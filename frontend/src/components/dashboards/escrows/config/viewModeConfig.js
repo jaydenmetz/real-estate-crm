@@ -389,8 +389,166 @@ export const escrowListConfig = {
 // ============================================================================
 
 export const escrowTableConfig = {
-  // TODO: Implement when TableRowTemplate is enhanced
-  // Will define column configurations with inline editing
+  // Grid layout: 8 columns with responsive widths
+  gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
+
+  // Status config for row styling
+  statusConfig: {
+    getConfig: (escrow) => {
+      const config = getStatusConfig(escrow.escrow_status);
+      return {
+        color: config.color,
+        bg: config.bg,
+      };
+    },
+  },
+
+  // Column configurations
+  columns: [
+    // Property Address (editable, with subtitle)
+    {
+      label: 'Property',
+      field: (escrow) => escrow.property_address_display || escrow.property_address || 'No Address',
+      subtitle: (escrow) => {
+        if (escrow.city && escrow.state) {
+          return `${escrow.city}, ${escrow.state}${escrow.zip_code ? ' ' + escrow.zip_code : ''}`;
+        }
+        return 'Location TBD';
+      },
+      editable: true,
+      editor: EditPropertyAddress,
+      editorProps: (escrow) => ({
+        value: escrow.property_address_display || escrow.property_address,
+        canonicalValue: escrow.property_address,
+        data: escrow,
+      }),
+      onSave: (escrow, addressData) => addressData,
+      align: 'left',
+      bold: true,
+      hoverColor: 'rgba(16, 185, 129, 0.08)',
+    },
+
+    // Status (editable)
+    {
+      label: 'Status',
+      field: 'escrow_status',
+      formatter: (status) => getStatusConfig(status).label,
+      isStatus: true,
+      editable: true,
+      statusOptions: [
+        {
+          value: 'active',
+          label: 'Active',
+          icon: CheckCircle,
+          color: '#10b981',
+        },
+        {
+          value: 'closed',
+          label: 'Closed',
+          icon: CheckCircle,
+          color: '#3b82f6',
+        },
+        {
+          value: 'cancelled',
+          label: 'Cancelled',
+          icon: Cancel,
+          color: '#ef4444',
+        },
+      ],
+      onSave: (escrow, newStatus) => {
+        return { escrow_status: newStatus };
+      },
+      align: 'left',
+    },
+
+    // Purchase Price (editable)
+    {
+      label: 'Price',
+      field: 'purchase_price',
+      formatter: (value) => formatCurrency(value),
+      editable: true,
+      editor: EditPurchasePrice,
+      onSave: (escrow, newPrice) => {
+        return { purchase_price: newPrice };
+      },
+      align: 'left',
+      bold: true,
+      color: '#10b981',
+      hoverColor: 'rgba(16, 185, 129, 0.08)',
+    },
+
+    // Commission (editable with toggle)
+    {
+      label: 'Commission',
+      field: (escrow) => escrow.commission_amount || escrow.gross_commission || 0,
+      formatter: (value) => formatCurrency(value),
+      editable: true,
+      editor: EditCommissionAmount,
+      editorProps: (escrow) => ({
+        value: escrow.commission_amount || escrow.gross_commission || 0,
+        commissionPercentage: escrow.commission_percentage || 3,
+        commissionType: escrow.commission_type || 'percentage',
+        purchasePrice: escrow.purchase_price || 0,
+      }),
+      onSave: (escrow, updates) => {
+        return {
+          commission_amount: updates.my_commission || updates,
+          commission_percentage: updates.commission_percentage,
+          commission_type: updates.commission_type,
+        };
+      },
+      toggle: {
+        maskFn: maskCommission,
+      },
+      align: 'left',
+      bold: true,
+      color: '#6366f1',
+      hoverColor: 'rgba(99, 102, 241, 0.08)',
+    },
+
+    // Acceptance Date (editable)
+    {
+      label: 'Acceptance',
+      field: 'acceptance_date',
+      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+      editable: true,
+      editor: EditAcceptanceDate,
+      onSave: (escrow, newDate) => {
+        return { acceptance_date: newDate };
+      },
+      align: 'left',
+      hoverColor: alpha('#000', 0.05),
+    },
+
+    // Closing Date (editable)
+    {
+      label: 'Closing',
+      field: 'closing_date',
+      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+      editable: true,
+      editor: EditClosingDate,
+      onSave: (escrow, newDate) => {
+        return { closing_date: newDate };
+      },
+      align: 'left',
+      hoverColor: alpha('#000', 0.05),
+    },
+
+    // Progress (read-only)
+    {
+      label: 'Progress',
+      field: (escrow) => {
+        const totalTasks = escrow.checklist_total || 0;
+        const completedTasks = escrow.checklist_completed || 0;
+        if (totalTasks === 0) return 0;
+        return Math.round((completedTasks / totalTasks) * 100);
+      },
+      formatter: (value) => `${value}%`,
+      align: 'center',
+      bold: true,
+      color: (escrow) => getStatusConfig(escrow.escrow_status).color,
+    },
+  ],
 };
 
 export default escrowCardConfig;
