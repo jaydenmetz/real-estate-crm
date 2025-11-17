@@ -420,55 +420,18 @@ export const DashboardHero = ({
           {/* Stats Cards Grid */}
           <Grid item xs={12} xl={config.showAIAssistant ? 9 : 12}>
             <Grid container spacing={3}>
-              {/* Render stat cards based on selected status */}
-              {statsConfig && statsConfig
-                .filter(statCfg => !statCfg.visibleWhen || statCfg.visibleWhen.includes(selectedStatus))
-                .slice(0, 4) // Max 4 stat cards
-                .map((statCfg, index) => {
-                  // Check if this is a component-based stat (new approach)
-                  if (statCfg.component) {
-                    const StatComponent = statCfg.component;
-                    return (
-                      <Grid item xs={12} sm={6} md={6} xl={3} key={statCfg.id}>
-                        <StatComponent
-                          data={allData}
-                          delay={index}
-                          {...(statCfg.props || {})}
-                        />
-                      </Grid>
-                    );
-                  }
-
-                  // Fallback to old calculation-based approach (for backward compatibility)
-                  const prefixValue = statCfg.format === 'currency' ? '$' : (statCfg.prefix || '');
-                  const suffixValue = statCfg.format === 'percentage' ? '%' : (statCfg.suffix || '');
-                  const statValue = stats?.[statCfg.id]?.value || 0;
-                  let valueColor = statCfg.valueColor;
-                  if (valueColor === 'dynamic') {
-                    valueColor = statValue >= 0 ? '#4caf50' : '#f44336';
-                  }
-
-                  return (
-                    <Grid item xs={12} sm={6} md={6} xl={3} key={statCfg.id}>
-                      {StatCardComponent && (
-                        <StatCardComponent
-                          icon={statCfg.icon}
-                          title={statCfg.label}
-                          value={statValue}
-                          prefix={prefixValue}
-                          suffix={suffixValue}
-                          color={statCfg.color || "#ffffff"}
-                          backgroundColor={statCfg.backgroundColor}
-                          textColor={statCfg.textColor || null}
-                          valueColor={valueColor}
-                          delay={index}
-                          goal={statCfg.goal}
-                          trend={stats?.[statCfg.id]?.trend}
-                        />
-                      )}
-                    </Grid>
-                  );
-                })}
+              {/* DEBUG: STATS RENDERING TEMPORARILY DISABLED */}
+              <Grid item xs={12}>
+                <Box sx={{
+                  p: 3,
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: 2,
+                  textAlign: 'center',
+                  color: 'white'
+                }}>
+                  DEBUG: Stats rendering disabled to isolate error
+                </Box>
+              </Grid>
             </Grid>
 
             {/* Action Buttons Row */}
