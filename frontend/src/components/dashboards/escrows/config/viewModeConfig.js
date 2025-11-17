@@ -19,12 +19,14 @@ import { getStatusConfig } from '../../../../constants/escrowConfig';
 import { getBestPropertyImage } from '../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../utils/formatters';
 
-// Import editor components
-import { EditPurchasePrice } from '../editors/EditPurchasePrice';
-import { EditCommissionAmount } from '../editors/EditCommissionAmount';
-import { EditAcceptanceDate } from '../editors/EditAcceptanceDate';
-import { EditClosingDate } from '../editors/EditClosingDate';
-import { EditPropertyAddress } from '../editors/EditPropertyAddress';
+// Import editor components (barrel export)
+import {
+  EditPurchasePrice,
+  EditCommissionAmount,
+  EditAcceptanceDate,
+  EditClosingDate,
+  EditPropertyAddress,
+} from '../editors';
 
 // ============================================================================
 // COMMISSION MASKING (for privacy toggle)
@@ -109,17 +111,17 @@ export const escrowCardConfig = {
     },
   },
 
-  // Metrics Configuration (2x2 grid with price and commission)
+  // Metrics Configuration (2x2 grid - only Price and Commission)
   metrics: [
-    // Purchase Price (top-left, editable)
+    // Purchase Price (editable)
     {
-      label: 'Purchase Price',
+      label: 'Price',
       field: 'purchase_price',
       formatter: (value) => formatCurrency(value),
       color: {
-        primary: '#3b82f6',
-        secondary: '#60a5fa',
-        bg: alpha('#3b82f6', 0.1),
+        primary: '#10b981',
+        secondary: '#059669',
+        bg: alpha('#10b981', 0.08),
       },
       editable: true,
       editor: EditPurchasePrice,
@@ -128,15 +130,15 @@ export const escrowCardConfig = {
       },
     },
 
-    // Commission (top-right, editable with toggle)
+    // Commission (editable with toggle)
     {
-      label: 'Your Commission',
+      label: 'Commission',
       field: (escrow) => escrow.commission_amount || escrow.gross_commission || 0,
       formatter: (value) => formatCurrency(value),
       color: {
-        primary: '#10b981',
-        secondary: '#34d399',
-        bg: alpha('#10b981', 0.1),
+        primary: '#6366f1',
+        secondary: '#4f46e5',
+        bg: alpha('#6366f1', 0.08),
       },
       editable: true,
       editor: EditCommissionAmount,
@@ -151,75 +153,35 @@ export const escrowCardConfig = {
         },
       },
     },
-
-    // Acceptance Date (bottom-left, editable)
-    {
-      label: 'Acceptance',
-      field: 'acceptance_date',
-      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
-      color: {
-        primary: '#8b5cf6',
-        secondary: '#a78bfa',
-        bg: alpha('#8b5cf6', 0.1),
-      },
-      editable: true,
-      editor: EditAcceptanceDate,
-      onSave: (escrow, newDate) => {
-        return { acceptance_date: newDate };
-      },
-    },
-
-    // Closing Date (bottom-right, editable)
-    {
-      label: 'Closing',
-      field: 'closing_date',
-      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
-      color: {
-        primary: '#f59e0b',
-        secondary: '#fbbf24',
-        bg: alpha('#f59e0b', 0.1),
-      },
-      editable: true,
-      editor: EditClosingDate,
-      onSave: (escrow, newDate) => {
-        return { closing_date: newDate };
-      },
-    },
   ],
 
-  // Footer Configuration (with progress bar)
+  // Footer Configuration (Acceptance + Close dates + Progress)
   footer: {
     fields: [
+      // Acceptance Date (editable)
       {
-        label: 'Days to Close',
-        field: (escrow) => {
-          if (!escrow.closing_date) return null;
-          const closingDate = new Date(escrow.closing_date);
-          const today = new Date();
-          const diffTime = closingDate - today;
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          return diffDays;
+        label: 'Acceptance',
+        field: 'acceptance_date',
+        formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+        editable: true,
+        editor: EditAcceptanceDate,
+        onSave: (escrow, newDate) => {
+          return { acceptance_date: newDate };
         },
-        formatter: (days) => {
-          if (days === null) return '—';
-          if (days < 0) return `${Math.abs(days)} days overdue`;
-          if (days === 0) return 'Today';
-          if (days === 1) return '1 day';
-          return `${days} days`;
-        },
-        editable: false,
-        width: '40%',
+        width: '33.33%',
       },
 
+      // Close Date (editable)
       {
-        label: 'Transaction',
-        field: 'transaction_type',
-        formatter: (value) => {
-          if (!value) return '—';
-          return value.charAt(0).toUpperCase() + value.slice(1);
+        label: 'Close',
+        field: 'closing_date',
+        formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+        editable: true,
+        editor: EditClosingDate,
+        onSave: (escrow, newDate) => {
+          return { closing_date: newDate };
         },
-        editable: false,
-        width: '30%',
+        width: '33.33%',
       },
     ],
 
