@@ -110,10 +110,18 @@ export const EditCommission = ({
       if (!value) return '$0.00';
       const num = parseFloat(value);
       if (isNaN(num)) return '$0.00';
-      return `$${num.toLocaleString('en-US', {
+      const formatted = `$${num.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })}`;
+
+      // For flat rate, show percentage helper
+      if (commissionType === 'flat' && purchasePrice && purchasePrice > 0) {
+        const percentage = (num / purchasePrice) * 100;
+        return `${formatted} (${percentage.toFixed(2)}%)`;
+      }
+
+      return formatted;
     }
 
     // Calculate based on commission type
@@ -127,10 +135,18 @@ export const EditCommission = ({
     }
 
     if (isNaN(displayAmount)) return '$0.00';
-    return `$${displayAmount.toLocaleString('en-US', {
+    const formatted = `$${displayAmount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
+
+    // For flat rate, show percentage helper
+    if (commissionType === 'flat' && purchasePrice && purchasePrice > 0) {
+      const percentage = (displayAmount / purchasePrice) * 100;
+      return `${formatted} (${percentage.toFixed(2)}%)`;
+    }
+
+    return formatted;
   };
 
   return (
