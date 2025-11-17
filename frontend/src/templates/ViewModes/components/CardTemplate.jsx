@@ -428,8 +428,8 @@ const CardTemplate = React.memo(({
               </Box>
             )}
 
-            {/* Metrics Grid - TEMPORARILY DISABLED FOR DEBUGGING */}
-            {/* {config.metrics && config.metrics.length > 0 && (
+            {/* Metrics Grid */}
+            {config.metrics && config.metrics.length > 0 && (
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, mb: 1 }}>
                 {config.metrics.map((metric, idx) => {
                   const metricValue = typeof metric.field === 'function'
@@ -512,12 +512,7 @@ const CardTemplate = React.memo(({
                   );
                 })}
               </Box>
-            )} */}
-            <Box sx={{ p: 1, bgcolor: 'warning.light', borderRadius: 1, mb: 1 }}>
-              <Typography variant="caption" sx={{ color: 'warning.contrastText' }}>
-                DEBUG: CardTemplate metrics disabled
-              </Typography>
-            </Box>
+            )}
 
             {/* Footer */}
             {config.footer && (
