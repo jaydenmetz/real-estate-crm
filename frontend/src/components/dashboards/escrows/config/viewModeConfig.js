@@ -488,7 +488,8 @@ export const escrowTableConfig = {
       editor: EditCommissionAmount,
       editorProps: (escrow) => ({
         value: escrow.my_commission || escrow.gross_commission || 0,
-        commissionPercentage: escrow.commission_percentage || 3,
+        // Normalize commission percentage: parseFloat removes trailing zeros
+        commissionPercentage: escrow.commission_percentage ? parseFloat(escrow.commission_percentage) : 3,
         commissionType: escrow.commission_type || 'percentage',
         purchasePrice: escrow.purchase_price || 0,
       }),
