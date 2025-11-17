@@ -306,36 +306,6 @@ export const DashboardContent = ({
             return displayData.map((item, index) => {
               const itemId = item[config.api.idField];
 
-              // DEBUG: Skip rendering if Component is undefined
-              if (!Component) {
-                console.error('[DashboardContent] Component is undefined!', {
-                  viewMode,
-                  CardComponent,
-                  ListComponent,
-                  TableComponent
-                });
-                return (
-                  <Box key={itemId} sx={{ p: 2, bgcolor: 'error.light' }}>
-                    <Typography>ERROR: Component undefined for viewMode: {viewMode}</Typography>
-                  </Box>
-                );
-              }
-
-              // DEBUG: Log every prop being passed
-              if (index === 0) { // Only log first item to avoid spam
-                console.log('[DashboardContent] Rendering first item:', {
-                  Component,
-                  ComponentName: Component?.name || Component?.displayName,
-                  entityName: config.entity.name,
-                  item,
-                  itemId,
-                  viewMode,
-                  hasOnUpdate: !!onUpdate,
-                  hasOnDelete: !!onDelete,
-                  hasOnArchive: !!onArchive
-                });
-              }
-
               return (
                 <motion.div
                   key={itemId}

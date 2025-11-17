@@ -9,14 +9,6 @@ import {
   TotalCommissionCard
 } from '../../components/dashboards/listings/hero';
 
-// Debug logging to verify imports
-console.log('[listings.config.js] Stat card imports:', {
-  TotalListingsCard,
-  TotalThisMonthCard,
-  TotalVolumeCard,
-  TotalCommissionCard
-});
-
 // Import navigation configurations
 import {
   listingStatusTabs,
