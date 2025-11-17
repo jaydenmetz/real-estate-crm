@@ -459,8 +459,18 @@ const ListItemTemplate = React.memo(({
         />
       )}
 
-      {config.metrics?.map((metric, idx) =>
-        metric.editor ? (
+      {config.metrics?.map((metric, idx) => {
+        if (!metric.editor) return null;
+
+        // Use custom editorProps if provided, otherwise default props
+        const editorProps = metric.editorProps
+          ? metric.editorProps(data)
+          : {
+              value: typeof metric.field === 'function' ? metric.field(data) : resolveField(data, metric.field)?.raw,
+              data: data,
+            };
+
+        return (
           <metric.editor
             key={`metric_${idx}`}
             open={openEditors[`metric_${idx}`] || false}
@@ -472,11 +482,10 @@ const ListItemTemplate = React.memo(({
               }
               closeEditor(`metric_${idx}`);
             }}
-            value={typeof metric.field === 'function' ? metric.field(data) : resolveField(data, metric.field)?.raw}
-            data={data}
+            {...editorProps}
           />
-        ) : null
-      )}
+        );
+      })}
 
       {/* Status Change Menu */}
       {config.status?.editable && config.status?.options && (

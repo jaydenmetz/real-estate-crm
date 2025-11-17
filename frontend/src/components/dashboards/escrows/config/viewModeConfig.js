@@ -142,8 +142,20 @@ export const escrowCardConfig = {
       },
       editable: true,
       editor: EditCommissionAmount,
-      onSave: (escrow, newCommission) => {
-        return { commission_amount: newCommission };
+      // Pass additional props needed by EditCommissionAmount
+      editorProps: (escrow) => ({
+        value: escrow.commission_amount || escrow.gross_commission || 0,
+        commissionPercentage: escrow.commission_percentage || 3,
+        commissionType: escrow.commission_type || 'percentage',
+        purchasePrice: escrow.purchase_price || 0,
+      }),
+      onSave: (escrow, updates) => {
+        // EditCommissionAmount returns { my_commission, commission_percentage, commission_type }
+        return {
+          commission_amount: updates.my_commission || updates,
+          commission_percentage: updates.commission_percentage,
+          commission_type: updates.commission_type,
+        };
       },
       toggle: {
         maskFn: maskCommission,
@@ -326,8 +338,20 @@ export const escrowListConfig = {
       formatter: (value) => formatCurrency(value),
       editable: true,
       editor: EditCommissionAmount,
-      onSave: (escrow, newCommission) => {
-        return { commission_amount: newCommission };
+      // Pass additional props needed by EditCommissionAmount
+      editorProps: (escrow) => ({
+        value: escrow.commission_amount || escrow.gross_commission || 0,
+        commissionPercentage: escrow.commission_percentage || 3,
+        commissionType: escrow.commission_type || 'percentage',
+        purchasePrice: escrow.purchase_price || 0,
+      }),
+      onSave: (escrow, updates) => {
+        // EditCommissionAmount returns { my_commission, commission_percentage, commission_type }
+        return {
+          commission_amount: updates.my_commission || updates,
+          commission_percentage: updates.commission_percentage,
+          commission_type: updates.commission_type,
+        };
       },
       toggle: {
         maskFn: maskCommission,
