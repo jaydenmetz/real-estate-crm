@@ -264,8 +264,138 @@ export const escrowCardConfig = {
 // ============================================================================
 
 export const escrowListConfig = {
-  // TODO: Implement when ListItemTemplate is enhanced
-  // Will use similar structure but optimized for horizontal layout
+  // Image/Left Section Configuration
+  image: {
+    source: (escrow) => getBestPropertyImage(escrow),
+    fallbackIcon: HomeIcon,
+    width: 200,
+  },
+
+  // Progress Bar Overlay
+  progress: {
+    getValue: (escrow) => {
+      const totalTasks = escrow.checklist_total || 0;
+      const completedTasks = escrow.checklist_completed || 0;
+      if (totalTasks === 0) return 0;
+      return Math.round((completedTasks / totalTasks) * 100);
+    },
+    getColor: (escrow) => {
+      const config = getStatusConfig(escrow.escrow_status);
+      return config.bg;
+    },
+  },
+
+  // Status Chip Configuration (editable)
+  status: {
+    field: 'escrow_status',
+    getConfig: (status) => {
+      const config = getStatusConfig(status);
+      return {
+        label: config.label,
+        color: config.color,
+        bg: config.bg,
+      };
+    },
+    editable: true,
+    options: [
+      {
+        value: 'active',
+        label: 'Active',
+        icon: CheckCircle,
+        color: '#10b981',
+      },
+      {
+        value: 'closed',
+        label: 'Closed',
+        icon: CheckCircle,
+        color: '#3b82f6',
+      },
+      {
+        value: 'cancelled',
+        label: 'Cancelled',
+        icon: Cancel,
+        color: '#ef4444',
+      },
+    ],
+    onSave: (escrow, newStatus) => {
+      return { escrow_status: newStatus };
+    },
+  },
+
+  // Title Configuration (address, editable)
+  title: {
+    field: 'property_address',
+    editable: true,
+    editor: EditPropertyAddress,
+    onSave: (escrow, newAddress) => {
+      return { property_address: newAddress };
+    },
+  },
+
+  // Subtitle Configuration (location)
+  subtitle: {
+    formatter: (escrow) => {
+      const parts = [];
+      if (escrow.city) parts.push(escrow.city);
+      if (escrow.state) parts.push(escrow.state);
+      if (escrow.zip_code) parts.push(escrow.zip_code);
+      return parts.join(', ') || 'Location TBD';
+    },
+  },
+
+  // Metrics Configuration (horizontal row)
+  metrics: [
+    // Purchase Price (editable)
+    {
+      label: 'Price',
+      field: 'purchase_price',
+      formatter: (value) => formatCurrency(value),
+      editable: true,
+      editor: EditPurchasePrice,
+      onSave: (escrow, newPrice) => {
+        return { purchase_price: newPrice };
+      },
+    },
+
+    // Commission (editable with toggle)
+    {
+      label: 'Commission',
+      field: (escrow) => escrow.commission_amount || escrow.gross_commission || 0,
+      formatter: (value) => formatCurrency(value),
+      editable: true,
+      editor: EditCommissionAmount,
+      onSave: (escrow, newCommission) => {
+        return { commission_amount: newCommission };
+      },
+      toggle: {
+        maskFn: maskCommission,
+      },
+    },
+
+    // Acceptance Date (editable)
+    {
+      label: 'Acceptance',
+      field: 'acceptance_date',
+      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
+      editable: true,
+      editor: EditAcceptanceDate,
+      onSave: (escrow, newDate) => {
+        return { acceptance_date: newDate };
+      },
+    },
+
+    // Closing Date (editable)
+    {
+      label: 'Closing',
+      field: 'closing_date',
+      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
+      editable: true,
+      editor: EditClosingDate,
+      onSave: (escrow, newDate) => {
+        return { closing_date: newDate };
+      },
+    },
+  ],
 };
 
 // ============================================================================
