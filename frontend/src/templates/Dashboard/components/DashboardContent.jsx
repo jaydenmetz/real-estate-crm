@@ -303,34 +303,26 @@ export const DashboardContent = ({
             }
 
             // Regular view (not archived)
-            return displayData.map((item, index) => {
-              const itemId = item[config.api.idField];
-
-              return (
-                <motion.div
-                  key={itemId}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{
-                    duration: 0.3,
-                    delay: index * 0.05,
-                  }}
-                >
-                  <Component
-                    {...{ [config.entity.name]: item }}
-                    viewMode={viewMode}
-                    index={index}
-                    isArchived={false}
-                    onUpdate={onUpdate ? (id, updates) => onUpdate(id, updates) : undefined}
-                    onDelete={onDelete ? () => onDelete(itemId) : undefined}
-                    onArchive={onArchive ? () => onArchive(itemId) : undefined}
-                    customActions={customActions}
-                    animationType="spring"
-                  />
-                </motion.div>
-              );
-            });
+            // DEBUG: TEMPORARILY DISABLED RENDERING TO ISOLATE ERROR
+            return (
+              <Box sx={{
+                gridColumn: '1 / -1',
+                p: 4,
+                bgcolor: 'info.light',
+                borderRadius: 2,
+                textAlign: 'center'
+              }}>
+                <Typography variant="h6">
+                  DEBUG: Item rendering disabled
+                </Typography>
+                <Typography variant="body2">
+                  Found {displayData.length} items, view mode: {viewMode}
+                </Typography>
+                <Typography variant="caption">
+                  Component: {Component?.name || Component?.displayName || 'Unknown'}
+                </Typography>
+              </Box>
+            );
           })()}
         </AnimatePresence>
       </Box>
