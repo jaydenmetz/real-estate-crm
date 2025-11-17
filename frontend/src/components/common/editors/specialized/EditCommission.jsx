@@ -145,7 +145,9 @@ export const EditCommission = ({
     // For flat rate, show percentage helper
     if (commissionType === 'flat' && purchasePrice && purchasePrice > 0) {
       const percentage = (displayAmount / purchasePrice) * 100;
-      return `${formatted} (${percentage.toFixed(2)}%)`;
+      // Remove trailing zeros: 3.00 → 3, 2.50 → 2.5, 2.83 → 2.83
+      const formattedPercent = parseFloat(percentage.toFixed(2));
+      return `${formatted} (${formattedPercent}%)`;
     }
 
     return formatted;
