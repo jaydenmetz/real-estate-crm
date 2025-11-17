@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -123,6 +123,25 @@ const CardTemplate = React.memo(({
 
   // Status menu state
   const [statusMenuAnchor, setStatusMenuAnchor] = useState(null);
+
+  // Reset toggle states when data changes (so updated values are shown, not masked)
+  useEffect(() => {
+    // Extract metric values to detect changes
+    const metricValues = config.metrics?.map((metric, idx) => {
+      const value = typeof metric.field === 'function'
+        ? metric.field(data)
+        : data?.[metric.field];
+      return value;
+    }) || [];
+
+    // Reset toggle states when any metric value changes
+    setToggleStates({});
+  }, [data?.id, ...(config.metrics?.map((metric) => {
+    const value = typeof metric.field === 'function'
+      ? metric.field(data)
+      : data?.[metric.field];
+    return value;
+  }) || [])]);
 
   // Click vs drag detection (for text selection)
   const [isDragging, setIsDragging] = useState(false);
