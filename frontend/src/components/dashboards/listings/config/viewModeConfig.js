@@ -193,6 +193,7 @@ export const listingListConfig = {
   },
 
   // Metrics Configuration (horizontal row)
+  // NOTE: Icons are ONLY supported in ListItemTemplate, NOT CardTemplate
   metrics: [
     {
       label: 'Price',
@@ -203,7 +204,6 @@ export const listingListConfig = {
         secondary: '#2563eb',
         bg: 'rgba(59, 130, 246, 0.08)',
       },
-      icon: AttachMoneyIcon,
     },
     {
       label: 'Beds/Baths',
@@ -217,7 +217,6 @@ export const listingListConfig = {
         secondary: '#7c3aed',
         bg: 'rgba(139, 92, 246, 0.08)',
       },
-      icon: BedIcon,
     },
     {
       label: 'Sqft',
@@ -228,7 +227,6 @@ export const listingListConfig = {
         secondary: '#d97706',
         bg: 'rgba(245, 158, 11, 0.08)',
       },
-      icon: SquareFootIcon,
     },
     {
       label: 'Commission',
@@ -239,7 +237,6 @@ export const listingListConfig = {
         secondary: '#059669',
         bg: 'rgba(16, 185, 129, 0.08)',
       },
-      icon: AttachMoneyIcon,
     },
   ],
 };
