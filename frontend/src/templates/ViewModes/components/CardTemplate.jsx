@@ -445,6 +445,13 @@ const CardTemplate = React.memo(({
                     ? metric.toggle.maskFn(metricValue)
                     : formattedValue;
 
+                  // Defensive: Provide default colors if not defined in config
+                  const metricColor = metric.color || {
+                    primary: theme.palette.primary.main,
+                    secondary: theme.palette.primary.dark,
+                    bg: alpha(theme.palette.primary.main, 0.1),
+                  };
+
                   return (
                     <Box
                       key={idx}
@@ -457,18 +464,18 @@ const CardTemplate = React.memo(({
                       sx={{
                         p: 0.75,
                         borderRadius: 1.5,
-                        background: `linear-gradient(135deg, ${alpha(metric.color.primary, 0.08)} 0%, ${alpha(metric.color.secondary, 0.12)} 100%)`,
-                        border: `1px solid ${alpha(metric.color.primary, 0.15)}`,
+                        background: `linear-gradient(135deg, ${alpha(metricColor.primary, 0.08)} 0%, ${alpha(metricColor.secondary, 0.12)} 100%)`,
+                        border: `1px solid ${alpha(metricColor.primary, 0.15)}`,
                         cursor: metric.editable && onUpdate ? 'pointer' : 'default',
                         transition: 'all 0.2s',
                         position: 'relative',
                         '&:hover': metric.editable && onUpdate ? {
-                          background: `linear-gradient(135deg, ${alpha(metric.color.primary, 0.12)} 0%, ${alpha(metric.color.secondary, 0.16)} 100%)`,
+                          background: `linear-gradient(135deg, ${alpha(metricColor.primary, 0.12)} 0%, ${alpha(metricColor.secondary, 0.16)} 100%)`,
                           transform: 'scale(1.05)',
                         } : {},
                       }}
                     >
-                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: metric.color.secondary, mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: metricColor.secondary, mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         {metric.label}
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -486,18 +493,18 @@ const CardTemplate = React.memo(({
                               transition: 'all 0.2s',
                               flexShrink: 0,
                               '&:hover': {
-                                background: alpha(metric.color.primary, 0.1),
+                                background: alpha(metricColor.primary, 0.1),
                               },
                             }}
                           >
                             {isToggled ? (
-                              <VisibilityOffIcon sx={{ fontSize: 14, color: metric.color.primary }} />
+                              <VisibilityOffIcon sx={{ fontSize: 14, color: metricColor.primary }} />
                             ) : (
-                              <VisibilityIcon sx={{ fontSize: 14, color: metric.color.primary }} />
+                              <VisibilityIcon sx={{ fontSize: 14, color: metricColor.primary }} />
                             )}
                           </Box>
                         )}
-                        <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: metric.color.primary, letterSpacing: '-0.5px' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: metricColor.primary, letterSpacing: '-0.5px' }}>
                           {displayValue}
                         </Typography>
                       </Box>
