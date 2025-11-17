@@ -6,7 +6,10 @@
  * Usage: Import from this index in listings.config.js
  */
 
-export { default as TotalListingsCard } from './stats/TotalListingsCard';
-export { default as TotalThisMonthCard } from './stats/TotalThisMonthCard';
-export { default as TotalVolumeCard } from './stats/TotalVolumeCard';
-export { default as TotalCommissionCard } from './stats/TotalCommissionCard';
+// Re-export from stats directory (matches escrows pattern)
+export {
+  TotalListingsCard,
+  TotalThisMonthCard,
+  TotalVolumeCard,
+  TotalCommissionCard
+} from './stats';
