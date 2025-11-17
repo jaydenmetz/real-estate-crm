@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -33,7 +33,7 @@ import {
   Lock,
   Group,
   Business,
-} from '@mui/material/icons';
+} from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useEscrowCalculations } from '../../../../../hooks/useEscrowCalculations';
@@ -41,15 +41,13 @@ import { getStatusConfig } from '../../../../../constants/escrowConfig';
 import { EditableTextField } from '../../../../common/editors/EditableTextField';
 import { EditableDateField } from '../../../../common/editors/EditableDateField';
 import { EditableNumberField } from '../../../../common/editors/EditableNumberField';
-import { ContactSelectionModal } from '../../../../modals/ContactSelectionModal';
 import { EditPurchasePrice } from '../../editors/EditPurchasePrice';
 import { EditCommissionAmount } from '../../editors/EditCommissionAmount';
 import { EditAcceptanceDate } from '../../editors/EditAcceptanceDate';
 import { EditClosingDate } from '../../editors/EditClosingDate';
 import { EditPropertyAddress } from '../../editors/EditPropertyAddress';
-import PeopleEditor from '../../../../common/editors/PeopleEditor';
 import { QuickActionsMenu } from '../../../../common/QuickActionsMenu';
-import { formatCurrency, formatDate as formatDateUtil, getInitials as getInitialsUtil, truncateText } from '../../../../../utils/formatters';
+import { formatCurrency, formatDate as formatDateUtil } from '../../../../../utils/formatters';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 
 const EscrowCard = React.memo(({ escrow, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
@@ -73,72 +71,6 @@ const EscrowCard = React.memo(({ escrow, onArchive, onDelete, onRestore, isArchi
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [saving, setSaving] = useState(false);
-
-  // Multiple buyers/sellers state - Initialize from people JSONB or legacy fields
-  const initializeBuyers = () => {
-    if (escrow.people?.buyers && Array.isArray(escrow.people.buyers)) {
-      return escrow.people.buyers;
-    }
-    if (escrow.people?.buyer) {
-      return [escrow.people.buyer];
-    }
-    return [{ name: escrow.buyer_name || 'TBD', email: escrow.buyer_email || '' }];
-  };
-
-  const initializeSellers = () => {
-    if (escrow.people?.sellers && Array.isArray(escrow.people.sellers)) {
-      return escrow.people.sellers;
-    }
-    if (escrow.people?.seller) {
-      return [escrow.people.seller];
-    }
-    return [{ name: escrow.seller_name || 'TBD', email: escrow.seller_email || '' }];
-  };
-
-  const [buyers, setBuyers] = useState(initializeBuyers());
-  const [sellers, setSellers] = useState(initializeSellers());
-
-  // Contact selection modal state
-  const [contactModalOpen, setContactModalOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(null);
-  const [selectedRoleIndex, setSelectedRoleIndex] = useState(null);
-
-  // Hover states for Add Buyer/Seller buttons
-  const [showAddBuyerButton, setShowAddBuyerButton] = useState(false);
-  const [showAddSellerButton, setShowAddSellerButton] = useState(false);
-
-  // People Editor modal states
-  const [peopleEditorOpen, setPeopleEditorOpen] = useState(false);
-  const [peopleEditorRole, setPeopleEditorRole] = useState(null); // 'buyer', 'seller', 'buyer_agent', etc.
-
-  // Open People Editor for a specific role
-  const handleOpenPeopleEditor = useCallback((role) => {
-    setPeopleEditorRole(role);
-    setPeopleEditorOpen(true);
-  }, []);
-
-  // Close People Editor
-  const handleClosePeopleEditor = useCallback(() => {
-    setPeopleEditorOpen(false);
-    setPeopleEditorRole(null);
-  }, []);
-
-  // Save people from editor
-  const handleSavePeople = useCallback(async (updatedPeople) => {
-    if (!peopleEditorRole) return;
-
-    // TODO: Update the appropriate state and call onUpdate
-    // // console.log('Saving people for role:', peopleEditorRole, updatedPeople);
-
-    // For now, just close the modal
-    handleClosePeopleEditor();
-  }, [peopleEditorRole, handleClosePeopleEditor]);
-
-  // Sync state when escrow data changes from parent
-  useEffect(() => {
-    setBuyers(initializeBuyers());
-    setSellers(initializeSellers());
-  }, [escrow.people, escrow.buyer_name, escrow.seller_name]);
 
   // ✅ Memoized calculations - only recalculate when escrow data changes
   const calculations = useEscrowCalculations(escrow);
@@ -222,120 +154,6 @@ const EscrowCard = React.memo(({ escrow, onArchive, onDelete, onRestore, isArchi
     }
   }, [escrow.id, editValue, onUpdate, handleCancelEdit]);
 
-  // ✅ Helper to update people in database
-  const updatePeopleInDatabase = useCallback(async (updatedBuyers, updatedSellers) => {
-    if (!onUpdate) return;
-
-    const updatedPeople = {
-      ...escrow.people,
-      buyers: updatedBuyers,
-      sellers: updatedSellers,
-    };
-
-    try {
-      await onUpdate(escrow.id, { people: updatedPeople });
-    } catch (error) {
-      console.error('Failed to update people:', error);
-    }
-  }, [escrow.id, escrow.people, onUpdate]);
-
-  // ✅ Multiple buyers/sellers handlers (max 6 each)
-  const handleAddBuyer = useCallback(async (e) => {
-    e?.stopPropagation();
-    if (buyers.length >= 6) {
-      console.warn('Maximum 6 buyers allowed');
-      return;
-    }
-    const newBuyers = [...buyers, { name: 'TBD', email: '', phone: '', company: null }];
-    setBuyers(newBuyers);
-    await updatePeopleInDatabase(newBuyers, sellers);
-  }, [buyers, sellers, updatePeopleInDatabase]);
-
-  const handleAddSeller = useCallback(async (e) => {
-    e?.stopPropagation();
-    if (sellers.length >= 6) {
-      console.warn('Maximum 6 sellers allowed');
-      return;
-    }
-    const newSellers = [...sellers, { name: 'TBD', email: '', phone: '', company: null }];
-    setSellers(newSellers);
-    await updatePeopleInDatabase(buyers, newSellers);
-  }, [buyers, sellers, updatePeopleInDatabase]);
-
-  const handleRemoveBuyer = useCallback(async (index, e) => {
-    e?.stopPropagation();
-    if (buyers.length > 1) {
-      const newBuyers = buyers.filter((_, i) => i !== index);
-      setBuyers(newBuyers);
-      await updatePeopleInDatabase(newBuyers, sellers);
-    }
-  }, [buyers, sellers, updatePeopleInDatabase]);
-
-  const handleRemoveSeller = useCallback(async (index, e) => {
-    e?.stopPropagation();
-    if (sellers.length > 1) {
-      const newSellers = sellers.filter((_, i) => i !== index);
-      setSellers(newSellers);
-      await updatePeopleInDatabase(buyers, newSellers);
-    }
-  }, [buyers, sellers, updatePeopleInDatabase]);
-
-
-  // ✅ Contact selection modal handlers
-  const handlePersonClick = useCallback((role, roleConfig, index = null, e) => {
-    e?.stopPropagation();
-    setSelectedRole({ type: role, config: roleConfig });
-    setSelectedRoleIndex(index);
-    setContactModalOpen(true);
-  }, []);
-
-  const handleContactSelect = useCallback(async (contact) => {
-    if (!onUpdate || !selectedRole) return;
-
-    try {
-      const roleType = selectedRole.type;
-
-      // Update based on role type
-      if (roleType === 'buyer' && selectedRoleIndex !== null) {
-        const newBuyers = [...buyers];
-        newBuyers[selectedRoleIndex] = {
-          name: contact.full_name,
-          email: contact.email,
-          phone: contact.phone,
-          company: contact.company_name,
-        };
-        setBuyers(newBuyers);
-        await updatePeopleInDatabase(newBuyers, sellers);
-      } else if (roleType === 'seller' && selectedRoleIndex !== null) {
-        const newSellers = [...sellers];
-        newSellers[selectedRoleIndex] = {
-          name: contact.full_name,
-          email: contact.email,
-          phone: contact.phone,
-          company: contact.company_name,
-        };
-        setSellers(newSellers);
-        await updatePeopleInDatabase(buyers, newSellers);
-      } else {
-        // For single-person roles (agents, lender, escrow officer)
-        const updatedPeople = {
-          ...escrow.people,
-          [roleType]: {
-            name: contact.full_name,
-            email: contact.email,
-            phone: contact.phone,
-            company: contact.company_name,
-          },
-        };
-        await onUpdate(escrow.id, { people: updatedPeople });
-      }
-
-      setContactModalOpen(false);
-    } catch (error) {
-      console.error('Failed to update contact:', error);
-    }
-  }, [selectedRole, selectedRoleIndex, buyers, sellers, escrow.id, escrow.people, onUpdate, updatePeopleInDatabase]);
-
   // ✅ Status configuration (constant lookup, no object creation)
   const statusConfig = getStatusConfig(escrow.escrow_status);
 
@@ -380,80 +198,6 @@ const EscrowCard = React.memo(({ escrow, onArchive, onDelete, onRestore, isArchi
   // Get best available image: property_image_url > zillow_image_url > street view > placeholder
   const propertyImage = getBestPropertyImage(escrow);
   const address = escrow.property_address || 'No Address';
-
-  /**
-   * Smart name truncation that prioritizes first and last names
-   * Examples:
-   *   "John Doe" → "John Doe" (fits)
-   *   "John Michael Doe" → "John M. Doe" (middle initial)
-   *   "John Michael Christopher Doe" → "John M. C. Doe" (all middle initials)
-   *   "Christopher Emmanuel Rodriguez Martinez" → "Christopher E. R. Martinez"
-   * @param {string} name - Full name to truncate
-   * @param {number} maxLength - Maximum character length (default 25)
-   * @returns {string} Truncated name
-   */
-  const truncateName = (name, maxLength = 25) => {
-    if (!name || name.length <= maxLength) return name;
-
-    const parts = name.trim().split(/\s+/);
-    if (parts.length <= 2) {
-      // Just first and last, use ellipsis if too long
-      return name.length > maxLength ? `${name.substring(0, maxLength - 3)}...` : name;
-    }
-
-    // First name + middle initials + last name
-    const firstName = parts[0];
-    const lastName = parts[parts.length - 1];
-    const middleNames = parts.slice(1, -1);
-
-    // Create middle initials
-    const middleInitials = middleNames.map(n => `${n[0]}.`).join(' ');
-
-    const truncated = `${firstName} ${middleInitials} ${lastName}`;
-
-    // If still too long, just show "First L."
-    if (truncated.length > maxLength) {
-      return `${firstName} ${lastName[0]}.`;
-    }
-
-    return truncated;
-  };
-
-  // People data with lender and escrow officer
-  const people = {
-    buyer: {
-      name: escrow.buyer_name || 'TBD',
-      email: escrow.buyer_email,
-      company: null,
-      color: { primary: '#10b981', secondary: '#059669' }
-    },
-    buyerAgent: {
-      name: escrow.buyer_agent_name || 'You',
-      company: 'Associated Real Estate',
-      color: { primary: '#8b5cf6', secondary: '#7c3aed' }
-    },
-    lender: {
-      name: escrow.lender_name || 'TBD',
-      company: escrow.lender_company || 'TBD',
-      color: { primary: '#3b82f6', secondary: '#2563eb' }
-    },
-    seller: {
-      name: escrow.seller_name || 'TBD',
-      email: escrow.seller_email,
-      company: null,
-      color: { primary: '#f59e0b', secondary: '#d97706' }
-    },
-    listingAgent: {
-      name: escrow.listing_agent_name || 'TBD',
-      company: 'Associated Real Estate',
-      color: { primary: '#6366f1', secondary: '#4f46e5' }
-    },
-    escrowOfficer: {
-      name: escrow.escrow_officer_name || 'TBD',
-      company: escrow.escrow_company || 'TBD',
-      color: { primary: '#ec4899', secondary: '#db2777' }
-    },
-  };
 
 
   return (
@@ -940,15 +684,6 @@ const EscrowCard = React.memo(({ escrow, onArchive, onDelete, onRestore, isArchi
             </Box>
           </Card>
 
-      {/* Contact Selection Modal */}
-      <ContactSelectionModal
-        open={contactModalOpen}
-        onClose={() => setContactModalOpen(false)}
-        onSelect={handleContactSelect}
-        roleType={selectedRole?.type}
-        roleConfig={selectedRole?.config || { primary: '#6366f1', secondary: '#8b5cf6' }}
-      />
-
       {/* Price Badge Editor */}
       <EditPurchasePrice
         open={priceEditorOpen}
@@ -991,44 +726,6 @@ const EscrowCard = React.memo(({ escrow, onArchive, onDelete, onRestore, isArchi
         onSave={(addressData) => onUpdate(escrow.id, addressData)}
         value={escrow.property_address}
       />
-
-      {/* People Editor Modal */}
-      {peopleEditorOpen && (
-        <PeopleEditor
-          open={peopleEditorOpen}
-          onClose={handleClosePeopleEditor}
-          onSave={handleSavePeople}
-          roleName={
-            peopleEditorRole === 'buyer' ? 'Buyers' :
-            peopleEditorRole === 'seller' ? 'Sellers' :
-            peopleEditorRole === 'buyer_agent' ? "Buyer's Agent Team" :
-            peopleEditorRole === 'listing_agent' ? "Listing Agent Team" :
-            peopleEditorRole === 'lender' ? 'Lender Team' :
-            peopleEditorRole === 'escrow_officer' ? 'Escrow Team' :
-            'People'
-          }
-          currentPeople={
-            peopleEditorRole === 'buyer' ? buyers.map((person, idx) => ({ ...person, id: person.id || `buyer-${idx}` })) :
-            peopleEditorRole === 'seller' ? sellers.map((person, idx) => ({ ...person, id: person.id || `seller-${idx}` })) :
-            peopleEditorRole === 'buyer_agent' ? (people.buyerAgent ? [{ ...people.buyerAgent, id: 'buyer-agent-1' }] : []) :
-            peopleEditorRole === 'listing_agent' ? (people.listingAgent ? [{ ...people.listingAgent, id: 'listing-agent-1' }] : []) :
-            peopleEditorRole === 'lender' ? (people.lender ? [{ ...people.lender, id: 'lender-1' }] : []) :
-            peopleEditorRole === 'escrow_officer' ? (people.escrowOfficer ? [{ ...people.escrowOfficer, id: 'escrow-officer-1' }] : []) :
-            []
-          }
-          color={
-            peopleEditorRole === 'buyer' ? people.buyer.color :
-            peopleEditorRole === 'seller' ? people.seller.color :
-            peopleEditorRole === 'buyer_agent' ? people.buyerAgent.color :
-            peopleEditorRole === 'listing_agent' ? people.listingAgent.color :
-            peopleEditorRole === 'lender' ? people.lender.color :
-            peopleEditorRole === 'escrow_officer' ? people.escrowOfficer.color :
-            { primary: '#6366f1', secondary: '#8b5cf6' }
-          }
-          allContacts={[]} // TODO: Pass actual contacts array
-          getInitials={getInitialsUtil}
-        />
-      )}
 
       {/* Status Change Menu */}
       <Menu
