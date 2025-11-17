@@ -321,6 +321,21 @@ export const DashboardContent = ({
                 );
               }
 
+              // DEBUG: Log every prop being passed
+              if (index === 0) { // Only log first item to avoid spam
+                console.log('[DashboardContent] Rendering first item:', {
+                  Component,
+                  ComponentName: Component?.name || Component?.displayName,
+                  entityName: config.entity.name,
+                  item,
+                  itemId,
+                  viewMode,
+                  hasOnUpdate: !!onUpdate,
+                  hasOnDelete: !!onDelete,
+                  hasOnArchive: !!onArchive
+                });
+              }
+
               return (
                 <motion.div
                   key={itemId}
