@@ -4,6 +4,15 @@ import { listingsConfig } from '../../../config/entities/listings.config';
 import { ListingCard, ListingListItem, ListingTableRow } from './view-modes';
 import NewListingModal from './modals/NewListingModal';
 
+// DEBUG: Log all imports to verify they're defined
+console.log('[ListingsDashboard] Component imports:', {
+  ListingCard,
+  ListingListItem,
+  ListingTableRow,
+  NewListingModal,
+  listingsConfig: !!listingsConfig
+});
+
 /**
  * ListingsDashboard - Config-driven dashboard using DashboardTemplate
  *
@@ -22,6 +31,13 @@ import NewListingModal from './modals/NewListingModal';
  *   - Table: ListingTableRow component (compact table)
  */
 const ListingsDashboard = () => {
+  // DEBUG: Log before rendering
+  console.log('[ListingsDashboard] Rendering with components:', {
+    CardComponent: ListingCard,
+    ListComponent: ListingListItem,
+    TableComponent: ListingTableRow
+  });
+
   return (
     <DashboardTemplate
       config={listingsConfig}
