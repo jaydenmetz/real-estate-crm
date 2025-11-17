@@ -24,10 +24,6 @@ import {
   VisibilityOff,
   PersonOutline,
   AccountBalance,
-  CheckCircleOutline,
-  RadioButtonUnchecked,
-  ChevronLeft,
-  ChevronRight,
   Close,
   Add,
   Remove,
@@ -37,8 +33,7 @@ import {
   Lock,
   Group,
   Business,
-} from '@mui/icons-material';
-import { useMotionValue, useTransform, PanInfo } from 'framer-motion';
+} from '@mui/material/icons';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useEscrowCalculations } from '../../../../../hooks/useEscrowCalculations';
@@ -52,17 +47,15 @@ import { EditCommissionAmount } from '../../editors/EditCommissionAmount';
 import { EditAcceptanceDate } from '../../editors/EditAcceptanceDate';
 import { EditClosingDate } from '../../editors/EditClosingDate';
 import { EditPropertyAddress } from '../../editors/EditPropertyAddress';
-import PersonRoleContainer from '../../../../common/editors/PersonRoleContainer';
 import PeopleEditor from '../../../../common/editors/PeopleEditor';
 import { QuickActionsMenu } from '../../../../common/QuickActionsMenu';
 import { formatCurrency, formatDate as formatDateUtil, getInitials as getInitialsUtil, truncateText } from '../../../../../utils/formatters';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 
-const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
+const EscrowCard = React.memo(({ escrow, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [showCommission, setShowCommission] = useState(false);
-  const [currentPanel, setCurrentPanel] = useState(0); // 0=small, 1=people, 2=timeline, 3=checklists
 
   // Badge editor states
   const [priceEditorOpen, setPriceEditorOpen] = useState(false);
@@ -154,44 +147,6 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // < 600px
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md')); // 600-900px
   const isDesktop = useMediaQuery(theme.breakpoints.up('lg')); // 1200px+
-
-  // Panel widths
-  const PANEL_WIDTHS = {
-    small: 320,
-    people: 380,
-    timeline: 240,
-    checklists: 240,
-  };
-
-  // Calculate visible panels based on viewport
-  const getVisiblePanels = () => {
-    if (isDesktop) return 4; // Show all panels
-    if (isTablet) return 2; // Show 2 panels
-    return 1; // Mobile: Show 1 panel
-  };
-
-  const visiblePanels = getVisiblePanels();
-  const totalPanels = 4;
-  const maxPanelIndex = totalPanels - visiblePanels;
-
-  // ✅ Memoized navigation handlers - prevent child re-renders
-  const goToNextPanel = useCallback(() => {
-    setCurrentPanel((prev) => Math.min(prev + 1, maxPanelIndex));
-  }, [maxPanelIndex]);
-
-  const goToPrevPanel = useCallback(() => {
-    setCurrentPanel((prev) => Math.max(prev - 1, 0));
-  }, []);
-
-  // ✅ Swipe gesture handling
-  const handleDragEnd = useCallback((event, info) => {
-    const swipeThreshold = 50;
-    if (info.offset.x < -swipeThreshold) {
-      goToNextPanel();
-    } else if (info.offset.x > swipeThreshold) {
-      goToPrevPanel();
-    }
-  }, [goToNextPanel, goToPrevPanel]);
 
   // Click vs drag detection (for text selection)
   const [isDragging, setIsDragging] = useState(false);
@@ -325,50 +280,6 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     }
   }, [buyers, sellers, updatePeopleInDatabase]);
 
-  // ✅ View All modal handlers
-  const handleViewAllBuyers = useCallback((e) => {
-    e?.stopPropagation();
-    setViewAllModalRole('buyer');
-    setViewAllModalOpen(true);
-  }, []);
-
-  const handleViewAllSellers = useCallback((e) => {
-    e?.stopPropagation();
-    setViewAllModalRole('seller');
-    setViewAllModalOpen(true);
-  }, []);
-
-  const handleCloseViewAllModal = useCallback(() => {
-    setViewAllModalOpen(false);
-    setViewAllModalRole(null);
-  }, []);
-
-  // ✅ Team Management modal handlers
-  const handleOpenTeamModal = useCallback((roleType, e) => {
-    e?.stopPropagation();
-    setTeamModalRoleType(roleType);
-    setTeamModalOpen(true);
-  }, []);
-
-  const handleCloseTeamModal = useCallback(() => {
-    setTeamModalOpen(false);
-    setTeamModalRoleType(null);
-  }, []);
-
-  const handleTeamPersonClick = useCallback(async (person, section, personIndex) => {
-    // TODO: Open contact selection modal to edit person
-    // // console.log('Edit person:', person, 'in section:', section);
-  }, []);
-
-  const handleTeamAddPerson = useCallback(async (section) => {
-    // TODO: Open contact selection modal to add person
-    // // console.log('Add person to section:', section);
-  }, []);
-
-  const handleTeamRemovePerson = useCallback(async (section, personIndex) => {
-    // TODO: Remove person from team section
-    // // console.log('Remove person:', personIndex, 'from section:', section);
-  }, []);
 
   // ✅ Contact selection modal handlers
   const handlePersonClick = useCallback((role, roleConfig, index = null, e) => {
@@ -544,182 +455,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     },
   };
 
-  // Mock timeline milestones
-  const timeline = [
-    { label: 'Opened', date: escrow.created_at, completed: true },
-    { label: 'Inspection', date: escrow.inspection_date, completed: !!escrow.inspection_date },
-    { label: 'Appraisal', date: escrow.appraisal_date, completed: !!escrow.appraisal_date },
-    { label: 'Closing', date: closingDate, completed: escrow.escrow_status === 'Closed' },
-  ];
-
-  // Mock checklist groups
-  const checklists = [
-    { group: 'Documents', completed: 3, total: 5 },
-    { group: 'Inspections', completed: 2, total: 3 },
-    { group: 'Financing', completed: 1, total: 2 },
-    { group: 'Disclosures', completed: 4, total: 4 },
-  ];
-
-  // Calculate which panels to show based on viewMode and viewport
-  const getVisiblePanelWidths = () => {
-    // Mobile/Tablet: Use carousel system
-    if (!isDesktop) {
-      if (isMobile) return [PANEL_WIDTHS.small]; // Show 1 panel
-      if (isTablet) return [PANEL_WIDTHS.small, PANEL_WIDTHS.people]; // Show 2 panels
-    }
-
-    // Desktop: Show panels based on viewMode
-    // grid: Just main card (320px) - for grid view with multiple cards
-    // list/table: Not used anymore (EscrowListItem and EscrowTableRow used instead)
-    // large: All panels (legacy support for detail view)
-    if (viewMode === 'large') {
-      return [PANEL_WIDTHS.small, PANEL_WIDTHS.people, PANEL_WIDTHS.timeline, PANEL_WIDTHS.checklists]; // 1180px - All panels
-    } else {
-      return [PANEL_WIDTHS.small]; // Default: just main card (grid view)
-    }
-  };
-
-  const visiblePanelWidths = getVisiblePanelWidths();
-  const containerWidth = visiblePanelWidths.reduce((sum, width) => sum + width, 0);
-
-  // Card height is determined naturally by content:
-  // - Image: 3:2 aspect ratio (responsive to card width)
-  // - Content section: Compact padding for minimal white space
-  // Card 2 matches Card 1's height automatically via flexbox stretch
-
-  // Helper to check if a panel should be shown
-  const showPanel = (panelIndex) => {
-    // panelIndex: 0=small, 1=people, 2=timeline, 3=checklists
-    if (!isDesktop) {
-      // Mobile/tablet: controlled by carousel
-      return true; // Always render all panels, carousel will hide them
-    }
-
-    // Desktop: Show based on viewMode
-    if (viewMode === 'large') return true; // Large: show all panels
-    return panelIndex === 0; // Default: just main card (grid/list/table)
-  };
-
-  // Calculate translate offset based on current panel
-  const getTranslateX = () => {
-    if (isDesktop) return 0; // No translation needed, all visible
-
-    let offset = 0;
-    const panelWidths = [
-      PANEL_WIDTHS.small,
-      PANEL_WIDTHS.people,
-      PANEL_WIDTHS.timeline,
-      PANEL_WIDTHS.checklists,
-    ];
-
-    for (let i = 0; i < currentPanel; i++) {
-      offset += panelWidths[i];
-    }
-
-    return -offset;
-  };
 
   return (
-    <Box
-      style={{ width: '100%', position: 'relative' }}
-    >
-      {/* Navigation Arrows - Only show on mobile/tablet AND in large view mode */}
-      {!isDesktop && viewMode === 'large' && (
-        <>
-          {currentPanel > 0 && (
-            <IconButton
-              onClick={goToPrevPanel}
-              sx={{
-                position: 'absolute',
-                left: -20,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                zIndex: 10,
-                background: alpha(theme.palette.background.paper, 0.9),
-                boxShadow: 3,
-                '&:hover': {
-                  background: theme.palette.background.paper,
-                },
-              }}
-            >
-              <ChevronLeft />
-            </IconButton>
-          )}
-
-          {currentPanel < maxPanelIndex && (
-            <IconButton
-              onClick={goToNextPanel}
-              sx={{
-                position: 'absolute',
-                right: -20,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                zIndex: 10,
-                background: alpha(theme.palette.background.paper, 0.9),
-                boxShadow: 3,
-                '&:hover': {
-                  background: theme.palette.background.paper,
-                },
-              }}
-            >
-              <ChevronRight />
-            </IconButton>
-          )}
-        </>
-      )}
-
-      {/* Panel Indicators - Only show on mobile */}
-      {isMobile && (
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: -30,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            gap: 1,
-            zIndex: 10,
-          }}
-        >
-          {[0, 1, 2, 3].map((i) => (
-            <Box
-              key={i}
-              onClick={() => setCurrentPanel(Math.min(i, maxPanelIndex))}
-              sx={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: i === currentPanel ? statusConfig.color : alpha(theme.palette.text.disabled, 0.3),
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  transform: 'scale(1.3)',
-                },
-              }}
-            />
-          ))}
-        </Box>
-      )}
-
-      {/* Card Container - Card 1 stays fixed, Card 2 slides in */}
-      <Box sx={{
-        width: '100%',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'row',
-        gap: 1.5, // 12px gap between cards
-        alignItems: 'stretch', // Force both cards to match height
-      }}>
-        {/* Card 1: Escrow Card (Fixed 320px width in all modes) */}
-        <Box
-          sx={{
-            width: '320px', // Always 320px width
-            minWidth: '320px', // Prevent shrinking
-            maxWidth: '320px', // Prevent growing
-            flexShrink: 0,
-            display: 'flex', // Make this a flex container so Card stretches to full height
-          }}
-        >
+    <Box sx={{ width: '320px', maxWidth: '320px', flexShrink: 0 }}>
           <Card
             onMouseDown={handleCardMouseDown}
             onMouseMove={handleCardMouseMove}
@@ -1201,249 +939,6 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
               </CardContent>
             </Box>
           </Card>
-        </Box>
-
-        {/* Card 2: Extension Panels (Only in large view) */}
-        {viewMode === 'large' && (
-          <Box
-            style={{
-              width: 'calc(100% - 332px)', // Full width minus Card 1 (320px) and gap (12px)
-              flexShrink: 0,
-              display: 'flex',
-              opacity: 1,
-            }}
-          >
-              <Card
-                sx={{
-                  width: '100%',
-                  height: '100%', // Match Card 1 height
-                  borderRadius: 4,
-                  overflow: 'hidden',
-                  position: 'relative',
-                  boxShadow: `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}`,
-                  display: 'flex',
-                  flexDirection: 'row', // Horizontal layout for large view
-                }}
-              >
-                {/* PANEL 1: People (large view only) */}
-                {viewMode === 'large' && (
-                  <Box
-                    sx={{
-                      width: '50%',
-                      flexShrink: 0,
-                      background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
-                      borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                      p: 1.5,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {/* People content for large view - Fixed 2x3 Grid */}
-                    <>
-                      <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 1.5, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                        People
-                      </Typography>
-
-                      {/* Fixed 2 Column x 3 Row Grid */}
-                      <Box
-                        sx={{
-                          display: 'grid',
-                          gridTemplateColumns: '1fr 1fr',
-                          gridTemplateRows: '1fr 1fr 1fr',
-                          gap: 1,
-                          height: 'calc(100% - 35px)', // Subtract title height
-                        }}
-                      >
-                        {/* LEFT COLUMN - Row 1: Buyers */}
-                        <Box sx={{ minHeight: 0, overflow: 'hidden' }}>
-                          <PersonRoleContainer
-                            roleName="Buyer"
-                            people={buyers}
-                            color={people.buyer.color}
-                            onContainerClick={() => handleOpenPeopleEditor('buyer')}
-                            getInitials={getInitialsUtil}
-                            truncateName={truncateName}
-                          />
-                        </Box>
-
-                        {/* RIGHT COLUMN - Row 1: Sellers */}
-                        <Box sx={{ minHeight: 0, overflow: 'hidden' }}>
-                          <PersonRoleContainer
-                            roleName="Seller"
-                            people={sellers}
-                            color={people.seller.color}
-                            onContainerClick={() => handleOpenPeopleEditor('seller')}
-                            getInitials={getInitialsUtil}
-                            truncateName={truncateName}
-                          />
-                        </Box>
-
-                        {/* LEFT COLUMN - Row 2: Buyer Agent */}
-                        <Box sx={{ minHeight: 0, overflow: 'hidden' }}>
-                          <PersonRoleContainer
-                            roleName="Buyer Agent"
-                            people={[people.buyerAgent]}
-                            color={people.buyerAgent.color}
-                            onContainerClick={() => handleOpenPeopleEditor('buyer_agent')}
-                            getInitials={getInitialsUtil}
-                            truncateName={truncateName}
-                          />
-                        </Box>
-
-                        {/* RIGHT COLUMN - Row 2: Listing Agent */}
-                        <Box sx={{ minHeight: 0, overflow: 'hidden' }}>
-                          <PersonRoleContainer
-                            roleName="Listing Agent"
-                            people={[people.listingAgent]}
-                            color={people.listingAgent.color}
-                            onContainerClick={() => handleOpenPeopleEditor('listing_agent')}
-                            getInitials={getInitialsUtil}
-                            truncateName={truncateName}
-                          />
-                        </Box>
-
-                        {/* LEFT COLUMN - Row 3: Lender */}
-                        <Box sx={{ minHeight: 0, overflow: 'hidden' }}>
-                          <PersonRoleContainer
-                            roleName="Lender"
-                            people={[people.lender]}
-                            color={people.lender.color}
-                            onContainerClick={() => handleOpenPeopleEditor('lender')}
-                            getInitials={getInitialsUtil}
-                            truncateName={truncateName}
-                          />
-                        </Box>
-
-                        {/* RIGHT COLUMN - Row 3: Escrow Officer */}
-                        <Box sx={{ minHeight: 0, overflow: 'hidden' }}>
-                          <PersonRoleContainer
-                            roleName="Escrow Officer"
-                            people={[people.escrowOfficer]}
-                            color={people.escrowOfficer.color}
-                            onContainerClick={() => handleOpenPeopleEditor('escrow_officer')}
-                            getInitials={getInitialsUtil}
-                            truncateName={truncateName}
-                          />
-                        </Box>
-                      </Box>
-                    </>
-                  </Box>
-                )}
-
-                {/* PANEL 2: Timeline (Only in large view) */}
-                {viewMode === 'large' && (
-                  <Box
-                    sx={{
-                      width: '25%',
-                      flexShrink: 0,
-                      background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
-                      borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                      p: 1.5,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 1.5, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                      Timeline
-                    </Typography>
-
-                    {timeline.map((milestone, idx) => (
-                      <Box
-                        key={milestone.label}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: 1,
-                          mb: 3,
-                          position: 'relative',
-                          '&::after': idx < timeline.length - 1 ? {
-                            content: '""',
-                            position: 'absolute',
-                            left: 11,
-                            top: 28,
-                            bottom: -24,
-                            width: 2,
-                            background: milestone.completed
-                              ? 'linear-gradient(to bottom, #10b981, #059669)'
-                              : alpha(theme.palette.divider, 0.2),
-                          } : {},
-                        }}
-                      >
-                        {milestone.completed ? (
-                          <CheckCircleOutline sx={{ fontSize: 24, color: '#10b981', flexShrink: 0 }} />
-                        ) : (
-                          <RadioButtonUnchecked sx={{ fontSize: 24, color: alpha(theme.palette.text.disabled, 0.3), flexShrink: 0 }} />
-                        )}
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: milestone.completed ? theme.palette.text.primary : theme.palette.text.secondary }}>
-                            {milestone.label}
-                          </Typography>
-                          <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                            {milestone.date ? formatDateUtil(milestone.date, 'MMM d, yyyy') : 'Pending'}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
-
-                {/* PANEL 3: Checklists (Only in large view) */}
-                {viewMode === 'large' && (
-                  <Box
-                    sx={{
-                      width: '25%',
-                      flexShrink: 0,
-                      background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
-                      p: 1.5,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 1.5, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                      Checklists
-                    </Typography>
-
-                    {checklists.map((checklist, idx) => {
-                      const progress = (checklist.completed / checklist.total) * 100;
-                      const isComplete = checklist.completed === checklist.total;
-
-                      return (
-                        <Box key={checklist.group} sx={{ mb: 3 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
-                              {checklist.group}
-                            </Typography>
-                            <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 600, color: isComplete ? '#10b981' : theme.palette.text.secondary }}>
-                              {checklist.completed}/{checklist.total}
-                            </Typography>
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
-                            value={progress}
-                            sx={{
-                              height: 6,
-                              borderRadius: 3,
-                              backgroundColor: alpha(theme.palette.divider, 0.1),
-                              '& .MuiLinearProgress-bar': {
-                                background: isComplete
-                                  ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
-                                  : 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)',
-                                borderRadius: 3,
-                              },
-                            }}
-                          />
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                )}
-              </Card>
-            </Box>
-          )}
-      </Box>
 
       {/* Contact Selection Modal */}
       <ContactSelectionModal
@@ -1598,14 +1093,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   // ✅ Custom comparison function - only re-render if data actually changed
   // This prevents unnecessary re-renders when parent state changes
 
-  // Check if viewMode changed
-  if (prevProps.viewMode !== nextProps.viewMode) return false; // Re-render
-
   // Check if archived status changed
   if (prevProps.isArchived !== nextProps.isArchived) return false; // Re-render
-
-  // Check if index changed (affects animations)
-  if (prevProps.index !== nextProps.index) return false; // Re-render
 
   // Deep comparison of escrow object - only check fields that affect rendering
   const escrowChanged =
