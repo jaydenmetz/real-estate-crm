@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { Check, Close, Percent, AttachMoney } from '@mui/icons-material';
-import { ModalDialog } from '../shared/ModalDialog';
-import { CurrencyInput } from '../shared/CurrencyInput';
-import { PercentageInput } from '../shared/PercentageInput';
+import { ModalDialog } from '../../../components/common/editors/shared/ModalDialog';
+import { CurrencyInput } from '../../../components/common/editors/shared/CurrencyInput';
+import { PercentageInput } from '../../../components/common/editors/shared/PercentageInput';
 
 /**
  * Specialized Commission Editor
