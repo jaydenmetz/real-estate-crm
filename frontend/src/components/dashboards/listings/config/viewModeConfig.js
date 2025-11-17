@@ -21,91 +21,123 @@ import { getBestPropertyImage } from '../../../../utils/streetViewUtils';
 // ============================================================================
 
 export const listingCardConfig = {
-  // No avatar for listings - use property image as background or thumbnail
-  avatar: null,
-
-  // Title - property address
-  title: {
-    fields: ['property_address', 'address'],
-    format: 'string'
+  // Image/Header Configuration
+  image: {
+    source: (listing) => getBestPropertyImage(listing),
+    fallbackIcon: HomeIcon,
+    aspectRatio: '3 / 2',
   },
 
-  // Subtitle - MLS number
-  subtitle: {
-    field: 'mls_number',
-    transform: (value) => value ? `MLS# ${value}` : null,
-    format: 'string'
-  },
-
-  // Status badge
+  // Status Chip Configuration (top-left)
   status: {
     field: 'listing_status',
-    colorMap: LISTING_STATUS_COLORS
+    getConfig: (status) => {
+      const config = LISTING_STATUS_COLORS[status] || LISTING_STATUS_COLORS.Active;
+      return {
+        label: status || 'Active',
+        color: config.color,
+        bg: config.bg,
+      };
+    },
   },
 
-  // Metrics grid (property details)
+  // Title Configuration (address)
+  title: {
+    field: (listing) => listing.property_address || listing.address || 'No Address',
+  },
+
+  // Subtitle Configuration (MLS number)
+  subtitle: {
+    formatter: (listing) => listing.mls_number ? `MLS# ${listing.mls_number}` : null,
+  },
+
+  // Metrics Configuration (1x2 horizontal row - Price and Commission)
   metrics: [
+    // Listing Price
     {
       label: 'Price',
-      fields: ['listing_price', 'price'],
-      format: 'currency',
-      options: {}
+      field: (listing) => listing.listing_price || listing.price || 0,
+      formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      color: {
+        primary: '#3b82f6',
+        secondary: '#2563eb',
+        bg: 'rgba(59, 130, 246, 0.08)',
+      },
     },
-    {
-      label: 'Beds',
-      field: 'bedrooms',
-      transform: (value) => value ? `${value} beds` : '—',
-      format: 'string'
-    },
-    {
-      label: 'Baths',
-      field: 'bathrooms',
-      transform: (value) => value ? `${value} baths` : '—',
-      format: 'string'
-    },
-    {
-      label: 'Sq Ft',
-      field: 'square_feet',
-      format: 'number',
-      transform: (value) => value ? `${value.toLocaleString()} sqft` : '—'
-    },
-    {
-      label: 'DOM',
-      field: 'days_on_market',
-      transform: (value) => value ? `${value} days` : '—',
-      format: 'string'
-    },
+
+    // Commission
     {
       label: 'Commission',
-      fields: ['commission_amount', 'commission'],
-      format: 'currency',
-      options: {}
-    }
-  ],
-
-  // Footer items
-  footer: [
-    {
-      label: 'List Date',
-      fields: ['listing_date', 'list_date'],
-      format: 'date',
-      options: { dateFormat: 'MMM d, yyyy' }
+      field: (listing) => listing.commission_amount || listing.commission || 0,
+      formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      color: {
+        primary: '#10b981',
+        secondary: '#059669',
+        bg: 'rgba(16, 185, 129, 0.08)',
+      },
     },
-    {
-      label: 'Expiration',
-      fields: ['expiration_date', 'expires'],
-      format: 'date',
-      options: { dateFormat: 'MMM d, yyyy' }
-    }
   ],
 
-  // Quick actions menu
+  // Footer Configuration (Property details + dates)
+  footer: {
+    fields: [
+      // Bedrooms
+      {
+        label: 'Beds',
+        field: 'bedrooms',
+        formatter: (value) => value ? `${value} beds` : '—',
+        width: '25%',
+      },
+
+      // Bathrooms
+      {
+        label: 'Baths',
+        field: 'bathrooms',
+        formatter: (value) => value ? `${value} baths` : '—',
+        width: '25%',
+      },
+
+      // Square Feet
+      {
+        label: 'Sq Ft',
+        field: 'square_feet',
+        formatter: (value) => value ? `${value.toLocaleString()} sqft` : '—',
+        width: '25%',
+      },
+
+      // Days on Market
+      {
+        label: 'DOM',
+        field: 'days_on_market',
+        formatter: (value) => value ? `${value} days` : '—',
+        width: '25%',
+      },
+
+      // List Date
+      {
+        label: 'List Date',
+        field: (listing) => listing.listing_date || listing.list_date,
+        formatter: (value) => value ? format(parseISO(value), 'MMM d, yyyy') : '—',
+        width: '50%',
+      },
+
+      // Expiration Date
+      {
+        label: 'Expiration',
+        field: (listing) => listing.expiration_date || listing.expires,
+        formatter: (value) => value ? format(parseISO(value), 'MMM d, yyyy') : '—',
+        width: '50%',
+      },
+    ],
+  },
+
+  // Quick Actions Configuration
   actions: {
     view: true,
     archive: true,
     restore: true,
-    delete: true
-  }
+    delete: true,
+  },
 };
 
 // ============================================================================
