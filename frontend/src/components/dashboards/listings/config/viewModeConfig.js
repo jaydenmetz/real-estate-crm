@@ -12,7 +12,9 @@
  */
 
 import { format, parseISO } from 'date-fns';
+import { Home as HomeIcon, AttachMoney as AttachMoneyIcon, Bed as BedIcon, SquareFoot as SquareFootIcon } from '@mui/icons-material';
 import { LISTING_STATUS_COLORS } from '../constants/listingConstants';
+import { getBestPropertyImage } from '../../../../utils/streetViewUtils';
 
 // ============================================================================
 // CARD VIEW CONFIGURATION
@@ -111,70 +113,83 @@ export const listingCardConfig = {
 // ============================================================================
 
 export const listingListConfig = {
-  // No traditional avatar - can use property image in sidebar
-  avatar: null,
-
-  // Title
-  title: listingCardConfig.title,
-
-  // Subtitle
-  subtitle: {
-    field: 'listing_type',
-    format: 'titleCase'
+  // Image/Left Section Configuration
+  image: {
+    source: (listing) => getBestPropertyImage(listing),
+    fallbackIcon: HomeIcon,
+    width: 200,
   },
 
-  // Status badge
-  status: listingCardConfig.status,
-
-  // Primary fields (main content area)
-  primaryFields: [
-    {
-      label: 'MLS#',
-      field: 'mls_number'
+  // MLS Badge Overlay (top-left)
+  badges: {
+    topLeft: (listing) => listing.mls_number ? `MLS# ${listing.mls_number}` : null,
+    bottomLeft: (listing) => {
+      if (listing.days_on_market && listing.listing_status === 'Active') {
+        return `${listing.days_on_market} day${listing.days_on_market !== 1 ? 's' : ''} on market`;
+      }
+      return null;
     },
+  },
+
+  // Status Chip Configuration
+  status: {
+    field: 'listing_status',
+    getConfig: (status) => {
+      const config = LISTING_STATUS_COLORS[status] || LISTING_STATUS_COLORS.Active;
+      return {
+        label: status || 'Active',
+        color: config.color,
+        bg: config.bg,
+      };
+    },
+  },
+
+  // Title - property address
+  title: {
+    field: (listing) => listing.property_address || listing.address || 'No Address',
+  },
+
+  // Subtitle - city/state
+  subtitle: {
+    formatter: (listing) => {
+      const parts = [];
+      if (listing.city) parts.push(listing.city);
+      if (listing.state) parts.push(listing.state);
+      if (listing.zip_code) parts.push(listing.zip_code);
+      return parts.join(', ') || listing.listing_type || null;
+    },
+  },
+
+  // Metrics Configuration (horizontal row)
+  metrics: [
     {
       label: 'Price',
-      fields: ['listing_price', 'price'],
-      format: 'currency',
-      bold: true
+      field: (listing) => listing.listing_price || listing.price || 0,
+      formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      icon: AttachMoneyIcon,
     },
     {
-      label: 'Property',
-      transform: (_, data) => {
-        const parts = [];
-        if (data.bedrooms) parts.push(`${data.bedrooms} beds`);
-        if (data.bathrooms) parts.push(`${data.bathrooms} baths`);
-        if (data.square_feet) parts.push(`${data.square_feet.toLocaleString()} sqft`);
-        return parts.join(' • ') || '—';
-      }
+      label: 'Beds/Baths',
+      field: (listing) => {
+        const beds = listing.bedrooms || '—';
+        const baths = listing.bathrooms || '—';
+        return `${beds}/${baths}`;
+      },
+      icon: BedIcon,
     },
     {
-      label: 'DOM',
-      field: 'days_on_market',
-      transform: (value) => value ? `${value} days` : '—'
-    }
-  ],
-
-  // Secondary fields (right side)
-  secondaryFields: [
-    {
-      label: 'List Date',
-      fields: ['listing_date', 'list_date'],
-      format: 'date',
-      options: { dateFormat: 'MMM d, yyyy' }
+      label: 'Sqft',
+      field: 'square_feet',
+      formatter: (value) => value ? value.toLocaleString() : '—',
+      icon: SquareFootIcon,
     },
     {
       label: 'Commission',
-      fields: ['commission_amount', 'commission'],
-      format: 'currency'
-    }
+      field: (listing) => listing.commission_amount || listing.commission || 0,
+      formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      icon: AttachMoneyIcon,
+    },
   ],
-
-  // No sidebar for listings
-  sidebar: null,
-
-  // Actions
-  actions: listingCardConfig.actions
 };
 
 // ============================================================================
