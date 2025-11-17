@@ -11,6 +11,7 @@
  * Total: ~460 lines → ~200 lines config (56% reduction)
  */
 
+import { format, parseISO } from 'date-fns';
 import { LISTING_STATUS_COLORS } from '../constants/listingConstants';
 
 // ============================================================================
@@ -181,82 +182,76 @@ export const listingListConfig = {
 // ============================================================================
 
 export const listingTableConfig = {
-  // No avatar for listings
-  avatar: null,
+  // Grid template for table columns
+  gridTemplateColumns: '2fr 1.2fr 0.8fr 1fr 0.8fr 1fr 1fr 1fr 80px',
 
-  // Default status for row styling
-  status: listingCardConfig.status,
+  // Status configuration for row styling
+  statusConfig: {
+    getConfig: (listing) => {
+      const status = listing.listing_status || 'Active';
+      const config = LISTING_STATUS_COLORS[status] || LISTING_STATUS_COLORS.Active;
+      return {
+        color: config.color,
+        bg: config.bg
+      };
+    }
+  },
 
   // Column definitions
   columns: [
     {
-      // Property address
-      field: listingCardConfig.title,
-      subtitle: {
-        field: 'mls_number',
-        transform: (value) => value ? `MLS# ${value}` : null
-      },
+      label: 'Property',
+      field: 'property_address',
+      subtitle: (data) => data.mls_number ? `MLS# ${data.mls_number}` : null,
       align: 'left',
-      width: 250,
       bold: true
     },
     {
-      // Price
-      fields: ['listing_price', 'price'],
-      format: 'currency',
+      label: 'Price',
+      field: (data) => data.listing_price || data.price || 0,
+      formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       align: 'right',
-      width: 140,
       bold: true
     },
     {
-      // Beds/Baths
-      transform: (_, data) => {
+      label: 'Beds/Baths',
+      field: (data) => {
         const beds = data.bedrooms || '—';
         const baths = data.bathrooms || '—';
         return `${beds}/${baths}`;
       },
-      align: 'center',
-      width: 80
+      align: 'center'
     },
     {
-      // Square Feet
+      label: 'Sqft',
       field: 'square_feet',
-      format: 'number',
-      align: 'right',
-      width: 100
+      formatter: (value) => value ? value.toLocaleString() : '—',
+      align: 'right'
     },
     {
-      // Days on Market
+      label: 'DOM',
       field: 'days_on_market',
-      transform: (value) => value || '—',
-      align: 'center',
-      width: 80
+      formatter: (value) => value || '—',
+      align: 'center'
     },
     {
-      // Status
+      label: 'Status',
       field: 'listing_status',
+      formatter: (value) => value || 'Active',
       isStatus: true,
-      statusColorMap: LISTING_STATUS_COLORS,
-      align: 'center',
-      width: 120
+      align: 'center'
     },
     {
-      // List Date
-      fields: ['listing_date', 'list_date'],
-      format: 'date',
-      options: { dateFormat: 'MMM d, yyyy' },
-      align: 'right',
-      width: 120
+      label: 'List Date',
+      field: (data) => data.listing_date || data.list_date,
+      formatter: (value) => value ? format(parseISO(value), 'MMM d, yyyy') : '—',
+      align: 'right'
     },
     {
-      // Commission
-      fields: ['commission_amount', 'commission'],
-      format: 'currency',
-      align: 'right',
-      width: 120
+      label: 'Commission',
+      field: (data) => data.commission_amount || data.commission || 0,
+      formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      align: 'right'
     }
-  ],
-
-  // Actions
-  actions: listingCardConfig.actions
+  ]
 };
