@@ -8,7 +8,7 @@
  * components (3 files, ~1,500+ lines), you create ONE config object (~150 lines).
  *
  * Usage:
- * import { CardTemplate } from '../../../templates/ViewModes/components';
+ * import { CardTemplate } from '@/templates/Dashboard/view-modes';
  * import { clientCardConfig } from './config/viewModeConfig';
  *
  * <CardTemplate data={client} config={clientCardConfig} onClick={handleClick} />
@@ -417,7 +417,7 @@ import ClientTableRow from './ClientTableRow';
 <ClientTableRow client={client} onClick={handleClick} />
 
 // After (1 template + 3 configs, ~450 lines total):
-import { CardTemplate, ListItemTemplate, TableRowTemplate } from '../../../templates/ViewModes/components';
+import { CardTemplate, ListItemTemplate, TableRowTemplate } from '@/templates/Dashboard/view-modes';
 import { clientCardConfig, clientListConfig, clientTableConfig } from './config/viewModeConfig';
 
 <CardTemplate data={client} config={clientCardConfig} onClick={handleClick} />

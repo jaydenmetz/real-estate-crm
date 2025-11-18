@@ -1,5 +1,5 @@
 import React from 'react';
-import { ListItemTemplate } from '../../../../../templates/ViewModes';
+import { ListItemTemplate } from '../../../../../templates/Dashboard/view-modes';
 import { listingListConfig } from '../../config/viewModeConfig';
 
 /**

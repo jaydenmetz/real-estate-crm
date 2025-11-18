@@ -1,5 +1,5 @@
 import React from 'react';
-import { EditCommission } from '../../../../templates/ViewModes/editors/EditCommission';
+import { EditCommission } from '../../../../templates/Dashboard/view-modes/editors';
 
 /**
  * Escrow-specific Commission Editor

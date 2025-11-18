@@ -5,7 +5,7 @@
  * eliminating duplicate rendering logic in Card/List/Table components.
  */
 
-import { formatCurrency, formatDate } from '../../../utils/formatters';
+import { formatCurrency, formatDate } from '../../../../utils/formatters';
 import { format } from 'date-fns';
 
 /**

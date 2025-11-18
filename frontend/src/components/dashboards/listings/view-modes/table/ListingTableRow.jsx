@@ -1,5 +1,5 @@
 import React from 'react';
-import { TableRowTemplate } from '../../../../../templates/ViewModes';
+import { TableRowTemplate } from '../../../../../templates/Dashboard/view-modes';
 import { listingTableConfig } from '../../config/viewModeConfig';
 
 /**

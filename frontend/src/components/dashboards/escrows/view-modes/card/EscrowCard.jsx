@@ -1,5 +1,5 @@
 import React from 'react';
-import { CardTemplate } from '../../../../../templates/ViewModes';
+import { CardTemplate } from '../../../../../templates/Dashboard/view-modes';
 import { escrowCardConfig } from '../../config/viewModeConfig';
 
 /**

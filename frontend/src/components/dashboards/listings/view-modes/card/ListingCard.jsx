@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Card, CardMedia } from '@mui/material';
-import { CardTemplate } from '../../../../../templates/ViewModes';
+import { CardTemplate } from '../../../../../templates/Dashboard/view-modes';
 import { listingCardConfig } from '../../config/viewModeConfig';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 
