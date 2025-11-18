@@ -14,7 +14,7 @@
  * <CardTemplate data={client} config={clientCardConfig} onClick={handleClick} />
  */
 
-import { CLIENT_STATUS, CLIENT_STATUS_COLORS } from '../../../components/dashboards/clients/constants/clientConstants';
+import { CLIENT_STATUS, CLIENT_STATUS_COLORS } from '../../../../components/dashboards/clients/constants/clientConstants';
 
 // ============================================================================
 // CARD VIEW CONFIGURATION

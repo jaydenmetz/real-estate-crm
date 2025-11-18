@@ -30,7 +30,7 @@ import {
   buildFullName,
   getInitials,
   getStatusColor,
-} from '../utils/fieldRenderers';
+} from '../../lib/utils/fieldRenderers';
 
 /**
  * CardTemplate - Fully featured card component with editing capabilities

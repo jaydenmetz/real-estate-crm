@@ -1,29 +1,22 @@
 /**
- * View Mode Templates - Consolidated export
+ * View Mode Templates
  *
- * Generic, configuration-driven view components that eliminate duplicate code
- * across all dashboard view modes (Card, List, Table).
+ * Pure presentation templates for Card, List, and Table views.
+ * Configuration-driven components that eliminate duplicate code.
  *
- * Organized structure:
- * - card/       - Card view template (grid layout)
- * - list/       - List view template (horizontal layout)
- * - table/      - Table view template (compact rows)
- * - editors/    - Generic inline editing components
- * - utils/      - Shared utilities and field renderers
- * - config/     - Example configurations
+ * Structure:
+ * - card/   - Grid/card view template
+ * - list/   - Horizontal list view template  
+ * - table/  - Compact table view template
  *
  * Usage:
  * import { CardTemplate, ListItemTemplate, TableRowTemplate } from '@/templates/Dashboard/view-modes';
- * import { resolveField, formatFieldValue } from '@/templates/Dashboard/view-modes/utils';
+ * import { escrowCardConfig } from './config/viewModeConfig';
+ * 
+ * <CardTemplate data={escrow} config={escrowCardConfig} onClick={handleClick} />
  */
 
-// View mode templates
+// View templates
 export { CardTemplate } from './card';
 export { ListItemTemplate } from './list';
 export { TableRowTemplate } from './table';
-
-// Editors
-export * from './editors';
-
-// Utilities
-export * from './utils';

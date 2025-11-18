@@ -27,7 +27,7 @@ import {
   resolveField,
   getInitials,
   getStatusColor,
-} from '../utils/fieldRenderers';
+} from '../../lib/utils/fieldRenderers';
 
 /**
  * ListItemTemplate - Fully featured horizontal list item with editing

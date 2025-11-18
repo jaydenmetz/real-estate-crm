@@ -28,7 +28,7 @@ import {
   resolveField,
   getInitials,
   getStatusColor,
-} from '../utils/fieldRenderers';
+} from '../../lib/utils/fieldRenderers';
 
 /**
  * TableRowTemplate - Fully featured table row with editing
