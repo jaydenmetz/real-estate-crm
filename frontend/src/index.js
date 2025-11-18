@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/react";
 import App from './App';
 import './styles/globals.css';
 
+// Force rebuild - 2025-01-17 16:45 PST
 // HARDCODED DSN - Railway env vars not working during build
 const SENTRY_DSN = 'https://2d2e91e606017090b37b82c997bd3eb9@o4510050439200768.ingest.us.sentry.io/4510050490253312';
 
