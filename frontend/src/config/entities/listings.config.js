@@ -72,6 +72,9 @@ export const listingsConfig = createEntityConfig({
   // DASHBOARD CONFIGURATION
   // ========================================
   dashboard: {
+    // Multi-select feature
+    enableMultiSelect: true,
+
     // Status Mapping (tab label → API status value)
     // Maps user-facing tab names to database status values
     statusMapping: {

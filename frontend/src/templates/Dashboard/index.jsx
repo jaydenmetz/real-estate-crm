@@ -63,6 +63,65 @@ export const DashboardTemplate = ({
   const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
   const [batchDeleting, setBatchDeleting] = useState(false);
 
+  // Multi-select state
+  const [selectedItems, setSelectedItems] = useState([]);
+
+  // Multi-select handlers
+  const handleSelectItem = (item) => {
+    const itemId = item[config.api?.idField || 'id'];
+    setSelectedItems(prev =>
+      prev.includes(itemId)
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  const handleClearSelection = () => {
+    setSelectedItems([]);
+  };
+
+  const handleBulkArchive = async () => {
+    if (selectedItems.length === 0 || !config.api?.archive) return;
+
+    try {
+      await Promise.all(selectedItems.map(id => config.api.archive(id)));
+      setSelectedItems([]);
+      refetch();
+    } catch (error) {
+      console.error('Bulk archive failed:', error);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedItems.length === 0 || !config.api?.delete) return;
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to permanently delete ${selectedItems.length} item(s)? This cannot be undone.`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await Promise.all(selectedItems.map(id => config.api.delete(id)));
+      setSelectedItems([]);
+      refetch();
+    } catch (error) {
+      console.error('Bulk delete failed:', error);
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    if (selectedItems.length === 0 || !config.api?.restore) return;
+
+    try {
+      await Promise.all(selectedItems.map(id => config.api.restore(id)));
+      setSelectedItems([]);
+      refetch();
+    } catch (error) {
+      console.error('Bulk restore failed:', error);
+    }
+  };
+
   // Calculate date range based on filter or custom dates (matching Clients)
   const getCalculatedDateRange = () => {
     const now = new Date();
@@ -344,6 +403,12 @@ export const DashboardTemplate = ({
             showCalendar={showCalendar}
             onShowCalendarChange={setShowCalendar}
             archivedCount={archivedCount}
+            selectedItems={selectedItems}
+            onClearSelection={handleClearSelection}
+            onBulkArchive={handleBulkArchive}
+            onBulkDelete={handleBulkDelete}
+            onBulkRestore={handleBulkRestore}
+            bulkActions={config.dashboard?.bulkActions || []}
           />
         ) : (
           <DashboardNavigation
@@ -362,6 +427,12 @@ export const DashboardTemplate = ({
             showCalendar={showCalendar}
             onShowCalendarChange={setShowCalendar}
             archivedCount={archivedCount}
+            selectedItems={selectedItems}
+            onClearSelection={handleClearSelection}
+            onBulkArchive={handleBulkArchive}
+            onBulkDelete={handleBulkDelete}
+            onBulkRestore={handleBulkRestore}
+            bulkActions={config.dashboard?.bulkActions || []}
           />
         )}
 
@@ -387,6 +458,9 @@ export const DashboardTemplate = ({
           handleBatchDelete={handleBatchDelete}
           batchDeleting={batchDeleting}
           handleSelectAll={handleSelectAll}
+          isSelectable={config.dashboard?.enableMultiSelect || false}
+          selectedItems={selectedItems}
+          onSelectItem={handleSelectItem}
         />
 
       {/* New Item Modal */}

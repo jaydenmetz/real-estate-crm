@@ -40,6 +40,10 @@ export const DashboardContent = ({
   handleBatchDelete,
   batchDeleting,
   handleSelectAll,
+  // Multi-select props
+  isSelectable = false,
+  selectedItems = [],
+  onSelectItem,
 }) => {
   // Loading state
   if (loading) {
@@ -305,6 +309,7 @@ export const DashboardContent = ({
             // Regular view (not archived)
             return displayData.map((item, index) => {
               const itemId = item[config.api.idField];
+              const isSelected = selectedItems.includes(itemId);
 
               return (
                 <motion.div
@@ -331,6 +336,9 @@ export const DashboardContent = ({
                     onArchive={onArchive ? () => onArchive(itemId) : undefined}
                     customActions={customActions}
                     animationType="spring"
+                    isSelectable={isSelectable}
+                    isSelected={isSelected}
+                    onSelect={onSelectItem}
                   />
                 </motion.div>
               );

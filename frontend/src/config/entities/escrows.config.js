@@ -99,6 +99,9 @@ export const escrowsConfig = createEntityConfig({
   // DASHBOARD CONFIGURATION
   // ========================================
   dashboard: {
+    // Multi-select feature
+    enableMultiSelect: true,
+
     // Hero Card Configuration
     hero: {
       dateRangeFilters: ['1D', '1M', '1Y', 'YTD', 'Custom'],
