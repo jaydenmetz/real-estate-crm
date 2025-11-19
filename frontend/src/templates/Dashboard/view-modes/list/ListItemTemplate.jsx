@@ -10,6 +10,7 @@ import {
   ListItemIcon,
   ListItemText,
   LinearProgress,
+  Checkbox,
   alpha,
   useTheme,
   Paper,
@@ -91,6 +92,10 @@ const ListItemTemplate = React.memo(({
   onDelete,
   onRestore,
   isArchived = false,
+  // Multi-select props
+  isSelectable = false,
+  isSelected = false,
+  onSelect,
 }) => {
   const theme = useTheme();
 
@@ -217,6 +222,42 @@ const ListItemTemplate = React.memo(({
           },
         }}
       >
+        {/* Multi-Select Checkbox - Left Side (appears on hover) */}
+        {isSelectable && (
+          <Box
+            sx={{
+              position: 'absolute',
+              left: 8,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 4,
+              opacity: isSelected ? 1 : 0,
+              transition: 'opacity 0.2s',
+              'Box:hover &': { opacity: 1 },
+            }}
+          >
+            <Checkbox
+              checked={isSelected}
+              onChange={(e) => {
+                e.stopPropagation();
+                onSelect?.(data);
+              }}
+              onClick={(e) => e.stopPropagation()}
+              sx={{
+                backgroundColor: 'rgba(255,255,255,0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: '4px',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,1)',
+                },
+                '& .MuiSvgIcon-root': {
+                  fontSize: 20,
+                },
+              }}
+            />
+          </Box>
+        )}
+
         {/* Image Section */}
         {config.image && (
           <Box
@@ -232,6 +273,8 @@ const ListItemTemplate = React.memo(({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              ml: isSelectable ? 5 : 0, // Shift right if checkbox present
+              transition: 'margin-left 0.2s',
             }}
           >
             {!imageSource && config.image.fallbackIcon && (
