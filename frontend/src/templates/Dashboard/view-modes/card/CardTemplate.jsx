@@ -25,7 +25,6 @@ import {
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
-  CheckBox as CheckBoxIcon,
 } from '@mui/icons-material';
 import {
   resolveField,
@@ -281,6 +280,8 @@ const CardTemplate = React.memo(({
             borderRadius: 4,
             overflow: 'hidden',
             position: 'relative',
+            border: isSelected ? '2px solid' : 'none',
+            borderColor: isSelected ? 'primary.main' : 'transparent',
             '&::before': statusConfig.color ? {
               content: '""',
               position: 'absolute',
@@ -293,16 +294,20 @@ const CardTemplate = React.memo(({
               maskComposite: 'exclude',
               pointerEvents: 'none',
             } : {},
-            boxShadow: statusConfig.color
+            boxShadow: isSelected
+              ? '0 0 0 3px rgba(25, 118, 210, 0.15), 0 8px 24px rgba(25, 118, 210, 0.2)'
+              : statusConfig.color
               ? `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}`
               : 3,
             '&:hover': {
-              boxShadow: statusConfig.color
+              boxShadow: isSelected
+                ? '0 0 0 3px rgba(25, 118, 210, 0.25), 0 12px 32px rgba(25, 118, 210, 0.3)'
+                : statusConfig.color
                 ? `0 12px 48px ${alpha(statusConfig.color, 0.2)}, 0 4px 12px ${alpha(statusConfig.color, 0.15)}`
                 : 6,
               transform: 'translateY(-2px)',
             },
-            transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             display: 'flex',
             flexDirection: 'column',
           }}
@@ -337,7 +342,7 @@ const CardTemplate = React.memo(({
                 <Box component={config.image.fallbackIcon} sx={{ fontSize: 80, color: alpha('#757575', 0.5), zIndex: 1 }} />
               )}
 
-              {/* Multi-Select Checkbox - Floating top-left outside card */}
+              {/* Multi-Select Checkbox - Always visible when selectable, floating top-left */}
               {isSelectable && (
                 <Checkbox
                   checked={isSelected}
@@ -351,12 +356,12 @@ const CardTemplate = React.memo(({
                     top: -12,
                     left: -12,
                     zIndex: 10,
-                    opacity: isSelected ? 1 : 0,
+                    opacity: isSelected ? 1 : 0.6, // Always visible (was 0)
                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    transform: isSelected ? 'scale(1)' : 'scale(0.8)',
+                    transform: 'scale(1)', // Always full size (was scale(0.8))
                     '.MuiCard-root:hover &': {
                       opacity: 1,
-                      transform: 'scale(1)',
+                      transform: 'scale(1.05)', // Slight scale up on hover
                     },
                     padding: 0,
                     width: 28,
@@ -377,7 +382,7 @@ const CardTemplate = React.memo(({
                     },
                     '& .MuiSvgIcon-root': {
                       fontSize: 18,
-                      color: isSelected ? '#fff' : 'transparent',
+                      color: isSelected ? '#fff' : 'rgba(0,0,0,0.26)', // Show unchecked state
                     },
                   }}
                 />
@@ -444,12 +449,6 @@ const CardTemplate = React.memo(({
                       <MenuItem onClick={(e) => handleAction(e, () => onClick(data))}>
                         <VisibilityIcon sx={{ mr: 1, fontSize: 18 }} />
                         View Details
-                      </MenuItem>
-                    )}
-                    {isSelectable && onSelect && (
-                      <MenuItem onClick={(e) => handleAction(e, () => onSelect(data))}>
-                        <CheckBoxIcon sx={{ mr: 1, fontSize: 18 }} />
-                        Select
                       </MenuItem>
                     )}
                     {isArchived ? (
