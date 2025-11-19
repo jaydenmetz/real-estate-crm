@@ -150,6 +150,10 @@ const ListingCard = React.memo(({
   onDelete,
   onRestore,
   isArchived = false,
+  // Multi-select props
+  isSelectable,
+  isSelected,
+  onSelect,
 }) => {
   return (
     <CardTemplate
@@ -161,6 +165,9 @@ const ListingCard = React.memo(({
       onDelete={onDelete}
       onRestore={onRestore}
       isArchived={isArchived}
+      isSelectable={isSelectable}
+      isSelected={isSelected}
+      onSelect={onSelect}
     />
   );
 });

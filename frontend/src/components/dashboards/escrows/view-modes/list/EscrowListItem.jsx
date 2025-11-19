@@ -210,6 +210,10 @@ const EscrowListItem = React.memo(({
   onDelete,
   onRestore,
   isArchived = false,
+  // Multi-select props
+  isSelectable,
+  isSelected,
+  onSelect,
 }) => {
   return (
     <ListItemTemplate
@@ -221,6 +225,9 @@ const EscrowListItem = React.memo(({
       onDelete={onDelete}
       onRestore={onRestore}
       isArchived={isArchived}
+      isSelectable={isSelectable}
+      isSelected={isSelected}
+      onSelect={onSelect}
     />
   );
 });
