@@ -43,22 +43,22 @@ export const listingCardConfig = {
   },
 
   // Title Configuration (display address with fallback, decode HTML entities)
-  title: {
-    field: (listing) => decodeHTMLEntities(
-      listing.display_address || listing.property_address || listing.address || 'No Address'
-    ),
-  },
+  // title: {
+  //   field: (listing) => decodeHTMLEntities(
+  //     listing.display_address || listing.property_address || listing.address || 'No Address'
+  //   ),
+  // },
 
   // Subtitle Configuration (city, state, zip)
-  subtitle: {
-    formatter: (listing) => {
-      const parts = [];
-      if (listing.city) parts.push(listing.city);
-      if (listing.state) parts.push(listing.state);
-      if (listing.zip_code) parts.push(listing.zip_code);
-      return parts.join(', ') || null;
-    },
-  },
+  // subtitle: {
+  //   formatter: (listing) => {
+  //     const parts = [];
+  //     if (listing.city) parts.push(listing.city);
+  //     if (listing.state) parts.push(listing.state);
+  //     if (listing.zip_code) parts.push(listing.zip_code);
+  //     return parts.join(', ') || null;
+  //   },
+  // },
 
   // Metrics Configuration (1x2 horizontal row - Price and Commission)
   metrics: [
