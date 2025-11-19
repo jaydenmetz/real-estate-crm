@@ -24,6 +24,7 @@ import {
   VisibilityOff as VisibilityOffIcon,
   CheckCircle,
   Cancel,
+  CheckBox as CheckBoxIcon,
 } from '@mui/icons-material';
 import {
   resolveField,
@@ -457,6 +458,14 @@ const TableRowTemplate = React.memo(({
               <VisibilityIcon sx={{ fontSize: 18 }} />
             </ListItemIcon>
             <ListItemText primary="View Details" />
+          </MenuItem>
+        )}
+        {isSelectable && onSelect && (
+          <MenuItem onClick={(e) => handleAction(e, () => onSelect(data))}>
+            <ListItemIcon>
+              <CheckBoxIcon sx={{ fontSize: 18 }} />
+            </ListItemIcon>
+            <ListItemText primary="Select" />
           </MenuItem>
         )}
         {isArchived ? (

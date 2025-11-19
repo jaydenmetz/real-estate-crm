@@ -23,6 +23,7 @@ import {
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
   ChevronRight as ChevronRightIcon,
+  CheckBox as CheckBoxIcon,
 } from '@mui/icons-material';
 import {
   resolveField,

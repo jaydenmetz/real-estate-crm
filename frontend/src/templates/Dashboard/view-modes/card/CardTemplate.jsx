@@ -25,6 +25,7 @@ import {
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
+  CheckBox as CheckBoxIcon,
 } from '@mui/icons-material';
 import {
   resolveField,
@@ -427,6 +428,12 @@ const CardTemplate = React.memo(({
                       <MenuItem onClick={(e) => handleAction(e, () => onClick(data))}>
                         <VisibilityIcon sx={{ mr: 1, fontSize: 18 }} />
                         View Details
+                      </MenuItem>
+                    )}
+                    {isSelectable && onSelect && (
+                      <MenuItem onClick={(e) => handleAction(e, () => onSelect(data))}>
+                        <CheckBoxIcon sx={{ mr: 1, fontSize: 18 }} />
+                        Select
                       </MenuItem>
                     )}
                     {isArchived ? (
