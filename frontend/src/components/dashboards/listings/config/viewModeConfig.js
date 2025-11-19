@@ -16,6 +16,7 @@ import { Home as HomeIcon, AttachMoney as AttachMoneyIcon, Bed as BedIcon, Squar
 import { LISTING_STATUS_COLORS } from '../constants/listingConstants';
 import { getBestPropertyImage } from '../../../../utils/streetViewUtils';
 import { decodeHTMLEntities } from '../../../../utils/htmlUtils';
+import { formatCurrency } from '../../../../utils/formatters';
 
 // ============================================================================
 // CARD VIEW CONFIGURATION
@@ -65,8 +66,8 @@ export const listingCardConfig = {
     // Listing Price (API field is 'list_price', not 'listing_price')
     {
       label: 'Price',
-      field: (listing) => listing.list_price || listing.price || 0,
-      formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      field: 'list_price',
+      formatter: (value) => formatCurrency(value),
       color: {
         primary: '#3b82f6',
         secondary: '#2563eb',
@@ -74,11 +75,16 @@ export const listingCardConfig = {
       },
     },
 
-    // Commission
+    // Commission (calculated from percentage * price)
+    // Database stores percentages (3.00 = 3%), not dollar amounts
     {
       label: 'Commission',
-      field: (listing) => listing.total_commission || listing.listing_commission || 0,
-      formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      field: (listing) => {
+        const price = listing.list_price || 0;
+        const percentage = listing.total_commission || 0;
+        return (price * percentage) / 100;
+      },
+      formatter: (value) => formatCurrency(value),
       color: {
         primary: '#10b981',
         secondary: '#059669',
