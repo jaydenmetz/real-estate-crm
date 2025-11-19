@@ -7,25 +7,21 @@
  * Usage: Imported into listings.config.js
  */
 
-import GridViewIcon from '@mui/icons-material/GridView';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import TableChartIcon from '@mui/icons-material/TableChart';
-
 export const listingViewModes = [
   {
     value: 'card',
     label: 'Card',
-    icon: GridViewIcon  // CRITICAL FIX: Use component, not string
+    icon: 'GridView'
   },
   {
     value: 'list',
     label: 'List',
-    icon: ViewListIcon  // CRITICAL FIX: Use component, not string
+    icon: 'ViewList'
   },
   {
     value: 'table',
     label: 'Table',
-    icon: TableChartIcon  // CRITICAL FIX: Use component, not string
+    icon: 'TableChart'
   }
 ];
 
