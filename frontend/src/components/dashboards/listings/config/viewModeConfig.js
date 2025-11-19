@@ -15,6 +15,7 @@ import { format, parseISO } from 'date-fns';
 import { Home as HomeIcon, AttachMoney as AttachMoneyIcon, Bed as BedIcon, SquareFoot as SquareFootIcon } from '@mui/icons-material';
 import { LISTING_STATUS_COLORS } from '../constants/listingConstants';
 import { getBestPropertyImage } from '../../../../utils/streetViewUtils';
+import { decodeHTMLEntities } from '../../../../utils/htmlUtils';
 
 // ============================================================================
 // CARD VIEW CONFIGURATION
@@ -41,9 +42,11 @@ export const listingCardConfig = {
     },
   },
 
-  // Title Configuration (display address with fallback)
+  // Title Configuration (display address with fallback, decode HTML entities)
   title: {
-    field: (listing) => listing.property_address_display || listing.property_address || listing.address || 'No Address',
+    field: (listing) => decodeHTMLEntities(
+      listing.property_address_display || listing.property_address || listing.address || 'No Address'
+    ),
   },
 
   // Subtitle Configuration (city, state, zip)
@@ -182,9 +185,11 @@ export const listingListConfig = {
     },
   },
 
-  // Title - display address with fallback
+  // Title - display address with fallback, decode HTML entities
   title: {
-    field: (listing) => listing.property_address_display || listing.property_address || listing.address || 'No Address',
+    field: (listing) => decodeHTMLEntities(
+      listing.property_address_display || listing.property_address || listing.address || 'No Address'
+    ),
   },
 
   // Subtitle - city, state, zip
@@ -271,7 +276,9 @@ export const listingTableConfig = {
   columns: [
     {
       label: 'Property',
-      field: (data) => data.property_address_display || data.property_address || data.address || 'No Address',
+      field: (data) => decodeHTMLEntities(
+        data.property_address_display || data.property_address || data.address || 'No Address'
+      ),
       subtitle: (data) => {
         const parts = [];
         if (data.city) parts.push(data.city);

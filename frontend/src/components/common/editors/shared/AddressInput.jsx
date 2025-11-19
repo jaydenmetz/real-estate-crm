@@ -106,6 +106,13 @@ export const AddressInput = ({
     }
   }, [autoFocus]);
 
+  // Sync value prop with internal state when it changes
+  useEffect(() => {
+    if (value && value !== addressSearchText) {
+      setAddressSearchText(value);
+    }
+  }, [value]);
+
   // Debounced Google Places search
   const searchGooglePlaces = useMemo(
     () => debounce(async (input, callback) => {
