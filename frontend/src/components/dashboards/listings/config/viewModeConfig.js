@@ -62,36 +62,37 @@ export const listingCardConfig = {
   // },
 
   // Metrics Configuration (1x2 horizontal row - Price and Commission)
-  metrics: [
-    // Listing Price (API field is 'list_price', not 'listing_price')
-    {
-      label: 'Price',
-      field: 'list_price',
-      formatter: (value) => formatCurrency(value),
-      color: {
-        primary: '#3b82f6',
-        secondary: '#2563eb',
-        bg: 'rgba(59, 130, 246, 0.08)',
-      },
-    },
+  // TEMPORARILY DISABLED FOR DEBUGGING
+  // metrics: [
+  //   // Listing Price (API field is 'list_price', not 'listing_price')
+  //   {
+  //     label: 'Price',
+  //     field: 'list_price',
+  //     formatter: (value) => formatCurrency(value),
+  //     color: {
+  //       primary: '#3b82f6',
+  //       secondary: '#2563eb',
+  //       bg: 'rgba(59, 130, 246, 0.08)',
+  //     },
+  //   },
 
-    // Commission (calculated from percentage * price)
-    // Database stores percentages (3.00 = 3%), not dollar amounts
-    {
-      label: 'Commission',
-      field: (listing) => {
-        const price = listing.list_price || 0;
-        const percentage = listing.total_commission || 0;
-        return (price * percentage) / 100;
-      },
-      formatter: (value) => formatCurrency(value),
-      color: {
-        primary: '#10b981',
-        secondary: '#059669',
-        bg: 'rgba(16, 185, 129, 0.08)',
-      },
-    },
-  ],
+  //   // Commission (calculated from percentage * price)
+  //   // Database stores percentages (3.00 = 3%), not dollar amounts
+  //   {
+  //     label: 'Commission',
+  //     field: (listing) => {
+  //       const price = listing.list_price || 0;
+  //       const percentage = listing.total_commission || 0;
+  //       return (price * percentage) / 100;
+  //     },
+  //     formatter: (value) => formatCurrency(value),
+  //     color: {
+  //       primary: '#10b981',
+  //       secondary: '#059669',
+  //       bg: 'rgba(16, 185, 129, 0.08)',
+  //     },
+  //   },
+  // ],
 
   // Footer Configuration (Property details + dates)
   footer: {
