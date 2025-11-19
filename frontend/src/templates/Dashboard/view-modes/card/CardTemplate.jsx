@@ -13,6 +13,7 @@ import {
   ListItemIcon,
   ListItemText,
   LinearProgress,
+  Checkbox,
   alpha,
   useTheme,
   useMediaQuery,
@@ -114,6 +115,10 @@ const CardTemplate = React.memo(({
   onDelete,
   onRestore,
   isArchived = false,
+  // Multi-select props
+  isSelectable = false,
+  isSelected = false,
+  onSelect,
 }) => {
   const theme = useTheme();
 
@@ -331,7 +336,37 @@ const CardTemplate = React.memo(({
                 <Box component={config.image.fallbackIcon} sx={{ fontSize: 80, color: alpha('#757575', 0.5), zIndex: 1 }} />
               )}
 
-              {/* Status Chip - Top Left */}
+              {/* Multi-Select Checkbox - Top Left (appears on hover) */}
+              {isSelectable && (
+                <Checkbox
+                  checked={isSelected}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onSelect?.(data);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    left: 8,
+                    zIndex: 4,
+                    opacity: isSelected ? 1 : 0,
+                    transition: 'opacity 0.2s',
+                    '.MuiCard-root:hover &': { opacity: 1 },
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: '4px',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,1)',
+                    },
+                    '& .MuiSvgIcon-root': {
+                      fontSize: 20,
+                    },
+                  }}
+                />
+              )}
+
+              {/* Status Chip - Top Left (adjust position if checkbox present) */}
               {config.status && (
                 <Chip
                   label={statusConfig.label || statusValue}
@@ -340,7 +375,7 @@ const CardTemplate = React.memo(({
                   sx={{
                     position: 'absolute',
                     top: 10,
-                    left: 10,
+                    left: isSelectable ? 48 : 10, // Move right if checkbox present
                     fontWeight: 700,
                     fontSize: 11,
                     letterSpacing: '0.5px',

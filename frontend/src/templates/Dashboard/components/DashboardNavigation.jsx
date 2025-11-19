@@ -30,6 +30,7 @@ import {
   Sort,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
+import { BulkActionsBar } from './BulkActionsBar';
 
 export const DashboardNavigation = ({
   config,
@@ -44,6 +45,13 @@ export const DashboardNavigation = ({
   showCalendar,
   onShowCalendarChange,
   archivedCount = 0,
+  // Bulk selection props
+  selectedItems = [],
+  onClearSelection,
+  onBulkArchive,
+  onBulkDelete,
+  onBulkRestore,
+  bulkActions = [],
 }) => {
   // Get sort options from config
   const sortOptions = config?.sortOptions || [];
@@ -119,6 +127,21 @@ export const DashboardNavigation = ({
             </Tabs>
           </Paper>
         </Box>
+
+        {/* Bulk Actions Bar - appears between tabs and filters when items selected */}
+        {selectedItems.length > 0 && (
+          <Box sx={{ flexBasis: '100%', order: 2 }}>
+            <BulkActionsBar
+              selectedCount={selectedItems.length}
+              onClearSelection={onClearSelection}
+              onArchive={onBulkArchive}
+              onDelete={onBulkDelete}
+              onRestore={onBulkRestore}
+              isArchived={selectedStatus === 'archived'}
+              customActions={bulkActions}
+            />
+          </Box>
+        )}
 
         {/* Filters - stay right-justified, allow horizontal scroll if needed */}
         <Box sx={{
