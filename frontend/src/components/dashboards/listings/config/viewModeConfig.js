@@ -77,7 +77,7 @@ export const listingCardConfig = {
     // Commission
     {
       label: 'Commission',
-      field: (listing) => listing.commission_amount || listing.commission || 0,
+      field: (listing) => listing.total_commission || listing.listing_commission || 0,
       formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       color: {
         primary: '#10b981',
@@ -241,7 +241,7 @@ export const listingListConfig = {
     },
     {
       label: 'Commission',
-      field: (listing) => listing.commission_amount || listing.commission || 0,
+      field: (listing) => listing.total_commission || listing.listing_commission || 0,
       formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       color: {
         primary: '#10b981',
@@ -332,7 +332,7 @@ export const listingTableConfig = {
     },
     {
       label: 'Commission',
-      field: (data) => data.commission_amount || data.commission || 0,
+      field: (data) => data.total_commission || data.listing_commission || 0,
       formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       align: 'right'
     }
