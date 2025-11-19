@@ -26,16 +26,21 @@ export const EditAddress = ({
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // Extract display address from value (handle both string and object)
+  // Extract canonical address (source of truth for geocoding)
+  const getCanonicalAddress = () => {
+    if (!value) return '';
+    if (typeof value === 'object') {
+      return value.property_address || value.address || '';
+    }
+    return value;
+  };
+
+  // Extract display address (what user sees in view modes)
   const getDisplayAddress = () => {
     if (!value) return '';
-
-    // If value is an object (full listing/escrow data), extract the display address
     if (typeof value === 'object') {
       return value.property_address_display || value.property_address || value.address || '';
     }
-
-    // If value is already a string, use it directly
     return value;
   };
 
@@ -50,6 +55,7 @@ export const EditAddress = ({
     return parts.length > 0 ? parts.join(', ') : null;
   };
 
+  const canonicalAddress = getCanonicalAddress();
   const displayAddress = getDisplayAddress();
   const locationSubtitle = getLocationSubtitle();
 
@@ -89,24 +95,22 @@ export const EditAddress = ({
   return (
     <ModalDialog open={open} onClose={onClose} color={color}>
       <Box onClick={(e) => e.stopPropagation()}>
-        {/* Label */}
-        <Typography
-          variant="caption"
-          sx={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.9)',
-            mb: 1,
-            display: 'block',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-          }}
-        >
-          {label}
-        </Typography>
-
-        {/* Current Value Display */}
+        {/* Canonical Address (Read-Only Display) */}
         <Box sx={{ mb: 3 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontSize: 11,
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.7)',
+              mb: 0.5,
+              display: 'block',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}
+          >
+            Property Address (Geocoded)
+          </Typography>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
             <LocationOn sx={{ color: 'white', mt: 0.5, fontSize: 24 }} />
             <Box>
@@ -119,10 +123,10 @@ export const EditAddress = ({
                   lineHeight: 1.4,
                 }}
               >
-                {displayAddress || 'No address set'}
+                {selectedAddress?.property_address || canonicalAddress || 'No address set'}
               </Typography>
-              {/* Show location subtitle from existing data OR from newly selected address */}
-              {(locationSubtitle || selectedAddress) && (
+              {/* Show location from selected OR existing data */}
+              {(selectedAddress || locationSubtitle) && (
                 <Typography
                   variant="caption"
                   sx={{
@@ -140,13 +144,27 @@ export const EditAddress = ({
           </Box>
         </Box>
 
-        {/* Address Input */}
+        {/* Display Name Input (Editable) */}
+        <Typography
+          variant="caption"
+          sx={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.7)',
+            mb: 1,
+            display: 'block',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}
+        >
+          Display Name (shown in views)
+        </Typography>
         <AddressInput
           value={displayAddress} // Pass extracted string address, not full object
           onChange={setSelectedAddress}
           onKeyDown={handleKeyPress}
           disabled={saving}
-          placeholder="Start typing address..."
+          placeholder="Start typing address or customize display name..."
           autoFocus={true}
         />
 
