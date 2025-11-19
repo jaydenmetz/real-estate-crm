@@ -395,12 +395,23 @@ const CardTemplate = React.memo(({
                       </MenuItem>
                     )}
                     {isArchived ? (
-                      onRestore && (
-                        <MenuItem onClick={(e) => handleAction(e, () => onRestore(data))}>
-                          <UnarchiveIcon sx={{ mr: 1, fontSize: 18 }} />
-                          Restore
-                        </MenuItem>
-                      )
+                      <>
+                        {onRestore && (
+                          <MenuItem onClick={(e) => handleAction(e, () => onRestore(data))}>
+                            <UnarchiveIcon sx={{ mr: 1, fontSize: 18 }} />
+                            Restore
+                          </MenuItem>
+                        )}
+                        {onDelete && (
+                          <MenuItem
+                            onClick={(e) => handleAction(e, () => onDelete(data))}
+                            sx={{ color: 'error.main' }}
+                          >
+                            <DeleteIcon sx={{ mr: 1, fontSize: 18 }} />
+                            Delete
+                          </MenuItem>
+                        )}
+                      </>
                     ) : (
                       onArchive && (
                         <MenuItem onClick={(e) => handleAction(e, () => onArchive(data))}>
@@ -408,15 +419,6 @@ const CardTemplate = React.memo(({
                           Archive
                         </MenuItem>
                       )
-                    )}
-                    {onDelete && (
-                      <MenuItem
-                        onClick={(e) => handleAction(e, () => onDelete(data))}
-                        sx={{ color: 'error.main' }}
-                      >
-                        <DeleteIcon sx={{ mr: 1, fontSize: 18 }} />
-                        Delete
-                      </MenuItem>
                     )}
                   </Menu>
                 </Box>
