@@ -22,12 +22,12 @@ import { decodeHTMLEntities } from '../../../../utils/htmlUtils';
 // ============================================================================
 
 export const listingCardConfig = {
-  // Image/Header Configuration
-  image: {
-    source: (listing) => getBestPropertyImage(listing),
-    fallbackIcon: HomeIcon,
-    aspectRatio: '3 / 2',
-  },
+  // Image/Header Configuration (TEMPORARILY DISABLED FOR DEBUGGING)
+  // image: {
+  //   source: (listing) => getBestPropertyImage(listing),
+  //   fallbackIcon: HomeIcon,
+  //   aspectRatio: '3 / 2',
+  // },
 
   // Status Chip Configuration (top-left)
   status: {
@@ -62,10 +62,10 @@ export const listingCardConfig = {
 
   // Metrics Configuration (1x2 horizontal row - Price and Commission)
   metrics: [
-    // Listing Price
+    // Listing Price (API field is 'list_price', not 'listing_price')
     {
       label: 'Price',
-      field: (listing) => listing.listing_price || listing.price || 0,
+      field: (listing) => listing.list_price || listing.price || 0,
       formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       color: {
         primary: '#3b82f6',
