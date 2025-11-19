@@ -4,19 +4,40 @@
  * Configuration for CardTemplate, ListItemTemplate, and TableRowTemplate
  * to render listing data in different view modes.
  *
- * This single config file replaces:
- * - ListingCard.jsx (~130 lines)
- * - ListingListItem.jsx (~150 lines)
- * - ListingTableRow.jsx (~180 lines)
- * Total: ~460 lines → ~200 lines config (56% reduction)
+ * Based on escrows viewModeConfig structure.
  */
 
-import { format, parseISO } from 'date-fns';
-import { Home as HomeIcon, AttachMoney as AttachMoneyIcon, Bed as BedIcon, SquareFoot as SquareFootIcon } from '@mui/icons-material';
+import {
+  CheckCircle,
+  Cancel,
+  Home as HomeIcon,
+} from '@mui/icons-material';
+import { alpha } from '@mui/material';
 import { LISTING_STATUS_COLORS } from '../constants/listingConstants';
 import { getBestPropertyImage } from '../../../../utils/streetViewUtils';
-import { decodeHTMLEntities } from '../../../../utils/htmlUtils';
-import { formatCurrency } from '../../../../utils/formatters';
+import { formatCurrency, formatDate } from '../../../../utils/formatters';
+
+// Import editor components
+import {
+  EditListPrice,
+  EditCommissionAmount,
+  EditListingDate,
+  EditPropertyAddress,
+} from '../editors';
+
+// ============================================================================
+// COMMISSION MASKING (for privacy toggle)
+// ============================================================================
+
+const maskCommission = (value) => {
+  const absValue = Math.abs(value || 0);
+  if (absValue >= 100000) return '$***,***';
+  if (absValue >= 10000) return '$**,***';
+  if (absValue >= 1000) return '$*,***';
+  if (absValue >= 100) return '$***';
+  if (absValue >= 10) return '$**';
+  return '$*';
+};
 
 // ============================================================================
 // CARD VIEW CONFIGURATION
@@ -43,109 +64,103 @@ export const listingCardConfig = {
     },
   },
 
-  // Title Configuration (display address with fallback, decode HTML entities)
-  // title: {
-  //   field: (listing) => decodeHTMLEntities(
-  //     listing.display_address || listing.property_address || listing.address || 'No Address'
-  //   ),
-  // },
+  // Title Configuration (address)
+  title: {
+    field: (listing) => listing.display_address || listing.property_address || 'No Address',
+  },
 
-  // Subtitle Configuration (city, state, zip)
-  // subtitle: {
-  //   formatter: (listing) => {
-  //     const parts = [];
-  //     if (listing.city) parts.push(listing.city);
-  //     if (listing.state) parts.push(listing.state);
-  //     if (listing.zip_code) parts.push(listing.zip_code);
-  //     return parts.join(', ') || null;
-  //   },
-  // },
+  // Subtitle Configuration (city, state)
+  subtitle: {
+    formatter: (listing) => {
+      const parts = [];
+      if (listing.city) parts.push(listing.city);
+      if (listing.state) parts.push(listing.state);
+      return parts.join(', ') || null;
+    },
+  },
 
-  // Metrics Configuration (1x2 horizontal row - Price and Commission)
-  // TEMPORARILY DISABLED FOR DEBUGGING
-  // metrics: [
-  //   // Listing Price (API field is 'list_price', not 'listing_price')
-  //   {
-  //     label: 'Price',
-  //     field: 'list_price',
-  //     formatter: (value) => formatCurrency(value),
-  //     color: {
-  //       primary: '#3b82f6',
-  //       secondary: '#2563eb',
-  //       bg: 'rgba(59, 130, 246, 0.08)',
-  //     },
-  //   },
+  // Metrics Configuration (1x2 horizontal row - ONLY Price and Commission)
+  metrics: [
+    // List Price
+    {
+      label: 'Price',
+      field: 'list_price',
+      formatter: (value) => formatCurrency(value),
+      color: {
+        primary: '#10b981',
+        secondary: '#059669',
+        bg: alpha('#10b981', 0.08),
+      },
+    },
 
-  //   // Commission (calculated from percentage * price)
-  //   // Database stores percentages (3.00 = 3%), not dollar amounts
-  //   {
-  //     label: 'Commission',
-  //     field: (listing) => {
-  //       const price = listing.list_price || 0;
-  //       const percentage = listing.total_commission || 0;
-  //       return (price * percentage) / 100;
-  //     },
-  //     formatter: (value) => formatCurrency(value),
-  //     color: {
-  //       primary: '#10b981',
-  //       secondary: '#059669',
-  //       bg: 'rgba(16, 185, 129, 0.08)',
-  //     },
-  //   },
-  // ],
+    // Commission (calculated from percentage * price)
+    {
+      label: 'Commission',
+      field: (listing) => {
+        const price = listing.list_price || 0;
+        const percentage = listing.total_commission || 0;
+        return (price * percentage) / 100;
+      },
+      formatter: (value) => formatCurrency(value),
+      color: {
+        primary: '#6366f1',
+        secondary: '#4f46e5',
+        bg: alpha('#6366f1', 0.08),
+      },
+      toggle: {
+        maskFn: maskCommission,
+        icon: {
+          show: 'Visibility',
+          hide: 'VisibilityOff',
+        },
+      },
+    },
+  ],
 
-  // Footer Configuration (Property details + dates)
-  // footer: {
-  //   fields: [
-  //     // Bedrooms
-  //     {
-  //       label: 'Beds',
-  //       field: 'bedrooms',
-  //       formatter: (value) => value ? `${value} beds` : '—',
-  //       width: '25%',
-  //     },
+  // Footer Configuration (List Date + Expiration Date + Progress)
+  footer: {
+    fields: [
+      // List Date
+      {
+        label: 'Listed',
+        field: 'listing_date',
+        formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+        width: '33.33%',
+      },
 
-  //     // Bathrooms
-  //     {
-  //       label: 'Baths',
-  //       field: 'bathrooms',
-  //       formatter: (value) => value ? `${value} baths` : '—',
-  //       width: '25%',
-  //     },
+      // Expiration Date
+      {
+        label: 'Expires',
+        field: 'expiration_date',
+        formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+        width: '33.33%',
+      },
+    ],
 
-  //     // Square Feet
-  //     {
-  //       label: 'Sq Ft',
-  //       field: 'square_feet',
-  //       formatter: (value) => value ? `${value.toLocaleString()} sqft` : '—',
-  //       width: '25%',
-  //     },
+    progress: {
+      formatter: (listing) => {
+        // Calculate days on market as progress indicator
+        const dom = listing.days_on_market || 0;
 
-  //     // Days on Market
-  //     {
-  //       label: 'DOM',
-  //       field: 'days_on_market',
-  //       formatter: (value) => value ? `${value} days` : '—',
-  //       width: '25%',
-  //     },
+        if (dom === 0) {
+          return {
+            label: 'DOM',
+            value: 0,
+            displayValue: 'New',
+            showBar: false,
+          };
+        }
 
-  //     // List Date
-  //     {
-  //       label: 'List Date',
-  //       field: (listing) => listing.listing_date || listing.list_date,
-  //       formatter: (value) => value ? format(parseISO(value), 'MMM d, yyyy') : '—',
-  //       width: '50%',
-  //     },
-
-  //     // Expiration Date
-  //     {
-  //       label: 'Expiration',
-  //       field: (listing) => listing.expiration_date || listing.expires,
-  //       formatter: (value) => value ? format(parseISO(value), 'MMM d, yyyy') : '—',
-  //       width: '50%',
-  //     },
-  //   ],
-  // },
+        return {
+          label: 'DOM',
+          value: Math.min(dom, 365), // Cap at 365 for visualization
+          displayValue: `${dom} days`,
+          showBar: true,
+        };
+      },
+      width: '30%',
+    },
+  },
 
   // Quick Actions Configuration
   actions: {
@@ -160,13 +175,24 @@ export const listingCardConfig = {
 // LIST VIEW CONFIGURATION
 // ============================================================================
 
-// LIST VIEW - TEMPORARILY MINIMAL FOR DEBUGGING
 export const listingListConfig = {
   // Image/Left Section Configuration
   image: {
     source: (listing) => getBestPropertyImage(listing),
     fallbackIcon: HomeIcon,
     width: 200,
+  },
+
+  // Progress Bar Overlay (days on market)
+  progress: {
+    getValue: (listing) => {
+      const dom = listing.days_on_market || 0;
+      return Math.min(dom, 365); // Cap at 365
+    },
+    getColor: (listing) => {
+      const config = LISTING_STATUS_COLORS[listing.listing_status] || LISTING_STATUS_COLORS.Active;
+      return config.bg;
+    },
   },
 
   // Status Chip Configuration
@@ -181,6 +207,60 @@ export const listingListConfig = {
       };
     },
   },
+
+  // Title Configuration (address)
+  title: {
+    field: (listing) => listing.display_address || listing.property_address || 'No Address',
+  },
+
+  // Subtitle Configuration (location)
+  subtitle: {
+    formatter: (listing) => {
+      const parts = [];
+      if (listing.city) parts.push(listing.city);
+      if (listing.state) parts.push(listing.state);
+      if (listing.zip_code) parts.push(listing.zip_code);
+      return parts.join(', ') || 'Location TBD';
+    },
+  },
+
+  // Metrics Configuration (horizontal row)
+  metrics: [
+    // List Price
+    {
+      label: 'Price',
+      field: 'list_price',
+      formatter: (value) => formatCurrency(value),
+    },
+
+    // Commission (calculated from percentage)
+    {
+      label: 'Commission',
+      field: (listing) => {
+        const price = listing.list_price || 0;
+        const percentage = listing.total_commission || 0;
+        return (price * percentage) / 100;
+      },
+      formatter: (value) => formatCurrency(value),
+      toggle: {
+        maskFn: maskCommission,
+      },
+    },
+
+    // List Date
+    {
+      label: 'Listed',
+      field: 'listing_date',
+      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
+    },
+
+    // Expiration Date
+    {
+      label: 'Expires',
+      field: 'expiration_date',
+      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
+    },
+  ],
 };
 
 // ============================================================================
@@ -188,29 +268,106 @@ export const listingListConfig = {
 // ============================================================================
 
 export const listingTableConfig = {
-  // Grid template for table columns
-  gridTemplateColumns: '2fr 1.2fr 0.8fr 1fr 0.8fr 1fr 1fr 1fr 80px',
+  // Grid layout: 8 columns with responsive widths
+  gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
 
-  // Status configuration for row styling
+  // Status config for row styling
   statusConfig: {
     getConfig: (listing) => {
-      const status = listing.listing_status || 'Active';
-      const config = LISTING_STATUS_COLORS[status] || LISTING_STATUS_COLORS.Active;
+      const config = LISTING_STATUS_COLORS[listing.listing_status] || LISTING_STATUS_COLORS.Active;
       return {
         color: config.color,
-        bg: config.bg
+        bg: config.bg,
       };
-    }
+    },
   },
 
-  // Column definitions - TEMPORARILY MINIMAL FOR DEBUGGING
+  // Column configurations
   columns: [
+    // Property Address (with subtitle)
+    {
+      label: 'Property',
+      field: (listing) => listing.display_address || listing.property_address || 'No Address',
+      subtitle: (listing) => {
+        if (listing.city && listing.state) {
+          return `${listing.city}, ${listing.state}${listing.zip_code ? ' ' + listing.zip_code : ''}`;
+        }
+        return 'Location TBD';
+      },
+      align: 'left',
+      bold: true,
+      hoverColor: 'rgba(16, 185, 129, 0.08)',
+    },
+
+    // Status
     {
       label: 'Status',
       field: 'listing_status',
-      formatter: (value) => value || 'Active',
+      formatter: (status) => status || 'Active',
       isStatus: true,
-      align: 'center'
-    }
-  ]
+      align: 'left',
+    },
+
+    // List Price
+    {
+      label: 'Price',
+      field: 'list_price',
+      formatter: (value) => formatCurrency(value),
+      align: 'left',
+      bold: true,
+      color: '#10b981',
+      hoverColor: 'rgba(16, 185, 129, 0.08)',
+    },
+
+    // Commission (calculated)
+    {
+      label: 'Commission',
+      field: (listing) => {
+        const price = listing.list_price || 0;
+        const percentage = listing.total_commission || 0;
+        return (price * percentage) / 100;
+      },
+      formatter: (value) => formatCurrency(value),
+      toggle: {
+        maskFn: maskCommission,
+      },
+      align: 'left',
+      bold: true,
+      color: '#6366f1',
+      hoverColor: 'rgba(99, 102, 241, 0.08)',
+    },
+
+    // List Date
+    {
+      label: 'Listed',
+      field: 'listing_date',
+      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+      align: 'left',
+      hoverColor: alpha('#000', 0.05),
+    },
+
+    // Expiration Date
+    {
+      label: 'Expires',
+      field: 'expiration_date',
+      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+      align: 'left',
+      hoverColor: alpha('#000', 0.05),
+    },
+
+    // Days on Market
+    {
+      label: 'DOM',
+      field: 'days_on_market',
+      formatter: (value) => value ? `${value}` : '0',
+      align: 'center',
+      bold: true,
+      color: (listing) => {
+        const config = LISTING_STATUS_COLORS[listing.listing_status] || LISTING_STATUS_COLORS.Active;
+        return config.color;
+      },
+    },
+  ],
 };
+
+export default listingCardConfig;
