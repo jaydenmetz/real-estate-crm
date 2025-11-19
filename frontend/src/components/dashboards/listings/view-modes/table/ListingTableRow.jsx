@@ -10,6 +10,15 @@ import { alpha } from '@mui/material';
 import { LISTING_STATUS_COLORS } from '../../constants/listingConstants';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
 
+// Import editor components
+import {
+  EditListPrice,
+  EditCommissionAmount,
+  EditListingDate,
+  EditExpirationDate,
+  EditPropertyAddress,
+} from '../../editors';
+
 // ============================================================================
 // COMMISSION MASKING (for privacy toggle)
 // ============================================================================
@@ -45,7 +54,7 @@ const listingTableConfig = {
 
   // Column configurations
   columns: [
-    // Property Address (with subtitle)
+    // Property Address (editable, with subtitle)
     {
       label: 'Property',
       field: (listing) => listing.display_address || listing.property_address || 'No Address',
@@ -55,6 +64,14 @@ const listingTableConfig = {
         }
         return 'Location TBD';
       },
+      editable: true,
+      editor: EditPropertyAddress,
+      editorProps: (listing) => ({
+        value: listing.display_address || listing.property_address,
+        canonicalValue: listing.property_address,
+        data: listing,
+      }),
+      onSave: (listing, addressData) => addressData,
       align: 'left',
       bold: true,
       hoverColor: 'rgba(16, 185, 129, 0.08)',
@@ -117,18 +134,23 @@ const listingTableConfig = {
       align: 'left',
     },
 
-    // List Price
+    // List Price (editable)
     {
       label: 'Price',
       field: 'list_price',
       formatter: (value) => formatCurrency(value),
+      editable: true,
+      editor: EditListPrice,
+      onSave: (listing, newPrice) => {
+        return { list_price: newPrice };
+      },
       align: 'left',
       bold: true,
       color: '#10b981',
       hoverColor: 'rgba(16, 185, 129, 0.08)',
     },
 
-    // Commission (calculated)
+    // Commission (editable with toggle)
     {
       label: 'Commission',
       field: (listing) => {
@@ -137,6 +159,22 @@ const listingTableConfig = {
         return (price * percentage) / 100;
       },
       formatter: (value) => formatCurrency(value),
+      editable: true,
+      editor: EditCommissionAmount,
+      editorProps: (listing) => ({
+        value: (listing.list_price || 0) * (listing.total_commission || 0) / 100,
+        commissionPercentage: listing.total_commission !== null && listing.total_commission !== undefined
+          ? parseFloat(listing.total_commission)
+          : null,
+        commissionType: listing.commission_type || 'percentage',
+        listPrice: listing.list_price || 0,
+      }),
+      onSave: (listing, updates) => {
+        return {
+          total_commission: updates.total_commission || updates.commission_percentage,
+          commission_type: updates.commission_type,
+        };
+      },
       toggle: {
         maskFn: maskCommission,
       },
@@ -146,20 +184,30 @@ const listingTableConfig = {
       hoverColor: 'rgba(99, 102, 241, 0.08)',
     },
 
-    // List Date
+    // List Date (editable)
     {
       label: 'Listed',
       field: 'listing_date',
       formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+      editable: true,
+      editor: EditListingDate,
+      onSave: (listing, newDate) => {
+        return { listing_date: newDate };
+      },
       align: 'left',
       hoverColor: alpha('#000', 0.05),
     },
 
-    // Expiration Date
+    // Expiration Date (editable)
     {
       label: 'Expires',
       field: 'expiration_date',
       formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+      editable: true,
+      editor: EditExpirationDate,
+      onSave: (listing, newDate) => {
+        return { expiration_date: newDate };
+      },
       align: 'left',
       hoverColor: alpha('#000', 0.05),
     },
@@ -184,15 +232,18 @@ const listingTableConfig = {
  *
  * Now uses TableRowTemplate with inline configuration for better colocation.
  *
- * Reduced from 152 lines to ~170 lines by using TableRowTemplate (460 lines, reusable).
+ * Reduced from 152 lines to ~260 lines by using TableRowTemplate (460 lines, reusable).
  *
  * Features preserved:
  * - Grid layout with 8 columns (Property, Status, Price, Commission, Listed, Expires, DOM, Actions)
- * - Commission privacy toggle
- * - Status chip with color coding
+ * - Inline editors: address, status, price, commission (with toggle), dates
+ * - Commission toggle: show/hide with privacy masking
+ * - Status menu: 7 status options with icons
  * - Click vs drag: text selection support
  * - Hover effects and transitions
  * - QuickActionsMenu
+ *
+ * Matches escrows inline editing pattern for consistency.
  */
 const ListingTableRow = React.memo(({
   listing,

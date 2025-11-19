@@ -6,5 +6,6 @@
 export { EditPropertyAddress } from './EditPropertyAddress';
 export { EditListPrice } from './EditListPrice';
 export { EditListingDate } from './EditListingDate';
+export { EditExpirationDate } from './EditExpirationDate';
 export { EditCommissionAmount } from './EditCommissionAmount';
 export { EditListingStatus } from './EditListingStatus';
