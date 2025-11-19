@@ -26,14 +26,43 @@ export const LISTING_STATUS_LABELS = {
 };
 
 export const LISTING_STATUS_COLORS = {
-  [LISTING_STATUS.COMING_SOON]: 'info',
-  [LISTING_STATUS.ACTIVE]: 'success',
-  [LISTING_STATUS.PENDING]: 'warning',
-  [LISTING_STATUS.SOLD]: 'default',
-  [LISTING_STATUS.EXPIRED]: 'error',
-  [LISTING_STATUS.CANCELLED]: 'error',
-  [LISTING_STATUS.WITHDRAWN]: 'default',
-  [LISTING_STATUS.ARCHIVED]: 'default'
+  [LISTING_STATUS.COMING_SOON]: {
+    color: '#3b82f6',
+    bg: 'rgba(59, 130, 246, 0.1)',
+  },
+  [LISTING_STATUS.ACTIVE]: {
+    color: '#10b981',
+    bg: 'rgba(16, 185, 129, 0.1)',
+  },
+  [LISTING_STATUS.PENDING]: {
+    color: '#f59e0b',
+    bg: 'rgba(245, 158, 11, 0.1)',
+  },
+  [LISTING_STATUS.SOLD]: {
+    color: '#6366f1',
+    bg: 'rgba(99, 102, 241, 0.1)',
+  },
+  [LISTING_STATUS.EXPIRED]: {
+    color: '#ef4444',
+    bg: 'rgba(239, 68, 68, 0.1)',
+  },
+  [LISTING_STATUS.CANCELLED]: {
+    color: '#ef4444',
+    bg: 'rgba(239, 68, 68, 0.1)',
+  },
+  [LISTING_STATUS.WITHDRAWN]: {
+    color: '#6b7280',
+    bg: 'rgba(107, 114, 128, 0.1)',
+  },
+  [LISTING_STATUS.ARCHIVED]: {
+    color: '#6b7280',
+    bg: 'rgba(107, 114, 128, 0.1)',
+  },
+  // Default fallback
+  Active: {
+    color: '#10b981',
+    bg: 'rgba(16, 185, 129, 0.1)',
+  },
 };
 
 export const LISTING_TYPES = {

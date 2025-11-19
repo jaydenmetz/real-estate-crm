@@ -1,5 +1,11 @@
 import React from 'react';
 import { TableRowTemplate } from '../../../../../templates/Dashboard/view-modes';
+import {
+  CheckCircle,
+  Cancel,
+  HourglassEmpty,
+  Pending,
+} from '@mui/icons-material';
 import { alpha } from '@mui/material';
 import { LISTING_STATUS_COLORS } from '../../constants/listingConstants';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
@@ -54,12 +60,60 @@ const listingTableConfig = {
       hoverColor: 'rgba(16, 185, 129, 0.08)',
     },
 
-    // Status
+    // Status (editable)
     {
       label: 'Status',
       field: 'listing_status',
       formatter: (status) => status || 'Active',
       isStatus: true,
+      editable: true,
+      statusOptions: [
+        {
+          value: 'Coming Soon',
+          label: 'Coming Soon',
+          icon: HourglassEmpty,
+          color: '#3b82f6',
+        },
+        {
+          value: 'Active',
+          label: 'Active',
+          icon: CheckCircle,
+          color: '#10b981',
+        },
+        {
+          value: 'Pending',
+          label: 'Pending',
+          icon: Pending,
+          color: '#f59e0b',
+        },
+        {
+          value: 'Sold',
+          label: 'Sold',
+          icon: CheckCircle,
+          color: '#6366f1',
+        },
+        {
+          value: 'Expired',
+          label: 'Expired',
+          icon: Cancel,
+          color: '#ef4444',
+        },
+        {
+          value: 'Cancelled',
+          label: 'Cancelled',
+          icon: Cancel,
+          color: '#ef4444',
+        },
+        {
+          value: 'Withdrawn',
+          label: 'Withdrawn',
+          icon: Cancel,
+          color: '#6b7280',
+        },
+      ],
+      onSave: (listing, newStatus) => {
+        return { listing_status: newStatus };
+      },
       align: 'left',
     },
 
