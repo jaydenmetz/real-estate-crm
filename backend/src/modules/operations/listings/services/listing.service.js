@@ -143,7 +143,27 @@ class ListingsService {
     params.push(limit, offset);
     const listingsQuery = `
       SELECT
-        l.*,
+        l.id,
+        l.property_address,
+        l.display_address,
+        l.city,
+        l.state,
+        l.zip_code,
+        l.list_price,
+        l.listing_status,
+        l.listing_commission,
+        l.buyer_commission,
+        l.total_commission,
+        l.mls_number,
+        l.property_type,
+        l.bedrooms,
+        l.bathrooms,
+        l.square_feet,
+        l.listing_date,
+        l.expiration_date,
+        l.days_on_market,
+        l.created_at,
+        l.updated_at,
         u.first_name || ' ' || u.last_name AS agent_name,
         u.email AS agent_email
       FROM listings l

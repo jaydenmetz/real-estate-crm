@@ -65,7 +65,7 @@ export const listingsConfig = createEntityConfig({
       restore: '/listings/:id/restore',
       stats: '/listings/stats',
     },
-    idField: 'listing_id',
+    idField: 'id', // CRITICAL FIX: Database column is 'id', not 'listing_id'
   },
 
   // ========================================
