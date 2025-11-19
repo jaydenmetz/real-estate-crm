@@ -117,7 +117,7 @@ export const listingCardConfig = {
     },
   ],
 
-  // Footer Configuration (List Date + Expiration Date + Progress)
+  // Footer Configuration (List Date + Expiration Date)
   footer: {
     fields: [
       // List Date
@@ -125,7 +125,7 @@ export const listingCardConfig = {
         label: 'Listed',
         field: 'listing_date',
         formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
-        width: '33.33%',
+        width: '50%',
       },
 
       // Expiration Date
@@ -133,33 +133,9 @@ export const listingCardConfig = {
         label: 'Expires',
         field: 'expiration_date',
         formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
-        width: '33.33%',
+        width: '50%',
       },
     ],
-
-    progress: {
-      formatter: (listing) => {
-        // Calculate days on market as progress indicator
-        const dom = listing.days_on_market || 0;
-
-        if (dom === 0) {
-          return {
-            label: 'DOM',
-            value: 0,
-            displayValue: 'New',
-            showBar: false,
-          };
-        }
-
-        return {
-          label: 'DOM',
-          value: Math.min(dom, 365), // Cap at 365 for visualization
-          displayValue: `${dom} days`,
-          showBar: true,
-        };
-      },
-      width: '30%',
-    },
   },
 
   // Quick Actions Configuration
