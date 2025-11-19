@@ -39,7 +39,7 @@ export const EditAddress = ({
   const getDisplayAddress = () => {
     if (!value) return '';
     if (typeof value === 'object') {
-      return value.property_address_display || value.property_address || value.address || '';
+      return value.display_address || value.property_address || value.address || '';
     }
     return value;
   };

@@ -45,7 +45,7 @@ export const listingCardConfig = {
   // Title Configuration (display address with fallback, decode HTML entities)
   title: {
     field: (listing) => decodeHTMLEntities(
-      listing.property_address_display || listing.property_address || listing.address || 'No Address'
+      listing.display_address || listing.property_address || listing.address || 'No Address'
     ),
   },
 
@@ -188,7 +188,7 @@ export const listingListConfig = {
   // Title - display address with fallback, decode HTML entities
   title: {
     field: (listing) => decodeHTMLEntities(
-      listing.property_address_display || listing.property_address || listing.address || 'No Address'
+      listing.display_address || listing.property_address || listing.address || 'No Address'
     ),
   },
 
@@ -277,7 +277,7 @@ export const listingTableConfig = {
     {
       label: 'Property',
       field: (data) => decodeHTMLEntities(
-        data.property_address_display || data.property_address || data.address || 'No Address'
+        data.display_address || data.property_address || data.address || 'No Address'
       ),
       subtitle: (data) => {
         const parts = [];

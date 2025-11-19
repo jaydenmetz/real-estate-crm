@@ -416,7 +416,7 @@ export const escrowTableConfig = {
     // Property Address (editable, with subtitle)
     {
       label: 'Property',
-      field: (escrow) => escrow.property_address_display || escrow.property_address || 'No Address',
+      field: (escrow) => escrow.display_address || escrow.property_address || 'No Address',
       subtitle: (escrow) => {
         if (escrow.city && escrow.state) {
           return `${escrow.city}, ${escrow.state}${escrow.zip_code ? ' ' + escrow.zip_code : ''}`;
@@ -426,7 +426,7 @@ export const escrowTableConfig = {
       editable: true,
       editor: EditPropertyAddress,
       editorProps: (escrow) => ({
-        value: escrow.property_address_display || escrow.property_address,
+        value: escrow.display_address || escrow.property_address,
         canonicalValue: escrow.property_address,
         data: escrow,
       }),

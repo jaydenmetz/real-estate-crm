@@ -345,6 +345,7 @@ class ListingsService {
     // Map camelCase to snake_case and build update fields
     const columnMap = {
       propertyAddress: 'property_address',
+      displayAddress: 'display_address',
       listPrice: 'list_price',
       listingStatus: 'listing_status',
       propertyType: 'property_type',

@@ -109,7 +109,7 @@ async function getAllEscrows(req, res) {
         e.${idField} as id,
         e.${displayIdField} as display_id,
         e.property_address as property_address,
-        e.property_address_display as property_address_display,
+        e.display_address as display_address,
         e.city,
         e.state,
         e.zip_code,
@@ -341,7 +341,7 @@ async function createEscrow(req, res) {
 
     // Add optional fields if provided (check both camelCase and snake_case)
     const optionalFields = {
-      property_address_display: escrowData.propertyAddressDisplay || escrowData.property_address_display,
+      display_address: escrowData.displayAddress || escrowData.display_address || escrowData.propertyAddressDisplay || escrowData.property_address_display,
       city: escrowData.city,
       state: escrowData.state,
       zip_code: escrowData.zipCode || escrowData.zip_code,
@@ -428,7 +428,7 @@ async function createEscrow(req, res) {
         id: newEscrow.id || newEscrow.display_id,
         displayId: newEscrow.display_id,
         propertyAddress: newEscrow.property_address,
-        propertyAddressDisplay: newEscrow.property_address_display
+        displayAddress: newEscrow.display_address
       }
     };
 
@@ -491,7 +491,8 @@ async function updateEscrow(req, res) {
     // Map camelCase fields to snake_case for database
     const fieldMapping = {
       propertyAddress: 'property_address',
-      propertyAddressDisplay: 'property_address_display',
+      propertyAddressDisplay: 'display_address', // Updated to use standardized field name
+      displayAddress: 'display_address',
       purchasePrice: 'purchase_price',
       closingDate: 'closing_date',
       acceptanceDate: 'acceptance_date',
@@ -635,7 +636,7 @@ async function updateEscrow(req, res) {
         id: updatedEscrow.id || updatedEscrow.display_id,
         displayId: updatedEscrow.display_id,
         propertyAddress: updatedEscrow.property_address,
-        propertyAddressDisplay: updatedEscrow.property_address_display
+        displayAddress: updatedEscrow.display_address
       }
     };
 
