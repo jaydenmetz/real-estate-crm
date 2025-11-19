@@ -184,9 +184,9 @@ const listingTableConfig = {
       hoverColor: 'rgba(99, 102, 241, 0.08)',
     },
 
-    // List Date (editable)
+    // Beginning Date (editable)
     {
-      label: 'Listed',
+      label: 'Beginning',
       field: 'listing_date',
       formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
       editable: true,

@@ -97,9 +97,9 @@ const listingListConfig = {
       },
     },
 
-    // List Date
+    // Beginning Date
     {
-      label: 'Listed',
+      label: 'Beginning',
       field: 'listing_date',
       formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
     },

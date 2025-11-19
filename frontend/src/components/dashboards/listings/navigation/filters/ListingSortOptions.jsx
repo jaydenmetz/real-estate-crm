@@ -10,7 +10,7 @@
 export const listingSortOptions = [
   {
     value: 'created_at',
-    label: 'Date Listed'
+    label: 'Beginning Date'
   },
   {
     value: 'listing_price',

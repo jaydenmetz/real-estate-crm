@@ -100,12 +100,12 @@ const listingCardConfig = {
     },
   ],
 
-  // Footer Configuration (List Date + Expiration Date)
+  // Footer Configuration (Beginning Date + Expiration Date)
   footer: {
     fields: [
-      // List Date
+      // Beginning Date
       {
-        label: 'Listed',
+        label: 'Beginning',
         field: 'listing_date',
         formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
         width: '50%',

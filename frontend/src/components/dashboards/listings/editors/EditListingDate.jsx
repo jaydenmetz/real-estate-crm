@@ -2,7 +2,7 @@ import React from 'react';
 import { EditDate } from '../../../common/editors/fields/EditDate';
 
 /**
- * Listing-specific Listing Date Editor
+ * Listing-specific Beginning Date Editor
  * Wraps EditDate with listing-specific context and styling
  *
  * @param {boolean} open - Dialog open state
@@ -16,7 +16,7 @@ export const EditListingDate = ({ open, onClose, onSave, value }) => {
       open={open}
       onClose={onClose}
       onSave={onSave}
-      label="Listing Date"
+      label="Beginning Date"
       value={value}
       color="#3b82f6" // Blue theme for listings
     />

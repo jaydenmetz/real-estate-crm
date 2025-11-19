@@ -99,7 +99,7 @@ export const LISTING_FILTERS = {
 };
 
 export const LISTING_SORT_OPTIONS = [
-  { value: 'listing_date', label: 'Listing Date' },
+  { value: 'listing_date', label: 'Beginning Date' },
   { value: 'created_at', label: 'Created Date' },
   { value: 'list_price', label: 'List Price' },
   { value: 'property_address', label: 'Property Address' },
