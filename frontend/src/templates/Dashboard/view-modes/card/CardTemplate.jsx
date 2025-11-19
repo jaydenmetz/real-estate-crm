@@ -337,7 +337,7 @@ const CardTemplate = React.memo(({
                 <Box component={config.image.fallbackIcon} sx={{ fontSize: 80, color: alpha('#757575', 0.5), zIndex: 1 }} />
               )}
 
-              {/* Multi-Select Checkbox - Top Left (appears on hover) */}
+              {/* Multi-Select Checkbox - Floating top-left outside card */}
               {isSelectable && (
                 <Checkbox
                   checked={isSelected}
@@ -348,26 +348,42 @@ const CardTemplate = React.memo(({
                   onClick={(e) => e.stopPropagation()}
                   sx={{
                     position: 'absolute',
-                    top: 8,
-                    left: 8,
-                    zIndex: 4,
+                    top: -12,
+                    left: -12,
+                    zIndex: 10,
                     opacity: isSelected ? 1 : 0,
-                    transition: 'opacity 0.2s',
-                    '.MuiCard-root:hover &': { opacity: 1 },
-                    backgroundColor: 'rgba(255,255,255,0.95)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: '4px',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: isSelected ? 'scale(1)' : 'scale(0.8)',
+                    '.MuiCard-root:hover &': {
+                      opacity: 1,
+                      transform: 'scale(1)',
+                    },
+                    padding: 0,
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    backgroundColor: isSelected ? 'primary.main' : 'rgba(255,255,255,0.95)',
+                    border: isSelected ? 'none' : '2px solid',
+                    borderColor: 'divider',
+                    boxShadow: isSelected
+                      ? '0 4px 12px rgba(25, 118, 210, 0.4)'
+                      : '0 2px 8px rgba(0,0,0,0.15)',
                     '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,1)',
+                      backgroundColor: isSelected ? 'primary.dark' : 'rgba(255,255,255,1)',
+                      boxShadow: isSelected
+                        ? '0 6px 16px rgba(25, 118, 210, 0.5)'
+                        : '0 4px 12px rgba(0,0,0,0.2)',
+                      transform: 'scale(1.1)',
                     },
                     '& .MuiSvgIcon-root': {
-                      fontSize: 20,
+                      fontSize: 18,
+                      color: isSelected ? '#fff' : 'transparent',
                     },
                   }}
                 />
               )}
 
-              {/* Status Chip - Top Left (adjust position if checkbox present) */}
+              {/* Status Chip - Top Left */}
               {config.status && (
                 <Chip
                   label={statusConfig.label || statusValue}
@@ -376,7 +392,7 @@ const CardTemplate = React.memo(({
                   sx={{
                     position: 'absolute',
                     top: 10,
-                    left: isSelectable ? 48 : 10, // Move right if checkbox present
+                    left: 10, // Checkbox is now outside card, no position adjustment needed
                     fontWeight: 700,
                     fontSize: 11,
                     letterSpacing: '0.5px',
