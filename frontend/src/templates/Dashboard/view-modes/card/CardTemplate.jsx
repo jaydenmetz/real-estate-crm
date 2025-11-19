@@ -174,16 +174,6 @@ const CardTemplate = React.memo(({
   }, [mouseDownPos]);
 
   const handleCardClick = useCallback((e) => {
-    // In select mode, clicking toggles selection instead of navigating
-    if (isSelectable && onSelect && !isDragging) {
-      e.preventDefault();
-      e.stopPropagation();
-      onSelect(data);
-      setMouseDownPos(null);
-      setIsDragging(false);
-      return;
-    }
-
     if (!isDragging && onClick) {
       onClick(data);
     }
@@ -291,8 +281,6 @@ const CardTemplate = React.memo(({
             borderRadius: 4,
             overflow: 'hidden',
             position: 'relative',
-            border: isSelected ? '3px solid' : 'none',
-            borderColor: isSelected ? 'primary.main' : 'transparent',
             '&::before': statusConfig.color ? {
               content: '""',
               position: 'absolute',
@@ -305,20 +293,16 @@ const CardTemplate = React.memo(({
               maskComposite: 'exclude',
               pointerEvents: 'none',
             } : {},
-            boxShadow: isSelected
-              ? '0 0 0 4px rgba(25, 118, 210, 0.15), 0 8px 24px rgba(25, 118, 210, 0.25)'
-              : statusConfig.color
+            boxShadow: statusConfig.color
               ? `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}`
               : 3,
             '&:hover': {
-              boxShadow: isSelected
-                ? '0 0 0 4px rgba(25, 118, 210, 0.2), 0 12px 32px rgba(25, 118, 210, 0.3)'
-                : statusConfig.color
+              boxShadow: statusConfig.color
                 ? `0 12px 48px ${alpha(statusConfig.color, 0.2)}, 0 4px 12px ${alpha(statusConfig.color, 0.15)}`
                 : 6,
               transform: 'translateY(-2px)',
             },
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             display: 'flex',
             flexDirection: 'column',
           }}
@@ -343,7 +327,51 @@ const CardTemplate = React.memo(({
                   position: 'absolute',
                   bottom: 0,
                   left: 0,
-              {/* Selected cards show subtle blue glow border - no checkbox needed */}
+                  right: 0,
+                  height: '50%',
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)',
+                },
+              }}
+            >
+              {!imageSource && config.image.fallbackIcon && (
+                <Box component={config.image.fallbackIcon} sx={{ fontSize: 80, color: alpha('#757575', 0.5), zIndex: 1 }} />
+              )}
+
+              {/* Multi-Select Checkbox - Floating top-left outside card */}
+              {isSelectable && (
+                <Checkbox
+                  checked={isSelected}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onSelect?.(data);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{
+                    position: 'absolute',
+                    top: -12,
+                    left: -12,
+                    zIndex: 10,
+                    opacity: isSelected ? 1 : 0,
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: isSelected ? 'scale(1)' : 'scale(0.8)',
+                    '.MuiCard-root:hover &': {
+                      opacity: 1,
+                      transform: 'scale(1)',
+                    },
+                    padding: 0,
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    backgroundColor: isSelected ? 'primary.main' : 'rgba(255,255,255,0.95)',
+                    border: isSelected ? 'none' : '2px solid',
+                    borderColor: 'divider',
+                    boxShadow: isSelected
+                      ? '0 4px 12px rgba(25, 118, 210, 0.4)'
+                      : '0 2px 8px rgba(0,0,0,0.15)',
+                    '&:hover': {
+                      backgroundColor: isSelected ? 'primary.dark' : 'rgba(255,255,255,1)',
+                      boxShadow: isSelected
+                        ? '0 6px 16px rgba(25, 118, 210, 0.5)'
                         : '0 4px 12px rgba(0,0,0,0.2)',
                       transform: 'scale(1.1)',
                     },
@@ -416,6 +444,12 @@ const CardTemplate = React.memo(({
                       <MenuItem onClick={(e) => handleAction(e, () => onClick(data))}>
                         <VisibilityIcon sx={{ mr: 1, fontSize: 18 }} />
                         View Details
+                      </MenuItem>
+                    )}
+                    {isSelectable && onSelect && (
+                      <MenuItem onClick={(e) => handleAction(e, () => onSelect(data))}>
+                        <CheckBoxIcon sx={{ mr: 1, fontSize: 18 }} />
+                        Select
                       </MenuItem>
                     )}
                     {isArchived ? (
