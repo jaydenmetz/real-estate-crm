@@ -26,6 +26,33 @@ export const EditAddress = ({
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [saving, setSaving] = useState(false);
 
+  // Extract display address from value (handle both string and object)
+  const getDisplayAddress = () => {
+    if (!value) return '';
+
+    // If value is an object (full listing/escrow data), extract the display address
+    if (typeof value === 'object') {
+      return value.property_address_display || value.property_address || value.address || '';
+    }
+
+    // If value is already a string, use it directly
+    return value;
+  };
+
+  // Extract location subtitle from value object (city, state, zip)
+  const getLocationSubtitle = () => {
+    if (!value || typeof value !== 'object') return null;
+
+    const parts = [];
+    if (value.city) parts.push(value.city);
+    if (value.state) parts.push(value.state);
+    if (value.zip_code) parts.push(value.zip_code);
+    return parts.length > 0 ? parts.join(', ') : null;
+  };
+
+  const displayAddress = getDisplayAddress();
+  const locationSubtitle = getLocationSubtitle();
+
   // Reset when dialog closes
   useEffect(() => {
     if (!open) {
@@ -92,9 +119,10 @@ export const EditAddress = ({
                   lineHeight: 1.4,
                 }}
               >
-                {value || 'No address set'}
+                {displayAddress || 'No address set'}
               </Typography>
-              {selectedAddress && (
+              {/* Show location subtitle from existing data OR from newly selected address */}
+              {(locationSubtitle || selectedAddress) && (
                 <Typography
                   variant="caption"
                   sx={{
@@ -103,9 +131,9 @@ export const EditAddress = ({
                     mt: 0.5,
                   }}
                 >
-                  {selectedAddress.city && selectedAddress.state
+                  {selectedAddress && selectedAddress.city && selectedAddress.state
                     ? `${selectedAddress.city}, ${selectedAddress.state}${selectedAddress.zip_code ? ' ' + selectedAddress.zip_code : ''}`
-                    : 'Select an address from suggestions'}
+                    : locationSubtitle || 'Select an address from suggestions'}
                 </Typography>
               )}
             </Box>
@@ -114,7 +142,7 @@ export const EditAddress = ({
 
         {/* Address Input */}
         <AddressInput
-          value={value} // This is property_address_display from parent
+          value={displayAddress} // Pass extracted string address, not full object
           onChange={setSelectedAddress}
           onKeyDown={handleKeyPress}
           disabled={saving}
