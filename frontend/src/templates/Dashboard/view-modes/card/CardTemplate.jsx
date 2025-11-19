@@ -124,6 +124,9 @@ const CardTemplate = React.memo(({
   // Status menu state
   const [statusMenuAnchor, setStatusMenuAnchor] = useState(null);
 
+  // Quick actions menu state
+  const [actionsMenuAnchor, setActionsMenuAnchor] = useState(null);
+
   // Reset toggle states when data changes (so updated values are shown, not masked)
   useEffect(() => {
     // Extract metric values to detect changes
@@ -209,6 +212,23 @@ const CardTemplate = React.memo(({
     }
     handleStatusClose();
   }, [data, config.status, onUpdate, handleStatusClose]);
+
+  // Quick actions menu handlers
+  const handleActionsMenuOpen = useCallback((e) => {
+    e.stopPropagation();
+    setActionsMenuAnchor(e.currentTarget);
+  }, []);
+
+  const handleActionsMenuClose = useCallback((e) => {
+    e?.stopPropagation();
+    setActionsMenuAnchor(null);
+  }, []);
+
+  const handleAction = useCallback((e, action) => {
+    e.stopPropagation();
+    handleActionsMenuClose();
+    if (action) action();
+  }, [handleActionsMenuClose]);
 
   // Resolve image source
   const imageSource = typeof config.image?.source === 'function'
@@ -355,8 +375,50 @@ const CardTemplate = React.memo(({
                     '.MuiCard-root:hover &': { opacity: 1 },
                   }}
                 >
-                  {/* QuickActionsMenu component would go here */}
-                  {/* For now, simplified version */}
+                  <IconButton
+                    size="small"
+                    onClick={handleActionsMenuOpen}
+                    sx={{ color: 'text.secondary' }}
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                  <Menu
+                    anchorEl={actionsMenuAnchor}
+                    open={Boolean(actionsMenuAnchor)}
+                    onClose={handleActionsMenuClose}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {onClick && (
+                      <MenuItem onClick={(e) => handleAction(e, () => onClick(data))}>
+                        <VisibilityIcon sx={{ mr: 1, fontSize: 18 }} />
+                        View Details
+                      </MenuItem>
+                    )}
+                    {isArchived ? (
+                      onRestore && (
+                        <MenuItem onClick={(e) => handleAction(e, () => onRestore(data))}>
+                          <UnarchiveIcon sx={{ mr: 1, fontSize: 18 }} />
+                          Restore
+                        </MenuItem>
+                      )
+                    ) : (
+                      onArchive && (
+                        <MenuItem onClick={(e) => handleAction(e, () => onArchive(data))}>
+                          <ArchiveIcon sx={{ mr: 1, fontSize: 18 }} />
+                          Archive
+                        </MenuItem>
+                      )
+                    )}
+                    {onDelete && (
+                      <MenuItem
+                        onClick={(e) => handleAction(e, () => onDelete(data))}
+                        sx={{ color: 'error.main' }}
+                      >
+                        <DeleteIcon sx={{ mr: 1, fontSize: 18 }} />
+                        Delete
+                      </MenuItem>
+                    )}
+                  </Menu>
                 </Box>
               )}
 
