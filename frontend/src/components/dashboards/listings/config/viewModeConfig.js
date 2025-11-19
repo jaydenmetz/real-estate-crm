@@ -17,13 +17,13 @@ import { LISTING_STATUS_COLORS } from '../constants/listingConstants';
 import { getBestPropertyImage } from '../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../utils/formatters';
 
-// Import editor components
-import {
-  EditListPrice,
-  EditCommissionAmount,
-  EditListingDate,
-  EditPropertyAddress,
-} from '../editors';
+// Import editor components (for future inline editing)
+// import {
+//   EditListPrice,
+//   EditCommissionAmount,
+//   EditListingDate,
+//   EditPropertyAddress,
+// } from '../editors';
 
 // ============================================================================
 // COMMISSION MASKING (for privacy toggle)
