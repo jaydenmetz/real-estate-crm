@@ -22,12 +22,12 @@ import { decodeHTMLEntities } from '../../../../utils/htmlUtils';
 // ============================================================================
 
 export const listingCardConfig = {
-  // Image/Header Configuration (TEMPORARILY DISABLED FOR DEBUGGING)
-  // image: {
-  //   source: (listing) => getBestPropertyImage(listing),
-  //   fallbackIcon: HomeIcon,
-  //   aspectRatio: '3 / 2',
-  // },
+  // Image/Header Configuration
+  image: {
+    source: (listing) => getBestPropertyImage(listing),
+    fallbackIcon: HomeIcon,
+    aspectRatio: '3 / 2',
+  },
 
   // Status Chip Configuration (top-left)
   status: {
