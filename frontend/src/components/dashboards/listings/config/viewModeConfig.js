@@ -41,14 +41,20 @@ export const listingCardConfig = {
     },
   },
 
-  // Title Configuration (address)
+  // Title Configuration (display address with fallback)
   title: {
-    field: (listing) => listing.property_address || listing.address || 'No Address',
+    field: (listing) => listing.property_address_display || listing.property_address || listing.address || 'No Address',
   },
 
-  // Subtitle Configuration (MLS number)
+  // Subtitle Configuration (city, state, zip)
   subtitle: {
-    formatter: (listing) => listing.mls_number ? `MLS# ${listing.mls_number}` : null,
+    formatter: (listing) => {
+      const parts = [];
+      if (listing.city) parts.push(listing.city);
+      if (listing.state) parts.push(listing.state);
+      if (listing.zip_code) parts.push(listing.zip_code);
+      return parts.join(', ') || null;
+    },
   },
 
   // Metrics Configuration (1x2 horizontal row - Price and Commission)
@@ -176,19 +182,19 @@ export const listingListConfig = {
     },
   },
 
-  // Title - property address
+  // Title - display address with fallback
   title: {
-    field: (listing) => listing.property_address || listing.address || 'No Address',
+    field: (listing) => listing.property_address_display || listing.property_address || listing.address || 'No Address',
   },
 
-  // Subtitle - city/state
+  // Subtitle - city, state, zip
   subtitle: {
     formatter: (listing) => {
       const parts = [];
       if (listing.city) parts.push(listing.city);
       if (listing.state) parts.push(listing.state);
       if (listing.zip_code) parts.push(listing.zip_code);
-      return parts.join(', ') || listing.listing_type || null;
+      return parts.join(', ') || null;
     },
   },
 
@@ -265,8 +271,14 @@ export const listingTableConfig = {
   columns: [
     {
       label: 'Property',
-      field: 'property_address',
-      subtitle: (data) => data.mls_number ? `MLS# ${data.mls_number}` : null,
+      field: (data) => data.property_address_display || data.property_address || data.address || 'No Address',
+      subtitle: (data) => {
+        const parts = [];
+        if (data.city) parts.push(data.city);
+        if (data.state) parts.push(data.state);
+        if (data.zip_code) parts.push(data.zip_code);
+        return parts.join(', ') || null;
+      },
       align: 'left',
       bold: true
     },
