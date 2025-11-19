@@ -346,27 +346,31 @@ class RefreshTokenService {
 
   /**
    * Revoke all existing refresh tokens for a user from the same device/browser
+   * Uses device fingerprint (IP + user agent) to distinguish different sessions
    * This prevents token accumulation when users log in multiple times without logging out
    * @param {string} userId - User UUID
    * @param {string} userAgent - Client user agent to match
+   * @param {string} ipAddress - Client IP address to match
    * @returns {Promise<number>} Number of tokens revoked
    */
-  static async revokeOldTokensFromDevice(userId, userAgent) {
+  static async revokeOldTokensFromDevice(userId, userAgent, ipAddress) {
     try {
       const query = `
         DELETE FROM refresh_tokens
         WHERE user_id = $1
           AND user_agent = $2
+          AND ip_address = $3
           AND expires_at > NOW()
       `;
 
-      const result = await pool.query(query, [userId, userAgent]);
+      const result = await pool.query(query, [userId, userAgent, ipAddress]);
 
       if (result.rowCount > 0) {
         logger.info('Revoked old refresh tokens from device', {
           userId,
           tokensRevoked: result.rowCount,
           userAgent: userAgent?.substring(0, 50), // Log truncated UA
+          ipAddress,
         });
       }
 

@@ -300,8 +300,9 @@ class AuthController {
         };
 
         // CRITICAL: Revoke old tokens from this device to prevent accumulation
+        // Uses device fingerprint (IP + user agent) to distinguish sessions
         // This prevents 21+ tokens per user when they log in after token expiry
-        await RefreshTokenService.revokeOldTokensFromDevice(user.id, userAgent);
+        await RefreshTokenService.revokeOldTokensFromDevice(user.id, userAgent, ipAddress);
 
         refreshTokenData = await RefreshTokenService.createRefreshToken(
           user.id,
