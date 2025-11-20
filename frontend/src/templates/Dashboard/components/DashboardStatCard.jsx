@@ -204,13 +204,15 @@ const DashboardStatCard = ({
               </IconButton>
             )}
 
-            {/* Value - centered */}
+            {/* Value - centered in available space (accounting for icon) */}
             <Box sx={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flex: 1,
-              px: showPrivacy ? 4 : 0, // Add padding if privacy toggle exists
+              // Account for icon width (48px) + padding (16px)
+              maxWidth: 'calc(100% - 64px)',
+              px: showPrivacy ? 4 : 1,
             }}>
               <Typography
                 variant="h3"
@@ -221,18 +223,20 @@ const DashboardStatCard = ({
                   display: 'flex',
                   alignItems: 'baseline',
                   gap: 0.5,
-                  // Responsive font sizing based on value length
+                  // More aggressive responsive font sizing for large values
                   fontSize: (() => {
                     const valueStr = String(value || '').replace(/,/g, '');
                     const totalLength = prefix.length + valueStr.length + suffix.length;
-                    if (totalLength >= 10) return 'clamp(1.25rem, 3vw, 1.75rem)'; // 10+ digits: smaller
-                    if (totalLength >= 9) return 'clamp(1.4rem, 3.5vw, 2rem)';    // 9 digits
-                    return 'clamp(1.5rem, 4vw, 2.25rem)';                          // ≤8 digits: normal
+                    if (totalLength >= 11) return 'clamp(1rem, 2.5vw, 1.5rem)';    // 11+ digits: very small
+                    if (totalLength >= 10) return 'clamp(1.15rem, 2.8vw, 1.65rem)'; // 10 digits: smaller
+                    if (totalLength >= 9) return 'clamp(1.3rem, 3.2vw, 1.85rem)';   // 9 digits: small
+                    return 'clamp(1.5rem, 4vw, 2.25rem)';                           // ≤8 digits: normal
                   })(),
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
+                  maxWidth: '100%',
                 }}
               >
                 {showPrivacy && !showValue ? (
