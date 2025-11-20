@@ -69,7 +69,7 @@ class ListingsService {
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const params = [];
-    const whereConditions = ['l.deleted_at IS NULL'];
+    const whereConditions = ['l.is_archived = false'];
 
     // Add filters
     if (status) {
@@ -201,7 +201,7 @@ class ListingsService {
           'total', l.total_commission
         ) as commission
       FROM listings l
-      WHERE l.id = $1 AND l.deleted_at IS NULL
+      WHERE l.id = $1 AND l.is_archived = false
     `;
 
     const listingResult = await query(listingQuery, [id]);
@@ -425,7 +425,7 @@ class ListingsService {
     const updateQuery = `
       UPDATE listings
       SET ${updateFields.join(', ')}
-      WHERE id = $${paramCount} AND deleted_at IS NULL${versionClause}
+      WHERE id = $${paramCount} AND is_archived = false${versionClause}
       RETURNING *
     `;
 
@@ -434,7 +434,7 @@ class ListingsService {
     if (result.rows.length === 0) {
       // Check if record exists but version mismatch
       if (clientVersion !== undefined) {
-        const checkQuery = 'SELECT version FROM listings WHERE id = $1 AND deleted_at IS NULL';
+        const checkQuery = 'SELECT version FROM listings WHERE id = $1 AND is_archived = false';
         const checkResult = await query(checkQuery, [id]);
 
         if (checkResult.rows.length === 0) {
@@ -485,7 +485,7 @@ class ListingsService {
   async updateListingStatus(id, newStatus, user) {
     // Get current status
     const currentResult = await query(
-      'SELECT listing_status FROM listings WHERE id = $1 AND deleted_at IS NULL',
+      'SELECT listing_status FROM listings WHERE id = $1 AND is_archived = false',
       [id]
     );
 
@@ -542,12 +542,13 @@ class ListingsService {
     const archiveQuery = `
       UPDATE listings
       SET
-        deleted_at = CURRENT_TIMESTAMP,
+        is_archived = true,
+        archived_at = CURRENT_TIMESTAMP,
         listing_status = 'Cancelled'
       WHERE id = $1
       AND (listing_agent_id = $2 OR team_id = $3)
-      AND deleted_at IS NULL
-      RETURNING id, property_address, deleted_at, listing_status
+      AND is_archived = false
+      RETURNING id, property_address, is_archived, archived_at, listing_status
     `;
 
     const result = await query(archiveQuery, [id, userId, teamId]);
@@ -581,12 +582,13 @@ class ListingsService {
     const restoreQuery = `
       UPDATE listings
       SET
-        deleted_at = NULL,
+        is_archived = false,
+        archived_at = NULL,
         listing_status = 'Active'
       WHERE id = $1
       AND (listing_agent_id = $2 OR team_id = $3)
-      AND deleted_at IS NOT NULL
-      RETURNING id, property_address, deleted_at, listing_status
+      AND is_archived = true
+      RETURNING id, property_address, is_archived, archived_at, listing_status
     `;
 
     const result = await query(restoreQuery, [id, userId, teamId]);
@@ -618,7 +620,7 @@ class ListingsService {
 
     // First check if the listing exists and is archived
     const checkQuery = `
-      SELECT id, property_address, deleted_at, broker_id
+      SELECT id, property_address, is_archived, broker_id
       FROM listings
       WHERE id = $1
       AND (listing_agent_id = $2 OR team_id = $3)
@@ -632,7 +634,7 @@ class ListingsService {
       throw error;
     }
 
-    if (!checkResult.rows[0].deleted_at) {
+    if (!checkResult.rows[0].is_archived) {
       const error = new Error('Listing must be archived before deletion');
       error.code = 'NOT_ARCHIVED';
       throw error;
@@ -643,7 +645,7 @@ class ListingsService {
       DELETE FROM listings
       WHERE id = $1
       AND (listing_agent_id = $2 OR team_id = $3)
-      AND deleted_at IS NOT NULL
+      AND is_archived = true
       RETURNING id, property_address
     `;
 
@@ -719,7 +721,7 @@ class ListingsService {
 
       // First verify all listings exist and are archived
       const verifyQuery = `
-        SELECT id, property_address, deleted_at
+        SELECT id, property_address, is_archived
         FROM listings
         WHERE id = ANY($1)
         AND (listing_agent_id = $2 OR team_id = $3)
@@ -739,7 +741,7 @@ class ListingsService {
       }
 
       // Check if all are archived
-      const notArchivedListings = verifyResult.rows.filter((row) => !row.deleted_at);
+      const notArchivedListings = verifyResult.rows.filter((row) => !row.is_archived);
       if (notArchivedListings.length > 0) {
         await client.query('ROLLBACK');
         const error = new Error('All listings must be archived before deletion');
@@ -753,7 +755,7 @@ class ListingsService {
         DELETE FROM listings
         WHERE id = ANY($1)
         AND (listing_agent_id = $2 OR team_id = $3)
-        AND deleted_at IS NOT NULL
+        AND is_archived = true
         RETURNING id, property_address
       `;
 
