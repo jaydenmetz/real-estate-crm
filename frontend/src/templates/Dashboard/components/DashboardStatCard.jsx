@@ -236,10 +236,10 @@ const DashboardStatCard = ({
                     const displayLength = prefix.length + numDigits + estimatedCommas + suffix.length;
 
                     // Size based on total displayed characters (including commas, prefix, suffix)
-                    if (displayLength >= 11) return 'clamp(0.95rem, 2.3vw, 1.4rem)';  // 11+ chars: very small
-                    if (displayLength >= 10) return 'clamp(1.1rem, 2.6vw, 1.6rem)';   // 10 chars: smaller
-                    if (displayLength >= 9) return 'clamp(1.25rem, 3vw, 1.8rem)';     // 9 chars: small
-                    return 'clamp(1.4rem, 3.5vw, 2.1rem)';                            // ≤8 chars: normal
+                    if (displayLength >= 11) return 'clamp(1.1rem, 2.8vw, 1.65rem)';  // 11+ chars: small
+                    if (displayLength >= 10) return 'clamp(1.25rem, 3.2vw, 1.85rem)'; // 10 chars: medium-small
+                    if (displayLength >= 9) return 'clamp(1.4rem, 3.6vw, 2rem)';      // 9 chars: medium
+                    return 'clamp(1.5rem, 4vw, 2.25rem)';                             // ≤8 chars: normal
                   })(),
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                   overflow: 'hidden',
@@ -252,21 +252,21 @@ const DashboardStatCard = ({
                 ) : typeof value === 'string' ? (
                   // Custom string value (no CountUp animation)
                   <>
-                    {prefix && <span style={{ fontSize: 'clamp(0.85rem, 2.2vw, 1.3rem)' }}>{prefix}</span>}
+                    {prefix && <span style={{ fontSize: 'clamp(0.7rem, 1.8vw, 1rem)' }}>{prefix}</span>}
                     <span>{value}</span>
-                    {suffix && <span style={{ fontSize: 'clamp(0.85rem, 2.2vw, 1.3rem)' }}>{suffix}</span>}
+                    {suffix && <span style={{ fontSize: 'clamp(0.7rem, 1.8vw, 1rem)' }}>{suffix}</span>}
                   </>
                 ) : (
                   // Numeric value with CountUp animation
                   <>
-                    {prefix && <span style={{ fontSize: 'clamp(0.85rem, 2.2vw, 1.3rem)' }}>{prefix}</span>}
+                    {prefix && <span style={{ fontSize: 'clamp(0.7rem, 1.8vw, 1rem)' }}>{prefix}</span>}
                     <CountUp
                       end={value}
                       duration={2.5}
                       separator=","
                       decimals={0}
                     />
-                    {suffix && <span style={{ fontSize: 'clamp(0.85rem, 2.2vw, 1.3rem)' }}>{suffix}</span>}
+                    {suffix && <span style={{ fontSize: 'clamp(0.7rem, 1.8vw, 1rem)' }}>{suffix}</span>}
                   </>
                 )}
               </Typography>
