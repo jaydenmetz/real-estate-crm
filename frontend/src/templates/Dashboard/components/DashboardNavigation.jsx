@@ -139,20 +139,18 @@ export const DashboardNavigation = ({
           overflowX: 'auto',
           maxWidth: '100%',
         }}>
-          {/* Bulk Actions Dropdown - appears first when items selected */}
-          {selectedItems.length > 0 && (
-            <BulkActionsBar
-              selectedCount={selectedItems.length}
-              totalCount={totalCount}
-              onClearSelection={onClearSelection}
-              onSelectAll={onSelectAll}
-              onArchive={onBulkArchive}
-              onDelete={onBulkDelete}
-              onRestore={onBulkRestore}
-              isArchived={selectedStatus === 'archived'}
-              customActions={bulkActions}
-            />
-          )}
+          {/* Bulk Actions Dropdown - always visible, shows "Select All" or count */}
+          <BulkActionsBar
+            selectedCount={selectedItems.length}
+            totalCount={totalCount}
+            onClearSelection={onClearSelection}
+            onSelectAll={onSelectAll}
+            onArchive={onBulkArchive}
+            onDelete={onBulkDelete}
+            onRestore={onBulkRestore}
+            isArchived={selectedStatus === 'archived'}
+            customActions={bulkActions}
+          />
 
           {/* Scope Dropdown - Styled like Year Dropdown */}
           {scopeOptions.length > 0 && (

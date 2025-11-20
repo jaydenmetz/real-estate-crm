@@ -55,15 +55,12 @@ export const BulkActionsBar = ({
     action?.();
   };
 
-  if (selectedCount === 0) {
-    return null;
-  }
-
   const allSelected = selectedCount === totalCount && totalCount > 0;
+  const hasSelection = selectedCount > 0;
 
   return (
     <>
-      {/* Bulk Actions Dropdown - matches filter button style */}
+      {/* Bulk Actions Dropdown - always visible, matches filter button style */}
       <Button
         size="small"
         variant="outlined"
@@ -79,8 +76,8 @@ export const BulkActionsBar = ({
           fontSize: '0.875rem',
           textTransform: 'none',
           border: '1px solid',
-          borderColor: 'primary.main',
-          color: 'primary.main',
+          borderColor: hasSelection ? 'primary.main' : 'divider',
+          color: hasSelection ? 'primary.main' : 'text.secondary',
           transition: 'all 0.2s',
           '&:hover': {
             borderColor: 'primary.main',
@@ -89,7 +86,7 @@ export const BulkActionsBar = ({
           },
         }}
       >
-        {selectedCount} selected
+        {hasSelection ? `${selectedCount} selected` : 'Select All'}
       </Button>
 
       <Menu
@@ -105,60 +102,75 @@ export const BulkActionsBar = ({
           },
         }}
       >
-        {/* Select All / Unselect All */}
-        {onSelectAll && (
-          <>
-            <MenuItem onClick={() => handleAction(onSelectAll)}>
-              <ListItemIcon>
-                {allSelected ? (
-                  <CheckBoxOutlineBlankIcon fontSize="small" />
-                ) : (
-                  <CheckBoxIcon fontSize="small" />
-                )}
-              </ListItemIcon>
-              <ListItemText primary={allSelected ? 'Unselect All' : 'Select All'} />
-            </MenuItem>
-            <Divider />
-          </>
+        {/* When no items selected: Show only Select All */}
+        {!hasSelection && onSelectAll && (
+          <MenuItem onClick={() => handleAction(onSelectAll)}>
+            <ListItemIcon>
+              <CheckBoxIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primary="Select All" />
+          </MenuItem>
         )}
 
-        {/* Archive/Restore Actions */}
-        {isArchived ? (
+        {/* When items are selected: Show full menu */}
+        {hasSelection && (
           <>
-            {onRestore && (
-              <MenuItem onClick={() => handleAction(onRestore)}>
-                <ListItemIcon>
-                  <UnarchiveIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText primary={`Restore (${selectedCount})`} />
-              </MenuItem>
+            {/* Select All / Unselect All */}
+            {onSelectAll && (
+              <>
+                <MenuItem onClick={() => handleAction(onSelectAll)}>
+                  <ListItemIcon>
+                    {allSelected ? (
+                      <CheckBoxOutlineBlankIcon fontSize="small" />
+                    ) : (
+                      <CheckBoxIcon fontSize="small" />
+                    )}
+                  </ListItemIcon>
+                  <ListItemText primary={allSelected ? 'Unselect All' : 'Select All'} />
+                </MenuItem>
+                <Divider />
+              </>
             )}
-          </>
-        ) : (
-          onArchive && (
-            <MenuItem onClick={() => handleAction(onArchive)}>
-              <ListItemIcon>
-                <ArchiveIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary={`Archive (${selectedCount})`} />
-            </MenuItem>
-          )
-        )}
 
-        {/* Custom Actions */}
-        {customActions.length > 0 && (
-          <>
-            <Divider />
-            {customActions.map((action, idx) => (
-              <MenuItem
-                key={idx}
-                onClick={() => handleAction(action.onClick)}
-                disabled={action.disabled}
-              >
-                {action.icon && <ListItemIcon>{action.icon}</ListItemIcon>}
-                <ListItemText primary={action.label} />
-              </MenuItem>
-            ))}
+            {/* Archive/Restore Actions */}
+            {isArchived ? (
+              <>
+                {onRestore && (
+                  <MenuItem onClick={() => handleAction(onRestore)}>
+                    <ListItemIcon>
+                      <UnarchiveIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary={`Restore (${selectedCount})`} />
+                  </MenuItem>
+                )}
+              </>
+            ) : (
+              onArchive && (
+                <MenuItem onClick={() => handleAction(onArchive)}>
+                  <ListItemIcon>
+                    <ArchiveIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary={`Archive (${selectedCount})`} />
+                </MenuItem>
+              )
+            )}
+
+            {/* Custom Actions */}
+            {customActions.length > 0 && (
+              <>
+                <Divider />
+                {customActions.map((action, idx) => (
+                  <MenuItem
+                    key={idx}
+                    onClick={() => handleAction(action.onClick)}
+                    disabled={action.disabled}
+                  >
+                    {action.icon && <ListItemIcon>{action.icon}</ListItemIcon>}
+                    <ListItemText primary={action.label} />
+                  </MenuItem>
+                ))}
+              </>
+            )}
           </>
         )}
       </Menu>
