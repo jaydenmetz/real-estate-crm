@@ -22,7 +22,6 @@ import {
 import {
   ExpandMore as ExpandMoreIcon,
   Archive as ArchiveIcon,
-  Delete as DeleteIcon,
   Close as CloseIcon,
   Unarchive as UnarchiveIcon,
   CheckBox as CheckBoxIcon,
@@ -132,17 +131,6 @@ export const BulkActionsBar = ({
                   <UnarchiveIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText primary={`Restore (${selectedCount})`} />
-              </MenuItem>
-            )}
-            {onDelete && (
-              <MenuItem onClick={() => handleAction(onDelete)}>
-                <ListItemIcon>
-                  <DeleteIcon fontSize="small" color="error" />
-                </ListItemIcon>
-                <ListItemText
-                  primary={`Delete (${selectedCount})`}
-                  sx={{ color: 'error.main' }}
-                />
               </MenuItem>
             )}
           </>
