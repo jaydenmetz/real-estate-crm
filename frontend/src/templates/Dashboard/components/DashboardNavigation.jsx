@@ -294,10 +294,10 @@ export const DashboardNavigation = ({
             sx={{
               width: 36,
               height: 36,
-              backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
+              backgroundColor: selectedStatus === 'archived' ? alpha('#000', 0.8) : alpha('#000', 0.06),
               color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
               '&:hover': {
-                backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
+                backgroundColor: selectedStatus === 'archived' ? alpha('#000', 0.9) : alpha('#000', 0.1),
               },
               transition: 'all 0.2s',
             }}

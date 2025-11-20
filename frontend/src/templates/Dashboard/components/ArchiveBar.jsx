@@ -49,10 +49,10 @@ export const ArchiveBar = ({
         gap: 2,
         p: 2,
         mb: 2,
-        backgroundColor: alpha('#ff9800', 0.08),
+        backgroundColor: alpha('#000', 0.03),
         borderRadius: 2,
         border: '1px solid',
-        borderColor: alpha('#ff9800', 0.2),
+        borderColor: alpha('#000', 0.1),
       }}
     >
       {/* Year Selector */}
@@ -94,7 +94,7 @@ export const ArchiveBar = ({
           }}
           sx={{
             '&.MuiCheckbox-indeterminate': {
-              color: 'warning.main',
+              color: 'text.secondary',
             },
           }}
         />
