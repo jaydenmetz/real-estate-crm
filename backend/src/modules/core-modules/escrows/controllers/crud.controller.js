@@ -33,6 +33,7 @@ async function getAllEscrows(req, res) {
       order = 'desc',
       search,
       scope = 'user', // Extract scope parameter (user/team/broker)
+      onlyArchived = 'false', // Archive view filter
     } = req.query;
 
     // Get user context for filtering
@@ -48,6 +49,8 @@ async function getAllEscrows(req, res) {
     const schema = await detectSchema();
 
     // Check if escrows table exists and has data
+    const showArchived = onlyArchived === 'true' || onlyArchived === true;
+
     try {
       const tableCheck = await pool.query(`
         SELECT
@@ -55,7 +58,7 @@ async function getAllEscrows(req, res) {
           MIN(id::text) as first_id,
           MAX(id::text) as last_id
         FROM escrows
-        WHERE is_archived = false
+        WHERE is_archived = ${showArchived}
       `);
 
       const totalCount = parseInt(tableCheck.rows[0]?.count || 0);
@@ -121,11 +124,14 @@ async function getAllEscrows(req, res) {
         e.commission_type,
         e.gross_commission as gross_commission,
         ${acceptanceDateField} as acceptance_date,
-        e.created_at as created_at
+        e.created_at as created_at,
+        e.is_archived,
+        e.archived_at
       FROM escrows e
     `;
 
-    const conditions = ['e.is_archived = false'];
+    // Build conditions array with archive filter based on onlyArchived parameter
+    const conditions = [`e.is_archived = ${showArchived}`];
     const values = [];
     let paramIndex = 1;
 

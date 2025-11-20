@@ -386,8 +386,15 @@ export const DashboardTemplate = ({
     }
   };
 
-  // Get archived data (using is_archived instead of deleted_at)
+  // Get archived data
+  // When selectedStatus === 'archived', the backend already returns archived items only
+  // So we use rawData directly (which is already filtered by backend)
   const archivedData = useMemo(() => {
+    if (selectedStatus === 'archived') {
+      // Data from backend is already archived-only
+      return Array.isArray(data) ? data : [];
+    }
+    // For other statuses, filter from filteredData (shouldn't have archived items anyway)
     return filteredData.filter(item =>
       item.is_archived === true ||
       item.isArchived === true ||
@@ -395,7 +402,7 @@ export const DashboardTemplate = ({
       item.deleted_at ||
       item.deletedAt
     );
-  }, [filteredData]);
+  }, [data, filteredData, selectedStatus]);
 
   // Filter archived data by selected year
   const archivedDataFiltered = useMemo(() => {

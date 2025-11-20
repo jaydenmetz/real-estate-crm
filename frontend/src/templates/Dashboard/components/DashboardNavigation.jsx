@@ -289,10 +289,10 @@ export const DashboardNavigation = ({
             </ToggleButton>
           </ToggleButtonGroup>
 
-          {/* Archive/Trash Icon */}
+          {/* Archive/Trash Icon - Toggle on/off */}
           <IconButton
             size="small"
-            onClick={() => onStatusChange('archived')}
+            onClick={() => onStatusChange(selectedStatus === 'archived' ? 'all' : 'archived')}
             sx={{
               width: 36,
               height: 36,
