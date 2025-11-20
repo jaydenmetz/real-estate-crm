@@ -47,7 +47,9 @@ export const DashboardNavigation = ({
   archivedCount = 0,
   // Bulk selection props
   selectedItems = [],
+  totalCount = 0,
   onClearSelection,
+  onSelectAll,
   onBulkArchive,
   onBulkDelete,
   onBulkRestore,
@@ -128,21 +130,6 @@ export const DashboardNavigation = ({
           </Paper>
         </Box>
 
-        {/* Bulk Actions Bar - appears between tabs and filters when items selected */}
-        {selectedItems.length > 0 && (
-          <Box sx={{ flexBasis: '100%', order: 2 }}>
-            <BulkActionsBar
-              selectedCount={selectedItems.length}
-              onClearSelection={onClearSelection}
-              onArchive={onBulkArchive}
-              onDelete={onBulkDelete}
-              onRestore={onBulkRestore}
-              isArchived={selectedStatus === 'archived'}
-              customActions={bulkActions}
-            />
-          </Box>
-        )}
-
         {/* Filters - stay right-justified, allow horizontal scroll if needed */}
         <Box sx={{
           display: 'flex',
@@ -152,6 +139,21 @@ export const DashboardNavigation = ({
           overflowX: 'auto',
           maxWidth: '100%',
         }}>
+          {/* Bulk Actions Dropdown - appears first when items selected */}
+          {selectedItems.length > 0 && (
+            <BulkActionsBar
+              selectedCount={selectedItems.length}
+              totalCount={totalCount}
+              onClearSelection={onClearSelection}
+              onSelectAll={onSelectAll}
+              onArchive={onBulkArchive}
+              onDelete={onBulkDelete}
+              onRestore={onBulkRestore}
+              isArchived={selectedStatus === 'archived'}
+              customActions={bulkActions}
+            />
+          )}
+
           {/* Scope Dropdown - Styled like Year Dropdown */}
           {scopeOptions.length > 0 && (
             <Select

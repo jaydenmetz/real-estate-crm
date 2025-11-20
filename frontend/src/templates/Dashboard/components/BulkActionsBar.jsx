@@ -2,165 +2,178 @@
  * BulkActionsBar.jsx - Bulk action controls for multi-select
  *
  * Displays between tabs and filters when items are selected
- * Shows: count, Archive, Delete, and custom actions
+ * Single dropdown menu with all bulk actions
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
   Typography,
   IconButton,
   Tooltip,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
   alpha,
 } from '@mui/material';
 import {
+  ExpandMore as ExpandMoreIcon,
   Archive as ArchiveIcon,
   Delete as DeleteIcon,
   Close as CloseIcon,
   Unarchive as UnarchiveIcon,
+  CheckBox as CheckBoxIcon,
+  CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
 } from '@mui/icons-material';
 
 export const BulkActionsBar = ({
   selectedCount = 0,
+  totalCount = 0,
   onClearSelection,
+  onSelectAll,
   onArchive,
   onDelete,
   onRestore,
   isArchived = false,
   customActions = [],
 }) => {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleAction = (action) => {
+    handleClose();
+    action?.();
+  };
+
   if (selectedCount === 0) {
     return null;
   }
 
+  const allSelected = selectedCount === totalCount && totalCount > 0;
+
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
-        py: 1,
-        px: 2,
-        backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: (theme) => alpha(theme.palette.primary.main, 0.2),
-        flexWrap: 'wrap',
-      }}
-    >
-      {/* Selection Count */}
-      <Typography
-        variant="body2"
+    <>
+      {/* Bulk Actions Dropdown - matches filter button style */}
+      <Button
+        size="small"
+        variant="outlined"
+        endIcon={<ExpandMoreIcon />}
+        onClick={handleClick}
         sx={{
+          minWidth: 140,
+          height: 32,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: 2,
           fontWeight: 600,
+          fontSize: '0.875rem',
+          textTransform: 'none',
+          border: '1px solid',
+          borderColor: 'primary.main',
           color: 'primary.main',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
+          transition: 'all 0.2s',
+          '&:hover': {
+            borderColor: 'primary.main',
+            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          },
         }}
       >
         {selectedCount} selected
-      </Typography>
+      </Button>
 
-      {/* Actions */}
-      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            mt: 0.5,
+            minWidth: 200,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          },
+        }}
+      >
+        {/* Select All / Unselect All */}
+        {onSelectAll && (
+          <>
+            <MenuItem onClick={() => handleAction(onSelectAll)}>
+              <ListItemIcon>
+                {allSelected ? (
+                  <CheckBoxOutlineBlankIcon fontSize="small" />
+                ) : (
+                  <CheckBoxIcon fontSize="small" />
+                )}
+              </ListItemIcon>
+              <ListItemText primary={allSelected ? 'Unselect All' : 'Select All'} />
+            </MenuItem>
+            <Divider />
+          </>
+        )}
+
+        {/* Archive/Restore Actions */}
         {isArchived ? (
           <>
             {onRestore && (
-              <Tooltip title="Restore selected items">
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<UnarchiveIcon />}
-                  onClick={onRestore}
-                  sx={{
-                    textTransform: 'none',
-                    borderRadius: 1.5,
-                    fontWeight: 500,
-                  }}
-                >
-                  Restore
-                </Button>
-              </Tooltip>
+              <MenuItem onClick={() => handleAction(onRestore)}>
+                <ListItemIcon>
+                  <UnarchiveIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary={`Restore (${selectedCount})`} />
+              </MenuItem>
             )}
             {onDelete && (
-              <Tooltip title="Permanently delete selected items">
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  startIcon={<DeleteIcon />}
-                  onClick={onDelete}
-                  sx={{
-                    textTransform: 'none',
-                    borderRadius: 1.5,
-                    fontWeight: 500,
-                  }}
-                >
-                  Delete
-                </Button>
-              </Tooltip>
+              <MenuItem onClick={() => handleAction(onDelete)}>
+                <ListItemIcon>
+                  <DeleteIcon fontSize="small" color="error" />
+                </ListItemIcon>
+                <ListItemText
+                  primary={`Delete (${selectedCount})`}
+                  sx={{ color: 'error.main' }}
+                />
+              </MenuItem>
             )}
           </>
         ) : (
           onArchive && (
-            <Tooltip title="Archive selected items">
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<ArchiveIcon />}
-                onClick={onArchive}
-                sx={{
-                  textTransform: 'none',
-                  borderRadius: 1.5,
-                  fontWeight: 500,
-                }}
-              >
-                Archive
-              </Button>
-            </Tooltip>
+            <MenuItem onClick={() => handleAction(onArchive)}>
+              <ListItemIcon>
+                <ArchiveIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary={`Archive (${selectedCount})`} />
+            </MenuItem>
           )
         )}
 
         {/* Custom Actions */}
-        {customActions.map((action, idx) => (
-          <Tooltip key={idx} title={action.tooltip || action.label}>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={action.icon}
-              onClick={action.onClick}
-              disabled={action.disabled}
-              sx={{
-                textTransform: 'none',
-                borderRadius: 1.5,
-                fontWeight: 500,
-              }}
-            >
-              {action.label}
-            </Button>
-          </Tooltip>
-        ))}
-      </Box>
-
-      {/* Clear Selection */}
-      <Box sx={{ ml: 'auto' }}>
-        <Tooltip title="Clear selection">
-          <IconButton
-            size="small"
-            onClick={onClearSelection}
-            sx={{
-              color: 'text.secondary',
-              '&:hover': {
-                backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.1),
-              },
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
-    </Box>
+        {customActions.length > 0 && (
+          <>
+            <Divider />
+            {customActions.map((action, idx) => (
+              <MenuItem
+                key={idx}
+                onClick={() => handleAction(action.onClick)}
+                disabled={action.disabled}
+              >
+                {action.icon && <ListItemIcon>{action.icon}</ListItemIcon>}
+                <ListItemText primary={action.label} />
+              </MenuItem>
+            ))}
+          </>
+        )}
+      </Menu>
+    </>
   );
 };

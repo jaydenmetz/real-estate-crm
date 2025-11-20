@@ -80,6 +80,17 @@ export const DashboardTemplate = ({
     setSelectedItems([]);
   };
 
+  const handleSelectAll = () => {
+    if (selectedItems.length === (data?.length || 0)) {
+      // All selected - unselect all
+      setSelectedItems([]);
+    } else {
+      // Not all selected - select all
+      const allIds = (data || []).map(item => item[config.api?.idField || 'id']);
+      setSelectedItems(allIds);
+    }
+  };
+
   const handleBulkArchive = async () => {
     if (selectedItems.length === 0 || !config.api?.archive) return;
 
@@ -404,7 +415,9 @@ export const DashboardTemplate = ({
             onShowCalendarChange={setShowCalendar}
             archivedCount={archivedCount}
             selectedItems={selectedItems}
+            totalCount={data?.length || 0}
             onClearSelection={handleClearSelection}
+            onSelectAll={handleSelectAll}
             onBulkArchive={handleBulkArchive}
             onBulkDelete={handleBulkDelete}
             onBulkRestore={handleBulkRestore}
@@ -428,7 +441,9 @@ export const DashboardTemplate = ({
             onShowCalendarChange={setShowCalendar}
             archivedCount={archivedCount}
             selectedItems={selectedItems}
+            totalCount={data?.length || 0}
             onClearSelection={handleClearSelection}
+            onSelectAll={handleSelectAll}
             onBulkArchive={handleBulkArchive}
             onBulkDelete={handleBulkDelete}
             onBulkRestore={handleBulkRestore}
