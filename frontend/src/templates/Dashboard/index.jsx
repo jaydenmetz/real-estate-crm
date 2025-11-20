@@ -92,17 +92,35 @@ export const DashboardTemplate = ({
   };
 
   const handleClearSelection = () => {
-    setSelectedItems([]);
+    if (selectedStatus === 'archived') {
+      setSelectedArchivedIds([]);
+    } else {
+      setSelectedItems([]);
+    }
   };
 
   const handleSelectAll = () => {
-    if (selectedItems.length === (data?.length || 0)) {
-      // All selected - unselect all
-      setSelectedItems([]);
+    if (selectedStatus === 'archived') {
+      // Archive view
+      const currentData = archivedData || [];
+      if (selectedArchivedIds.length === currentData.length) {
+        // All selected - unselect all
+        setSelectedArchivedIds([]);
+      } else {
+        // Not all selected - select all
+        const allIds = currentData.map(item => item[config.api?.idField || 'id']);
+        setSelectedArchivedIds(allIds);
+      }
     } else {
-      // Not all selected - select all
-      const allIds = (data || []).map(item => item[config.api?.idField || 'id']);
-      setSelectedItems(allIds);
+      // Regular view
+      if (selectedItems.length === (data?.length || 0)) {
+        // All selected - unselect all
+        setSelectedItems([]);
+      } else {
+        // Not all selected - select all
+        const allIds = (data || []).map(item => item[config.api?.idField || 'id']);
+        setSelectedItems(allIds);
+      }
     }
   };
 
@@ -505,8 +523,8 @@ export const DashboardTemplate = ({
             showCalendar={showCalendar}
             onShowCalendarChange={setShowCalendar}
             archivedCount={archivedCount}
-            selectedItems={selectedItems}
-            totalCount={data?.length || 0}
+            selectedItems={selectedStatus === 'archived' ? selectedArchivedIds : selectedItems}
+            totalCount={selectedStatus === 'archived' ? archivedData?.length || 0 : data?.length || 0}
             onClearSelection={handleClearSelection}
             onSelectAll={handleSelectAll}
             onBulkArchive={handleBulkArchive}
