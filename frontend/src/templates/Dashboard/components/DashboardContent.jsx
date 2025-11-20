@@ -36,8 +36,6 @@ export const DashboardContent = ({
   // Archive view props
   selectedStatus,
   archivedData,
-  selectedArchivedIds,
-  setSelectedArchivedIds,
   handleBatchDelete,
   handleBatchRestore,
   batchDeleting,
@@ -229,7 +227,7 @@ export const DashboardContent = ({
                       selectedYear={selectedYear}
                       onYearChange={onYearChange}
                       yearOptions={yearOptions || []}
-                      selectedItems={selectedArchivedIds || []}
+                      selectedItems={selectedItems || []}
                       totalCount={archivedData?.length || 0}
                       onSelectAll={handleSelectAll}
                       onClearSelection={handleClearSelection}
@@ -242,7 +240,7 @@ export const DashboardContent = ({
 
                   {archivedData.map((item, index) => {
                     const itemId = item[config.api.idField];
-                    const isSelected = selectedArchivedIds?.includes(itemId);
+                    const isSelected = selectedItems?.includes(itemId);
 
                     return (
                       <Box
@@ -276,13 +274,7 @@ export const DashboardContent = ({
                           // Multi-select props (same as regular view)
                           isSelectable={true}
                           isSelected={isSelected}
-                          onSelect={(id) => {
-                            if (isSelected) {
-                              setSelectedArchivedIds?.(prev => prev.filter(itemId => itemId !== id));
-                            } else {
-                              setSelectedArchivedIds?.(prev => [...prev, id]);
-                            }
-                          }}
+                          onSelect={onSelectItem}
                         />
                       </Box>
                     );

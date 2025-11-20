@@ -60,7 +60,6 @@ export const DashboardTemplate = ({
   // Calendar and archive state (matching Clients)
   const [showCalendar, setShowCalendar] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
-  const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
   const [batchDeleting, setBatchDeleting] = useState(false);
   const [batchRestoring, setBatchRestoring] = useState(false);
 
@@ -92,35 +91,20 @@ export const DashboardTemplate = ({
   };
 
   const handleClearSelection = () => {
-    if (selectedStatus === 'archived') {
-      setSelectedArchivedIds([]);
-    } else {
-      setSelectedItems([]);
-    }
+    setSelectedItems([]);
   };
 
   const handleSelectAll = () => {
-    if (selectedStatus === 'archived') {
-      // Archive view
-      const currentData = archivedData || [];
-      if (selectedArchivedIds.length === currentData.length) {
-        // All selected - unselect all
-        setSelectedArchivedIds([]);
-      } else {
-        // Not all selected - select all
-        const allIds = currentData.map(item => item[config.api?.idField || 'id']);
-        setSelectedArchivedIds(allIds);
-      }
+    // Get the current data based on view
+    const currentData = selectedStatus === 'archived' ? (archivedData || []) : (data || []);
+
+    if (selectedItems.length === currentData.length && currentData.length > 0) {
+      // All selected - unselect all
+      setSelectedItems([]);
     } else {
-      // Regular view
-      if (selectedItems.length === (data?.length || 0)) {
-        // All selected - unselect all
-        setSelectedItems([]);
-      } else {
-        // Not all selected - select all
-        const allIds = (data || []).map(item => item[config.api?.idField || 'id']);
-        setSelectedItems(allIds);
-      }
+      // Not all selected - select all
+      const allIds = currentData.map(item => item[config.api?.idField || 'id']);
+      setSelectedItems(allIds);
     }
   };
 
@@ -357,16 +341,16 @@ export const DashboardTemplate = ({
 
   // Batch restore handler for archived items
   const handleBatchRestore = async () => {
-    if (!selectedArchivedIds || selectedArchivedIds.length === 0) return;
+    if (!selectedItems || selectedItems.length === 0) return;
 
     setBatchRestoring(true);
     try {
       // Restore all selected items
       await Promise.all(
-        selectedArchivedIds.map(id => config.api.restore(id))
+        selectedItems.map(id => config.api.restore(id))
       );
       await refetch();
-      setSelectedArchivedIds([]);
+      setSelectedItems([]);
     } catch (err) {
       console.error(`Failed to batch restore ${config.entity.namePlural}:`, err);
     } finally {
@@ -376,16 +360,16 @@ export const DashboardTemplate = ({
 
   // Batch delete handler for archived items
   const handleBatchDelete = async () => {
-    if (!selectedArchivedIds || selectedArchivedIds.length === 0) return;
+    if (!selectedItems || selectedItems.length === 0) return;
 
     setBatchDeleting(true);
     try {
       // Delete all selected items
       await Promise.all(
-        selectedArchivedIds.map(id => config.api.delete(id))
+        selectedItems.map(id => config.api.delete(id))
       );
       await refetch();
-      setSelectedArchivedIds([]);
+      setSelectedItems([]);
     } catch (err) {
       console.error(`Failed to batch delete ${config.entity.namePlural}:`, err);
     } finally {
@@ -523,7 +507,7 @@ export const DashboardTemplate = ({
             showCalendar={showCalendar}
             onShowCalendarChange={setShowCalendar}
             archivedCount={archivedCount}
-            selectedItems={selectedStatus === 'archived' ? selectedArchivedIds : selectedItems}
+            selectedItems={selectedItems}
             totalCount={selectedStatus === 'archived' ? archivedData?.length || 0 : data?.length || 0}
             onClearSelection={handleClearSelection}
             onSelectAll={handleSelectAll}
@@ -551,14 +535,12 @@ export const DashboardTemplate = ({
           customActions={customActions}
           selectedStatus={selectedStatus}
           archivedData={archivedDataFiltered}
-          selectedArchivedIds={selectedArchivedIds}
-          setSelectedArchivedIds={setSelectedArchivedIds}
           handleBatchDelete={handleBatchDelete}
           handleBatchRestore={handleBatchRestore}
           batchDeleting={batchDeleting}
           batchRestoring={batchRestoring}
-          handleSelectAll={handleSelectAllArchived}
-          handleClearSelection={() => setSelectedArchivedIds([])}
+          handleSelectAll={handleSelectAll}
+          handleClearSelection={handleClearSelection}
           selectedYear={archiveYear}
           onYearChange={setArchiveYear}
           yearOptions={archiveYearOptions}
