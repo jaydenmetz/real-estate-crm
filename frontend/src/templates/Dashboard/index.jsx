@@ -341,8 +341,8 @@ export const DashboardTemplate = ({
     }
   };
 
-  // Select all handler
-  const handleSelectAll = (checked) => {
+  // Select all archived items handler
+  const handleSelectAllArchived = (checked) => {
     if (checked) {
       const archivedItems = filteredData.filter(item => item.deleted_at || item.deletedAt);
       const allIds = archivedItems.map(item => item[config.api.idField]);
@@ -472,7 +472,7 @@ export const DashboardTemplate = ({
           setSelectedArchivedIds={setSelectedArchivedIds}
           handleBatchDelete={handleBatchDelete}
           batchDeleting={batchDeleting}
-          handleSelectAll={handleSelectAll}
+          handleSelectAll={handleSelectAllArchived}
           isSelectable={config.dashboard?.enableMultiSelect || false}
           selectedItems={selectedItems}
           onSelectItem={handleSelectItem}
