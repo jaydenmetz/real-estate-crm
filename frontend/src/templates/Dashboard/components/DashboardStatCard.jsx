@@ -176,12 +176,12 @@ const DashboardStatCard = ({
           {/* Middle: CSS Grid layout for precise control */}
           <Box sx={{
             display: 'grid',
-            gridTemplateColumns: showPrivacy ? '32px 1fr 56px' : '1fr 56px',
+            gridTemplateColumns: showPrivacy ? '32px 1fr 52px' : '1fr 52px',
             alignItems: 'center',
-            gap: 1,
+            gap: 1.5,
             flex: 1,
             my: 1,
-            px: 2,
+            px: 1.5,
           }}>
             {/* Privacy toggle - fixed column */}
             {showPrivacy && (
