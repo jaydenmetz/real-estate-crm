@@ -216,7 +216,8 @@ const DashboardStatCard = ({
               alignItems: 'center',
               justifyContent: 'center',
               flex: 1,
-              minWidth: 0, // Allow flex item to shrink below content size
+              minWidth: 0,
+              overflow: 'hidden', // Prevent container overflow
             }}>
               <Typography
                 variant="h3"
@@ -224,9 +225,10 @@ const DashboardStatCard = ({
                 sx={{
                   fontWeight: 700,
                   color: valueColor || textColor || 'white',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'baseline',
-                  gap: 0.5,
+                  gap: 0.25,
+                  flexShrink: 1,
                   // More aggressive responsive font sizing for large values
                   fontSize: (() => {
                     const valueStr = String(value || '').replace(/,/g, '');
@@ -236,15 +238,12 @@ const DashboardStatCard = ({
                     const displayLength = prefix.length + numDigits + estimatedCommas + suffix.length;
 
                     // Size based on total displayed characters (including commas, prefix, suffix)
-                    if (displayLength >= 11) return 'clamp(1.1rem, 2.8vw, 1.65rem)';  // 11+ chars: small
-                    if (displayLength >= 10) return 'clamp(1.25rem, 3.2vw, 1.85rem)'; // 10 chars: medium-small
-                    if (displayLength >= 9) return 'clamp(1.4rem, 3.6vw, 2rem)';      // 9 chars: medium
-                    return 'clamp(1.5rem, 4vw, 2.25rem)';                             // ≤8 chars: normal
+                    if (displayLength >= 11) return 'clamp(1rem, 2.5vw, 1.5rem)';   // 11+ chars: very small
+                    if (displayLength >= 10) return 'clamp(1.15rem, 2.8vw, 1.7rem)'; // 10 chars: small
+                    if (displayLength >= 9) return 'clamp(1.3rem, 3.2vw, 1.9rem)';   // 9 chars: medium
+                    return 'clamp(1.5rem, 4vw, 2.25rem)';                            // ≤8 chars: normal
                   })(),
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
                 }}
               >
                 {showPrivacy && !showValue ? (
