@@ -217,7 +217,7 @@ const DashboardStatCard = ({
               justifyContent: 'center',
               flex: 1,
               minWidth: 0,
-              overflow: 'hidden', // Prevent container overflow
+              overflow: 'hidden',
             }}>
               <Typography
                 variant="h3"
@@ -227,21 +227,22 @@ const DashboardStatCard = ({
                   color: valueColor || textColor || 'white',
                   display: 'inline-flex',
                   alignItems: 'baseline',
-                  gap: 0.25,
+                  gap: 0.2,
                   flexShrink: 1,
-                  // More aggressive responsive font sizing for large values
+                  // Aggressive font scaling - no max limit, shrinks as needed
                   fontSize: (() => {
                     const valueStr = String(value || '').replace(/,/g, '');
                     const numDigits = valueStr.length;
-                    // Estimate displayed length including commas (add 1 comma per 3 digits after first)
                     const estimatedCommas = Math.max(0, Math.floor((numDigits - 1) / 3));
                     const displayLength = prefix.length + numDigits + estimatedCommas + suffix.length;
 
-                    // Size based on total displayed characters (including commas, prefix, suffix)
-                    if (displayLength >= 11) return 'clamp(1rem, 2.5vw, 1.5rem)';   // 11+ chars: very small
-                    if (displayLength >= 10) return 'clamp(1.15rem, 2.8vw, 1.7rem)'; // 10 chars: small
-                    if (displayLength >= 9) return 'clamp(1.3rem, 3.2vw, 1.9rem)';   // 9 chars: medium
-                    return 'clamp(1.5rem, 4vw, 2.25rem)';                            // ≤8 chars: normal
+                    // More aggressive scaling with lower minimums and maximums
+                    if (displayLength >= 12) return 'clamp(0.8rem, 2vw, 1.2rem)';    // 12+ chars: tiny
+                    if (displayLength >= 11) return 'clamp(0.9rem, 2.2vw, 1.35rem)'; // 11 chars: very small
+                    if (displayLength >= 10) return 'clamp(1rem, 2.5vw, 1.5rem)';    // 10 chars: small
+                    if (displayLength >= 9) return 'clamp(1.15rem, 2.8vw, 1.7rem)';  // 9 chars: medium-small
+                    if (displayLength >= 8) return 'clamp(1.3rem, 3.2vw, 1.9rem)';   // 8 chars: medium
+                    return 'clamp(1.5rem, 4vw, 2.25rem)';                            // ≤7 chars: normal
                   })(),
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                 }}
@@ -251,21 +252,21 @@ const DashboardStatCard = ({
                 ) : typeof value === 'string' ? (
                   // Custom string value (no CountUp animation)
                   <>
-                    {prefix && <span style={{ fontSize: 'clamp(0.7rem, 1.8vw, 1rem)' }}>{prefix}</span>}
+                    {prefix && <span style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.85rem)', opacity: 0.85 }}>{prefix}</span>}
                     <span>{value}</span>
-                    {suffix && <span style={{ fontSize: 'clamp(0.7rem, 1.8vw, 1rem)' }}>{suffix}</span>}
+                    {suffix && <span style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.85rem)', opacity: 0.85 }}>{suffix}</span>}
                   </>
                 ) : (
                   // Numeric value with CountUp animation
                   <>
-                    {prefix && <span style={{ fontSize: 'clamp(0.7rem, 1.8vw, 1rem)' }}>{prefix}</span>}
+                    {prefix && <span style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.85rem)', opacity: 0.85 }}>{prefix}</span>}
                     <CountUp
                       end={value}
                       duration={2.5}
                       separator=","
                       decimals={0}
                     />
-                    {suffix && <span style={{ fontSize: 'clamp(0.7rem, 1.8vw, 1rem)' }}>{suffix}</span>}
+                    {suffix && <span style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.85rem)', opacity: 0.85 }}>{suffix}</span>}
                   </>
                 )}
               </Typography>
