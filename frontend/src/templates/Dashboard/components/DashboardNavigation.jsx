@@ -28,7 +28,7 @@ import {
 } from '@mui/material';
 import {
   Sort,
-  Delete as DeleteIcon,
+  Archive as ArchiveIcon,
 } from '@mui/icons-material';
 import { BulkActionsBar } from './BulkActionsBar';
 
@@ -289,7 +289,7 @@ export const DashboardNavigation = ({
             </ToggleButton>
           </ToggleButtonGroup>
 
-          {/* Archive/Trash Icon - Toggle on/off */}
+          {/* Archive Icon - Toggle on/off */}
           <IconButton
             size="small"
             onClick={() => onStatusChange(selectedStatus === 'archived' ? 'all' : 'archived')}
@@ -305,7 +305,7 @@ export const DashboardNavigation = ({
             }}
           >
             <Badge badgeContent={archivedCount} color="error" max={99}>
-              <DeleteIcon sx={{ fontSize: 20 }} />
+              <ArchiveIcon sx={{ fontSize: 20 }} />
             </Badge>
           </IconButton>
         </Box>
