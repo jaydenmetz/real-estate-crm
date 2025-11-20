@@ -13,6 +13,7 @@ import {
   DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ArchiveBar } from './ArchiveBar';
 
 /**
  * DashboardContent - Config-driven content grid/list with animations
@@ -38,8 +39,15 @@ export const DashboardContent = ({
   selectedArchivedIds,
   setSelectedArchivedIds,
   handleBatchDelete,
+  handleBatchRestore,
   batchDeleting,
+  batchRestoring,
   handleSelectAll,
+  handleClearSelection,
+  // Year filtering for archive view
+  selectedYear,
+  onYearChange,
+  yearOptions,
   // Multi-select props
   isSelectable = false,
   selectedItems = [],
@@ -211,44 +219,25 @@ export const DashboardContent = ({
       <Box sx={getGridStyles()}>
         <AnimatePresence>
           {(() => {
-            // Archive view with checkboxes
+            // Archive view with ArchiveBar
             if (isArchiveView) {
               return (
                 <>
-                  {/* Batch Delete Controls */}
-                  <Box sx={{
-                    gridColumn: '1 / -1',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    p: 2,
-                    backgroundColor: alpha('#ff9800', 0.1),
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: alpha('#ff9800', 0.3),
-                  }}>
-                    <Checkbox
-                      checked={selectedArchivedIds?.length === archivedData?.length && archivedData?.length > 0}
-                      indeterminate={selectedArchivedIds?.length > 0 && selectedArchivedIds?.length < archivedData?.length}
-                      onChange={(e) => handleSelectAll?.(e.target.checked)}
+                  {/* Archive Bar - Year selector and batch actions */}
+                  <Box sx={{ gridColumn: '1 / -1' }}>
+                    <ArchiveBar
+                      selectedYear={selectedYear}
+                      onYearChange={onYearChange}
+                      yearOptions={yearOptions || []}
+                      selectedItems={selectedArchivedIds || []}
+                      totalCount={archivedData?.length || 0}
+                      onSelectAll={handleSelectAll}
+                      onClearSelection={handleClearSelection}
+                      onRestore={handleBatchRestore}
+                      onDelete={handleBatchDelete}
+                      isRestoring={batchRestoring}
+                      isDeleting={batchDeleting}
                     />
-                    <Typography variant="body2">
-                      {selectedArchivedIds?.length > 0
-                        ? `${selectedArchivedIds.length} selected`
-                        : 'Select all'}
-                    </Typography>
-                    {selectedArchivedIds?.length > 0 && (
-                      <Button
-                        variant="contained"
-                        color="error"
-                        size="small"
-                        startIcon={batchDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
-                        onClick={handleBatchDelete}
-                        disabled={batchDeleting}
-                      >
-                        Delete {selectedArchivedIds.length} {config.entity.label}{selectedArchivedIds.length > 1 ? 's' : ''}
-                      </Button>
-                    )}
                   </Box>
 
                   {archivedData.map((item, index) => {
