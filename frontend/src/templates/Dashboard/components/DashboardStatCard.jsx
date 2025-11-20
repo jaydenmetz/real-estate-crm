@@ -178,10 +178,10 @@ const DashboardStatCard = ({
             display: 'grid',
             gridTemplateColumns: showPrivacy ? '32px 1fr 52px' : '1fr 52px',
             alignItems: 'center',
-            gap: 1.5,
+            gap: 2,
             flex: 1,
             my: 1,
-            px: 1.5,
+            px: 0.5,
           }}>
             {/* Privacy toggle - fixed column */}
             {showPrivacy && (
