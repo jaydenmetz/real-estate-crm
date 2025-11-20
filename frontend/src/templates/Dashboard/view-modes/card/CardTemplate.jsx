@@ -279,8 +279,6 @@ const CardTemplate = React.memo(({
             borderRadius: 4,
             overflow: 'hidden',
             position: 'relative',
-            border: isSelected ? '2px solid' : 'none',
-            borderColor: isSelected ? 'primary.main' : 'transparent',
             '&::before': statusConfig.color ? {
               content: '""',
               position: 'absolute',
@@ -293,15 +291,11 @@ const CardTemplate = React.memo(({
               maskComposite: 'exclude',
               pointerEvents: 'none',
             } : {},
-            boxShadow: isSelected
-              ? '0 0 0 3px rgba(25, 118, 210, 0.15), 0 8px 24px rgba(25, 118, 210, 0.2)'
-              : statusConfig.color
+            boxShadow: statusConfig.color
               ? `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}`
               : 3,
             '&:hover': {
-              boxShadow: isSelected
-                ? '0 0 0 3px rgba(25, 118, 210, 0.25), 0 12px 32px rgba(25, 118, 210, 0.3)'
-                : statusConfig.color
+              boxShadow: statusConfig.color
                 ? `0 12px 48px ${alpha(statusConfig.color, 0.2)}, 0 4px 12px ${alpha(statusConfig.color, 0.15)}`
                 : 6,
               transform: 'translateY(-2px)',

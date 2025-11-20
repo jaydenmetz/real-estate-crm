@@ -312,7 +312,8 @@ export const DashboardContent = ({
               const isSelected = selectedItems.includes(itemId);
 
               return (
-                <motion.div
+                <Box
+                  component={motion.div}
                   key={itemId}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -321,11 +322,17 @@ export const DashboardContent = ({
                     duration: 0.3,
                     delay: index * 0.05,
                   }}
-                  style={{ position: 'relative' }}
+                  sx={{
+                    position: 'relative',
+                    '&:hover .multi-select-checkbox': {
+                      opacity: 1,
+                    },
+                  }}
                 >
-                  {/* Multi-Select Checkbox - Outside card bounds */}
+                  {/* Multi-Select Checkbox - Outside card bounds, hidden until hover */}
                   {isSelectable && (
                     <Checkbox
+                      className="multi-select-checkbox"
                       checked={isSelected}
                       onChange={(e) => {
                         e.stopPropagation();
@@ -338,25 +345,14 @@ export const DashboardContent = ({
                         left: viewMode === 'card' ? -12 : -48,
                         transform: viewMode === 'card' ? 'none' : 'translateY(-50%)',
                         zIndex: 10,
-                        opacity: isSelected ? 1 : 0.6,
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        '&:hover': {
-                          opacity: 1,
-                          transform: viewMode === 'card' ? 'scale(1.05)' : 'translateY(-50%) scale(1.05)',
-                        },
                         padding: 0,
-                        width: 28,
-                        height: 28,
-                        borderRadius: '50%',
-                        backgroundColor: isSelected ? 'primary.main' : 'rgba(255,255,255,0.95)',
-                        border: isSelected ? 'none' : '2px solid',
-                        borderColor: 'divider',
-                        boxShadow: isSelected
-                          ? '0 4px 12px rgba(25, 118, 210, 0.4)'
-                          : '0 2px 8px rgba(0,0,0,0.15)',
+                        opacity: isSelected ? 1 : 0,
+                        transition: 'opacity 0.2s',
+                        '&:hover': {
+                          backgroundColor: 'transparent',
+                        },
                         '& .MuiSvgIcon-root': {
-                          fontSize: 18,
-                          color: isSelected ? '#fff' : 'rgba(0,0,0,0.26)',
+                          fontSize: 24,
                         },
                       }}
                     />
@@ -380,7 +376,7 @@ export const DashboardContent = ({
                     isSelected={isSelected}
                     onSelect={onSelectItem}
                   />
-                </motion.div>
+                </Box>
               );
             });
           })()}

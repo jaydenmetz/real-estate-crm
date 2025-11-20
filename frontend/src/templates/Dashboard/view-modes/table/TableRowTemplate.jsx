@@ -193,9 +193,7 @@ const TableRowTemplate = React.memo(({
         onClick={handleRowClick}
         sx={{
           display: 'grid',
-          gridTemplateColumns: isSelectable
-            ? `48px ${config.gridTemplateColumns || 'repeat(auto-fit, minmax(0, 1fr)) 80px'}`
-            : config.gridTemplateColumns || 'repeat(auto-fit, minmax(0, 1fr)) 80px',
+          gridTemplateColumns: config.gridTemplateColumns || 'repeat(auto-fit, minmax(0, 1fr)) 80px',
           gap: 2,
           alignItems: 'center',
           width: '100%',
@@ -217,35 +215,6 @@ const TableRowTemplate = React.memo(({
           } : {},
         }}
       >
-        {/* Multi-Select Checkbox - First Column */}
-        {isSelectable && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: isSelected ? 1 : 0,
-              transition: 'opacity 0.2s',
-              'Box:hover &': { opacity: 1 },
-            }}
-          >
-            <Checkbox
-              checked={isSelected}
-              onChange={(e) => {
-                e.stopPropagation();
-                onSelect?.(data);
-              }}
-              onClick={(e) => e.stopPropagation()}
-              size="small"
-              sx={{
-                '& .MuiSvgIcon-root': {
-                  fontSize: 20,
-                },
-              }}
-            />
-          </Box>
-        )}
-
         {/* Render columns */}
         {config.columns?.map((column, idx) => {
           const columnValue = typeof column.field === 'function'
