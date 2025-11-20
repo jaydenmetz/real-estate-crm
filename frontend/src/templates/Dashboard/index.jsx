@@ -62,6 +62,21 @@ export const DashboardTemplate = ({
   const [archivedCount, setArchivedCount] = useState(0);
   const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
   const [batchDeleting, setBatchDeleting] = useState(false);
+  const [batchRestoring, setBatchRestoring] = useState(false);
+
+  // Archive year filtering
+  const [archiveYear, setArchiveYear] = useState('all'); // 'all', 2025, 2024, 2023, etc.
+
+  // Generate year options for archive view (current year back to 5 years ago)
+  const archiveYearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years = [{ value: 'all', label: 'All Time' }];
+    for (let i = 0; i < 6; i++) {
+      const year = currentYear - i;
+      years.push({ value: year, label: String(year) });
+    }
+    return years;
+  }, []);
 
   // Multi-select state
   const [selectedItems, setSelectedItems] = useState([]);
@@ -322,6 +337,25 @@ export const DashboardTemplate = ({
     }
   };
 
+  // Batch restore handler for archived items
+  const handleBatchRestore = async () => {
+    if (!selectedArchivedIds || selectedArchivedIds.length === 0) return;
+
+    setBatchRestoring(true);
+    try {
+      // Restore all selected items
+      await Promise.all(
+        selectedArchivedIds.map(id => config.api.restore(id))
+      );
+      await refetch();
+      setSelectedArchivedIds([]);
+    } catch (err) {
+      console.error(`Failed to batch restore ${config.entity.namePlural}:`, err);
+    } finally {
+      setBatchRestoring(false);
+    }
+  };
+
   // Batch delete handler for archived items
   const handleBatchDelete = async () => {
     if (!selectedArchivedIds || selectedArchivedIds.length === 0) return;
@@ -344,16 +378,40 @@ export const DashboardTemplate = ({
   // Select all archived items handler
   const handleSelectAllArchived = (checked) => {
     if (checked) {
-      const archivedItems = filteredData.filter(item => item.deleted_at || item.deletedAt);
-      const allIds = archivedItems.map(item => item[config.api.idField]);
+      // Use year-filtered archived data
+      const allIds = archivedDataFiltered.map(item => item[config.api.idField]);
       setSelectedArchivedIds(allIds);
     } else {
       setSelectedArchivedIds([]);
     }
   };
 
-  // Get archived data
-  const archivedData = filteredData.filter(item => item.deleted_at || item.deletedAt);
+  // Get archived data (using is_archived instead of deleted_at)
+  const archivedData = useMemo(() => {
+    return filteredData.filter(item =>
+      item.is_archived === true ||
+      item.isArchived === true ||
+      // Fallback for legacy data during migration
+      item.deleted_at ||
+      item.deletedAt
+    );
+  }, [filteredData]);
+
+  // Filter archived data by selected year
+  const archivedDataFiltered = useMemo(() => {
+    if (archiveYear === 'all') {
+      return archivedData;
+    }
+
+    // Filter by year from archived_at timestamp
+    return archivedData.filter(item => {
+      const archivedAt = item.archived_at || item.archivedAt || item.deleted_at || item.deletedAt;
+      if (!archivedAt) return false;
+
+      const itemYear = new Date(archivedAt).getFullYear();
+      return itemYear === archiveYear;
+    });
+  }, [archivedData, archiveYear]);
 
   // Update archived count whenever data changes
   useEffect(() => {
@@ -467,12 +525,18 @@ export const DashboardTemplate = ({
           onRestore={handleRestore}
           customActions={customActions}
           selectedStatus={selectedStatus}
-          archivedData={archivedData}
+          archivedData={archivedDataFiltered}
           selectedArchivedIds={selectedArchivedIds}
           setSelectedArchivedIds={setSelectedArchivedIds}
           handleBatchDelete={handleBatchDelete}
+          handleBatchRestore={handleBatchRestore}
           batchDeleting={batchDeleting}
+          batchRestoring={batchRestoring}
           handleSelectAll={handleSelectAllArchived}
+          handleClearSelection={() => setSelectedArchivedIds([])}
+          selectedYear={archiveYear}
+          onYearChange={setArchiveYear}
+          yearOptions={archiveYearOptions}
           isSelectable={config.dashboard?.enableMultiSelect || false}
           selectedItems={selectedItems}
           onSelectItem={handleSelectItem}
