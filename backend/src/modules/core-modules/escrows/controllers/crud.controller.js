@@ -55,7 +55,7 @@ async function getAllEscrows(req, res) {
           MIN(id::text) as first_id,
           MAX(id::text) as last_id
         FROM escrows
-        WHERE deleted_at IS NULL
+        WHERE is_archived = false
       `);
 
       const totalCount = parseInt(tableCheck.rows[0]?.count || 0);
@@ -125,7 +125,7 @@ async function getAllEscrows(req, res) {
       FROM escrows e
     `;
 
-    const conditions = ['e.deleted_at IS NULL'];
+    const conditions = ['e.is_archived = false'];
     const values = [];
     let paramIndex = 1;
 
@@ -249,7 +249,7 @@ async function getEscrowById(req, res) {
     let query = `
       SELECT * FROM escrows
       WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
-      AND deleted_at IS NULL
+      AND is_archived = false
     `;
 
     const result = await pool.query(query, [id]);
@@ -693,10 +693,11 @@ async function archiveEscrow(req, res) {
 
     const result = await pool.query(
       `UPDATE escrows
-       SET deleted_at = CURRENT_TIMESTAMP,
+       SET is_archived = true,
+           archived_at = CURRENT_TIMESTAMP,
            updated_at = CURRENT_TIMESTAMP
        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
-       AND deleted_at IS NULL
+       AND is_archived = false
        RETURNING display_id`,
       [id],
     );
@@ -739,10 +740,11 @@ async function restoreEscrow(req, res) {
 
     const result = await pool.query(
       `UPDATE escrows
-       SET deleted_at = NULL,
+       SET is_archived = false,
+           archived_at = NULL,
            updated_at = CURRENT_TIMESTAMP
        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
-       AND deleted_at IS NOT NULL
+       AND is_archived = true
        RETURNING display_id`,
       [id],
     );
@@ -787,7 +789,7 @@ async function deleteEscrow(req, res) {
     const result = await pool.query(
       `DELETE FROM escrows
        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
-       AND deleted_at IS NOT NULL
+       AND is_archived = true
        RETURNING display_id`,
       [id],
     );
@@ -859,7 +861,7 @@ async function batchDeleteEscrows(req, res) {
       SELECT id, display_id, property_address
       FROM escrows
       WHERE (id = ANY($1) OR display_id = ANY($1))
-      AND deleted_at IS NOT NULL
+      AND is_archived = true
     `;
 
     const verifyResult = await client.query(verifyQuery, [ids]);
@@ -883,7 +885,7 @@ async function batchDeleteEscrows(req, res) {
     const deleteQuery = `
       DELETE FROM escrows
       WHERE (id = ANY($1) OR display_id = ANY($1))
-      AND deleted_at IS NOT NULL
+      AND is_archived = true
       RETURNING id, display_id, property_address
     `;
 
