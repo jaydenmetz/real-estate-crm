@@ -173,17 +173,17 @@ const DashboardStatCard = ({
             </Box>
           </Box>
 
-          {/* Middle: Value and Icon in horizontal flex container */}
+          {/* Middle: CSS Grid layout for precise control */}
           <Box sx={{
-            display: 'flex',
+            display: 'grid',
+            gridTemplateColumns: showPrivacy ? '32px 1fr 56px' : '1fr 56px',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 2,
+            gap: 1,
             flex: 1,
             my: 1,
             px: 2,
           }}>
-            {/* Privacy toggle - positioned on left */}
+            {/* Privacy toggle - fixed column */}
             {showPrivacy && (
               <IconButton
                 size="small"
@@ -195,7 +195,7 @@ const DashboardStatCard = ({
                   width: 28,
                   height: 28,
                   color: 'rgba(255,255,255,0.8)',
-                  flexShrink: 0,
+                  justifySelf: 'start',
                   '&:hover': {
                     backgroundColor: 'rgba(255,255,255,0.1)',
                     color: 'white',
@@ -210,13 +210,11 @@ const DashboardStatCard = ({
               </IconButton>
             )}
 
-            {/* Value - grows to fill space, centered within its container */}
+            {/* Value - fills grid column, centered within */}
             <Box sx={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              flex: 1,
-              minWidth: 0,
               overflow: 'hidden',
             }}>
               <Typography
@@ -272,15 +270,15 @@ const DashboardStatCard = ({
               </Typography>
             </Box>
 
-            {/* Icon Circle - part of flex layout, not absolute */}
+            {/* Icon Circle - fixed grid column on right */}
             <Box
               sx={{
                 width: 48,
                 height: 48,
-                flexShrink: 0, // Don't shrink
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                justifySelf: 'end',
                 position: 'relative',
               }}
             >
