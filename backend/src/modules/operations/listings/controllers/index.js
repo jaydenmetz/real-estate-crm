@@ -3,13 +3,14 @@ const marketingController = require('./sub-resources/marketing.controller');
 const analyticsController = require('./sub-resources/analytics.controller');
 
 module.exports = {
-  // CRUD operations (8 methods)
+  // CRUD operations (9 methods)
   getListings: crudController.getListings,
   getListing: crudController.getListing,
   createListing: crudController.createListing,
   updateListing: crudController.updateListing,
   updateStatus: crudController.updateStatus,
   archiveListing: crudController.archiveListing,
+  restoreListing: crudController.restoreListing,
   deleteListing: crudController.deleteListing,
   batchDeleteListings: crudController.batchDeleteListings,
 

@@ -240,6 +240,39 @@ exports.archiveListing = async (req, res) => {
   }
 };
 
+// Restore archived listing
+exports.restoreListing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const restoredListing = await listingsService.restoreListing(id, req.user);
+
+    res.json({
+      success: true,
+      data: restoredListing,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    if (error.code === 'NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: error.message,
+        },
+      });
+    }
+
+    logger.error('Error restoring listing:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'RESTORE_ERROR',
+        message: 'Failed to restore listing',
+      },
+    });
+  }
+};
+
 // Delete listing (hard delete - only after archiving)
 exports.deleteListing = async (req, res) => {
   try {

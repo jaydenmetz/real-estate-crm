@@ -36,8 +36,9 @@ router.get('/:id', requireOwnership('listing'), listingsController.getListing);
 router.post('/', createValidation, validate, validateListingRules, listingsController.createListing);
 router.put('/:id', updateValidation, validate, requireModifyPermission('listing'), validateListingRules, listingsController.updateListing);
 
-// Archive and Delete endpoints
+// Archive, Restore, and Delete endpoints
 router.put('/:id/archive', requireModifyPermission('listing'), listingsController.archiveListing);
+router.put('/:id/restore', requireModifyPermission('listing'), listingsController.restoreListing);
 router.delete('/:id', requireDeletePermission('listing'), listingsController.deleteListing);
 // Batch delete endpoint: Delete multiple archived listings
 router.post(

@@ -567,6 +567,45 @@ class ListingsService {
   }
 
   /**
+   * Restore an archived listing
+   * @param {string} id - Listing ID
+   * @param {Object} user - Current user
+   * @returns {Promise<Object>} Restored listing
+   * @throws {Error} If listing not found or not archived
+   */
+  async restoreListing(id, user) {
+    const userId = user.id;
+    const teamId = user.teamId || user.team_id;
+
+    // Restore the listing with permission check
+    const restoreQuery = `
+      UPDATE listings
+      SET
+        deleted_at = NULL,
+        listing_status = 'Active'
+      WHERE id = $1
+      AND (listing_agent_id = $2 OR team_id = $3)
+      AND deleted_at IS NOT NULL
+      RETURNING id, property_address, deleted_at, listing_status
+    `;
+
+    const result = await query(restoreQuery, [id, userId, teamId]);
+
+    if (result.rows.length === 0) {
+      const error = new Error('Listing not found or not archived');
+      error.code = 'NOT_FOUND';
+      throw error;
+    }
+
+    logger.info('Listing restored', {
+      listingId: id,
+      restoredBy: user?.email || 'unknown',
+    });
+
+    return result.rows[0];
+  }
+
+  /**
    * Permanently delete a listing (must be archived first)
    * @param {string} id - Listing ID
    * @param {Object} user - Current user
