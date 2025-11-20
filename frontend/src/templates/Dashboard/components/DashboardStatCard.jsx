@@ -227,20 +227,21 @@ const DashboardStatCard = ({
                   alignItems: 'baseline',
                   gap: 0.2,
                   flexShrink: 1,
-                  // Aggressive font scaling - no max limit, shrinks as needed
+                  // Responsive font scaling - optimized for mobile (single column) and desktop (multi-column)
                   fontSize: (() => {
                     const valueStr = String(value || '').replace(/,/g, '');
                     const numDigits = valueStr.length;
                     const estimatedCommas = Math.max(0, Math.floor((numDigits - 1) / 3));
                     const displayLength = prefix.length + numDigits + estimatedCommas + suffix.length;
 
-                    // More aggressive scaling with lower minimums and maximums
-                    if (displayLength >= 12) return 'clamp(0.8rem, 2vw, 1.2rem)';    // 12+ chars: tiny
-                    if (displayLength >= 11) return 'clamp(0.9rem, 2.2vw, 1.35rem)'; // 11 chars: very small
-                    if (displayLength >= 10) return 'clamp(1rem, 2.5vw, 1.5rem)';    // 10 chars: small
-                    if (displayLength >= 9) return 'clamp(1.15rem, 2.8vw, 1.7rem)';  // 9 chars: medium-small
-                    if (displayLength >= 8) return 'clamp(1.3rem, 3.2vw, 1.9rem)';   // 8 chars: medium
-                    return 'clamp(1.5rem, 4vw, 2.25rem)';                            // ≤7 chars: normal
+                    // Viewport-based scaling: uses vw for mobile (large cards), capped for desktop (small cards)
+                    // Mobile gets larger sizes (6-8vw), desktop caps at reasonable max (1.8-2.5rem)
+                    if (displayLength >= 12) return 'clamp(1.2rem, 6vw, 1.5rem)';    // 12+ chars: readable on mobile
+                    if (displayLength >= 11) return 'clamp(1.3rem, 6.5vw, 1.7rem)';  // 11 chars: slightly larger
+                    if (displayLength >= 10) return 'clamp(1.4rem, 7vw, 1.9rem)';    // 10 chars: comfortable
+                    if (displayLength >= 9) return 'clamp(1.5rem, 7.5vw, 2.1rem)';   // 9 chars: good size
+                    if (displayLength >= 8) return 'clamp(1.6rem, 8vw, 2.3rem)';     // 8 chars: larger
+                    return 'clamp(1.8rem, 8vw, 2.5rem)';                             // ≤7 chars: largest
                   })(),
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                 }}
@@ -250,21 +251,21 @@ const DashboardStatCard = ({
                 ) : typeof value === 'string' ? (
                   // Custom string value (no CountUp animation)
                   <>
-                    {prefix && <span style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.85rem)', opacity: 0.85 }}>{prefix}</span>}
+                    {prefix && <span style={{ fontSize: 'clamp(0.9rem, 3vw, 1.2rem)', opacity: 0.85 }}>{prefix}</span>}
                     <span>{value}</span>
-                    {suffix && <span style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.85rem)', opacity: 0.85 }}>{suffix}</span>}
+                    {suffix && <span style={{ fontSize: 'clamp(0.9rem, 3vw, 1.2rem)', opacity: 0.85 }}>{suffix}</span>}
                   </>
                 ) : (
                   // Numeric value with CountUp animation
                   <>
-                    {prefix && <span style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.85rem)', opacity: 0.85 }}>{prefix}</span>}
+                    {prefix && <span style={{ fontSize: 'clamp(0.9rem, 3vw, 1.2rem)', opacity: 0.85 }}>{prefix}</span>}
                     <CountUp
                       end={value}
                       duration={2.5}
                       separator=","
                       decimals={0}
                     />
-                    {suffix && <span style={{ fontSize: 'clamp(0.6rem, 1.5vw, 0.85rem)', opacity: 0.85 }}>{suffix}</span>}
+                    {suffix && <span style={{ fontSize: 'clamp(0.9rem, 3vw, 1.2rem)', opacity: 0.85 }}>{suffix}</span>}
                   </>
                 )}
               </Typography>

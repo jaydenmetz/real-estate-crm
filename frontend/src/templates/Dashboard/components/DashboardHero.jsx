@@ -419,7 +419,7 @@ export const DashboardHero = ({
 
           {/* Stats Cards Grid */}
           <Grid item xs={12} xl={config.showAIAssistant ? 9 : 12}>
-            <Grid container spacing={3}>
+            <Grid container spacing={3} sx={{ justifyContent: { xs: 'center', sm: 'flex-start' } }}>
               {/* Render stat cards based on selected status */}
               {statsConfig && statsConfig
                 .filter(statCfg => !statCfg.visibleWhen || statCfg.visibleWhen.includes(selectedStatus))
