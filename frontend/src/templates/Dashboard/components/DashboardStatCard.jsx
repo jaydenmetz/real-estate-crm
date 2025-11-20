@@ -173,8 +173,16 @@ const DashboardStatCard = ({
             </Box>
           </Box>
 
-          {/* Middle: Value centered between left edge and icon */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, my: 1, position: 'relative' }}>
+          {/* Middle: Value and Icon in horizontal flex container */}
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+            flex: 1,
+            my: 1,
+            px: 2,
+          }}>
             {/* Privacy toggle - positioned on left */}
             {showPrivacy && (
               <IconButton
@@ -184,8 +192,6 @@ const DashboardStatCard = ({
                   setShowValue(!showValue);
                 }}
                 sx={{
-                  position: 'absolute',
-                  left: 0,
                   width: 28,
                   height: 28,
                   color: 'rgba(255,255,255,0.8)',
@@ -204,15 +210,13 @@ const DashboardStatCard = ({
               </IconButton>
             )}
 
-            {/* Value - centered in available space (accounting for icon) */}
+            {/* Value - grows to fill space, centered within its container */}
             <Box sx={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flex: 1,
-              // Account for icon width (48px) + padding (16px)
-              maxWidth: 'calc(100% - 64px)',
-              px: showPrivacy ? 4 : 1,
+              minWidth: 0, // Allow flex item to shrink below content size
             }}>
               <Typography
                 variant="h3"
@@ -232,16 +236,15 @@ const DashboardStatCard = ({
                     const displayLength = prefix.length + numDigits + estimatedCommas + suffix.length;
 
                     // Size based on total displayed characters (including commas, prefix, suffix)
-                    if (displayLength >= 11) return 'clamp(1rem, 2.5vw, 1.5rem)';    // 11+ chars: very small
-                    if (displayLength >= 10) return 'clamp(1.15rem, 2.8vw, 1.65rem)'; // 10 chars: smaller
-                    if (displayLength >= 9) return 'clamp(1.3rem, 3.2vw, 1.85rem)';   // 9 chars: small
-                    return 'clamp(1.5rem, 4vw, 2.25rem)';                            // ≤8 chars: normal
+                    if (displayLength >= 11) return 'clamp(0.95rem, 2.3vw, 1.4rem)';  // 11+ chars: very small
+                    if (displayLength >= 10) return 'clamp(1.1rem, 2.6vw, 1.6rem)';   // 10 chars: smaller
+                    if (displayLength >= 9) return 'clamp(1.25rem, 3vw, 1.8rem)';     // 9 chars: small
+                    return 'clamp(1.4rem, 3.5vw, 2.1rem)';                            // ≤8 chars: normal
                   })(),
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  maxWidth: '100%',
                 }}
               >
                 {showPrivacy && !showValue ? (
@@ -249,36 +252,36 @@ const DashboardStatCard = ({
                 ) : typeof value === 'string' ? (
                   // Custom string value (no CountUp animation)
                   <>
-                    {prefix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{prefix}</span>}
+                    {prefix && <span style={{ fontSize: 'clamp(0.85rem, 2.2vw, 1.3rem)' }}>{prefix}</span>}
                     <span>{value}</span>
-                    {suffix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{suffix}</span>}
+                    {suffix && <span style={{ fontSize: 'clamp(0.85rem, 2.2vw, 1.3rem)' }}>{suffix}</span>}
                   </>
                 ) : (
                   // Numeric value with CountUp animation
                   <>
-                    {prefix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{prefix}</span>}
+                    {prefix && <span style={{ fontSize: 'clamp(0.85rem, 2.2vw, 1.3rem)' }}>{prefix}</span>}
                     <CountUp
                       end={value}
                       duration={2.5}
                       separator=","
                       decimals={0}
                     />
-                    {suffix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{suffix}</span>}
+                    {suffix && <span style={{ fontSize: 'clamp(0.85rem, 2.2vw, 1.3rem)' }}>{suffix}</span>}
                   </>
                 )}
               </Typography>
             </Box>
 
-            {/* Icon Circle - positioned absolutely on right */}
+            {/* Icon Circle - part of flex layout, not absolute */}
             <Box
               sx={{
-                position: 'absolute',
-                right: 0,
-                width: 48,  // Reduced from 56
-                height: 48, // Reduced from 56
+                width: 48,
+                height: 48,
+                flexShrink: 0, // Don't shrink
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                position: 'relative',
               }}
             >
               <Box
@@ -291,7 +294,7 @@ const DashboardStatCard = ({
                   border: textColor === '#000' ? '2px solid rgba(0,0,0,0.1)' : '2px solid rgba(255,255,255,0.2)',
                 }}
               />
-              {IconComponent && <IconComponent sx={{ fontSize: 28, color: textColor === '#000' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)', zIndex: 1 }} />} {/* Reduced from 32 */}
+              {IconComponent && <IconComponent sx={{ fontSize: 26, color: textColor === '#000' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)', zIndex: 1 }} />}
             </Box>
           </Box>
 
