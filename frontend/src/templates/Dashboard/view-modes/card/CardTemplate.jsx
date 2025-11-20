@@ -13,7 +13,6 @@ import {
   ListItemIcon,
   ListItemText,
   LinearProgress,
-  Checkbox,
   alpha,
   useTheme,
   useMediaQuery,
@@ -340,52 +339,6 @@ const CardTemplate = React.memo(({
             >
               {!imageSource && config.image.fallbackIcon && (
                 <Box component={config.image.fallbackIcon} sx={{ fontSize: 80, color: alpha('#757575', 0.5), zIndex: 1 }} />
-              )}
-
-              {/* Multi-Select Checkbox - Always visible when selectable, floating top-left */}
-              {isSelectable && (
-                <Checkbox
-                  checked={isSelected}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    onSelect?.(data);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  sx={{
-                    position: 'absolute',
-                    top: -12,
-                    left: -12,
-                    zIndex: 10,
-                    opacity: isSelected ? 1 : 0.6, // Always visible (was 0)
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    transform: 'scale(1)', // Always full size (was scale(0.8))
-                    '.MuiCard-root:hover &': {
-                      opacity: 1,
-                      transform: 'scale(1.05)', // Slight scale up on hover
-                    },
-                    padding: 0,
-                    width: 28,
-                    height: 28,
-                    borderRadius: '50%',
-                    backgroundColor: isSelected ? 'primary.main' : 'rgba(255,255,255,0.95)',
-                    border: isSelected ? 'none' : '2px solid',
-                    borderColor: 'divider',
-                    boxShadow: isSelected
-                      ? '0 4px 12px rgba(25, 118, 210, 0.4)'
-                      : '0 2px 8px rgba(0,0,0,0.15)',
-                    '&:hover': {
-                      backgroundColor: isSelected ? 'primary.dark' : 'rgba(255,255,255,1)',
-                      boxShadow: isSelected
-                        ? '0 6px 16px rgba(25, 118, 210, 0.5)'
-                        : '0 4px 12px rgba(0,0,0,0.2)',
-                      transform: 'scale(1.1)',
-                    },
-                    '& .MuiSvgIcon-root': {
-                      fontSize: 18,
-                      color: isSelected ? '#fff' : 'rgba(0,0,0,0.26)', // Show unchecked state
-                    },
-                  }}
-                />
               )}
 
               {/* Status Chip - Top Left */}
