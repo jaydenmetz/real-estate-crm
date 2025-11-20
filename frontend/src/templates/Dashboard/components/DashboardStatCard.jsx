@@ -226,11 +226,16 @@ const DashboardStatCard = ({
                   // More aggressive responsive font sizing for large values
                   fontSize: (() => {
                     const valueStr = String(value || '').replace(/,/g, '');
-                    const totalLength = prefix.length + valueStr.length + suffix.length;
-                    if (totalLength >= 11) return 'clamp(1rem, 2.5vw, 1.5rem)';    // 11+ digits: very small
-                    if (totalLength >= 10) return 'clamp(1.15rem, 2.8vw, 1.65rem)'; // 10 digits: smaller
-                    if (totalLength >= 9) return 'clamp(1.3rem, 3.2vw, 1.85rem)';   // 9 digits: small
-                    return 'clamp(1.5rem, 4vw, 2.25rem)';                           // ≤8 digits: normal
+                    const numDigits = valueStr.length;
+                    // Estimate displayed length including commas (add 1 comma per 3 digits after first)
+                    const estimatedCommas = Math.max(0, Math.floor((numDigits - 1) / 3));
+                    const displayLength = prefix.length + numDigits + estimatedCommas + suffix.length;
+
+                    // Size based on total displayed characters (including commas, prefix, suffix)
+                    if (displayLength >= 11) return 'clamp(1rem, 2.5vw, 1.5rem)';    // 11+ chars: very small
+                    if (displayLength >= 10) return 'clamp(1.15rem, 2.8vw, 1.65rem)'; // 10 chars: smaller
+                    if (displayLength >= 9) return 'clamp(1.3rem, 3.2vw, 1.85rem)';   // 9 chars: small
+                    return 'clamp(1.5rem, 4vw, 2.25rem)';                            // ≤8 chars: normal
                   })(),
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                   overflow: 'hidden',
