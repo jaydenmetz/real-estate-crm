@@ -245,49 +245,45 @@ export const DashboardContent = ({
                     const isSelected = selectedArchivedIds?.includes(itemId);
 
                     return (
-                      <Box key={itemId} sx={{ position: 'relative' }}>
-                        {/* Selection checkbox */}
-                        <Checkbox
-                          checked={isSelected}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedArchivedIds?.(prev => [...prev, itemId]);
+                      <Box
+                        component={motion.div}
+                        key={itemId}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{
+                          duration: 0.3,
+                          delay: index * 0.05,
+                        }}
+                        sx={{
+                          position: 'relative',
+                          width: viewMode === 'card' ? '320px' : 'auto',
+                          '&:hover .multi-select-checkbox': {
+                            opacity: 1,
+                          },
+                        }}
+                      >
+                        <Component
+                          {...{ [config.entity.name]: item }}
+                          viewMode={viewMode}
+                          index={index}
+                          isArchived={true}
+                          onUpdate={onUpdate ? (id, updates) => onUpdate(id, updates) : undefined}
+                          onDelete={onDelete ? () => onDelete(itemId) : undefined}
+                          onRestore={onRestore ? () => onRestore(itemId) : undefined}
+                          customActions={customActions}
+                          animationType="spring"
+                          // Multi-select props (same as regular view)
+                          isSelectable={true}
+                          isSelected={isSelected}
+                          onSelect={(id) => {
+                            if (isSelected) {
+                              setSelectedArchivedIds?.(prev => prev.filter(itemId => itemId !== id));
                             } else {
-                              setSelectedArchivedIds?.(prev => prev.filter(id => id !== itemId));
+                              setSelectedArchivedIds?.(prev => [...prev, id]);
                             }
                           }}
-                          sx={{
-                            position: 'absolute',
-                            top: 8,
-                            left: 8,
-                            zIndex: 10,
-                            backgroundColor: 'white',
-                            borderRadius: '4px',
-                            '&:hover': {
-                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            },
-                          }}
-                          onClick={(e) => e.stopPropagation()}
                         />
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
-                          style={{ opacity: isSelected ? 0.7 : 1 }}
-                        >
-                          <Component
-                            {...{ [config.entity.name]: item }}
-                            viewMode={viewMode}
-                            index={index}
-                            isArchived={true}
-                            onUpdate={onUpdate ? (id, updates) => onUpdate(id, updates) : undefined}
-                            onDelete={onDelete ? () => onDelete(itemId) : undefined}
-                            onRestore={onRestore ? () => onRestore(itemId) : undefined}
-                            customActions={customActions}
-                            animationType="spring"
-                          />
-                        </motion.div>
                       </Box>
                     );
                   })}
