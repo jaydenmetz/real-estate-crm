@@ -274,8 +274,6 @@ const ListItemTemplate = React.memo(({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              ml: isSelectable ? 5 : 0, // Shift right if checkbox present
-              transition: 'margin-left 0.2s',
             }}
           >
             {!imageSource && config.image.fallbackIcon && (

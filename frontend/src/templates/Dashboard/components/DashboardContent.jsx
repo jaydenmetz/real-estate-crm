@@ -313,6 +313,7 @@ export const DashboardContent = ({
                   }}
                   sx={{
                     position: 'relative',
+                    width: viewMode === 'card' ? '320px' : 'auto', // Fixed width for card view to match grid
                     '&:hover .multi-select-checkbox': {
                       opacity: 1,
                     },
