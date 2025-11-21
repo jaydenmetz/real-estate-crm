@@ -34,6 +34,8 @@ async function getAllEscrows(req, res) {
       search,
       scope = 'user', // Extract scope parameter (user/team/broker)
       onlyArchived = 'false', // Archive view filter
+      startDate, // Display start date (YYYY-MM-DD)
+      endDate, // Display end date (YYYY-MM-DD)
     } = req.query;
 
     // Get user context for filtering
@@ -149,6 +151,32 @@ async function getAllEscrows(req, res) {
         e.${displayIdField} ILIKE $${paramIndex}
       )`);
       values.push(`%${search}%`);
+      paramIndex++;
+    }
+
+    // Date range filter (intersection logic)
+    // Show item if its date range overlaps with display range
+    // Item: [acceptance_date, closing_date]
+    // Display: [startDate, endDate]
+    if (startDate && endDate) {
+      // Both dates provided - filter for items that overlap with display range
+      conditions.push(`(
+        (e.closing_date >= $${paramIndex} OR e.closing_date IS NULL)
+        AND
+        (${acceptanceDateField} <= $${paramIndex + 1} OR ${acceptanceDateField} IS NULL)
+      )`);
+      values.push(startDate);
+      values.push(endDate);
+      paramIndex += 2;
+    } else if (startDate) {
+      // Only start date - show items that end after start date
+      conditions.push(`(e.closing_date >= $${paramIndex} OR e.closing_date IS NULL)`);
+      values.push(startDate);
+      paramIndex++;
+    } else if (endDate) {
+      // Only end date - show items that start before end date
+      conditions.push(`(${acceptanceDateField} <= $${paramIndex} OR ${acceptanceDateField} IS NULL)`);
+      values.push(endDate);
       paramIndex++;
     }
 
