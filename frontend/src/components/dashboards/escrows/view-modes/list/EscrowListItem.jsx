@@ -95,9 +95,17 @@ const escrowListConfig = {
     },
   },
 
-  // Title Configuration (address, editable)
+  // Title Configuration (address, editable with location subtitle)
   title: {
     field: (escrow) => escrow.display_address || escrow.property_address, // Prefer display name, fallback to canonical
+    subtitle: (escrow) => {
+      // Show city, state, zip as subtitle (same as card and table)
+      const parts = [];
+      if (escrow.city) parts.push(escrow.city);
+      if (escrow.state) parts.push(escrow.state);
+      if (escrow.zip_code) parts.push(escrow.zip_code);
+      return parts.join(', ') || 'Location TBD';
+    },
     editable: true,
     editor: EditPropertyAddress,
     onSave: (escrow, addressData) => {
@@ -113,17 +121,6 @@ const escrowListConfig = {
         latitude: addressData.latitude || null,
         longitude: addressData.longitude || null,
       };
-    },
-  },
-
-  // Subtitle Configuration (location)
-  subtitle: {
-    formatter: (escrow) => {
-      const parts = [];
-      if (escrow.city) parts.push(escrow.city);
-      if (escrow.state) parts.push(escrow.state);
-      if (escrow.zip_code) parts.push(escrow.zip_code);
-      return parts.join(', ') || 'Location TBD';
     },
   },
 
