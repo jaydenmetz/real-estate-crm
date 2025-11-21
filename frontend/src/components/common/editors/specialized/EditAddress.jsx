@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
-import { Check, Close, LocationOn } from '@mui/icons-material';
+import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Check, Close, LocationOn, ContentCopy, Apple, Map } from '@mui/icons-material';
 import { ModalDialog } from '../shared/ModalDialog';
 import { AddressInput } from '../shared/AddressInput';
 
@@ -25,6 +25,7 @@ export const EditAddress = ({
 }) => {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [addressMenuAnchor, setAddressMenuAnchor] = useState(null);
 
   // Extract canonical address (source of truth for geocoding)
   const getCanonicalAddress = () => {
@@ -92,6 +93,51 @@ export const EditAddress = ({
     }
   };
 
+  // Address menu handlers
+  const handleAddressClick = (e) => {
+    e.stopPropagation();
+    setAddressMenuAnchor(e.currentTarget);
+  };
+
+  const handleAddressMenuClose = () => {
+    setAddressMenuAnchor(null);
+  };
+
+  const handleCopyAddress = () => {
+    // Format: "display address, city, state zipcode"
+    const parts = [];
+    if (displayAddress) parts.push(displayAddress);
+
+    const locationParts = [];
+    if (typeof value === 'object') {
+      if (value.city) locationParts.push(value.city);
+      if (value.state) locationParts.push(value.state);
+      if (value.zip_code) locationParts.push(value.zip_code);
+    }
+
+    if (locationParts.length > 0) {
+      parts.push(locationParts.join(' '));
+    }
+
+    const formattedAddress = parts.join(', ');
+    navigator.clipboard.writeText(formattedAddress);
+    handleAddressMenuClose();
+  };
+
+  const handleOpenAppleMaps = () => {
+    // Apple Maps URL scheme
+    const query = encodeURIComponent(canonicalAddress || displayAddress);
+    window.open(`maps://maps.apple.com/?q=${query}`, '_blank');
+    handleAddressMenuClose();
+  };
+
+  const handleOpenGoogleMaps = () => {
+    // Google Maps URL - works in browser and app
+    const query = encodeURIComponent(canonicalAddress || displayAddress);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+    handleAddressMenuClose();
+  };
+
   return (
     <ModalDialog open={open} onClose={onClose} color={color}>
       <Box onClick={(e) => e.stopPropagation()}>
@@ -111,9 +157,24 @@ export const EditAddress = ({
           >
             Property Address
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+          <Box
+            onClick={handleAddressClick}
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 1,
+              cursor: 'pointer',
+              borderRadius: 2,
+              p: 1,
+              mx: -1,
+              transition: 'background-color 0.2s',
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.1)',
+              },
+            }}
+          >
             <LocationOn sx={{ color: 'white', mt: 0.5, fontSize: 24 }} />
-            <Box>
+            <Box sx={{ flex: 1 }}>
               <Typography
                 variant="h6"
                 sx={{
@@ -140,6 +201,44 @@ export const EditAddress = ({
               )}
             </Box>
           </Box>
+
+          {/* Address Action Menu */}
+          <Menu
+            anchorEl={addressMenuAnchor}
+            open={Boolean(addressMenuAnchor)}
+            onClose={handleAddressMenuClose}
+            onClick={(e) => e.stopPropagation()}
+            slotProps={{
+              paper: {
+                sx: {
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 2,
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                  minWidth: 200,
+                },
+              },
+            }}
+          >
+            <MenuItem onClick={handleCopyAddress}>
+              <ListItemIcon>
+                <ContentCopy fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Copy address</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleOpenAppleMaps}>
+              <ListItemIcon>
+                <Apple fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Open in Apple Maps</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleOpenGoogleMaps}>
+              <ListItemIcon>
+                <Map fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Open in Google Maps</ListItemText>
+            </MenuItem>
+          </Menu>
         </Box>
 
         {/* Display Name Input (Editable) */}
