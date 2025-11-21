@@ -228,6 +228,34 @@ export const escrowsConfig = createEntityConfig({
         props: { status: 'all' },
         visibleWhen: ['all']
       },
+
+      // ========================================
+      // ARCHIVED TAB STATS (based on archived_at date)
+      // ========================================
+      {
+        id: 'total_archived_escrows',
+        component: TotalEscrowsCard,
+        props: { status: 'archived' },
+        visibleWhen: ['archived']
+      },
+      {
+        id: 'total_archived_this_month',
+        component: TotalThisMonthCard,
+        props: { status: 'archived', dateField: 'archived_at' },
+        visibleWhen: ['archived']
+      },
+      {
+        id: 'total_archived_volume',
+        component: TotalVolumeCard,
+        props: { status: 'archived' },
+        visibleWhen: ['archived']
+      },
+      {
+        id: 'total_archived_commission',
+        component: TotalCommissionCard,
+        props: { status: 'archived' },
+        visibleWhen: ['archived']
+      },
     ],
 
     // Status Tabs Configuration
