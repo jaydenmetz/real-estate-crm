@@ -96,7 +96,7 @@ export const DashboardTemplate = ({
 
   const handleSelectAll = () => {
     // Get the current data based on view
-    const currentData = selectedStatus === 'archived' ? (archivedData || []) : (data || []);
+    const currentData = data || [];
 
     if (selectedItems.length === currentData.length && currentData.length > 0) {
       // All selected - unselect all
@@ -390,15 +390,9 @@ export const DashboardTemplate = ({
     }
   };
 
-  // Get archived data
-  // When selectedStatus === 'archived', the backend already returns archived items only
-  // So we use rawData directly (which is already filtered by backend)
+  // Get archived data count for archive button badge
+  // Filter from filteredData to get archived items (for badge count only)
   const archivedData = useMemo(() => {
-    if (selectedStatus === 'archived') {
-      // Data from backend is already archived-only
-      return Array.isArray(data) ? data : [];
-    }
-    // For other statuses, filter from filteredData (shouldn't have archived items anyway)
     return filteredData.filter(item =>
       item.is_archived === true ||
       item.isArchived === true ||
@@ -406,7 +400,7 @@ export const DashboardTemplate = ({
       item.deleted_at ||
       item.deletedAt
     );
-  }, [data, filteredData, selectedStatus]);
+  }, [filteredData]);
 
   // Filter archived data by selected year
   const archivedDataFiltered = useMemo(() => {
@@ -510,7 +504,7 @@ export const DashboardTemplate = ({
             onShowCalendarChange={setShowCalendar}
             archivedCount={archivedCount}
             selectedItems={selectedItems}
-            totalCount={selectedStatus === 'archived' ? archivedData?.length || 0 : data?.length || 0}
+            totalCount={data?.length || 0}
             onClearSelection={handleClearSelection}
             onSelectAll={handleSelectAll}
             onBulkArchive={handleBulkArchive}

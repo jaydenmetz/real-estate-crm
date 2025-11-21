@@ -68,12 +68,8 @@ export const DashboardContent = ({
     );
   }
 
-  // Check if we're in archive view
-  const isArchiveView = selectedStatus === 'archived';
-  const displayData = isArchiveView ? archivedData : data;
-
   // Empty state
-  if (!displayData || displayData.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <Paper
         sx={{
@@ -84,23 +80,15 @@ export const DashboardContent = ({
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
-          background: theme => alpha(
-            isArchiveView ? theme.palette.warning.main : theme.palette.primary.main,
-            0.03
-          ),
-          border: theme => `1px solid ${alpha(
-            isArchiveView ? theme.palette.warning.main : theme.palette.primary.main,
-            0.1
-          )}`,
+          background: theme => alpha(theme.palette.primary.main, 0.03),
+          border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
         }}
       >
         <Typography variant="h6" color="textSecondary" gutterBottom>
-          {isArchiveView ? `No archived ${config.entity.namePlural}` : `No ${selectedStatus} ${config.entity.namePlural} found`}
+          No {selectedStatus} {config.entity.namePlural} found
         </Typography>
         <Typography variant="body2" color="textSecondary">
-          {isArchiveView
-            ? `Archived ${config.entity.namePlural} will appear here`
-            : config.dashboard.hero.showAddButton
+          {config.dashboard.hero.showAddButton
             ? `Click "New ${config.entity.label}" to get started`
             : 'Try adjusting your filters'}
         </Typography>

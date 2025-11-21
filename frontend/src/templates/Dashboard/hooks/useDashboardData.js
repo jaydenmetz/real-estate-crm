@@ -15,7 +15,15 @@ export const useDashboardData = (config, externalDateRange = null) => {
     // Validate that saved status exists in current config
     const validStatuses = config.dashboard?.statusTabs?.map(tab => tab.value) || [];
     const isValidStatus = saved && validStatuses.includes(saved);
-    return isValidStatus ? saved : (config.dashboard?.statusTabs?.[0]?.value || 'all');
+
+    // If saved status is invalid, clear it from localStorage and use default
+    if (saved && !isValidStatus) {
+      localStorage.removeItem(`${config.entity.namePlural}Status`);
+    }
+
+    return isValidStatus
+      ? saved
+      : (config.dashboard?.defaultStatus || config.dashboard?.statusTabs?.[0]?.value || 'All');
   });
 
   // Scope with localStorage persistence
@@ -64,16 +72,11 @@ export const useDashboardData = (config, externalDateRange = null) => {
         limit: 100 // Request up to 100 items per page (backend max)
       };
 
-      // Handle archived status specially
-      if (selectedStatus === 'archived') {
-        params.onlyArchived = true;
-      } else {
-        // Add status filter for non-archived views
-        if (selectedStatus !== 'all') {
-          // Use status mapping if defined (e.g., 'Closed' → 'Sold')
-          const statusMapping = config.dashboard?.statusMapping || {};
-          params.status = statusMapping[selectedStatus] || selectedStatus;
-        }
+      // Add status filter
+      if (selectedStatus !== 'All') {
+        // Use status mapping if defined (e.g., 'Closed' → 'Sold')
+        const statusMapping = config.dashboard?.statusMapping || {};
+        params.status = statusMapping[selectedStatus] || selectedStatus;
       }
 
       if (selectedScope !== 'all') {
