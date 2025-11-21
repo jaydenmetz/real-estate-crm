@@ -84,7 +84,7 @@ const escrowCardConfig = {
 
   // Title Configuration (address, editable)
   title: {
-    formatter: (escrow) => escrow.display_address || escrow.property_address, // Prefer display name, fallback to canonical
+    field: (escrow) => escrow.display_address || escrow.property_address, // Prefer display name, fallback to canonical
     editable: true,
     editor: EditPropertyAddress,
     onSave: (escrow, addressData) => {
