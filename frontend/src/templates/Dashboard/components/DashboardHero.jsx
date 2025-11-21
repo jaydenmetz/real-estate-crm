@@ -12,9 +12,6 @@ import {
   MenuItem
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { motion } from 'framer-motion';
 import { Add as AddIcon, Assessment as AssessmentIcon } from '@mui/icons-material';
 
@@ -52,9 +49,7 @@ export const DashboardHero = ({
   StatCardComponent,
   allData = [] // Pass all data to calculate available years
 }) => {
-  // Local state for date pickers
-  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
-  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
+  // Local state removed - using inline date editors with localStorage persistence
 
   // Calculate available years from data
   const getAvailableYears = () => {
@@ -260,157 +255,95 @@ export const DashboardHero = ({
               </Select>
             )}
 
-            {/* Date Range Pickers */}
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <Box sx={{
-                display: 'flex',
-                gap: 0.5,
-                alignItems: 'center',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: 1,
-                px: 0.5,
-                height: 36,
-                border: '1px solid transparent',
-                flexShrink: 0,
-                flexGrow: 0,
-              }}>
-                <DatePicker
-                  open={startDatePickerOpen}
-                  onOpen={() => setStartDatePickerOpen(true)}
-                  onClose={() => setStartDatePickerOpen(false)}
-                  format="MMM d, yyyy"
-                  value={(() => {
-                    try {
-                      const date = customStartDate || dateRange?.startDate;
-                      if (!date) return null;
-                      if (typeof date === 'string') {
-                        const parsed = new Date(date);
-                        if (isNaN(parsed.getTime())) return null;
-                        return parsed;
-                      }
-                      if (!(date instanceof Date)) return null;
-                      if (isNaN(date.getTime())) return null;
-                      return date;
-                    } catch (e) {
-                      console.error('DatePicker value error:', e);
-                      return null;
-                    }
-                  })()}
-                  onChange={(newDate) => {
-                    setCustomStartDate(newDate);
-                    if (newDate && customEndDate && detectPresetRange) {
-                      const matched = detectPresetRange(newDate, customEndDate);
-                      setDateRangeFilter(matched);
-                    } else {
-                      setDateRangeFilter(null);
-                    }
-                  }}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      placeholder: 'Start',
-                      onClick: () => setStartDatePickerOpen(true),
-                      sx: {
-                        width: { xs: 105, md: 115 },
-                        '& .MuiInputBase-root': {
-                          backgroundColor: 'transparent',
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
-                          height: 36,
-                          paddingRight: '8px !important',
-                        },
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': { borderColor: 'transparent' },
-                          '&:hover fieldset': { borderColor: 'transparent' },
-                          '&.Mui-focused fieldset': { borderColor: 'transparent' },
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: { xs: '0.75rem', md: '0.875rem' },
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          textAlign: 'center',
-                          color: 'rgba(255, 255, 255, 0.9)',
-                          padding: '6px 8px',
-                        },
-                        '& .MuiInputAdornment-root': { display: 'none' },
-                        '& .MuiInputLabel-root': { display: 'none' },
-                        '& .MuiOutlinedInput-notchedOutline legend': { display: 'none' },
-                      },
-                    },
-                    openPickerButton: {
-                      sx: { display: 'none' },
-                    },
-                  }}
-                />
-                <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
-                <DatePicker
-                  open={endDatePickerOpen}
-                  onOpen={() => setEndDatePickerOpen(true)}
-                  onClose={() => setEndDatePickerOpen(false)}
-                  format="MMM d, yyyy"
-                  value={(() => {
-                    try {
-                      const date = customEndDate || dateRange?.endDate;
-                      if (!date) return null;
-                      if (typeof date === 'string') {
-                        const parsed = new Date(date);
-                        if (isNaN(parsed.getTime())) return null;
-                        return parsed;
-                      }
-                      if (!(date instanceof Date)) return null;
-                      if (isNaN(date.getTime())) return null;
-                      return date;
-                    } catch (e) {
-                      console.error('DatePicker value error:', e);
-                      return null;
-                    }
-                  })()}
-                  onChange={(newDate) => {
-                    setCustomEndDate(newDate);
-                    if (customStartDate && newDate && detectPresetRange) {
-                      const matched = detectPresetRange(customStartDate, newDate);
-                      setDateRangeFilter(matched);
-                    } else {
-                      setDateRangeFilter(null);
-                    }
-                  }}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      placeholder: 'End',
-                      onClick: () => setEndDatePickerOpen(true),
-                      sx: {
-                        width: { xs: 105, md: 115 },
-                        '& .MuiInputBase-root': {
-                          backgroundColor: 'transparent',
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
-                          height: 36,
-                          paddingRight: '8px !important',
-                        },
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': { borderColor: 'transparent' },
-                          '&:hover fieldset': { borderColor: 'transparent' },
-                          '&.Mui-focused fieldset': { borderColor: 'transparent' },
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: { xs: '0.75rem', md: '0.875rem' },
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          textAlign: 'center',
-                          color: 'rgba(255, 255, 255, 0.9)',
-                          padding: '6px 8px',
-                        },
-                        '& .MuiInputAdornment-root': { display: 'none' },
-                        '& .MuiInputLabel-root': { display: 'none' },
-                        '& .MuiOutlinedInput-notchedOutline legend': { display: 'none' },
-                      },
-                    },
-                    openPickerButton: {
-                      sx: { display: 'none' },
-                    },
-                  }}
-                />
-              </Box>
-            </LocalizationProvider>
+            {/* Inline Date Range Editors */}
+            <Box sx={{
+              display: 'flex',
+              gap: 0.5,
+              alignItems: 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 1,
+              px: 1,
+              height: 36,
+              border: '1px solid transparent',
+              flexShrink: 0,
+              flexGrow: 0,
+            }}>
+              {/* Start Date Input */}
+              <input
+                type="date"
+                value={(() => {
+                  const date = customStartDate || dateRange?.startDate;
+                  if (!date) return '';
+                  try {
+                    const d = typeof date === 'string' ? new Date(date) : date;
+                    if (isNaN(d.getTime())) return '';
+                    return d.toISOString().split('T')[0];
+                  } catch (e) {
+                    return '';
+                  }
+                })()}
+                onChange={(e) => {
+                  const newDate = e.target.value ? new Date(e.target.value) : null;
+                  setCustomStartDate(newDate);
+                  if (newDate && customEndDate && detectPresetRange) {
+                    const matched = detectPresetRange(newDate, customEndDate);
+                    setDateRangeFilter(matched);
+                  } else {
+                    setDateRangeFilter(null);
+                  }
+                }}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  width: '115px',
+                  fontFamily: 'inherit',
+                }}
+              />
+              <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
+              {/* End Date Input */}
+              <input
+                type="date"
+                value={(() => {
+                  const date = customEndDate || dateRange?.endDate;
+                  if (!date) return '';
+                  try {
+                    const d = typeof date === 'string' ? new Date(date) : date;
+                    if (isNaN(d.getTime())) return '';
+                    return d.toISOString().split('T')[0];
+                  } catch (e) {
+                    return '';
+                  }
+                })()}
+                onChange={(e) => {
+                  const newDate = e.target.value ? new Date(e.target.value) : null;
+                  setCustomEndDate(newDate);
+                  if (customStartDate && newDate && detectPresetRange) {
+                    const matched = detectPresetRange(customStartDate, newDate);
+                    setDateRangeFilter(matched);
+                  } else {
+                    setDateRangeFilter(null);
+                  }
+                }}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  width: '115px',
+                  fontFamily: 'inherit',
+                }}
+              />
+            </Box>
           </Box>
         </Box>
 
