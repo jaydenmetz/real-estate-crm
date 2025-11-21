@@ -123,15 +123,48 @@ const DashboardStatCard = ({
   const dynamicFontSize = calculateFontSize(value, prefix, suffix);
   const IconComponent = typeof icon === 'string' ? iconMap[icon] : icon;
 
-  const maskValue = (val) => {
+  // Generate animated mask with staggered asterisks
+  const renderAnimatedMask = (val) => {
     const absValue = Math.abs(val);
-    if (absValue >= 1000000) return '$***,***,***';
-    if (absValue >= 100000) return '$***,***';
-    if (absValue >= 10000) return '$**,***';
-    if (absValue >= 1000) return '$*,***';
-    if (absValue >= 100) return '$***';
-    if (absValue >= 10) return '$**';
-    return '$*';
+    let pattern;
+    if (absValue >= 1000000) pattern = '***,***,***';
+    else if (absValue >= 100000) pattern = '***,***';
+    else if (absValue >= 10000) pattern = '**,***';
+    else if (absValue >= 1000) pattern = '*,***';
+    else if (absValue >= 100) pattern = '***';
+    else if (absValue >= 10) pattern = '**';
+    else pattern = '*';
+
+    let charIndex = 0;
+    return (
+      <>
+        <span style={{ fontSize: '0.7em', opacity: 0.9 }}>$</span>
+        {pattern.split('').map((char, i) => {
+          if (char === ',') {
+            return <span key={i}>,</span>;
+          }
+          const delay = charIndex * 0.08;
+          charIndex++;
+          return (
+            <span
+              key={i}
+              style={{
+                display: 'inline-block',
+                animation: `fadeInChar 0.3s ease-out ${delay}s both`,
+              }}
+            >
+              *
+            </span>
+          );
+        })}
+        <style>{`
+          @keyframes fadeInChar {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
+      </>
+    );
   };
 
   return (
@@ -231,7 +264,7 @@ const DashboardStatCard = ({
               }}
             >
               {showPrivacy && !showValue ? (
-                maskValue(value)
+                renderAnimatedMask(value)
               ) : typeof value === 'string' ? (
                 <>
                   {prefix && <span style={{ fontSize: '0.7em', opacity: 0.9 }}>{prefix}</span>}
