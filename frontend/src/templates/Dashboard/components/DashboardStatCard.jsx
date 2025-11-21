@@ -196,7 +196,8 @@ const DashboardStatCard = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             flex: 1,
-            px: 2,
+            pl: 2,
+            pr: 0.5,
           }}>
             {/* Privacy toggle */}
             {showPrivacy && (
