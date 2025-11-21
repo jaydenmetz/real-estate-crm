@@ -238,28 +238,21 @@ const DashboardStatCard = ({
               </IconButton>
             )}
 
-            {/* Value - Fixed container with auto-scaling text */}
-            <Box sx={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minWidth: 0,
-              overflow: 'hidden',
-            }}>
-              <Box
-                sx={{
-                  display: 'inline-block',
-                  maxWidth: '100%',
-                  fontWeight: 700,
-                  color: valueColor || textColor || 'white',
-                  textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
-                  whiteSpace: 'nowrap',
-                  overflow: 'visible',
-                  // Dynamic font sizing based on value length
-                  fontSize: dynamicFontSize,
-                }}
-              >
+            {/* Value - Takes full available width */}
+            <Box
+              sx={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 700,
+                color: valueColor || textColor || 'white',
+                textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
+                whiteSpace: 'nowrap',
+                // Dynamic font sizing based on value length
+                fontSize: dynamicFontSize,
+              }}
+            >
                 {showPrivacy && !showValue ? (
                   maskValue(value)
                 ) : typeof value === 'string' ? (
@@ -282,7 +275,6 @@ const DashboardStatCard = ({
                     {suffix && <span style={{ fontSize: '0.7em', opacity: 0.9 }}>{suffix}</span>}
                   </>
                 )}
-              </Box>
             </Box>
 
             {/* Icon Circle - fixed size on right */}
