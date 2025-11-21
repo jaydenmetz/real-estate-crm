@@ -79,6 +79,7 @@ const TotalCommissionCard = ({
       color="#42a5f5"
       textColor="#fff"
       delay={delay}
+      showPrivacy={true}
       {...props}
     />
   );
