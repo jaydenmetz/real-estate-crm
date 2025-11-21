@@ -87,8 +87,19 @@ const escrowCardConfig = {
     field: 'property_address',
     editable: true,
     editor: EditPropertyAddress,
-    onSave: (escrow, newAddress) => {
-      return { property_address: newAddress };
+    onSave: (escrow, addressData) => {
+      // addressData is the full object from EditAddress with all address components
+      // Extract the individual fields to save to database
+      return {
+        property_address: addressData.property_address || addressData,
+        display_address: addressData.property_address_display || addressData.display_address || addressData.property_address,
+        city: addressData.city,
+        state: addressData.state,
+        zip_code: addressData.zip_code,
+        county: addressData.county,
+        latitude: addressData.latitude,
+        longitude: addressData.longitude,
+      };
     },
   },
 
