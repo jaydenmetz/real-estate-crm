@@ -16,7 +16,8 @@ import { useAuth } from '../../../../contexts/AuthContext';
  * - Clean, minimal design matching other themed inputs
  *
  * @param {string} value - Current address value
- * @param {function} onChange - Change handler (receives structured address object)
+ * @param {function} onChange - Change handler (receives structured address object after selection)
+ * @param {function} onInputChange - Optional handler for text input changes (before selection)
  * @param {function} onKeyDown - Keyboard event handler
  * @param {boolean} disabled - Disabled state
  * @param {string} placeholder - Placeholder text
@@ -25,6 +26,7 @@ import { useAuth } from '../../../../contexts/AuthContext';
 export const AddressInput = ({
   value,
   onChange,
+  onInputChange, // Optional callback for text input changes (before selection)
   onKeyDown,
   disabled = false,
   placeholder = 'Enter property address',
@@ -288,6 +290,11 @@ export const AddressInput = ({
       setAddressSearchText(value);
       setLoadingAddress(true);
 
+      // Notify parent of text changes (for enabling save button, etc.)
+      if (onInputChange) {
+        onInputChange(value);
+      }
+
       if (googleMapsLoaded && autocompleteServiceRef.current) {
         searchGooglePlaces(value, (suggestions) => {
           setAddressSuggestions(suggestions);
@@ -304,7 +311,7 @@ export const AddressInput = ({
       setAddressSuggestions([]);
       onChange(null);
     }
-  }, [googleMapsLoaded, searchGooglePlaces, searchNominatim, onChange]);
+  }, [googleMapsLoaded, searchGooglePlaces, searchNominatim, onChange, onInputChange]);
 
   const handleAddressSelect = async (event, value) => {
     // If user typed custom text (not from suggestions), preserve it

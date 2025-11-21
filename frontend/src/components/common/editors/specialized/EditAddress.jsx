@@ -24,6 +24,7 @@ export const EditAddress = ({
   color = '#10b981',
 }) => {
   const [selectedAddress, setSelectedAddress] = useState(null);
+  const [currentInputText, setCurrentInputText] = useState(''); // Track text input changes
   const [saving, setSaving] = useState(false);
   const [addressMenuAnchor, setAddressMenuAnchor] = useState(null);
 
@@ -64,19 +65,40 @@ export const EditAddress = ({
   useEffect(() => {
     if (!open) {
       setSelectedAddress(null);
+      setCurrentInputText('');
     }
   }, [open]);
 
-  const handleSave = async () => {
-    if (!selectedAddress) {
-      return;
-    }
+  // Handler for text input changes (before autocomplete selection)
+  const handleInputChange = (text) => {
+    setCurrentInputText(text);
+  };
 
+  const handleSave = async () => {
     setSaving(true);
     try {
-      // Pass the full address object to parent
-      // Includes: property_address, city, state, zip_code, county, latitude, longitude
-      await onSave(selectedAddress);
+      // If user selected from autocomplete, use full address object
+      if (selectedAddress) {
+        await onSave(selectedAddress);
+      }
+      // If user just typed text without selecting, save as display_address only
+      else if (currentInputText && currentInputText.trim() !== displayAddress) {
+        // Create minimal address object with just display_address changed
+        const addressUpdate = typeof value === 'object'
+          ? {
+              ...value,
+              display_address: currentInputText.trim(),
+            }
+          : {
+              property_address: value || '',
+              display_address: currentInputText.trim(),
+            };
+        await onSave(addressUpdate);
+      } else {
+        // No changes, just close
+        onClose();
+        return;
+      }
       onClose();
     } catch (error) {
       console.error('Failed to save address:', error);
@@ -86,8 +108,11 @@ export const EditAddress = ({
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && selectedAddress) {
-      handleSave();
+    if (e.key === 'Enter') {
+      // Allow save on Enter if either autocomplete selected OR text changed
+      if (selectedAddress || (currentInputText && currentInputText.trim() !== displayAddress)) {
+        handleSave();
+      }
     } else if (e.key === 'Escape') {
       onClose();
     }
@@ -259,6 +284,7 @@ export const EditAddress = ({
         <AddressInput
           value={displayAddress} // Pass extracted string address, not full object
           onChange={setSelectedAddress}
+          onInputChange={handleInputChange} // Track text changes for enabling save button
           onKeyDown={handleKeyPress}
           disabled={saving}
           placeholder="Start typing address or customize display name..."
@@ -294,7 +320,7 @@ export const EditAddress = ({
               e.stopPropagation();
               handleSave();
             }}
-            disabled={saving || !selectedAddress}
+            disabled={saving || (!selectedAddress && (!currentInputText || currentInputText.trim() === displayAddress))}
             sx={{
               width: 48,
               height: 48,
