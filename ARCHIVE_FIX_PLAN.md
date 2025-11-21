@@ -115,10 +115,10 @@ const params = {
 
 ## Implementation Order
 
-1. ✅ **Backend first** - Add date filtering to `getAllEscrows`
-2. ✅ **Frontend query** - Add date params to API call
-3. ✅ **Remove duplicate archive call** - Use single unified query
-4. ✅ **Test all tabs** - Active, Closed, Cancelled, All, Archive with date filtering
+1. ✅ **Backend first** - Add date filtering to `getAllEscrows` (COMPLETED)
+2. ✅ **Frontend query** - Add date params to API call (COMPLETED)
+3. ✅ **Archive unified** - Already using single query with onlyArchived param (VERIFIED)
+4. 🔄 **Test all tabs** - Active, Closed, Cancelled, All, Archive with date filtering (READY FOR USER TESTING)
 
 ## Testing Checklist
 
