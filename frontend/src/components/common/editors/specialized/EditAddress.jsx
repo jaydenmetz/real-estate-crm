@@ -155,7 +155,18 @@ export const EditAddress = ({
             letterSpacing: '0.5px',
           }}
         >
-          Display Name
+          Display Name (shown in views)
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.5)',
+            mb: 1,
+            display: 'block',
+          }}
+        >
+          Select from autocomplete to update geocoded address, or press Enter to save display name only
         </Typography>
         <AddressInput
           value={displayAddress} // Pass extracted string address, not full object
