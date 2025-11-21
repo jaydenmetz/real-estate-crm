@@ -21,6 +21,8 @@ const TotalEscrowsCard = ({
   // Calculate count based on status
   const count = status === 'all'
     ? data.length
+    : status === 'archived'
+    ? data.filter(item => item.is_archived === true).length
     : data.filter(item => {
         const itemStatus = item.escrow_status || item.status;
         return itemStatus?.toLowerCase() === status.toLowerCase();
@@ -31,7 +33,8 @@ const TotalEscrowsCard = ({
     active: 'Home',
     closed: 'CheckCircle',
     cancelled: 'Cancel',
-    all: 'Dashboard'
+    all: 'Dashboard',
+    archived: 'Archive'
   }[status] || 'Home';
 
   return (

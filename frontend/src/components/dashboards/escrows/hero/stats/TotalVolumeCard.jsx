@@ -21,6 +21,10 @@ const TotalVolumeCard = ({
   // Calculate total volume
   const volume = status === 'all'
     ? data.reduce((sum, item) => sum + parseFloat(item.purchase_price || 0), 0)
+    : status === 'archived'
+    ? data
+        .filter(item => item.is_archived === true)
+        .reduce((sum, item) => sum + parseFloat(item.purchase_price || 0), 0)
     : data
         .filter(item => {
           const itemStatus = item.escrow_status || item.status;
@@ -33,7 +37,8 @@ const TotalVolumeCard = ({
     active: 'AttachMoney',
     closed: 'TrendingUp',
     cancelled: 'TrendingDown',
-    all: 'AccountBalance'
+    all: 'AccountBalance',
+    archived: 'Archive'
   }[status] || 'AttachMoney';
 
   return (

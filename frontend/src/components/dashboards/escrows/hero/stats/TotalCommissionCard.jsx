@@ -47,8 +47,17 @@ const TotalCommissionCard = ({
       }, 0);
 
     commission = closedCommission - lostCommission;
+  } else if (status === 'archived') {
+    // Archived status - filter by is_archived flag
+    commission = data
+      .filter(item => item.is_archived === true)
+      .reduce((sum, item) => {
+        const price = parseFloat(item.purchase_price || 0);
+        const commissionPct = parseFloat(item.commission_percentage || 3);
+        return sum + (price * (commissionPct / 100));
+      }, 0);
   } else {
-    // Single status
+    // Single status (active, closed, cancelled)
     commission = data
       .filter(item => {
         const itemStatus = item.escrow_status || item.status;
@@ -66,7 +75,8 @@ const TotalCommissionCard = ({
     active: 'Paid',
     closed: 'MonetizationOn',
     cancelled: 'MoneyOff',
-    all: 'AccountBalanceWallet'
+    all: 'AccountBalanceWallet',
+    archived: 'Archive'
   }[status] || 'Paid';
 
   return (

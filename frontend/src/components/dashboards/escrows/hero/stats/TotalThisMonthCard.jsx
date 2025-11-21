@@ -25,11 +25,14 @@ const TotalThisMonthCard = ({
 
   // Calculate count for this month
   const count = data.filter(item => {
-    const itemStatus = item.escrow_status || item.status;
-
-    // Check status match (skip for 'all')
-    if (status !== 'all' && itemStatus?.toLowerCase() !== status.toLowerCase()) {
-      return false;
+    // Check status match
+    if (status === 'archived') {
+      if (item.is_archived !== true) return false;
+    } else if (status !== 'all') {
+      const itemStatus = item.escrow_status || item.status;
+      if (itemStatus?.toLowerCase() !== status.toLowerCase()) {
+        return false;
+      }
     }
 
     // Check date range
@@ -42,7 +45,8 @@ const TotalThisMonthCard = ({
     active: 'Schedule',
     closed: 'EventAvailable',
     cancelled: 'EventBusy',
-    all: 'CalendarMonth'
+    all: 'CalendarMonth',
+    archived: 'Archive'
   }[status] || 'Schedule';
 
   return (
