@@ -173,17 +173,17 @@ const DashboardStatCard = ({
             </Box>
           </Box>
 
-          {/* Middle: CSS Grid layout for precise control */}
+          {/* Middle: Fixed-width layout - icon and number space are constant */}
           <Box sx={{
-            display: 'grid',
-            gridTemplateColumns: showPrivacy ? '32px 1fr 52px' : '1fr 52px',
+            display: 'flex',
             alignItems: 'center',
-            gap: 2,
+            justifyContent: 'space-between',
+            gap: 1,
             flex: 1,
             my: 1,
-            px: 0,
+            px: 2,
           }}>
-            {/* Privacy toggle - fixed column */}
+            {/* Privacy toggle - optional */}
             {showPrivacy && (
               <IconButton
                 size="small"
@@ -194,8 +194,8 @@ const DashboardStatCard = ({
                 sx={{
                   width: 28,
                   height: 28,
+                  flexShrink: 0,
                   color: 'rgba(255,255,255,0.8)',
-                  justifySelf: 'start',
                   '&:hover': {
                     backgroundColor: 'rgba(255,255,255,0.1)',
                     color: 'white',
@@ -210,63 +210,49 @@ const DashboardStatCard = ({
               </IconButton>
             )}
 
-            {/* Value - fills grid column, centered within */}
+            {/* Value - Fixed container with auto-scaling text */}
             <Box sx={{
+              flex: 1,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '100%',
-              minWidth: 0, // Allow flex shrinking
+              minWidth: 0,
+              overflow: 'hidden',
             }}>
-              <Typography
-                variant="h3"
-                component="div"
+              <Box
                 sx={{
+                  display: 'inline-block',
+                  maxWidth: '100%',
+                  fontSize: '2.5rem', // Base font size
                   fontWeight: 700,
                   color: valueColor || textColor || 'white',
-                  display: 'inline-flex',
-                  alignItems: 'baseline',
-                  gap: 0.2,
-                  whiteSpace: 'nowrap',
-                  width: 'fit-content',
-                  maxWidth: '100%',
-                  // Simple formula: Start at max size, shrink based on character count
-                  // Formula: max(min_size, max_size - (chars * reduction_factor))
-                  fontSize: (() => {
-                    const valueStr = String(value || '').replace(/,/g, '');
-                    const numDigits = valueStr.length;
-                    const estimatedCommas = Math.max(0, Math.floor((numDigits - 1) / 3));
-                    const displayLength = prefix.length + numDigits + estimatedCommas + suffix.length;
-
-                    // Simple clamp formula that works at all viewport sizes:
-                    // clamp(minimum, preferred, maximum)
-                    // The preferred uses viewport width (vw) which scales naturally
-
-                    // Max font: 2.5rem, Min font: 1rem
-                    // Reduction: 0.12rem per character over 7 chars
-                    const maxFont = 2.5;
-                    const minFont = 1;
-                    const baseChars = 7;
-                    const reductionPerChar = 0.12;
-
-                    const calculatedSize = displayLength > baseChars
-                      ? maxFont - ((displayLength - baseChars) * reductionPerChar)
-                      : maxFont;
-
-                    const finalSize = Math.max(minFont, calculatedSize);
-
-                    return `${finalSize}rem`;
-                  })(),
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'clip',
+                  // Auto-scale to fit using CSS transform
+                  transformOrigin: 'center center',
+                  '@media (max-width: 1536px)': {
+                    fontSize: '2.2rem',
+                  },
+                  '@media (max-width: 1200px)': {
+                    fontSize: '1.8rem',
+                  },
+                  '@media (max-width: 900px)': {
+                    fontSize: '2rem',
+                  },
+                  '@media (max-width: 600px)': {
+                    fontSize: '2.5rem',
+                  },
                 }}
               >
                 {showPrivacy && !showValue ? (
-                  <span>{maskValue(value)}</span>
+                  maskValue(value)
                 ) : typeof value === 'string' ? (
                   // Custom string value (no CountUp animation)
                   <>
                     {prefix && <span style={{ fontSize: '0.7em', opacity: 0.9 }}>{prefix}</span>}
-                    <span>{value}</span>
+                    {value}
                     {suffix && <span style={{ fontSize: '0.7em', opacity: 0.9 }}>{suffix}</span>}
                   </>
                 ) : (
@@ -282,18 +268,18 @@ const DashboardStatCard = ({
                     {suffix && <span style={{ fontSize: '0.7em', opacity: 0.9 }}>{suffix}</span>}
                   </>
                 )}
-              </Typography>
+              </Box>
             </Box>
 
-            {/* Icon Circle - fixed grid column on right */}
+            {/* Icon Circle - fixed size on right */}
             <Box
               sx={{
                 width: 48,
                 height: 48,
+                flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                justifySelf: 'end',
                 position: 'relative',
               }}
             >
