@@ -200,3 +200,50 @@ GET /api/escrows?startDate=2025-11-01&endDate=2025-11-30
 
 **Implementation Time:** ~45 minutes (faster than estimated 2 hours)
 **Reason:** Archive was already unified, only needed date formatting fix
+
+---
+
+## UPDATE: Critical Infinite Loop Fix (Commit 3)
+
+**Issue Discovered:** Date range filters (1M, 1Y, YTD) caused infinite API requests
+
+**Root Cause:**
+- `calculatedDateRange` called `getCalculatedDateRange()` on every render
+- Created new Date objects each time
+- React Query saw new object references as "changed"
+- Triggered infinite refetches → 429 errors
+
+**Solution (Commit `b124d9b`):**
+
+Wrapped date calculation in `useMemo` with proper dependencies:
+
+```javascript
+const calculatedDateRange = useMemo(() => {
+  if (!dateRangeFilter && !(customStartDate && customEndDate)) {
+    return null;
+  }
+  
+  // ... calculate dates based on filter ...
+  
+  return { startDate, endDate, label };
+}, [dateRangeFilter, customStartDate, customEndDate, selectedYear]);
+```
+
+**Dependencies:**
+- `dateRangeFilter` - Preset filter (1D, 1M, 1Y, YTD)
+- `customStartDate` - Manual start date selection
+- `customEndDate` - Manual end date selection
+- `selectedYear` - Year for YTD filter
+
+**Result:**
+- ✅ React Query only refetches when dependencies actually change
+- ✅ No more infinite loops
+- ✅ No more 429 errors
+- ✅ All date filters working (1D, 1M, 1Y, YTD)
+
+**File Changed:**
+- `frontend/src/templates/Dashboard/index.jsx` (lines 153-226)
+
+**Deployment:**
+- Committed: November 21, 2025 at 12:58 PM PST
+- Status: ✅ Live on production
