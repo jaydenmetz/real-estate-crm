@@ -150,8 +150,15 @@ export const DashboardTemplate = ({
     }
   };
 
-  // Calculate date range based on filter or custom dates (matching Clients)
-  const getCalculatedDateRange = () => {
+  // Memoize calculated date range to prevent infinite re-renders
+  // This is critical - without memoization, new Date objects are created every render,
+  // causing React Query to refetch infinitely
+  const calculatedDateRange = useMemo(() => {
+    // Only calculate if user has explicitly selected a date range
+    if (!dateRangeFilter && !(customStartDate && customEndDate)) {
+      return null;
+    }
+
     const now = new Date();
     let startDate, endDate;
 
@@ -216,12 +223,7 @@ export const DashboardTemplate = ({
       endDate: validEnd,
       label: label
     };
-  };
-
-  // Only calculate date range if user has explicitly selected one (not by default)
-  const calculatedDateRange = dateRangeFilter || (customStartDate && customEndDate)
-    ? getCalculatedDateRange()
-    : null;
+  }, [dateRangeFilter, customStartDate, customEndDate, selectedYear]);
 
   // Dashboard state from config (with calculated date range)
   const {
