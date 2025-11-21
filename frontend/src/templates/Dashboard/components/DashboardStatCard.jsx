@@ -229,13 +229,13 @@ const DashboardStatCard = ({
                   whiteSpace: 'nowrap',
                   overflow: 'visible',
                   // Responsive font sizing tuned for worst-case: "$1,050,000" (12 chars)
-                  // Each breakpoint tested to ensure no truncation or overlap
+                  // REDUCED SIGNIFICANTLY to prevent truncation/overlap
                   fontSize: {
-                    xs: '2.5rem',    // Mobile: 1 column (plenty of space)
-                    sm: '1.7rem',    // Tablet: 2 columns
-                    md: '1.4rem',    // Small desktop: 2 columns (tightest)
-                    lg: '1.5rem',    // Desktop: 4 columns
-                    xl: '1.8rem',    // Large desktop: 4 columns (more space)
+                    xs: '2rem',      // Mobile: 1 column
+                    sm: '1.3rem',    // Tablet: 2 columns
+                    md: '1.1rem',    // Small desktop: 2 columns (tightest)
+                    lg: '1.2rem',    // Desktop: 4 columns
+                    xl: '1.4rem',    // Large desktop: 4 columns
                   },
                 }}
               >
