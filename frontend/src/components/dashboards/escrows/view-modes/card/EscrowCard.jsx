@@ -90,15 +90,16 @@ const escrowCardConfig = {
     onSave: (escrow, addressData) => {
       // addressData is the full object from EditAddress with all address components
       // Extract the individual fields to save to database
+      // IMPORTANT: Never use addressData itself as fallback - it's the entire object!
       return {
-        property_address: addressData.property_address || addressData,
-        display_address: addressData.property_address_display || addressData.display_address || addressData.property_address,
-        city: addressData.city,
-        state: addressData.state,
-        zip_code: addressData.zip_code,
-        county: addressData.county,
-        latitude: addressData.latitude,
-        longitude: addressData.longitude,
+        property_address: addressData.property_address || '',
+        display_address: addressData.property_address_display || addressData.display_address || addressData.property_address || '',
+        city: addressData.city || '',
+        state: addressData.state || '',
+        zip_code: addressData.zip_code || '',
+        county: addressData.county || '',
+        latitude: addressData.latitude || null,
+        longitude: addressData.longitude || null,
       };
     },
   },

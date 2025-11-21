@@ -557,11 +557,16 @@ async function updateEscrow(req, res) {
       if (key !== 'id' && key !== 'display_id' && key !== 'created_at') {
         const dbFieldName = fieldMapping[key] || key;
 
-        // Handle JSONB fields
+        // Handle JSONB fields and prevent object stringification
         let value = updates[key];
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
           if (['people', 'checklists', 'timeline'].includes(dbFieldName)) {
+            // JSONB fields - stringify the object
             value = JSON.stringify(value);
+          } else {
+            // Non-JSONB field received an object - this is an error, skip it
+            console.warn(`⚠️  Skipping field '${key}' (${dbFieldName}): received object for non-JSONB field`, value);
+            return; // Skip this field
           }
         }
 
