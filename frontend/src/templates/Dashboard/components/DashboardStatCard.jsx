@@ -119,7 +119,7 @@ const DashboardStatCard = ({
   showPrivacy = false,
   defaultHidden = true,
 }) => {
-  const [showValue, setShowValue] = useState(!defaultHidden);
+  const [showValue, setShowValue] = useState(false);
   const dynamicFontSize = calculateFontSize(value, prefix, suffix);
   const IconComponent = typeof icon === 'string' ? iconMap[icon] : icon;
 
