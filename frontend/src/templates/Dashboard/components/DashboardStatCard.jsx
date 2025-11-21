@@ -199,16 +199,18 @@ const DashboardStatCard = ({
             flex: 1,
             pl: 2,
             pr: 0.5,
+            position: 'relative',
           }}>
-            {/* Privacy toggle */}
+            {/* Privacy toggle - positioned at left edge */}
             {showPrivacy && (
               <IconButton
                 size="small"
                 onClick={(e) => { e.stopPropagation(); setShowValue(!showValue); }}
                 sx={{
+                  position: 'absolute',
+                  left: -8,
                   width: 28,
                   height: 28,
-                  flexShrink: 0,
                   color: 'rgba(255,255,255,0.8)',
                   '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)', color: 'white' },
                 }}
