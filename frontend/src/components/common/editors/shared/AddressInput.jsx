@@ -69,18 +69,36 @@ export const AddressInput = ({
         return;
       }
 
-      try {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
-        script.async = true;
-        script.onload = () => {
+      // Check if script is already loading
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (existingScript) {
+        // Script already exists, wait for it to load
+        if (window.google?.maps?.places) {
           setGoogleMapsLoaded(true);
           autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
           sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
-
           const dummyDiv = document.createElement('div');
           placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
+        }
+        return;
+      }
+
+      try {
+        // Use callback pattern instead of loading=async
+        window.initGoogleMaps = () => {
+          if (window.google?.maps?.places) {
+            setGoogleMapsLoaded(true);
+            autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+            sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
+            const dummyDiv = document.createElement('div');
+            placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
+          }
         };
+
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMaps`;
+        script.async = true;
+        script.defer = true;
         document.head.appendChild(script);
       } catch (error) {
         console.error('Failed to load Google Maps:', error);
