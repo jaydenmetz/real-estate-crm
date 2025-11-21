@@ -97,11 +97,22 @@ const escrowListConfig = {
 
   // Title Configuration (address, editable)
   title: {
-    field: 'property_address',
+    formatter: (escrow) => escrow.display_address || escrow.property_address, // Prefer display name, fallback to canonical
     editable: true,
     editor: EditPropertyAddress,
-    onSave: (escrow, newAddress) => {
-      return { property_address: newAddress };
+    onSave: (escrow, addressData) => {
+      // addressData is the full object from EditAddress with all address components
+      // Extract the individual fields to save to database
+      return {
+        property_address: addressData.property_address || '',
+        display_address: addressData.property_address_display || addressData.display_address || addressData.property_address || '',
+        city: addressData.city || '',
+        state: addressData.state || '',
+        zip_code: addressData.zip_code || '',
+        county: addressData.county || '',
+        latitude: addressData.latitude || null,
+        longitude: addressData.longitude || null,
+      };
     },
   },
 
