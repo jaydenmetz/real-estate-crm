@@ -14,6 +14,7 @@ import {
 import { styled } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import { Add as AddIcon, Assessment as AssessmentIcon } from '@mui/icons-material';
+import { EditDisplayStartDate, EditDisplayEndDate } from '../editors';
 
 // Styled Components matching ClientHeroCard
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -49,7 +50,9 @@ export const DashboardHero = ({
   StatCardComponent,
   allData = [] // Pass all data to calculate available years
 }) => {
-  // Local state removed - using inline date editors with localStorage persistence
+  // State for date editor modals
+  const [startDateEditorOpen, setStartDateEditorOpen] = useState(false);
+  const [endDateEditorOpen, setEndDateEditorOpen] = useState(false);
 
   // Calculate available years from data
   const getAvailableYears = () => {
@@ -255,95 +258,113 @@ export const DashboardHero = ({
               </Select>
             )}
 
-            {/* Inline Date Range Editors */}
+            {/* Date Range Editors */}
             <Box sx={{
               display: 'flex',
               gap: 0.5,
               alignItems: 'center',
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
               borderRadius: 1,
-              px: 1,
+              px: 1.5,
               height: 36,
-              border: '1px solid transparent',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               flexShrink: 0,
               flexGrow: 0,
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+              },
             }}>
-              {/* Start Date Input */}
-              <input
-                type="date"
-                value={(() => {
+              {/* Start Date Button */}
+              <Typography
+                onClick={() => setStartDateEditorOpen(true)}
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  minWidth: '80px',
+                  '&:hover': {
+                    color: 'white',
+                  },
+                }}
+              >
+                {(() => {
                   const date = customStartDate || dateRange?.startDate;
-                  if (!date) return '';
+                  if (!date) return 'Start';
                   try {
                     const d = typeof date === 'string' ? new Date(date) : date;
-                    if (isNaN(d.getTime())) return '';
-                    return d.toISOString().split('T')[0];
+                    if (isNaN(d.getTime())) return 'Start';
+                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                   } catch (e) {
-                    return '';
+                    return 'Start';
                   }
                 })()}
-                onChange={(e) => {
-                  const newDate = e.target.value ? new Date(e.target.value) : null;
-                  setCustomStartDate(newDate);
-                  if (newDate && customEndDate && detectPresetRange) {
-                    const matched = detectPresetRange(newDate, customEndDate);
-                    setDateRangeFilter(matched);
-                  } else {
-                    setDateRangeFilter(null);
-                  }
-                }}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  color: 'rgba(255, 255, 255, 0.9)',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  width: '115px',
-                  fontFamily: 'inherit',
-                }}
-              />
+              </Typography>
               <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
-              {/* End Date Input */}
-              <input
-                type="date"
-                value={(() => {
-                  const date = customEndDate || dateRange?.endDate;
-                  if (!date) return '';
-                  try {
-                    const d = typeof date === 'string' ? new Date(date) : date;
-                    if (isNaN(d.getTime())) return '';
-                    return d.toISOString().split('T')[0];
-                  } catch (e) {
-                    return '';
-                  }
-                })()}
-                onChange={(e) => {
-                  const newDate = e.target.value ? new Date(e.target.value) : null;
-                  setCustomEndDate(newDate);
-                  if (customStartDate && newDate && detectPresetRange) {
-                    const matched = detectPresetRange(customStartDate, newDate);
-                    setDateRangeFilter(matched);
-                  } else {
-                    setDateRangeFilter(null);
-                  }
-                }}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: 'none',
+              {/* End Date Button */}
+              <Typography
+                onClick={() => setEndDateEditorOpen(true)}
+                sx={{
                   color: 'rgba(255, 255, 255, 0.9)',
                   fontSize: '0.875rem',
                   fontWeight: 600,
                   textAlign: 'center',
                   cursor: 'pointer',
-                  outline: 'none',
-                  width: '115px',
-                  fontFamily: 'inherit',
+                  minWidth: '80px',
+                  '&:hover': {
+                    color: 'white',
+                  },
                 }}
-              />
+              >
+                {(() => {
+                  const date = customEndDate || dateRange?.endDate;
+                  if (!date) return 'End';
+                  try {
+                    const d = typeof date === 'string' ? new Date(date) : date;
+                    if (isNaN(d.getTime())) return 'End';
+                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                  } catch (e) {
+                    return 'End';
+                  }
+                })()}
+              </Typography>
             </Box>
+
+            {/* Date Editor Modals */}
+            <EditDisplayStartDate
+              open={startDateEditorOpen}
+              onClose={() => setStartDateEditorOpen(false)}
+              value={customStartDate || dateRange?.startDate}
+              color={config.gradient?.match(/#[0-9A-Fa-f]{6}/)?.[0] || '#667eea'}
+              onSave={(newDate) => {
+                const parsedDate = new Date(newDate);
+                setCustomStartDate(parsedDate);
+                if (parsedDate && customEndDate && detectPresetRange) {
+                  const matched = detectPresetRange(parsedDate, customEndDate);
+                  setDateRangeFilter(matched);
+                } else {
+                  setDateRangeFilter(null);
+                }
+              }}
+            />
+            <EditDisplayEndDate
+              open={endDateEditorOpen}
+              onClose={() => setEndDateEditorOpen(false)}
+              value={customEndDate || dateRange?.endDate}
+              color={config.gradient?.match(/#[0-9A-Fa-f]{6}/)?.[0] || '#667eea'}
+              onSave={(newDate) => {
+                const parsedDate = new Date(newDate);
+                setCustomEndDate(parsedDate);
+                if (customStartDate && parsedDate && detectPresetRange) {
+                  const matched = detectPresetRange(customStartDate, parsedDate);
+                  setDateRangeFilter(matched);
+                } else {
+                  setDateRangeFilter(null);
+                }
+              }}
+            />
           </Box>
         </Box>
 
