@@ -228,13 +228,13 @@ const DashboardStatCard = ({
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                   whiteSpace: 'nowrap',
                   overflow: 'visible',
-                  // Responsive font sizing tuned for worst-case: "$30,001,500" (11 digits)
+                  // Responsive font sizing for "$1,000,050,000" (13 chars)
                   fontSize: {
-                    xs: '1.6rem',    // Mobile: 1 column
-                    sm: '1.1rem',    // Tablet: 2 columns
-                    md: '0.95rem',   // Small desktop: 2 columns (tightest)
-                    lg: '1rem',      // Desktop: 4 columns
-                    xl: '1.1rem',    // Large desktop: 4 columns
+                    xs: '1.4rem',
+                    sm: '0.9rem',
+                    md: '0.8rem',
+                    lg: '0.85rem',
+                    xl: '0.95rem',
                   },
                 }}
               >
