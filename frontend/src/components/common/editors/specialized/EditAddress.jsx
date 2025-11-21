@@ -155,7 +155,7 @@ export const EditAddress = ({
             letterSpacing: '0.5px',
           }}
         >
-          Display Name (shown in views)
+          Display Name
         </Typography>
         <AddressInput
           value={displayAddress} // Pass extracted string address, not full object
