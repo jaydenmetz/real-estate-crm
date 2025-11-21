@@ -80,10 +80,17 @@ export const useDashboardData = (config, externalDateRange = null) => {
         params.scope = selectedScope;
       }
 
-      // Add date range filter if present (send actual dates to backend)
+      // Add date range filter if present (send dates in YYYY-MM-DD format)
       if (externalDateRange?.startDate && externalDateRange?.endDate) {
-        params.startDate = externalDateRange.startDate.toISOString();
-        params.endDate = externalDateRange.endDate.toISOString();
+        // Format dates as YYYY-MM-DD for backend
+        const formatDate = (date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        params.startDate = formatDate(externalDateRange.startDate);
+        params.endDate = formatDate(externalDateRange.endDate);
       }
 
       // Use config's API method if available, otherwise fallback to fetch
