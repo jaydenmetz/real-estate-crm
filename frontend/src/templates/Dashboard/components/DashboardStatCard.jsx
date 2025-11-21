@@ -56,26 +56,47 @@ const iconMap = {
   'AccountBalanceWallet': AccountBalanceWallet,
 };
 
-// Calculate font size based on value length (dynamic per card)
+// Calculate font size based on number magnitude (dynamic per card)
+// Each 3 digits (order of magnitude) gets progressively smaller
 const calculateFontSize = (value, prefix, suffix) => {
-  const valueStr = typeof value === 'number'
-    ? value.toLocaleString()
-    : String(value);
-  const totalLength = (prefix || '').length + valueStr.length + (suffix || '').length;
+  // Get the numeric value for magnitude calculation
+  const numValue = typeof value === 'number' ? Math.abs(value) : 0;
 
-  if (totalLength <= 4) {
+  // Determine magnitude: 1-999, 1K-999K, 1M-999M, 1B+
+  if (numValue < 1000) {
+    // Hundreds: "2", "99", "500"
+    return { xs: '2.8rem', sm: '2.2rem', md: '2rem', lg: '2.2rem', xl: '2.4rem' };
+  }
+  if (numValue < 10000) {
+    // Low thousands: "1,000" - "9,999"
     return { xs: '2.5rem', sm: '2rem', md: '1.8rem', lg: '2rem', xl: '2.2rem' };
   }
-  if (totalLength <= 7) {
-    return { xs: '2.2rem', sm: '1.7rem', md: '1.5rem', lg: '1.7rem', xl: '1.9rem' };
+  if (numValue < 100000) {
+    // Mid thousands: "10,000" - "99,999"
+    return { xs: '2.2rem', sm: '1.8rem', md: '1.6rem', lg: '1.8rem', xl: '2rem' };
   }
-  if (totalLength <= 10) {
-    return { xs: '2rem', sm: '1.5rem', md: '1.3rem', lg: '1.5rem', xl: '1.6rem' };
+  if (numValue < 1000000) {
+    // High thousands: "100,000" - "999,999"
+    return { xs: '2rem', sm: '1.6rem', md: '1.4rem', lg: '1.6rem', xl: '1.8rem' };
   }
-  if (totalLength <= 13) {
-    return { xs: '1.7rem', sm: '1.2rem', md: '1.1rem', lg: '1.2rem', xl: '1.3rem' };
+  if (numValue < 10000000) {
+    // Low millions: "1,000,000" - "9,999,999"
+    return { xs: '1.8rem', sm: '1.4rem', md: '1.2rem', lg: '1.4rem', xl: '1.6rem' };
   }
-  return { xs: '1.5rem', sm: '1rem', md: '0.9rem', lg: '1rem', xl: '1.1rem' };
+  if (numValue < 100000000) {
+    // Mid millions: "10,000,000" - "99,999,999"
+    return { xs: '1.6rem', sm: '1.2rem', md: '1.1rem', lg: '1.2rem', xl: '1.4rem' };
+  }
+  if (numValue < 1000000000) {
+    // High millions: "100,000,000" - "999,999,999"
+    return { xs: '1.4rem', sm: '1.1rem', md: '1rem', lg: '1.1rem', xl: '1.2rem' };
+  }
+  if (numValue < 10000000000) {
+    // Low billions: "1,000,000,000" - "9,999,999,999"
+    return { xs: '1.2rem', sm: '1rem', md: '0.9rem', lg: '1rem', xl: '1.1rem' };
+  }
+  // 10B+ (very large teams)
+  return { xs: '1rem', sm: '0.9rem', md: '0.8rem', lg: '0.9rem', xl: '1rem' };
 };
 
 /**
