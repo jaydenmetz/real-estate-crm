@@ -178,10 +178,10 @@ const DashboardStatCard = ({
             display: 'grid',
             gridTemplateColumns: showPrivacy ? '32px 1fr 52px' : '1fr 52px',
             alignItems: 'center',
-            gap: { xs: 1.5, sm: 2, md: 1.5, lg: 2 },
+            gap: 2,
             flex: 1,
             my: 1,
-            px: { xs: 1, sm: 0.5, md: 0.75, lg: 1 },
+            px: 0,
           }}>
             {/* Privacy toggle - fixed column */}
             {showPrivacy && (
@@ -215,7 +215,8 @@ const DashboardStatCard = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              overflow: 'hidden',
+              width: '100%',
+              minWidth: 0, // Allow flex shrinking
             }}>
               <Typography
                 variant="h3"
@@ -226,37 +227,35 @@ const DashboardStatCard = ({
                   display: 'inline-flex',
                   alignItems: 'baseline',
                   gap: 0.2,
-                  flexShrink: 1,
-                  // Breakpoint-aware font scaling for optimal display at all viewport sizes
+                  whiteSpace: 'nowrap',
+                  width: 'fit-content',
+                  maxWidth: '100%',
+                  // Simple formula: Start at max size, shrink based on character count
+                  // Formula: max(min_size, max_size - (chars * reduction_factor))
                   fontSize: (() => {
                     const valueStr = String(value || '').replace(/,/g, '');
                     const numDigits = valueStr.length;
                     const estimatedCommas = Math.max(0, Math.floor((numDigits - 1) / 3));
                     const displayLength = prefix.length + numDigits + estimatedCommas + suffix.length;
 
-                    // Different sizing strategy per breakpoint:
-                    // xs (mobile, <600px): 1 column, large cards - use larger sizes
-                    // sm (tablet, 600-900px): 2 columns - moderate sizes
-                    // md (small desktop, 900-1200px): 2 columns - tighter sizing
-                    // lg+ (large desktop, >1200px): 4 columns - use clamp for flexibility
+                    // Simple clamp formula that works at all viewport sizes:
+                    // clamp(minimum, preferred, maximum)
+                    // The preferred uses viewport width (vw) which scales naturally
 
-                    if (displayLength >= 12) {
-                      return { xs: '2rem', sm: '1.5rem', md: '1.2rem', lg: '1.35rem', xl: '1.5rem' };
-                    }
-                    if (displayLength >= 11) {
-                      return { xs: '2.2rem', sm: '1.7rem', md: '1.35rem', lg: '1.5rem', xl: '1.7rem' };
-                    }
-                    if (displayLength >= 10) {
-                      return { xs: '2.4rem', sm: '1.9rem', md: '1.5rem', lg: '1.65rem', xl: '1.9rem' };
-                    }
-                    if (displayLength >= 9) {
-                      return { xs: '2.6rem', sm: '2.1rem', md: '1.65rem', lg: '1.85rem', xl: '2.1rem' };
-                    }
-                    if (displayLength >= 8) {
-                      return { xs: '2.8rem', sm: '2.3rem', md: '1.8rem', lg: '2rem', xl: '2.3rem' };
-                    }
-                    // ≤7 chars: largest
-                    return { xs: '3rem', sm: '2.5rem', md: '2rem', lg: '2.25rem', xl: '2.5rem' };
+                    // Max font: 2.5rem, Min font: 1rem
+                    // Reduction: 0.12rem per character over 7 chars
+                    const maxFont = 2.5;
+                    const minFont = 1;
+                    const baseChars = 7;
+                    const reductionPerChar = 0.12;
+
+                    const calculatedSize = displayLength > baseChars
+                      ? maxFont - ((displayLength - baseChars) * reductionPerChar)
+                      : maxFont;
+
+                    const finalSize = Math.max(minFont, calculatedSize);
+
+                    return `${finalSize}rem`;
                   })(),
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                 }}
@@ -266,37 +265,21 @@ const DashboardStatCard = ({
                 ) : typeof value === 'string' ? (
                   // Custom string value (no CountUp animation)
                   <>
-                    {prefix && (
-                      <Box component="span" sx={{ fontSize: { xs: '1.2rem', sm: '1rem', md: '0.85rem', lg: '0.95rem', xl: '1.05rem' }, opacity: 0.85 }}>
-                        {prefix}
-                      </Box>
-                    )}
+                    {prefix && <span style={{ fontSize: '0.7em', opacity: 0.9 }}>{prefix}</span>}
                     <span>{value}</span>
-                    {suffix && (
-                      <Box component="span" sx={{ fontSize: { xs: '1.2rem', sm: '1rem', md: '0.85rem', lg: '0.95rem', xl: '1.05rem' }, opacity: 0.85 }}>
-                        {suffix}
-                      </Box>
-                    )}
+                    {suffix && <span style={{ fontSize: '0.7em', opacity: 0.9 }}>{suffix}</span>}
                   </>
                 ) : (
                   // Numeric value with CountUp animation
                   <>
-                    {prefix && (
-                      <Box component="span" sx={{ fontSize: { xs: '1.2rem', sm: '1rem', md: '0.85rem', lg: '0.95rem', xl: '1.05rem' }, opacity: 0.85 }}>
-                        {prefix}
-                      </Box>
-                    )}
+                    {prefix && <span style={{ fontSize: '0.7em', opacity: 0.9 }}>{prefix}</span>}
                     <CountUp
                       end={value}
                       duration={2.5}
                       separator=","
                       decimals={0}
                     />
-                    {suffix && (
-                      <Box component="span" sx={{ fontSize: { xs: '1.2rem', sm: '1rem', md: '0.85rem', lg: '0.95rem', xl: '1.05rem' }, opacity: 0.85 }}>
-                        {suffix}
-                      </Box>
-                    )}
+                    {suffix && <span style={{ fontSize: '0.7em', opacity: 0.9 }}>{suffix}</span>}
                   </>
                 )}
               </Typography>
