@@ -13,7 +13,6 @@ import {
   DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArchiveBar } from './ArchiveBar';
 
 /**
  * DashboardContent - Config-driven content grid/list with animations
@@ -217,27 +216,10 @@ export const DashboardContent = ({
       <Box sx={getGridStyles()}>
         <AnimatePresence>
           {(() => {
-            // Archive view with ArchiveBar
+            // Archive view (no ArchiveBar - works like other status tabs)
             if (isArchiveView) {
               return (
                 <>
-                  {/* Archive Bar - Year selector and batch actions */}
-                  <Box sx={{ gridColumn: '1 / -1' }}>
-                    <ArchiveBar
-                      selectedYear={selectedYear}
-                      onYearChange={onYearChange}
-                      yearOptions={yearOptions || []}
-                      selectedItems={selectedItems || []}
-                      totalCount={archivedData?.length || 0}
-                      onSelectAll={handleSelectAll}
-                      onClearSelection={handleClearSelection}
-                      onRestore={handleBatchRestore}
-                      onDelete={handleBatchDelete}
-                      isRestoring={batchRestoring}
-                      isDeleting={batchDeleting}
-                    />
-                  </Box>
-
                   {archivedData.map((item, index) => {
                     const itemId = item[config.api.idField];
                     const isSelected = selectedItems?.includes(itemId);
