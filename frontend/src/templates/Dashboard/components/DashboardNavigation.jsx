@@ -44,6 +44,8 @@ export const DashboardNavigation = ({
   onSortByChange,
   showCalendar,
   onShowCalendarChange,
+  showArchived = false,
+  onShowArchivedChange,
   archivedCount = 0,
   // Bulk selection props
   selectedItems = [],
@@ -287,17 +289,17 @@ export const DashboardNavigation = ({
             </ToggleButton>
           </ToggleButtonGroup>
 
-          {/* Archive Icon - Toggle on/off */}
+          {/* Archive Icon - Toggle filter on/off */}
           <IconButton
             size="small"
-            onClick={() => onStatusChange(selectedStatus === 'archived' ? 'all' : 'archived')}
+            onClick={() => onShowArchivedChange(!showArchived)}
             sx={{
               width: 36,
               height: 36,
-              backgroundColor: selectedStatus === 'archived' ? alpha('#000', 0.8) : alpha('#000', 0.06),
-              color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
+              backgroundColor: showArchived ? alpha('#000', 0.8) : alpha('#000', 0.06),
+              color: showArchived ? 'white' : 'text.secondary',
               '&:hover': {
-                backgroundColor: selectedStatus === 'archived' ? alpha('#000', 0.9) : alpha('#000', 0.1),
+                backgroundColor: showArchived ? alpha('#000', 0.9) : alpha('#000', 0.1),
               },
               transition: 'all 0.2s',
             }}

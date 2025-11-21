@@ -6,9 +6,10 @@ import { useQuery } from '@tanstack/react-query';
  *
  * @param {Object} config - Entity configuration from config/entities
  * @param {Object} externalDateRange - Optional date range from parent { startDate, endDate, label }
+ * @param {boolean} showArchived - Show only archived items (filter toggle)
  * @returns {Object} Dashboard state and handlers
  */
-export const useDashboardData = (config, externalDateRange = null) => {
+export const useDashboardData = (config, externalDateRange = null, showArchived = false) => {
   // State management with localStorage persistence for selected tab
   const [selectedStatus, setSelectedStatus] = useState(() => {
     const saved = localStorage.getItem(`${config.entity.namePlural}Status`);
@@ -65,12 +66,17 @@ export const useDashboardData = (config, externalDateRange = null) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: [config.entity.namePlural, selectedStatus, selectedScope, dateRangeKey],
+    queryKey: [config.entity.namePlural, selectedStatus, selectedScope, dateRangeKey, showArchived],
     queryFn: async () => {
       // Build query params
       const params = {
         limit: 100 // Request up to 100 items per page (backend max)
       };
+
+      // Add archived filter (works with any status)
+      if (showArchived) {
+        params.onlyArchived = true;
+      }
 
       // Add status filter
       if (selectedStatus !== 'All') {

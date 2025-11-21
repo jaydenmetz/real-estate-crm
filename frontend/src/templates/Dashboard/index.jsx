@@ -59,6 +59,7 @@ export const DashboardTemplate = ({
 
   // Calendar and archive state (matching Clients)
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showArchived, setShowArchived] = useState(false); // Archive toggle filter
   const [archivedCount, setArchivedCount] = useState(0);
   const [batchDeleting, setBatchDeleting] = useState(false);
   const [batchRestoring, setBatchRestoring] = useState(false);
@@ -245,7 +246,7 @@ export const DashboardTemplate = ({
     setSortOrder,
     filteredData,
     refetch,
-  } = useDashboardData(config, calculatedDateRange);
+  } = useDashboardData(config, calculatedDateRange, showArchived);
 
   // Wrapper for setSelectedStatus that also changes viewMode based on tab's preferredViewMode
   const setSelectedStatus = (newStatus) => {
@@ -476,6 +477,8 @@ export const DashboardTemplate = ({
             onSortByChange={setSortBy}
             showCalendar={showCalendar}
             onShowCalendarChange={setShowCalendar}
+            showArchived={showArchived}
+            onShowArchivedChange={setShowArchived}
             archivedCount={archivedCount}
             selectedItems={selectedItems}
             totalCount={data?.length || 0}
@@ -502,6 +505,8 @@ export const DashboardTemplate = ({
             onSortByChange={setSortBy}
             showCalendar={showCalendar}
             onShowCalendarChange={setShowCalendar}
+            showArchived={showArchived}
+            onShowArchivedChange={setShowArchived}
             archivedCount={archivedCount}
             selectedItems={selectedItems}
             totalCount={data?.length || 0}
