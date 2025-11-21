@@ -68,6 +68,31 @@ const iconMap = {
  * - framer-motion animations
  * - Responsive typography
  */
+// Calculate font size based on value length (dynamic per card)
+const calculateFontSize = (value, prefix, suffix) => {
+  const valueStr = typeof value === 'number'
+    ? value.toLocaleString()
+    : String(value);
+  const totalLength = (prefix || '').length + valueStr.length + (suffix || '').length;
+
+  // Base sizes for short values (1-4 chars like "2")
+  // Reduce progressively as length increases
+  if (totalLength <= 4) {
+    return { xs: '2rem', sm: '1.5rem', md: '1.4rem', lg: '1.5rem', xl: '1.6rem' };
+  }
+  if (totalLength <= 7) {
+    return { xs: '1.8rem', sm: '1.3rem', md: '1.2rem', lg: '1.3rem', xl: '1.4rem' };
+  }
+  if (totalLength <= 10) {
+    return { xs: '1.6rem', sm: '1.1rem', md: '1rem', lg: '1.1rem', xl: '1.2rem' };
+  }
+  if (totalLength <= 13) {
+    return { xs: '1.4rem', sm: '0.9rem', md: '0.8rem', lg: '0.85rem', xl: '0.95rem' };
+  }
+  // Very long values (14+ chars)
+  return { xs: '1.2rem', sm: '0.8rem', md: '0.7rem', lg: '0.75rem', xl: '0.85rem' };
+};
+
 const DashboardStatCard = ({
   icon,
   title,
@@ -85,6 +110,9 @@ const DashboardStatCard = ({
 }) => {
   const theme = useTheme();
   const [showValue, setShowValue] = useState(false);
+
+  // Calculate dynamic font size based on value
+  const dynamicFontSize = calculateFontSize(value, prefix, suffix);
 
   // Resolve icon - can be string or component
   const IconComponent = typeof icon === 'string' ? iconMap[icon] : icon;
@@ -228,14 +256,8 @@ const DashboardStatCard = ({
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                   whiteSpace: 'nowrap',
                   overflow: 'visible',
-                  // Responsive font sizing for "$1,000,050,000" (13 chars)
-                  fontSize: {
-                    xs: '1.4rem',
-                    sm: '0.9rem',
-                    md: '0.8rem',
-                    lg: '0.85rem',
-                    xl: '0.95rem',
-                  },
+                  // Dynamic font sizing based on value length
+                  fontSize: dynamicFontSize,
                 }}
               >
                 {showPrivacy && !showValue ? (
