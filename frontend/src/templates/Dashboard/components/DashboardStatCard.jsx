@@ -261,6 +261,7 @@ const DashboardStatCard = ({
                 textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                 whiteSpace: 'nowrap',
                 fontSize: dynamicFontSize,
+                ml: showPrivacy ? 1.5 : 0,
               }}
             >
               {showPrivacy && !showValue ? (
