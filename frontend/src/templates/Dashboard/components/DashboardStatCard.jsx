@@ -169,14 +169,13 @@ const DashboardStatCard = ({
             {title}
           </Typography>
 
-          {/* Content Row: [Privacy?] Value Icon */}
+          {/* Content Row: Value + Icon (icon anchored right) */}
           <Box sx={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
             flex: 1,
-            gap: 2,
-            px: 1,
+            px: 2,
           }}>
             {/* Privacy toggle */}
             {showPrivacy && (
