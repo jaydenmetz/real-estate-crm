@@ -371,7 +371,7 @@ export const appointmentsConfig = createEntityConfig({
       { value: 'scheduled', label: 'Scheduled', preferredViewMode: 'large' },
       { value: 'completed', label: 'Completed', preferredViewMode: 'medium' },
       { value: 'cancelled', label: 'Cancelled', preferredViewMode: 'small' },
-      { value: 'all', label: 'All Appointments', preferredViewMode: 'small' },
+      { value: 'All', label: 'All Appointments', preferredViewMode: 'small' },
       { value: 'archived', label: 'Archived', preferredViewMode: 'small' }
     ],
     defaultStatus: 'scheduled',

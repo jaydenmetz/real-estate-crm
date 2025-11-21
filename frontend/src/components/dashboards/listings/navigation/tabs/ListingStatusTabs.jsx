@@ -24,7 +24,7 @@ export const listingStatusTabs = [
     preferredViewMode: 'list'
   },
   {
-    value: 'all',
+    value: 'All',
     label: 'All Listings',
     preferredViewMode: 'table'
   },

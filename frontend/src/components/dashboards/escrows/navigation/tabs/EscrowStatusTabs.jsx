@@ -24,13 +24,8 @@ export const escrowStatusTabs = [
     preferredViewMode: 'table'
   },
   {
-    value: 'all',
+    value: 'All',
     label: 'All Escrows',
     preferredViewMode: 'table'
-  },
-  {
-    value: 'archived',
-    label: 'Archived',
-    preferredViewMode: 'card'
   }
 ];

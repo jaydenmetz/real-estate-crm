@@ -7,7 +7,7 @@
  */
 
 export const clientStatusTabs = [
-  { value: 'all', label: 'All Clients' },
+  { value: 'All', label: 'All Clients' },
   { value: 'active', label: 'Active' },
   { value: 'lead', label: 'Leads' },
   { value: 'inactive', label: 'Inactive' },

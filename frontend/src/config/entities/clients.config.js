@@ -178,7 +178,7 @@ export const clientsConfig = createEntityConfig({
       { value: 'active', label: 'Active', preferredViewMode: 'large' },
       { value: 'past', label: 'Past', preferredViewMode: 'medium' },
       { value: 'expired', label: 'Expired', preferredViewMode: 'small' },
-      { value: 'all', label: 'All Clients', preferredViewMode: 'small' }
+      { value: 'All', label: 'All Clients', preferredViewMode: 'small' }
     ],
     defaultStatus: 'active',
 

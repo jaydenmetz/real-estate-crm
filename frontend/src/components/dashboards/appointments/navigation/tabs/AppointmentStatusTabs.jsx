@@ -7,7 +7,7 @@
  */
 
 export const appointmentStatusTabs = [
-  { value: 'all', label: 'All Appointments' },
+  { value: 'All', label: 'All Appointments' },
   { value: 'scheduled', label: 'Scheduled' },
   { value: 'confirmed', label: 'Confirmed' },
   { value: 'completed', label: 'Completed' },

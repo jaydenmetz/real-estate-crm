@@ -7,7 +7,7 @@
  */
 
 export const leadStatusTabs = [
-  { value: 'all', label: 'All Leads' },
+  { value: 'All', label: 'All Leads' },
   { value: 'new', label: 'New' },
   { value: 'contacted', label: 'Contacted' },
   { value: 'qualified', label: 'Qualified' },

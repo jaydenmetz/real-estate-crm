@@ -442,7 +442,7 @@ export const leadsConfig = createEntityConfig({
       { value: 'contacted', label: 'Contacted', preferredViewMode: 'large' },
       { value: 'qualified', label: 'Qualified', preferredViewMode: 'medium' },
       { value: 'converted', label: 'Converted', preferredViewMode: 'medium' },
-      { value: 'all', label: 'All Leads', preferredViewMode: 'small' },
+      { value: 'All', label: 'All Leads', preferredViewMode: 'small' },
       { value: 'archived', label: 'Archived', preferredViewMode: 'small' }
     ],
     defaultStatus: 'new',

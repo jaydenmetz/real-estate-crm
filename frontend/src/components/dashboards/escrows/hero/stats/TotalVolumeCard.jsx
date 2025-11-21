@@ -14,17 +14,15 @@ import DashboardStatCard from '../../../../../templates/Dashboard/components/Das
 const TotalVolumeCard = ({
   data = [],
   status = 'active',
+  archivedOnly = false,
   icon,
   delay = 0,
   ...props
 }) => {
   // Calculate total volume
-  const volume = status === 'all'
+  // Data is already filtered by backend for archived/non-archived
+  const volume = status === 'All'
     ? data.reduce((sum, item) => sum + parseFloat(item.purchase_price || 0), 0)
-    : status === 'archived'
-    ? data
-        .filter(item => item.is_archived === true)
-        .reduce((sum, item) => sum + parseFloat(item.purchase_price || 0), 0)
     : data
         .filter(item => {
           const itemStatus = item.escrow_status || item.status;
@@ -37,8 +35,7 @@ const TotalVolumeCard = ({
     active: 'AttachMoney',
     closed: 'TrendingUp',
     cancelled: 'TrendingDown',
-    all: 'AccountBalance',
-    archived: 'Archive'
+    All: 'AccountBalance'
   }[status] || 'AttachMoney';
 
   return (

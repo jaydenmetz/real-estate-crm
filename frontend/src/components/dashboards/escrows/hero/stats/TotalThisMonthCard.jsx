@@ -16,6 +16,7 @@ const TotalThisMonthCard = ({
   data = [],
   status = 'active',
   dateField = 'created_at', // 'created_at' for active/all, 'closing_date' for closed, 'updated_at' for cancelled
+  archivedOnly = false,
   icon,
   delay = 0,
   ...props
@@ -24,11 +25,10 @@ const TotalThisMonthCard = ({
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
   // Calculate count for this month
+  // Data is already filtered by backend for archived/non-archived
   const count = data.filter(item => {
     // Check status match
-    if (status === 'archived') {
-      if (item.is_archived !== true) return false;
-    } else if (status !== 'all') {
+    if (status !== 'All') {
       const itemStatus = item.escrow_status || item.status;
       if (itemStatus?.toLowerCase() !== status.toLowerCase()) {
         return false;
@@ -45,8 +45,7 @@ const TotalThisMonthCard = ({
     active: 'Schedule',
     closed: 'EventAvailable',
     cancelled: 'EventBusy',
-    all: 'CalendarMonth',
-    archived: 'Archive'
+    All: 'CalendarMonth'
   }[status] || 'Schedule';
 
   return (

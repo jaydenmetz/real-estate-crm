@@ -5,24 +5,28 @@ import DashboardStatCard from '../../../../../templates/Dashboard/components/Das
  * TotalCommissionCard - Displays total commission by status
  *
  * Reusable across Active, Closed, Cancelled, and All tabs
+ * Works with archived toggle to show archived items of current status
  * For "All" tab: Shows Closed Commission - Cancelled Commission
  *
- * @param {Array} data - All escrow data
- * @param {string} status - Filter status ('active', 'closed', 'cancelled', 'all')
+ * @param {Array} data - All escrow data (pre-filtered by backend for archived)
+ * @param {string} status - Filter status ('active', 'closed', 'cancelled', 'All')
+ * @param {boolean} archivedOnly - Show only archived items (passed from toggle)
  * @param {string} icon - MUI icon name (default: varies by status)
  * @param {number} delay - Animation delay index
  */
 const TotalCommissionCard = ({
   data = [],
   status = 'active',
+  archivedOnly = false,
   icon,
   delay = 0,
   ...props
 }) => {
   // Calculate commission
+  // Data is already filtered by backend for archived/non-archived
   let commission = 0;
 
-  if (status === 'all') {
+  if (status === 'All') {
     // All tab: Closed Commission - Lost Commission
     const closedCommission = data
       .filter(item => {
@@ -47,15 +51,6 @@ const TotalCommissionCard = ({
       }, 0);
 
     commission = closedCommission - lostCommission;
-  } else if (status === 'archived') {
-    // Archived status - filter by is_archived flag
-    commission = data
-      .filter(item => item.is_archived === true)
-      .reduce((sum, item) => {
-        const price = parseFloat(item.purchase_price || 0);
-        const commissionPct = parseFloat(item.commission_percentage || 3);
-        return sum + (price * (commissionPct / 100));
-      }, 0);
   } else {
     // Single status (active, closed, cancelled)
     commission = data
@@ -75,8 +70,7 @@ const TotalCommissionCard = ({
     active: 'Paid',
     closed: 'MonetizationOn',
     cancelled: 'MoneyOff',
-    all: 'AccountBalanceWallet',
-    archived: 'Archive'
+    All: 'AccountBalanceWallet'
   }[status] || 'Paid';
 
   return (
