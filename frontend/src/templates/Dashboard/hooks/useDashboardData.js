@@ -75,7 +75,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
 
       // Add archived filter (works with any status)
       if (showArchived) {
-        params.onlyArchived = true;
+        params.archived = true;
       }
 
       // Add status filter

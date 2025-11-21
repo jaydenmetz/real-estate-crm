@@ -33,7 +33,7 @@ async function getAllEscrows(req, res) {
       order = 'desc',
       search,
       scope = 'user', // Extract scope parameter (user/team/broker)
-      onlyArchived = 'false', // Archive view filter
+      archived = 'false', // Archive view filter
       startDate, // Display start date (YYYY-MM-DD)
       endDate, // Display end date (YYYY-MM-DD)
     } = req.query;
@@ -51,7 +51,7 @@ async function getAllEscrows(req, res) {
     const schema = await detectSchema();
 
     // Check if escrows table exists and has data
-    const showArchived = onlyArchived === 'true' || onlyArchived === true;
+    const showArchived = archived === 'true' || archived === true;
 
     try {
       const tableCheck = await pool.query(`
