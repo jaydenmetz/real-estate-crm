@@ -203,58 +203,7 @@ export const DashboardContent = ({
 
       <Box sx={getGridStyles()}>
         <AnimatePresence>
-          {(() => {
-            // Archive view (no ArchiveBar - works like other status tabs)
-            if (isArchiveView) {
-              return (
-                <>
-                  {archivedData.map((item, index) => {
-                    const itemId = item[config.api.idField];
-                    const isSelected = selectedItems?.includes(itemId);
-
-                    return (
-                      <Box
-                        component={motion.div}
-                        key={itemId}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{
-                          duration: 0.3,
-                          delay: index * 0.05,
-                        }}
-                        sx={{
-                          position: 'relative',
-                          width: viewMode === 'card' ? '320px' : 'auto',
-                          '&:hover .multi-select-checkbox': {
-                            opacity: 1,
-                          },
-                        }}
-                      >
-                        <Component
-                          {...{ [config.entity.name]: item }}
-                          viewMode={viewMode}
-                          index={index}
-                          isArchived={true}
-                          onUpdate={onUpdate ? (id, updates) => onUpdate(id, updates) : undefined}
-                          onDelete={onDelete ? () => onDelete(itemId) : undefined}
-                          onRestore={onRestore ? () => onRestore(itemId) : undefined}
-                          customActions={customActions}
-                          animationType="spring"
-                          // Multi-select props (same as regular view)
-                          isSelectable={true}
-                          isSelected={isSelected}
-                          onSelect={onSelectItem}
-                        />
-                      </Box>
-                    );
-                  })}
-                </>
-              );
-            }
-
-            // Regular view (not archived)
-            return displayData.map((item, index) => {
+          {data.map((item, index) => {
               const itemId = item[config.api.idField];
               const isSelected = selectedItems.includes(itemId);
 
@@ -326,8 +275,7 @@ export const DashboardContent = ({
                   />
                 </Box>
               );
-            });
-          })()}
+            })}
         </AnimatePresence>
       </Box>
     </>
