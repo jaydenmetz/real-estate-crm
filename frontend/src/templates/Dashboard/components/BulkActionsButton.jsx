@@ -1,17 +1,13 @@
 /**
- * BulkActionsBar.jsx - Bulk action controls for multi-select
+ * BulkActionsButton.jsx - Bulk action controls for multi-select
  *
- * Displays between tabs and filters when items are selected
- * Single dropdown menu with all bulk actions
+ * Compact dropdown button with bulk actions
+ * Shows selection count and provides menu with Archive/Restore options
  */
 
 import React, { useState } from 'react';
 import {
-  Box,
   Button,
-  Typography,
-  IconButton,
-  Tooltip,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -22,13 +18,12 @@ import {
 import {
   ExpandMore as ExpandMoreIcon,
   Archive as ArchiveIcon,
-  Close as CloseIcon,
   Unarchive as UnarchiveIcon,
   CheckBox as CheckBoxIcon,
   CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
 } from '@mui/icons-material';
 
-export const BulkActionsBar = ({
+export const BulkActionsButton = ({
   selectedCount = 0,
   totalCount = 0,
   onClearSelection,

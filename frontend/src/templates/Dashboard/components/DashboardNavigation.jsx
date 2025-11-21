@@ -30,7 +30,7 @@ import {
   Sort,
   Archive as ArchiveIcon,
 } from '@mui/icons-material';
-import { BulkActionsBar } from './BulkActionsBar';
+import { BulkActionsButton } from './BulkActionsButton';
 
 export const DashboardNavigation = ({
   config,
@@ -139,8 +139,8 @@ export const DashboardNavigation = ({
           overflowX: 'auto',
           maxWidth: '100%',
         }}>
-          {/* Bulk Actions Dropdown - always visible, shows "Select All" or count */}
-          <BulkActionsBar
+          {/* Bulk Actions Button - compact dropdown for selection and bulk operations */}
+          <BulkActionsButton
             selectedCount={selectedItems.length}
             totalCount={totalCount}
             onClearSelection={onClearSelection}
