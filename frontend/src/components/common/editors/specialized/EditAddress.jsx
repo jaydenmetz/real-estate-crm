@@ -109,7 +109,7 @@ export const EditAddress = ({
               letterSpacing: '0.5px',
             }}
           >
-            Property Address (Geocoded)
+            Property Address
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
             <LocationOn sx={{ color: 'white', mt: 0.5, fontSize: 24 }} />
@@ -155,18 +155,7 @@ export const EditAddress = ({
             letterSpacing: '0.5px',
           }}
         >
-          Display Name (shown in views)
-        </Typography>
-        <Typography
-          variant="caption"
-          sx={{
-            fontSize: 10,
-            color: 'rgba(255,255,255,0.5)',
-            mb: 1,
-            display: 'block',
-          }}
-        >
-          Select from autocomplete to update geocoded address, or press Enter to save display name only
+          Display Name
         </Typography>
         <AddressInput
           value={displayAddress} // Pass extracted string address, not full object
