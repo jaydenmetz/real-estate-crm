@@ -95,7 +95,7 @@ export const EditAddress = ({
   return (
     <ModalDialog open={open} onClose={onClose} color={color}>
       <Box onClick={(e) => e.stopPropagation()}>
-        {/* Canonical Address (Read-Only Display) */}
+        {/* Canonical Address (Read-Only Display - ALWAYS shows original property_address from DB) */}
         <Box sx={{ mb: 3 }}>
           <Typography
             variant="caption"
@@ -123,10 +123,10 @@ export const EditAddress = ({
                   lineHeight: 1.4,
                 }}
               >
-                {selectedAddress?.property_address || canonicalAddress || 'No address set'}
+                {canonicalAddress || 'No address set'}
               </Typography>
-              {/* Show location from selected OR existing data */}
-              {(selectedAddress || locationSubtitle) && (
+              {/* Show location from existing data ONLY (doesn't change when typing) */}
+              {locationSubtitle && (
                 <Typography
                   variant="caption"
                   sx={{
@@ -135,9 +135,7 @@ export const EditAddress = ({
                     mt: 0.5,
                   }}
                 >
-                  {selectedAddress && selectedAddress.city && selectedAddress.state
-                    ? `${selectedAddress.city}, ${selectedAddress.state}${selectedAddress.zip_code ? ' ' + selectedAddress.zip_code : ''}`
-                    : locationSubtitle || 'Select an address from suggestions'}
+                  {locationSubtitle}
                 </Typography>
               )}
             </Box>

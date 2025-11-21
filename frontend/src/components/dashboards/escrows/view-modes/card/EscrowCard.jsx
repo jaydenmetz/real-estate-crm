@@ -104,12 +104,13 @@ const escrowCardConfig = {
     },
   },
 
-  // Subtitle Configuration (city, state)
+  // Subtitle Configuration (city, state, zip)
   subtitle: {
     formatter: (escrow) => {
       const parts = [];
       if (escrow.city) parts.push(escrow.city);
       if (escrow.state) parts.push(escrow.state);
+      if (escrow.zip_code) parts.push(escrow.zip_code);
       return parts.join(', ') || null;
     },
   },
