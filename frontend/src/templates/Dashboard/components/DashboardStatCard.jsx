@@ -223,26 +223,19 @@ const DashboardStatCard = ({
                 sx={{
                   display: 'inline-block',
                   maxWidth: '100%',
-                  fontSize: '2.5rem', // Base font size
                   fontWeight: 700,
                   color: valueColor || textColor || 'white',
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                   whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'clip',
-                  // Auto-scale to fit using CSS transform
-                  transformOrigin: 'center center',
-                  '@media (max-width: 1536px)': {
-                    fontSize: '2.2rem',
-                  },
-                  '@media (max-width: 1200px)': {
-                    fontSize: '1.8rem',
-                  },
-                  '@media (max-width: 900px)': {
-                    fontSize: '2rem',
-                  },
-                  '@media (max-width: 600px)': {
-                    fontSize: '2.5rem',
+                  overflow: 'visible',
+                  // Responsive font sizing tuned for worst-case: "$1,050,000" (12 chars)
+                  // Each breakpoint tested to ensure no truncation or overlap
+                  fontSize: {
+                    xs: '2.5rem',    // Mobile: 1 column (plenty of space)
+                    sm: '1.7rem',    // Tablet: 2 columns
+                    md: '1.4rem',    // Small desktop: 2 columns (tightest)
+                    lg: '1.5rem',    // Desktop: 4 columns
+                    xl: '1.8rem',    // Large desktop: 4 columns (more space)
                   },
                 }}
               >
