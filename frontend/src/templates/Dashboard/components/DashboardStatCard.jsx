@@ -64,18 +64,18 @@ const calculateFontSize = (value, prefix, suffix) => {
   const totalLength = (prefix || '').length + valueStr.length + (suffix || '').length;
 
   if (totalLength <= 4) {
-    return { xs: '2rem', sm: '1.5rem', md: '1.4rem', lg: '1.5rem', xl: '1.6rem' };
+    return { xs: '2.5rem', sm: '2rem', md: '1.8rem', lg: '2rem', xl: '2.2rem' };
   }
   if (totalLength <= 7) {
-    return { xs: '1.8rem', sm: '1.3rem', md: '1.2rem', lg: '1.3rem', xl: '1.4rem' };
+    return { xs: '2.2rem', sm: '1.7rem', md: '1.5rem', lg: '1.7rem', xl: '1.9rem' };
   }
   if (totalLength <= 10) {
-    return { xs: '1.6rem', sm: '1.1rem', md: '1rem', lg: '1.1rem', xl: '1.2rem' };
+    return { xs: '2rem', sm: '1.5rem', md: '1.3rem', lg: '1.5rem', xl: '1.6rem' };
   }
   if (totalLength <= 13) {
-    return { xs: '1.4rem', sm: '0.9rem', md: '0.8rem', lg: '0.85rem', xl: '0.95rem' };
+    return { xs: '1.7rem', sm: '1.2rem', md: '1.1rem', lg: '1.2rem', xl: '1.3rem' };
   }
-  return { xs: '1.2rem', sm: '0.8rem', md: '0.7rem', lg: '0.75rem', xl: '0.85rem' };
+  return { xs: '1.5rem', sm: '1rem', md: '0.9rem', lg: '1rem', xl: '1.1rem' };
 };
 
 /**
