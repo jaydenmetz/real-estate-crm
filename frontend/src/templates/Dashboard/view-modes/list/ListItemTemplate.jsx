@@ -368,6 +368,23 @@ const ListItemTemplate = React.memo(({
               >
                 {titleValue}
               </Typography>
+
+              {/* Subtitle/Location - Now inside clickable title area */}
+              {subtitleValue && (
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: theme.palette.text.secondary,
+                    fontSize: '0.875rem',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    mt: 0.5,
+                  }}
+                >
+                  {subtitleValue}
+                </Typography>
+              )}
             </Box>
 
             {config.status && (
@@ -389,23 +406,6 @@ const ListItemTemplate = React.memo(({
               />
             )}
           </Box>
-
-          {/* Subtitle/Location */}
-          {subtitleValue && (
-            <Typography
-              variant="body2"
-              sx={{
-                color: theme.palette.text.secondary,
-                mb: 2,
-                fontSize: '0.875rem',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {subtitleValue}
-            </Typography>
-          )}
 
           {/* Metrics Row */}
           {config.metrics && config.metrics.length > 0 && (
