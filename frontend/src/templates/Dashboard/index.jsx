@@ -64,6 +64,12 @@ export const DashboardTemplate = ({
   const [batchDeleting, setBatchDeleting] = useState(false);
   const [batchRestoring, setBatchRestoring] = useState(false);
 
+  // Track last viewed timestamps for archived items per status (for badge counts)
+  const [lastViewedArchived, setLastViewedArchived] = useState(() => {
+    const saved = localStorage.getItem(`${config.entity.namePlural}LastViewedArchived`);
+    return saved ? JSON.parse(saved) : {};
+  });
+
   // Archive year filtering
   const [archiveYear, setArchiveYear] = useState('all'); // 'all', 2025, 2024, 2023, etc.
 
@@ -391,6 +397,21 @@ export const DashboardTemplate = ({
     }
   };
 
+  // Handle archive toggle - acknowledge viewed when opening archive view
+  const handleShowArchivedChange = (newShowArchived) => {
+    setShowArchived(newShowArchived);
+
+    // If opening archive view, mark current status as acknowledged
+    if (newShowArchived) {
+      const updated = {
+        ...lastViewedArchived,
+        [selectedStatus]: Date.now(),
+      };
+      setLastViewedArchived(updated);
+      localStorage.setItem(`${config.entity.namePlural}LastViewedArchived`, JSON.stringify(updated));
+    }
+  };
+
   // Get archived data count for archive button badge
   // Filter from filteredData to get archived items (for badge count only)
   const archivedData = useMemo(() => {
@@ -419,10 +440,29 @@ export const DashboardTemplate = ({
     });
   }, [archivedData, archiveYear]);
 
-  // Update archived count whenever data changes
+  // Calculate unacknowledged archived count for current status only
   useEffect(() => {
-    setArchivedCount(archivedData.length);
-  }, [archivedData.length]);
+    // Get last viewed timestamp for current status
+    const lastViewed = lastViewedArchived[selectedStatus] || 0;
+
+    // Count archived items for current status that were archived after last viewed
+    const unacknowledgedCount = archivedData.filter(item => {
+      // Check if item matches current status
+      const itemStatus = item.escrow_status || item.status || item.lead_status || item.appointment_status || item.client_status;
+      const matchesStatus = selectedStatus === 'All' || itemStatus?.toLowerCase() === selectedStatus.toLowerCase();
+
+      if (!matchesStatus) return false;
+
+      // Check if archived after last viewed
+      const archivedAt = item.archived_at || item.archivedAt || item.deleted_at || item.deletedAt;
+      if (!archivedAt) return false;
+
+      const archivedTimestamp = new Date(archivedAt).getTime();
+      return archivedTimestamp > lastViewed;
+    }).length;
+
+    setArchivedCount(unacknowledgedCount);
+  }, [archivedData, selectedStatus, lastViewedArchived]);
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -478,7 +518,7 @@ export const DashboardTemplate = ({
             showCalendar={showCalendar}
             onShowCalendarChange={setShowCalendar}
             showArchived={showArchived}
-            onShowArchivedChange={setShowArchived}
+            onShowArchivedChange={handleShowArchivedChange}
             archivedCount={archivedCount}
             selectedItems={selectedItems}
             totalCount={data?.length || 0}
@@ -506,7 +546,7 @@ export const DashboardTemplate = ({
             showCalendar={showCalendar}
             onShowCalendarChange={setShowCalendar}
             showArchived={showArchived}
-            onShowArchivedChange={setShowArchived}
+            onShowArchivedChange={handleShowArchivedChange}
             archivedCount={archivedCount}
             selectedItems={selectedItems}
             totalCount={data?.length || 0}
