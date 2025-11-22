@@ -133,20 +133,19 @@ export const DashboardNavigation = ({
           </Paper>
         </Box>
 
-        {/* Filters - centered rows with breakpoint-based wrapping */}
+        {/* Filters - snap to centered 2-row layout when space runs out */}
         <Box sx={{
           display: 'flex',
           gap: 1.5,
           alignItems: 'center',
-          flexShrink: 1,
-          flexWrap: 'wrap',
-          justifyContent: { xs: 'center', md: 'flex-end' }, // Centered on small screens, right-aligned on desktop
-          marginLeft: { xs: 0, md: 'auto' }, // No auto margin on xs (allows centering), auto on md (right-align)
-          minWidth: 0,
-          width: { xs: '100%', md: 'auto' }, // Full width on xs for centering, auto on md
+          flexShrink: 0, // Don't shrink - maintain full width until breakpoint
+          flexWrap: { xs: 'wrap', lg: 'nowrap' }, // Wrap on xs-md, no wrap on lg+
+          justifyContent: { xs: 'center', lg: 'flex-end' }, // Centered when wrapped, right-aligned when single row
+          marginLeft: { xs: 0, lg: 'auto' }, // Center on xs-md, right-align on lg+
+          width: { xs: '100%', lg: 'auto' }, // Full width for centering on xs-md, auto on lg+
         }}>
-          {/* Bulk Actions Button - compact dropdown for selection and bulk operations */}
-          <Box sx={{ order: { xs: 1, md: 0 } }}>
+          {/* Bulk Actions - Row 1 on all wrapped layouts */}
+          <Box sx={{ order: { xs: 1, lg: 0 } }}>
             <BulkActionsButton
               selectedCount={selectedItems.length}
               totalCount={totalCount}
@@ -160,9 +159,9 @@ export const DashboardNavigation = ({
             />
           </Box>
 
-          {/* Scope Dropdown */}
+          {/* Scope - Row 1 on all wrapped layouts */}
           {scopeOptions.length > 0 && (
-            <Box sx={{ order: { xs: 2, md: 0 } }}>
+            <Box sx={{ order: { xs: 2, lg: 0 } }}>
               <Select
                 value={selectedScope}
                 onChange={(e) => onScopeChange(e.target.value)}
@@ -201,12 +200,9 @@ export const DashboardNavigation = ({
             </Box>
           )}
 
-          {/* Sort Dropdown */}
+          {/* Sort - Row 2 on md, Row 1 on xs-sm */}
           {sortOptions.length > 0 && (
-            <Box sx={{
-              order: { xs: 4, sm: 3, md: 0 }, // Wraps to second row on xs (narrowest), stays on first row on sm+
-              flexBasis: { xs: '100%', sm: 'auto' } // Force wrap on xs by taking full width
-            }}>
+            <Box sx={{ order: { xs: 3, md: 4, lg: 0 } }}>
               <FormControl size="small" variant="standard" sx={{ minWidth: { xs: 110, sm: 120, md: 140 } }}>
                 <Select
                   value={sortBy}
@@ -252,8 +248,8 @@ export const DashboardNavigation = ({
             </Box>
           )}
 
-          {/* View Mode & Calendar Selector */}
-          <Box sx={{ order: { xs: 5, md: 0 } }}>
+          {/* View toggles - Row 2 on all wrapped layouts */}
+          <Box sx={{ order: { xs: 4, md: 5, lg: 0 } }}>
             <ToggleButtonGroup
               value={showCalendar ? 'calendar' : viewMode}
               exclusive
@@ -305,8 +301,8 @@ export const DashboardNavigation = ({
           </ToggleButtonGroup>
           </Box>
 
-          {/* Archive Icon - Toggle filter on/off */}
-          <Box sx={{ order: { xs: 6, md: 0 } }}>
+          {/* Archive - Row 2 on all wrapped layouts */}
+          <Box sx={{ order: { xs: 5, md: 6, lg: 0 } }}>
             <IconButton
               size="small"
               onClick={() => onShowArchivedChange(!showArchived)}
