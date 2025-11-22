@@ -372,8 +372,19 @@ export const DashboardHero = ({
         <Grid container spacing={3} sx={{ flexGrow: 1, margin: 0, width: '100%' }}>
 
           {/* Stats Cards Grid */}
-          <Grid item xs={12} lg={config.showAIAssistant ? 9 : 12}>
-            <Grid container spacing={3} sx={{ justifyContent: { xs: 'center', sm: 'flex-start' } }}>
+          <Grid item xs={12} sm={12} md={config.showAIAssistant ? 12 : 12} lg={config.showAIAssistant ? 8 : 12}>
+            <Box sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',                                  // <600px: 1×4 stack
+                sm: 'repeat(2, minmax(225px, 275px))',      // 600-899px: 2×2 grid
+                md: 'repeat(2, minmax(225px, 275px))',      // 900-1199px: 2×2 grid
+                lg: 'repeat(4, minmax(225px, 275px))',      // 1200px+: 1×4 row
+              },
+              gap: 3,
+              justifyContent: { xs: 'stretch', sm: 'center' },
+              width: '100%',
+            }}>
               {/* Render stat cards based on selected status */}
               {statsConfig && statsConfig
                 .filter(statCfg => !statCfg.visibleWhen || statCfg.visibleWhen.includes(selectedStatus))
@@ -387,22 +398,19 @@ export const DashboardHero = ({
                     if (!StatComponent) {
                       console.error(`[DashboardHero] ❌ Component undefined for stat: ${statCfg.id}`);
                       return (
-                        <Grid item xs={12} sm={6} md={6} xl={3} key={statCfg.id}>
-                          <Box sx={{ p: 2, bgcolor: 'error.light', color: 'error.dark' }}>
-                            ERROR: {statCfg.id} component is undefined
-                          </Box>
-                        </Grid>
+                        <Box key={statCfg.id} sx={{ p: 2, bgcolor: 'error.light', color: 'error.dark' }}>
+                          ERROR: {statCfg.id} component is undefined
+                        </Box>
                       );
                     }
 
                     return (
-                      <Grid item xs={12} sm={6} md={6} lg={3} key={statCfg.id}>
-                        <StatComponent
-                          data={allData}
-                          delay={index}
-                          {...(statCfg.props || {})}
-                        />
-                      </Grid>
+                      <StatComponent
+                        key={statCfg.id}
+                        data={allData}
+                        delay={index}
+                        {...(statCfg.props || {})}
+                      />
                     );
                   }
 
@@ -415,28 +423,25 @@ export const DashboardHero = ({
                     valueColor = statValue >= 0 ? '#4caf50' : '#f44336';
                   }
 
-                  return (
-                    <Grid item xs={12} sm={6} md={6} lg={3} key={statCfg.id}>
-                      {StatCardComponent && (
-                        <StatCardComponent
-                          icon={statCfg.icon}
-                          title={statCfg.label}
-                          value={statValue}
-                          prefix={prefixValue}
-                          suffix={suffixValue}
-                          color={statCfg.color || "#ffffff"}
-                          backgroundColor={statCfg.backgroundColor}
-                          textColor={statCfg.textColor || null}
-                          valueColor={valueColor}
-                          delay={index}
-                          goal={statCfg.goal}
-                          trend={stats?.[statCfg.id]?.trend}
-                        />
-                      )}
-                    </Grid>
+                  return StatCardComponent && (
+                    <StatCardComponent
+                      key={statCfg.id}
+                      icon={statCfg.icon}
+                      title={statCfg.label}
+                      value={statValue}
+                      prefix={prefixValue}
+                      suffix={suffixValue}
+                      color={statCfg.color || "#ffffff"}
+                      backgroundColor={statCfg.backgroundColor}
+                      textColor={statCfg.textColor || null}
+                      valueColor={valueColor}
+                      delay={index}
+                      goal={statCfg.goal}
+                      trend={stats?.[statCfg.id]?.trend}
+                    />
                   );
                 })}
-            </Grid>
+            </Box>
 
             {/* Action Buttons Row */}
             <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
@@ -475,7 +480,7 @@ export const DashboardHero = ({
 
           {/* AI Assistant Card (if enabled) */}
           {config.showAIAssistant && (
-            <Grid item xs={12} lg={3}>
+            <Grid item xs={12} sm={12} md={12} lg={4}>
               <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
