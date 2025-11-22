@@ -375,7 +375,7 @@ export const DashboardHero = ({
           <Grid item
             xs={12}
             sx={{
-              '@media (min-width: 1200px)': {
+              '@media (min-width: 900px)': {
                 width: config.showAIAssistant ? '66.67%' : '100%',
                 flexBasis: config.showAIAssistant ? '66.67%' : '100%',
                 maxWidth: config.showAIAssistant ? '66.67%' : '100%',
@@ -392,9 +392,9 @@ export const DashboardHero = ({
               gap: 3,
               width: '100%',
 
-              // <600px: 2×2 grid, cards scale 225-275px, AI below
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              justifyContent: 'center',
+              // <600px: 4×1 vertical stack, cards scale to container width, AI below
+              gridTemplateColumns: '1fr',
+              justifyContent: 'stretch',
 
               // 600-899px: 2×2 grid, cards scale 225-275px, AI below
               '@media (min-width: 600px)': {
@@ -402,14 +402,8 @@ export const DashboardHero = ({
                 justifyContent: 'center',
               },
 
-              // 900-1199px: 2×2 grid, cards scale 225-275px, AI below
+              // 900-1499px: 2×2 grid, cards scale 225-275px, AI right
               '@media (min-width: 900px)': {
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                justifyContent: 'center',
-              },
-
-              // 1200-1499px: 2×2 grid, cards scale 225-275px, AI right
-              '@media (min-width: 1200px)': {
                 gridTemplateColumns: 'repeat(2, 1fr)',
                 justifyContent: 'flex-start',
               },
@@ -422,11 +416,21 @@ export const DashboardHero = ({
 
               // Constrain individual grid cells to enforce card size limits
               '& > *': {
-                minWidth: '225px',
-                maxWidth: '275px',
-                justifySelf: 'center', // Center cards within grid cells
-                '@media (min-width: 1200px)': {
-                  justifySelf: 'start', // Left-align when AI is to the right
+                // <600px: Full width cards
+                width: '100%',
+                justifySelf: 'stretch',
+
+                // 600px+: Constrain to 225-275px
+                '@media (min-width: 600px)': {
+                  minWidth: '225px',
+                  maxWidth: '275px',
+                  width: 'auto',
+                  justifySelf: 'center',
+                },
+
+                // 900px+: Left-align when AI is to the right
+                '@media (min-width: 900px)': {
+                  justifySelf: 'start',
                 },
               },
             }}>
@@ -540,14 +544,8 @@ export const DashboardHero = ({
                   flexBasis: '100%',
                   maxWidth: '100%',
                 },
-                // 900-1199px: AI below stats (full width)
-                '@media (min-width: 900px) and (max-width: 1199px)': {
-                  width: '100%',
-                  flexBasis: '100%',
-                  maxWidth: '100%',
-                },
-                // 1200-1499px: AI right side (33.33% for 2×2 layout)
-                '@media (min-width: 1200px) and (max-width: 1499px)': {
+                // 900-1499px: AI right side (33.33% for 2×2 layout)
+                '@media (min-width: 900px) and (max-width: 1499px)': {
                   width: '33.33%',
                   flexBasis: '33.33%',
                   maxWidth: '33.33%',
