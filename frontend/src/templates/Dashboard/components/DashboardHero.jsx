@@ -372,7 +372,7 @@ export const DashboardHero = ({
         <Grid container spacing={3} sx={{ flexGrow: 1, margin: 0, width: '100%' }}>
 
           {/* Stats Cards Grid */}
-          <Grid item xs={12} xl={config.showAIAssistant ? 9 : 12}>
+          <Grid item xs={12} lg={config.showAIAssistant ? 9 : 12}>
             <Grid container spacing={3} sx={{ justifyContent: { xs: 'center', sm: 'flex-start' } }}>
               {/* Render stat cards based on selected status */}
               {statsConfig && statsConfig
@@ -396,7 +396,7 @@ export const DashboardHero = ({
                     }
 
                     return (
-                      <Grid item xs={12} sm={6} md={6} xl={3} key={statCfg.id}>
+                      <Grid item xs={12} sm={6} md={6} lg={3} key={statCfg.id}>
                         <StatComponent
                           data={allData}
                           delay={index}
@@ -416,7 +416,7 @@ export const DashboardHero = ({
                   }
 
                   return (
-                    <Grid item xs={12} sm={6} md={6} xl={3} key={statCfg.id}>
+                    <Grid item xs={12} sm={6} md={6} lg={3} key={statCfg.id}>
                       {StatCardComponent && (
                         <StatCardComponent
                           icon={statCfg.icon}
@@ -475,7 +475,7 @@ export const DashboardHero = ({
 
           {/* AI Assistant Card (if enabled) */}
           {config.showAIAssistant && (
-            <Grid item xs={12} xl={3}>
+            <Grid item xs={12} lg={3}>
               <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
