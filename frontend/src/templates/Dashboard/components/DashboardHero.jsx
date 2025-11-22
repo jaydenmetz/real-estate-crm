@@ -147,9 +147,10 @@ export const DashboardHero = ({
             display: 'flex',
             gap: 2,
             alignItems: 'center',
-            flexWrap: 'nowrap',
+            flexWrap: { xs: 'wrap', sm: 'nowrap' }, // Wrap on mobile (<600px)
             flexShrink: 0,
             marginLeft: 'auto',
+            justifyContent: { xs: 'flex-end', sm: 'flex-start' }, // Right-align on mobile
           }}>
             {/* Date Range Buttons */}
             <ToggleButtonGroup
@@ -269,7 +270,8 @@ export const DashboardHero = ({
               height: 36,
               border: '1px solid rgba(255, 255, 255, 0.2)',
               flexShrink: 0,
-              flexGrow: 0,
+              flexGrow: { xs: 1, sm: 0 }, // Full width on mobile, auto on desktop
+              width: { xs: '100%', sm: 'auto' }, // Force full width on mobile
               '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
