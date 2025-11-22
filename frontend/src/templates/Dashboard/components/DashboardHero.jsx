@@ -398,39 +398,37 @@ export const DashboardHero = ({
               gap: 3,
               width: '100%',
 
-              // <600px: 4×1 vertical stack, cards scale to container width, AI below
+              // <600px: 4×1 vertical stack, cards stretch to full width, AI below
               gridTemplateColumns: '1fr',
               justifyContent: 'stretch',
 
-              // 600-899px: 2×2 grid, cards scale 225-275px, AI below
+              // 600-899px: 2×2 grid, cards fixed at 250px, centered, AI below
               '@media (min-width: 600px)': {
-                gridTemplateColumns: 'repeat(2, 1fr)',
+                gridTemplateColumns: 'repeat(auto-fit, 250px)',
                 justifyContent: 'center',
               },
 
-              // 900-1499px: 2×2 grid, cards scale 225-275px, AI right
+              // 900-1499px: 2×2 grid, cards fixed at 250px, left-aligned, AI right
               '@media (min-width: 900px)': {
-                gridTemplateColumns: 'repeat(2, 1fr)',
+                gridTemplateColumns: 'repeat(auto-fit, 250px)',
                 justifyContent: 'flex-start',
               },
 
-              // 1500px+: 1×4 row, cards scale 225-275px, AI right
+              // 1500px+: 1×4 row, cards fixed at 250px, left-aligned, AI right
               '@media (min-width: 1500px)': {
-                gridTemplateColumns: 'repeat(4, 1fr)',
+                gridTemplateColumns: 'repeat(4, 250px)',
                 justifyContent: 'flex-start',
               },
 
-              // Constrain individual grid cells to enforce card size limits
+              // Individual grid cell styling
               '& > *': {
                 // <600px: Full width cards
                 width: '100%',
                 justifySelf: 'stretch',
 
-                // 600px+: Allow cards to grow from 225px to 275px
+                // 600px+: Fixed 250px width cards
                 '@media (min-width: 600px)': {
-                  minWidth: '225px',
-                  maxWidth: '275px',
-                  width: '100%', // Fill the grid cell (which is constrained by 1fr)
+                  width: '250px',
                   justifySelf: 'center',
                 },
 
