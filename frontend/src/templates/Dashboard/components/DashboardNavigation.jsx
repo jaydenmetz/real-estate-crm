@@ -140,6 +140,7 @@ export const DashboardNavigation = ({
           flexShrink: 0,
           overflowX: 'auto',
           maxWidth: '100%',
+          marginLeft: 'auto', // Stay right-aligned even when wrapped to second line
         }}>
           {/* Bulk Actions Button - compact dropdown for selection and bulk operations */}
           <BulkActionsButton
