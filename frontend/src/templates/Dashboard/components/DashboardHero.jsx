@@ -381,7 +381,7 @@ export const DashboardHero = ({
           <Grid item
             xs={12}
             sx={{
-              '@media (min-width: 900px)': {
+              '@media (min-width: 1017px)': {
                 width: config.showAIAssistant ? '66.67%' : '100%',
                 flexBasis: config.showAIAssistant ? '66.67%' : '100%',
                 maxWidth: config.showAIAssistant ? '66.67%' : '100%',
@@ -402,14 +402,14 @@ export const DashboardHero = ({
               gridTemplateColumns: '1fr',
               justifyContent: 'stretch',
 
-              // 600-899px: 2×2 grid, cards flexible 225-275px, centered, AI below
+              // 600-1016px: 2×2 grid, cards flexible 225-275px, centered, AI below
               '@media (min-width: 600px)': {
                 gridTemplateColumns: 'repeat(auto-fit, minmax(225px, 275px))',
                 justifyContent: 'center',
               },
 
-              // 900-1499px: 2×2 grid, cards flexible 225-275px, left-aligned, AI right
-              '@media (min-width: 900px)': {
+              // 1017-1499px: 2×2 grid, cards flexible 225-275px, left-aligned, AI right
+              '@media (min-width: 1017px)': {
                 gridTemplateColumns: 'repeat(auto-fit, minmax(225px, 275px))',
                 justifyContent: 'flex-start',
               },
@@ -434,8 +434,8 @@ export const DashboardHero = ({
                   justifySelf: 'center',
                 },
 
-                // 900px+: Left-align when AI is to the right
-                '@media (min-width: 900px)': {
+                // 1017px+: Left-align when AI is to the right
+                '@media (min-width: 1017px)': {
                   justifySelf: 'start',
                 },
               },
@@ -544,14 +544,14 @@ export const DashboardHero = ({
                   flexBasis: '100%',
                   maxWidth: '100%',
                 },
-                // 600-899px: AI below stats (full width)
-                '@media (min-width: 600px) and (max-width: 899px)': {
+                // 600-1016px: AI below stats (full width)
+                '@media (min-width: 600px) and (max-width: 1016px)': {
                   width: '100%',
                   flexBasis: '100%',
                   maxWidth: '100%',
                 },
-                // 900-1499px: AI right side (33.33% for 2×2 layout)
-                '@media (min-width: 900px) and (max-width: 1499px)': {
+                // 1017-1499px: AI right side (33.33% for 2×2 layout)
+                '@media (min-width: 1017px) and (max-width: 1499px)': {
                   width: '33.33%',
                   flexBasis: '33.33%',
                   maxWidth: '33.33%',
