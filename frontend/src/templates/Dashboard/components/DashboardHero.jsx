@@ -398,12 +398,12 @@ export const DashboardHero = ({
               gap: 3,
               width: '100%',
 
-              // <600px: 4×1 vertical stack, cards stretch to full width, AI below
+              // <702px: 4×1 vertical stack, cards stretch to full width, AI below
               gridTemplateColumns: '1fr',
               justifyContent: 'stretch',
 
-              // 600-1016px: 2×2 grid, cards flexible 225-275px, centered, AI below
-              '@media (min-width: 600px)': {
+              // 702-1016px: 2×2 grid, cards flexible 225-275px, centered, AI below
+              '@media (min-width: 702px)': {
                 gridTemplateColumns: 'repeat(auto-fit, minmax(225px, 275px))',
                 justifyContent: 'center',
               },
@@ -422,12 +422,12 @@ export const DashboardHero = ({
 
               // Individual grid cell styling
               '& > *': {
-                // <600px: Full width cards
+                // <702px: Full width cards
                 width: '100%',
                 justifySelf: 'stretch',
 
-                // 600px+: Allow cards to shrink/grow within grid constraints (225-275px)
-                '@media (min-width: 600px)': {
+                // 702px+: Allow cards to shrink/grow within grid constraints (225-275px)
+                '@media (min-width: 702px)': {
                   minWidth: '225px',
                   maxWidth: '275px',
                   width: '100%', // Fill available space within minmax constraints
@@ -538,14 +538,14 @@ export const DashboardHero = ({
             <Grid item
               xs={12}
               sx={{
-                // <600px: AI below stats (full width)
-                '@media (max-width: 599px)': {
+                // <702px: AI below stats (full width)
+                '@media (max-width: 701px)': {
                   width: '100%',
                   flexBasis: '100%',
                   maxWidth: '100%',
                 },
-                // 600-1016px: AI below stats (full width)
-                '@media (min-width: 600px) and (max-width: 1016px)': {
+                // 702-1016px: AI below stats (full width)
+                '@media (min-width: 702px) and (max-width: 1016px)': {
                   width: '100%',
                   flexBasis: '100%',
                   maxWidth: '100%',
