@@ -139,11 +139,11 @@ export const DashboardNavigation = ({
           gap: 1.5,
           alignItems: 'center',
           flexShrink: 0, // Don't shrink - maintain full width until breakpoint
-          flexWrap: { xs: 'wrap', sm: 'nowrap' }, // Wrap below 650px, no wrap at 650px+
+          flexWrap: { xs: 'wrap', sm: 'nowrap' }, // Wrap below 700px, no wrap at 700px+
           justifyContent: { xs: 'center', sm: 'flex-end' }, // Centered when wrapped, right-aligned when single row
-          marginLeft: { xs: 0, sm: 'auto' }, // Center below 650px, right-align at 650px+
-          width: { xs: '100%', sm: 'auto' }, // Full width for centering below 650px, auto at 650px+
-          '@media (max-width: 649px)': {
+          marginLeft: { xs: 0, sm: 'auto' }, // Center below 700px, right-align at 700px+
+          width: { xs: '100%', sm: 'auto' }, // Full width for centering below 700px, auto at 700px+
+          '@media (max-width: 699px)': {
             flexWrap: 'wrap',
             justifyContent: 'center',
             marginLeft: 0,
