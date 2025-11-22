@@ -392,9 +392,15 @@ export const DashboardHero = ({
               gap: 3,
               width: '100%',
 
-              // <900px: 2×2 grid, cards scale 225-275px, AI below
+              // <600px: 2×2 grid, cards scale 225-275px, AI below
               gridTemplateColumns: 'repeat(2, 1fr)',
               justifyContent: 'center',
+
+              // 600-899px: 2×2 grid, cards scale 225-275px, AI below
+              '@media (min-width: 600px)': {
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                justifyContent: 'center',
+              },
 
               // 900-1199px: 2×2 grid, cards scale 225-275px, AI below
               '@media (min-width: 900px)': {
@@ -522,8 +528,14 @@ export const DashboardHero = ({
             <Grid item
               xs={12}
               sx={{
-                // <900px: AI below stats (full width)
-                '@media (max-width: 899px)': {
+                // <600px: AI below stats (full width)
+                '@media (max-width: 599px)': {
+                  width: '100%',
+                  flexBasis: '100%',
+                  maxWidth: '100%',
+                },
+                // 600-899px: AI below stats (full width)
+                '@media (min-width: 600px) and (max-width: 899px)': {
                   width: '100%',
                   flexBasis: '100%',
                   maxWidth: '100%',
