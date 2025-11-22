@@ -139,13 +139,13 @@ export const DashboardNavigation = ({
           gap: 1.5,
           alignItems: 'center',
           flexShrink: 0, // Don't shrink - maintain full width until breakpoint
-          flexWrap: { xs: 'wrap', lg: 'nowrap' }, // Wrap on xs-md, no wrap on lg+
-          justifyContent: { xs: 'center', lg: 'flex-end' }, // Centered when wrapped, right-aligned when single row
-          marginLeft: { xs: 0, lg: 'auto' }, // Center on xs-md, right-align on lg+
-          width: { xs: '100%', lg: 'auto' }, // Full width for centering on xs-md, auto on lg+
+          flexWrap: { xs: 'wrap', md: 'nowrap' }, // Wrap on xs-sm, no wrap on md+
+          justifyContent: { xs: 'center', md: 'flex-end' }, // Centered when wrapped, right-aligned when single row
+          marginLeft: { xs: 0, md: 'auto' }, // Center on xs-sm, right-align on md+
+          width: { xs: '100%', md: 'auto' }, // Full width for centering on xs-sm, auto on md+
         }}>
-          {/* Bulk Actions - Row 1 on all wrapped layouts */}
-          <Box sx={{ order: { xs: 1, lg: 0 } }}>
+          {/* Bulk Actions - Row 1 on wrapped, no order on single row */}
+          <Box sx={{ order: { xs: 1, md: 0 } }}>
             <BulkActionsButton
               selectedCount={selectedItems.length}
               totalCount={totalCount}
@@ -159,9 +159,9 @@ export const DashboardNavigation = ({
             />
           </Box>
 
-          {/* Scope - Row 1 on all wrapped layouts */}
+          {/* Scope - Row 1 on wrapped, no order on single row */}
           {scopeOptions.length > 0 && (
-            <Box sx={{ order: { xs: 2, lg: 0 } }}>
+            <Box sx={{ order: { xs: 2, md: 0 } }}>
               <Select
                 value={selectedScope}
                 onChange={(e) => onScopeChange(e.target.value)}
@@ -200,9 +200,9 @@ export const DashboardNavigation = ({
             </Box>
           )}
 
-          {/* Sort - Row 2 on md, Row 1 on xs-sm */}
+          {/* Sort - Row 1 on xs-sm, Row 2 on sm wrapped (deleted - see below) */}
           {sortOptions.length > 0 && (
-            <Box sx={{ order: { xs: 3, md: 4, lg: 0 } }}>
+            <Box sx={{ order: { xs: 3, md: 0 } }}>
               <FormControl size="small" variant="standard" sx={{ minWidth: { xs: 110, sm: 120, md: 140 } }}>
                 <Select
                   value={sortBy}
@@ -248,8 +248,8 @@ export const DashboardNavigation = ({
             </Box>
           )}
 
-          {/* View toggles - Row 2 on all wrapped layouts */}
-          <Box sx={{ order: { xs: 4, md: 5, lg: 0 } }}>
+          {/* View toggles - Row 2 on wrapped, no order on single row */}
+          <Box sx={{ order: { xs: 4, md: 0 } }}>
             <ToggleButtonGroup
               value={showCalendar ? 'calendar' : viewMode}
               exclusive
@@ -301,8 +301,8 @@ export const DashboardNavigation = ({
           </ToggleButtonGroup>
           </Box>
 
-          {/* Archive - Row 2 on all wrapped layouts */}
-          <Box sx={{ order: { xs: 5, md: 6, lg: 0 } }}>
+          {/* Archive - Row 2 on wrapped, no order on single row */}
+          <Box sx={{ order: { xs: 5, md: 0 } }}>
             <IconButton
               size="small"
               onClick={() => onShowArchivedChange(!showArchived)}
