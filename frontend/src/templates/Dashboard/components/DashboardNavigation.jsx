@@ -1,13 +1,12 @@
 /**
- * DashboardNavigation.jsx - Navigation bar matching ClientNavigation architecture
+ * DashboardNavigation.jsx - Unified navigation bar for all screen sizes
  *
- * Contains:
- * - Status tabs in separate Paper (desktop) with sophisticated styling
- * - Scope selector, Sort dropdown, View mode toggle, Archive icon (desktop right-aligned)
- * - Mobile: Tabs at top, controls in gray box below
- * - Archive tab with badge (mobile)
- * - Calendar view toggle option
- * - Custom view mode icons (4 vertical bars for grid, single rect for large)
+ * Layout (xs to xl):
+ * - Left: Status tabs in Paper (scrollable on small screens)
+ * - Right: All filter controls (Bulk Actions, Scope, Sort, View toggles, Archive icon)
+ * - Wraps gracefully when space is limited
+ * - Responsive sizing for all controls
+ * - Custom view mode icons (4 vertical bars for grid, single rect for list, stacked bars for table)
  */
 
 import React from 'react';
@@ -75,10 +74,10 @@ export const DashboardNavigation = ({
 
   return (
     <Box sx={{ mb: 4 }}>
-      {/* Desktop Layout - Flexible single row with wrap */}
+      {/* Unified Layout - All screen sizes (xs to xl) */}
       <Box
         sx={{
-          display: { xs: 'none', md: 'flex' },
+          display: 'flex',
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between', // Force space between tabs and filters
@@ -100,14 +99,16 @@ export const DashboardNavigation = ({
             <Tabs
               value={selectedStatus}
               onChange={(e, newValue) => onStatusChange(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
               sx={{
-                minHeight: 48,
+                minHeight: { xs: 44, sm: 48 },
                 '& .MuiTab-root': {
                   textTransform: 'none',
-                  fontSize: '0.9375rem',
+                  fontSize: { xs: '0.8125rem', sm: '0.875rem', md: '0.9375rem' },
                   fontWeight: 500,
-                  minHeight: 48,
-                  px: 3,
+                  minHeight: { xs: 44, sm: 48 },
+                  px: { xs: 2, sm: 2.5, md: 3 },
                   color: 'text.secondary',
                   transition: 'all 0.2s ease',
                   '&:hover': {
@@ -156,20 +157,20 @@ export const DashboardNavigation = ({
             customActions={bulkActions}
           />
 
-          {/* Scope Dropdown - Styled like Year Dropdown */}
+          {/* Scope Dropdown */}
           {scopeOptions.length > 0 && (
             <Select
               value={selectedScope}
               onChange={(e) => onScopeChange(e.target.value)}
               size="small"
               sx={{
-                minWidth: 160,
+                minWidth: { xs: 120, sm: 140, md: 160 },
                 height: 32,
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(10px)',
                 borderRadius: 2,
                 fontWeight: 600,
-                fontSize: '0.875rem',
+                fontSize: { xs: '0.8125rem', sm: '0.875rem' },
                 border: '1px solid',
                 borderColor: 'divider',
                 transition: 'all 0.2s',
@@ -180,7 +181,7 @@ export const DashboardNavigation = ({
                 },
                 '& .MuiSelect-select': {
                   py: 0.5,
-                  px: 1.5,
+                  px: { xs: 1, sm: 1.5 },
                 },
                 '& .MuiOutlinedInput-notchedOutline': {
                   border: 'none',
@@ -197,17 +198,17 @@ export const DashboardNavigation = ({
 
           {/* Sort Dropdown */}
           {sortOptions.length > 0 && (
-            <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
+            <FormControl size="small" variant="standard" sx={{ minWidth: { xs: 110, sm: 120, md: 140 } }}>
               <Select
                 value={sortBy}
                 onChange={(e) => onSortByChange(e.target.value)}
                 disableUnderline
                 startAdornment={
-                  <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
+                  <Sort sx={{ mr: { xs: 0.5, sm: 1 }, fontSize: '1.125rem', color: 'text.secondary' }} />
                 }
                 renderValue={(value) => (
                   <Typography variant="body2" sx={{
-                    fontSize: '0.875rem',
+                    fontSize: { xs: '0.8125rem', sm: '0.875rem' },
                     fontWeight: 500,
                     color: 'text.primary',
                   }}>
@@ -217,7 +218,7 @@ export const DashboardNavigation = ({
                 sx={{
                   backgroundColor: 'transparent',
                   borderRadius: 1,
-                  px: 1.5,
+                  px: { xs: 1, sm: 1.5 },
                   py: 0.5,
                   border: '1px solid',
                   borderColor: 'divider',
@@ -258,11 +259,12 @@ export const DashboardNavigation = ({
             size="small"
             sx={{
               '& .MuiToggleButton-root': {
-                px: 1.5,
+                px: { xs: 1, sm: 1.5 },
                 py: 0.5,
                 textTransform: 'none',
                 fontWeight: 500,
                 height: '32px',
+                minWidth: { xs: '32px', sm: 'auto' },
               },
             }}
           >
@@ -296,8 +298,8 @@ export const DashboardNavigation = ({
             size="small"
             onClick={() => onShowArchivedChange(!showArchived)}
             sx={{
-              width: 36,
-              height: 36,
+              width: { xs: 32, sm: 36 },
+              height: { xs: 32, sm: 36 },
               backgroundColor: showArchived ? alpha('#000', 0.8) : alpha('#000', 0.06),
               color: showArchived ? 'white' : 'text.secondary',
               '&:hover': {
@@ -307,194 +309,9 @@ export const DashboardNavigation = ({
             }}
           >
             <Badge badgeContent={archivedCount} color="error" max={99}>
-              <ArchiveIcon sx={{ fontSize: 20 }} />
+              <ArchiveIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
             </Badge>
           </IconButton>
-        </Box>
-      </Box>
-
-      {/* Mobile/Tablet Layout */}
-      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-        {/* Tab Bar - Mobile/Tablet */}
-        <Paper
-          elevation={0}
-          sx={{
-            backgroundColor: 'background.paper',
-            borderRadius: '8px 8px 0 0',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            mb: 0,
-          }}
-        >
-          <Tabs
-            value={selectedStatus}
-            onChange={(e, newValue) => onStatusChange(newValue)}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontSize: { xs: '0.875rem', sm: '0.9375rem' },
-                fontWeight: 500,
-                minHeight: { xs: 48, sm: 52 },
-                px: { xs: 2, sm: 2.5 },
-              },
-              '& .Mui-selected': {
-                fontWeight: 600,
-                color: 'primary.main',
-              },
-              '& .MuiTabs-indicator': {
-                height: 3,
-                borderRadius: '3px 3px 0 0',
-              },
-            }}
-          >
-            {statusTabs.filter(tab => tab.value !== 'archived').map(tab => (
-              <Tab key={tab.value} label={tab.label} value={tab.value} />
-            ))}
-            {/* Archive Badge for Mobile */}
-            <Tab
-              label={
-                <Badge badgeContent={archivedCount} color="error" max={99}>
-                  <span>Archived</span>
-                </Badge>
-              }
-              value="archived"
-            />
-          </Tabs>
-        </Paper>
-
-        {/* Mobile/Tablet Filter Controls */}
-        <Box
-          sx={{
-            backgroundColor: alpha('#f5f5f5', 0.4),
-            borderRadius: '0 0 8px 8px',
-            p: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-          }}
-        >
-          {/* Sort and View Controls */}
-          <Box sx={{
-            display: 'flex',
-            gap: 1.5,
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}>
-            {/* Scope Dropdown - Mobile */}
-            {scopeOptions.length > 0 && (
-              <Select
-                value={selectedScope}
-                onChange={(e) => onScopeChange(e.target.value)}
-                size="small"
-                sx={{
-                  minWidth: 140,
-                  backgroundColor: 'white',
-                  borderRadius: 2,
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  '& .MuiSelect-select': {
-                    py: 1,
-                    px: 1.5,
-                  },
-                }}
-              >
-                {scopeOptions.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.fullLabel || option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            )}
-
-            {/* Sort Dropdown */}
-            {sortOptions.length > 0 && (
-              <FormControl
-                size="small"
-                variant="outlined"
-                sx={{
-                  flex: '1 1 auto',
-                  maxWidth: { xs: '60%', sm: '200px' },
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    borderRadius: 2,
-                  },
-                }}
-              >
-                <Select
-                  value={sortBy}
-                  onChange={(e) => onSortByChange(e.target.value)}
-                  startAdornment={<Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />}
-                  renderValue={(value) => (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                        Sort: {sortLabels[value] || value}
-                      </Typography>
-                    </Box>
-                  )}
-                >
-                  {sortOptions.map(option => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-
-            {/* View Mode & Calendar - Mobile */}
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <ToggleButtonGroup
-                value={showCalendar ? 'calendar' : viewMode}
-                exclusive
-                onChange={(e, newValue) => {
-                  if (newValue !== null) {
-                    if (newValue === 'calendar') {
-                      onShowCalendarChange(true);
-                    } else {
-                      onShowCalendarChange(false);
-                      onViewModeChange(newValue);
-                    }
-                  }
-                }}
-                size="small"
-                sx={{
-                  '& .MuiToggleButton-root': {
-                    px: 2,
-                    py: 0.5,
-                    textTransform: 'none',
-                    fontWeight: 500,
-                    height: '32px',
-                  },
-                }}
-              >
-                <ToggleButton value="card" title="Card view">
-                  <Box sx={{ display: 'flex', width: 24, height: 12, alignItems: 'center' }}>
-                    <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: '1.33px' }} />
-                    <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: '1.34px' }} />
-                    <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: '1.33px' }} />
-                    <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  </Box>
-                </ToggleButton>
-                <ToggleButton value="list" title="Full width view">
-                  <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                </ToggleButton>
-                <ToggleButton value="table" title="Table view">
-                  <Box sx={{ display: 'flex', flexDirection: 'column', width: 24, height: 12 }}>
-                    <Box sx={{ height: '0.33px' }} />
-                    <Box sx={{ width: 24, height: 5.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ height: '1.34px' }} />
-                    <Box sx={{ width: 24, height: 5.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ height: '0.33px' }} />
-                  </Box>
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </Box>
-          </Box>
         </Box>
       </Box>
     </Box>
