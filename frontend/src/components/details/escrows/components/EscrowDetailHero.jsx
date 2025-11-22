@@ -185,12 +185,13 @@ const EscrowDetailHero = ({ escrow, onUpdate }) => {
           </Box>
         </Box>
 
-        {/* Stats Grid - 4 columns */}
+        {/* Stats Grid - Always 2x2 grid */}
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+            gridTemplateColumns: 'repeat(2, 1fr)',  // Always 2 columns (2x2 grid)
             gap: 2,
+            maxWidth: { xs: '100%', xl: '50%' }, // On large screens, take 50% width to leave room for manager slot
           }}
         >
           <StatCard>
