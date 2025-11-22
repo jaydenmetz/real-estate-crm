@@ -402,21 +402,21 @@ export const DashboardHero = ({
               gridTemplateColumns: '1fr',
               justifyContent: 'stretch',
 
-              // 600-899px: 2×2 grid, cards fixed at 250px, centered, AI below
+              // 600-899px: 2×2 grid, cards flexible 225-275px, centered, AI below
               '@media (min-width: 600px)': {
-                gridTemplateColumns: 'repeat(auto-fit, 250px)',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(225px, 275px))',
                 justifyContent: 'center',
               },
 
-              // 900-1499px: 2×2 grid, cards fixed at 250px, left-aligned, AI right
+              // 900-1499px: 2×2 grid, cards flexible 225-275px, left-aligned, AI right
               '@media (min-width: 900px)': {
-                gridTemplateColumns: 'repeat(auto-fit, 250px)',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(225px, 275px))',
                 justifyContent: 'flex-start',
               },
 
-              // 1500px+: 1×4 row, cards fixed at 250px, left-aligned, AI right
+              // 1500px+: 1×4 row, cards flexible 225-275px, left-aligned, AI right
               '@media (min-width: 1500px)': {
-                gridTemplateColumns: 'repeat(4, 250px)',
+                gridTemplateColumns: 'repeat(4, minmax(225px, 275px))',
                 justifyContent: 'flex-start',
               },
 
@@ -426,9 +426,11 @@ export const DashboardHero = ({
                 width: '100%',
                 justifySelf: 'stretch',
 
-                // 600px+: Fixed 250px width cards
+                // 600px+: Allow cards to shrink/grow within grid constraints (225-275px)
                 '@media (min-width: 600px)': {
-                  width: '250px',
+                  minWidth: '225px',
+                  maxWidth: '275px',
+                  width: '100%', // Fill available space within minmax constraints
                   justifySelf: 'center',
                 },
 
