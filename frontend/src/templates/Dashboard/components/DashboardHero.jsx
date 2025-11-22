@@ -389,21 +389,39 @@ export const DashboardHero = ({
           >
             <Box sx={{
               display: 'grid',
-              gridTemplateColumns: '1fr',                   // <900px: 1×4 stack
               gap: 3,
-              justifyContent: 'stretch',
               width: '100%',
+
+              // <900px: 2×2 grid, cards scale 225-275px, AI below
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              justifyContent: 'center',
+
+              // 900-1199px: 2×2 grid, cards scale 225-275px, AI below
               '@media (min-width: 900px)': {
-                gridTemplateColumns: 'repeat(2, minmax(225px, 275px))',  // 900-1199px: 2×2 grid
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 justifyContent: 'center',
               },
+
+              // 1200-1499px: 2×2 grid, cards scale 225-275px, AI right
               '@media (min-width: 1200px)': {
-                gridTemplateColumns: 'repeat(2, minmax(225px, 275px))',  // 1200-1499px: 2×2 grid (AI right)
+                gridTemplateColumns: 'repeat(2, 1fr)',
                 justifyContent: 'flex-start',
               },
+
+              // 1500px+: 1×4 row, cards scale 225-275px, AI right
               '@media (min-width: 1500px)': {
-                gridTemplateColumns: 'repeat(4, minmax(225px, 275px))',  // 1500px+: 1×4 row (AI right)
+                gridTemplateColumns: 'repeat(4, 1fr)',
                 justifyContent: 'flex-start',
+              },
+
+              // Constrain individual grid cells to enforce card size limits
+              '& > *': {
+                minWidth: '225px',
+                maxWidth: '275px',
+                justifySelf: 'center', // Center cards within grid cells
+                '@media (min-width: 1200px)': {
+                  justifySelf: 'start', // Left-align when AI is to the right
+                },
               },
             }}>
               {/* Render stat cards based on selected status */}

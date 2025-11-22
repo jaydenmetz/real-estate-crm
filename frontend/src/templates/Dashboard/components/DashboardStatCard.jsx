@@ -177,9 +177,7 @@ const DashboardStatCard = ({
         elevation={0}
         sx={{
           height: 200,
-          minWidth: { xs: '100%', sm: 225 },
-          maxWidth: { xs: '100%', sm: 275 },
-          width: '100%',
+          width: '100%', // Fill grid cell (constrained by parent to 225-275px)
           position: 'relative',
           overflow: 'hidden',
           background: backgroundColor || `linear-gradient(135deg, ${alpha(color, 0.15)} 0%, ${alpha(color, 0.08)} 100%)`,
