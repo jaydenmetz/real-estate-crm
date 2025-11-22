@@ -171,12 +171,12 @@ export const DashboardContent = ({
     }
 
     if (viewMode === 'card') {
-      // Responsive grid with fixed 320px cards, left-justified layout
-      // Cards wrap naturally with consistent spacing regardless of row count
+      // Responsive grid with fixed 320px cards
+      // Center single-column layouts, left-align multi-column
       return {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, 320px)', // All cards fixed at 320px
-        justifyContent: 'start', // Left-justify cards (not centered)
+        justifyContent: { xs: 'center', sm: 'center', md: 'start' }, // Center on xs/sm (1 column), left on md+ (2+ columns)
         gap: {
           xs: 2, // 16px on mobile
           sm: 2, // 16px on small
