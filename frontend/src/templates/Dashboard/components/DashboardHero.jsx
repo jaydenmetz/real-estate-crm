@@ -150,11 +150,11 @@ export const DashboardHero = ({
             display: 'flex',
             gap: 2,
             alignItems: 'center',
-            flexWrap: 'wrap', // Allow wrapping for date range selector only
+            flexWrap: 'wrap', // Allow wrapping for date range selector
             flexShrink: 0,
             marginLeft: 'auto',
-            justifyContent: 'flex-end', // Right-align all controls
-            width: { xs: '100%', sm: 'auto' }, // Full width on mobile to force date range to new row
+            justifyContent: { xs: 'center', sm: 'flex-end' }, // Center on mobile, right-align on desktop
+            width: { xs: '100%', sm: 'auto' }, // Full width on mobile to force wrapping
           }}>
             {/* Date Range Buttons */}
             <ToggleButtonGroup
@@ -276,9 +276,6 @@ export const DashboardHero = ({
               flexShrink: 0,
               flexGrow: 0,
               width: 'auto', // Fixed width based on content
-              // Force to new row on mobile (<600px)
-              flexBasis: { xs: '100%', sm: 'auto' }, // Take full width row on mobile, but content stays fixed width
-              justifyContent: 'flex-end', // Always right-align
               '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
