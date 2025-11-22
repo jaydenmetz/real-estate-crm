@@ -372,18 +372,39 @@ export const DashboardHero = ({
         <Grid container spacing={3} sx={{ flexGrow: 1, margin: 0, width: '100%' }}>
 
           {/* Stats Cards Grid */}
-          <Grid item xs={12} sm={12} md={config.showAIAssistant ? 12 : 12} lg={config.showAIAssistant ? 8 : 12}>
+          <Grid item
+            xs={12}
+            sx={{
+              '@media (min-width: 1200px)': {
+                width: config.showAIAssistant ? '66.67%' : '100%',
+                flexBasis: config.showAIAssistant ? '66.67%' : '100%',
+                maxWidth: config.showAIAssistant ? '66.67%' : '100%',
+              },
+              '@media (min-width: 1500px)': {
+                width: config.showAIAssistant ? '75%' : '100%',
+                flexBasis: config.showAIAssistant ? '75%' : '100%',
+                maxWidth: config.showAIAssistant ? '75%' : '100%',
+              },
+            }}
+          >
             <Box sx={{
               display: 'grid',
-              gridTemplateColumns: {
-                xs: '1fr',                                  // <600px: 1×4 stack
-                sm: 'repeat(2, minmax(225px, 275px))',      // 600-899px: 2×2 grid
-                md: 'repeat(2, minmax(225px, 275px))',      // 900-1199px: 2×2 grid
-                lg: 'repeat(4, minmax(225px, 275px))',      // 1200px+: 1×4 row
-              },
+              gridTemplateColumns: '1fr',                   // <900px: 1×4 stack
               gap: 3,
-              justifyContent: { xs: 'stretch', sm: 'center' },
+              justifyContent: 'stretch',
               width: '100%',
+              '@media (min-width: 900px)': {
+                gridTemplateColumns: 'repeat(2, minmax(225px, 275px))',  // 900-1199px: 2×2 grid
+                justifyContent: 'center',
+              },
+              '@media (min-width: 1200px)': {
+                gridTemplateColumns: 'repeat(2, minmax(225px, 275px))',  // 1200-1499px: 2×2 grid (AI right)
+                justifyContent: 'flex-start',
+              },
+              '@media (min-width: 1500px)': {
+                gridTemplateColumns: 'repeat(4, minmax(225px, 275px))',  // 1500px+: 1×4 row (AI right)
+                justifyContent: 'flex-start',
+              },
             }}>
               {/* Render stat cards based on selected status */}
               {statsConfig && statsConfig
@@ -480,7 +501,35 @@ export const DashboardHero = ({
 
           {/* AI Assistant Card (if enabled) */}
           {config.showAIAssistant && (
-            <Grid item xs={12} sm={12} md={12} lg={4}>
+            <Grid item
+              xs={12}
+              sx={{
+                // <900px: AI below stats (full width)
+                '@media (max-width: 899px)': {
+                  width: '100%',
+                  flexBasis: '100%',
+                  maxWidth: '100%',
+                },
+                // 900-1199px: AI below stats (full width)
+                '@media (min-width: 900px) and (max-width: 1199px)': {
+                  width: '100%',
+                  flexBasis: '100%',
+                  maxWidth: '100%',
+                },
+                // 1200-1499px: AI right side (33.33% for 2×2 layout)
+                '@media (min-width: 1200px) and (max-width: 1499px)': {
+                  width: '33.33%',
+                  flexBasis: '33.33%',
+                  maxWidth: '33.33%',
+                },
+                // 1500px+: AI right side (25% for 1×4 layout)
+                '@media (min-width: 1500px)': {
+                  width: '25%',
+                  flexBasis: '25%',
+                  maxWidth: '25%',
+                },
+              }}
+            >
               <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
