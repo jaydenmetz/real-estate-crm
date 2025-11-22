@@ -133,141 +133,152 @@ export const DashboardNavigation = ({
           </Paper>
         </Box>
 
-        {/* Filters - stay right-justified, shrink to fit when wrapped */}
+        {/* Filters - centered rows with breakpoint-based wrapping */}
         <Box sx={{
           display: 'flex',
           gap: 1.5,
           alignItems: 'center',
-          flexShrink: 1, // Allow shrinking to fit available space
-          flexWrap: 'wrap', // Wrap individual filters if needed
-          justifyContent: 'flex-end', // Keep filters right-aligned within their box
-          marginLeft: 'auto', // Stay right-aligned even when wrapped to second line
-          minWidth: 0, // Allow shrinking below content size
+          flexShrink: 1,
+          flexWrap: 'wrap',
+          justifyContent: { xs: 'center', md: 'flex-end' }, // Centered on small screens, right-aligned on desktop
+          marginLeft: { xs: 0, md: 'auto' }, // No auto margin on xs (allows centering), auto on md (right-align)
+          minWidth: 0,
+          width: { xs: '100%', md: 'auto' }, // Full width on xs for centering, auto on md
         }}>
           {/* Bulk Actions Button - compact dropdown for selection and bulk operations */}
-          <BulkActionsButton
-            selectedCount={selectedItems.length}
-            totalCount={totalCount}
-            onClearSelection={onClearSelection}
-            onSelectAll={onSelectAll}
-            onArchive={onBulkArchive}
-            onDelete={onBulkDelete}
-            onRestore={onBulkRestore}
-            isArchived={false}
-            customActions={bulkActions}
-          />
+          <Box sx={{ order: { xs: 1, md: 0 } }}>
+            <BulkActionsButton
+              selectedCount={selectedItems.length}
+              totalCount={totalCount}
+              onClearSelection={onClearSelection}
+              onSelectAll={onSelectAll}
+              onArchive={onBulkArchive}
+              onDelete={onBulkDelete}
+              onRestore={onBulkRestore}
+              isArchived={false}
+              customActions={bulkActions}
+            />
+          </Box>
 
           {/* Scope Dropdown */}
           {scopeOptions.length > 0 && (
-            <Select
-              value={selectedScope}
-              onChange={(e) => onScopeChange(e.target.value)}
-              size="small"
-              sx={{
-                minWidth: { xs: 120, sm: 140, md: 160 },
-                height: 32,
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: 2,
-                fontWeight: 600,
-                fontSize: { xs: '0.8125rem', sm: '0.875rem' },
-                border: '1px solid',
-                borderColor: 'divider',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  backgroundColor: 'rgba(255, 255, 255, 1)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                },
-                '& .MuiSelect-select': {
-                  py: 0.5,
-                  px: { xs: 1, sm: 1.5 },
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  border: 'none',
-                },
-              }}
-            >
-              {scopeOptions.map(option => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.fullLabel || option.label}
-                </MenuItem>
-              ))}
-            </Select>
+            <Box sx={{ order: { xs: 2, md: 0 } }}>
+              <Select
+                value={selectedScope}
+                onChange={(e) => onScopeChange(e.target.value)}
+                size="small"
+                sx={{
+                  minWidth: { xs: 120, sm: 140, md: 160 },
+                  height: 32,
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 2,
+                  fontWeight: 600,
+                  fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    backgroundColor: 'rgba(255, 255, 255, 1)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  },
+                  '& .MuiSelect-select': {
+                    py: 0.5,
+                    px: { xs: 1, sm: 1.5 },
+                  },
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    border: 'none',
+                  },
+                }}
+              >
+                {scopeOptions.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.fullLabel || option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Box>
           )}
 
           {/* Sort Dropdown */}
           {sortOptions.length > 0 && (
-            <FormControl size="small" variant="standard" sx={{ minWidth: { xs: 110, sm: 120, md: 140 } }}>
-              <Select
-                value={sortBy}
-                onChange={(e) => onSortByChange(e.target.value)}
-                disableUnderline
-                startAdornment={
-                  <Sort sx={{ mr: { xs: 0.5, sm: 1 }, fontSize: '1.125rem', color: 'text.secondary' }} />
-                }
-                renderValue={(value) => (
-                  <Typography variant="body2" sx={{
-                    fontSize: { xs: '0.8125rem', sm: '0.875rem' },
-                    fontWeight: 500,
-                    color: 'text.primary',
-                  }}>
-                    {sortLabels[value] || value}
-                  </Typography>
-                )}
-                sx={{
-                  backgroundColor: 'transparent',
-                  borderRadius: 1,
-                  px: { xs: 1, sm: 1.5 },
-                  py: 0.5,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  '&:hover': {
-                    backgroundColor: alpha('#000', 0.04),
-                    borderColor: 'primary.main',
-                  },
-                  '& .MuiSelect-select': {
-                    paddingRight: '32px !important',
-                    display: 'flex',
-                    alignItems: 'center',
-                  },
-                }}
-              >
-                {sortOptions.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Box sx={{
+              order: { xs: 4, sm: 3, md: 0 }, // Wraps to second row on xs (narrowest), stays on first row on sm+
+              flexBasis: { xs: '100%', sm: 'auto' } // Force wrap on xs by taking full width
+            }}>
+              <FormControl size="small" variant="standard" sx={{ minWidth: { xs: 110, sm: 120, md: 140 } }}>
+                <Select
+                  value={sortBy}
+                  onChange={(e) => onSortByChange(e.target.value)}
+                  disableUnderline
+                  startAdornment={
+                    <Sort sx={{ mr: { xs: 0.5, sm: 1 }, fontSize: '1.125rem', color: 'text.secondary' }} />
+                  }
+                  renderValue={(value) => (
+                    <Typography variant="body2" sx={{
+                      fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+                      fontWeight: 500,
+                      color: 'text.primary',
+                    }}>
+                      {sortLabels[value] || value}
+                    </Typography>
+                  )}
+                  sx={{
+                    backgroundColor: 'transparent',
+                    borderRadius: 1,
+                    px: { xs: 1, sm: 1.5 },
+                    py: 0.5,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    '&:hover': {
+                      backgroundColor: alpha('#000', 0.04),
+                      borderColor: 'primary.main',
+                    },
+                    '& .MuiSelect-select': {
+                      paddingRight: '32px !important',
+                      display: 'flex',
+                      alignItems: 'center',
+                    },
+                  }}
+                >
+                  {sortOptions.map(option => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
           )}
 
           {/* View Mode & Calendar Selector */}
-          <ToggleButtonGroup
-            value={showCalendar ? 'calendar' : viewMode}
-            exclusive
-            onChange={(e, newValue) => {
-              if (newValue !== null) {
-                if (newValue === 'calendar') {
-                  onShowCalendarChange(true);
-                } else {
-                  onShowCalendarChange(false);
-                  onViewModeChange(newValue);
+          <Box sx={{ order: { xs: 5, md: 0 } }}>
+            <ToggleButtonGroup
+              value={showCalendar ? 'calendar' : viewMode}
+              exclusive
+              onChange={(e, newValue) => {
+                if (newValue !== null) {
+                  if (newValue === 'calendar') {
+                    onShowCalendarChange(true);
+                  } else {
+                    onShowCalendarChange(false);
+                    onViewModeChange(newValue);
+                  }
                 }
-              }
-            }}
-            size="small"
-            sx={{
-              '& .MuiToggleButton-root': {
-                px: { xs: 1, sm: 1.5 },
-                py: 0.5,
-                textTransform: 'none',
-                fontWeight: 500,
-                height: '32px',
-                minWidth: { xs: '32px', sm: 'auto' },
-              },
-            }}
-          >
+              }}
+              size="small"
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: { xs: 1, sm: 1.5 },
+                  py: 0.5,
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  height: '32px',
+                  minWidth: { xs: '32px', sm: 'auto' },
+                },
+              }}
+            >
             <ToggleButton value="card" title="Card view">
               <Box sx={{ display: 'flex', width: 24, height: 12, alignItems: 'center' }}>
                 <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
@@ -292,26 +303,29 @@ export const DashboardNavigation = ({
               </Box>
             </ToggleButton>
           </ToggleButtonGroup>
+          </Box>
 
           {/* Archive Icon - Toggle filter on/off */}
-          <IconButton
-            size="small"
-            onClick={() => onShowArchivedChange(!showArchived)}
-            sx={{
-              width: { xs: 32, sm: 36 },
-              height: { xs: 32, sm: 36 },
-              backgroundColor: showArchived ? alpha('#000', 0.8) : alpha('#000', 0.06),
-              color: showArchived ? 'white' : 'text.secondary',
-              '&:hover': {
-                backgroundColor: showArchived ? alpha('#000', 0.9) : alpha('#000', 0.1),
-              },
-              transition: 'all 0.2s',
-            }}
-          >
-            <Badge badgeContent={archivedCount} color="error" max={99}>
-              <ArchiveIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-            </Badge>
-          </IconButton>
+          <Box sx={{ order: { xs: 6, md: 0 } }}>
+            <IconButton
+              size="small"
+              onClick={() => onShowArchivedChange(!showArchived)}
+              sx={{
+                width: { xs: 32, sm: 36 },
+                height: { xs: 32, sm: 36 },
+                backgroundColor: showArchived ? alpha('#000', 0.8) : alpha('#000', 0.06),
+                color: showArchived ? 'white' : 'text.secondary',
+                '&:hover': {
+                  backgroundColor: showArchived ? alpha('#000', 0.9) : alpha('#000', 0.1),
+                },
+                transition: 'all 0.2s',
+              }}
+            >
+              <Badge badgeContent={archivedCount} color="error" max={99}>
+                <ArchiveIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+              </Badge>
+            </IconButton>
+          </Box>
         </Box>
       </Box>
     </Box>
