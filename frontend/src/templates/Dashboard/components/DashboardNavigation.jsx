@@ -132,15 +132,16 @@ export const DashboardNavigation = ({
           </Paper>
         </Box>
 
-        {/* Filters - stay right-justified, allow horizontal scroll if needed */}
+        {/* Filters - stay right-justified, shrink to fit when wrapped */}
         <Box sx={{
           display: 'flex',
           gap: 1.5,
           alignItems: 'center',
-          flexShrink: 0,
-          overflowX: 'auto',
-          maxWidth: '100%',
+          flexShrink: 1, // Allow shrinking to fit available space
+          flexWrap: 'wrap', // Wrap individual filters if needed
+          justifyContent: 'flex-end', // Keep filters right-aligned within their box
           marginLeft: 'auto', // Stay right-aligned even when wrapped to second line
+          minWidth: 0, // Allow shrinking below content size
         }}>
           {/* Bulk Actions Button - compact dropdown for selection and bulk operations */}
           <BulkActionsButton
