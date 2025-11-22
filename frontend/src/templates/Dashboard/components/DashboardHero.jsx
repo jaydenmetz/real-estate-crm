@@ -139,7 +139,7 @@ export const DashboardHero = ({
           >
             <Typography variant="h3" component="h1" sx={{
               fontWeight: 700,
-              fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' } // Smaller on mobile to fit
+              fontSize: { xs: '2rem', md: '3rem' } // 2 sizes: mobile (2rem) and desktop (3rem)
             }}>
               {config.title}
             </Typography>
