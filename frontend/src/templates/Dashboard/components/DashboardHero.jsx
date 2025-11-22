@@ -420,11 +420,11 @@ export const DashboardHero = ({
                 width: '100%',
                 justifySelf: 'stretch',
 
-                // 600px+: Constrain to 225-275px
+                // 600px+: Allow cards to grow from 225px to 275px
                 '@media (min-width: 600px)': {
                   minWidth: '225px',
                   maxWidth: '275px',
-                  width: 'auto',
+                  width: '100%', // Fill the grid cell (which is constrained by 1fr)
                   justifySelf: 'center',
                 },
 
