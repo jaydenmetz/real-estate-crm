@@ -135,9 +135,12 @@ export const DashboardHero = ({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            style={{ flexShrink: 0 }}
+            style={{ flexShrink: 1, minWidth: 0 }} // Allow title to shrink if needed
           >
-            <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
+            <Typography variant="h3" component="h1" sx={{
+              fontWeight: 700,
+              fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' } // Smaller on mobile to fit
+            }}>
               {config.title}
             </Typography>
           </motion.div>
@@ -147,10 +150,11 @@ export const DashboardHero = ({
             display: 'flex',
             gap: 2,
             alignItems: 'center',
-            flexWrap: 'wrap', // Allow wrapping for date range selector
+            flexWrap: 'wrap', // Allow wrapping for date range selector only
             flexShrink: 0,
             marginLeft: 'auto',
             justifyContent: 'flex-end', // Right-align all controls
+            width: { xs: '100%', sm: 'auto' }, // Full width on mobile to force date range to new row
           }}>
             {/* Date Range Buttons */}
             <ToggleButtonGroup
@@ -261,7 +265,7 @@ export const DashboardHero = ({
 
             {/* Date Range Editors */}
             <Box sx={{
-              display: 'flex',
+              display: 'inline-flex', // Use inline-flex to maintain fixed width
               gap: 0.5,
               alignItems: 'center',
               backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -271,10 +275,10 @@ export const DashboardHero = ({
               border: '1px solid rgba(255, 255, 255, 0.2)',
               flexShrink: 0,
               flexGrow: 0,
-              width: 'auto',
-              // Force to new row on mobile (<600px) and right-align
-              flexBasis: { xs: '100%', sm: 'auto' }, // Take full width on mobile
-              justifyContent: { xs: 'flex-end', sm: 'flex-start' }, // Right-align content on mobile
+              width: 'auto', // Fixed width based on content
+              // Force to new row on mobile (<600px)
+              flexBasis: { xs: '100%', sm: 'auto' }, // Take full width row on mobile, but content stays fixed width
+              justifyContent: 'flex-end', // Always right-align
               '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
