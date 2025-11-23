@@ -1,12 +1,22 @@
 import React from 'react';
 import { CardTemplate } from '../../../../../templates/Dashboard/view-modes';
 import {
+  CheckCircle,
+  Cancel,
   Home as HomeIcon,
 } from '@mui/icons-material';
 import { alpha } from '@mui/material';
 import { LISTING_STATUS_COLORS } from '../../constants/listingConstants';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+
+// Import editor components
+import {
+  EditListedPrice,
+  EditListingCommission,
+  EditListingDate,
+  EditExpirationDate,
+} from '../../editors';
 
 // ============================================================================
 // COMMISSION MASKING (for privacy toggle)
@@ -34,7 +44,7 @@ const listingCardConfig = {
     aspectRatio: '3 / 2',
   },
 
-  // Status Chip Configuration (top-left)
+  // Status Chip Configuration (top-left, editable)
   status: {
     field: 'listing_status',
     getConfig: (status) => {
@@ -44,6 +54,36 @@ const listingCardConfig = {
         color: config.color,
         bg: config.bg,
       };
+    },
+    editable: true,
+    options: [
+      {
+        value: 'active',
+        label: 'Active',
+        icon: CheckCircle,
+        color: '#10b981',
+      },
+      {
+        value: 'pending',
+        label: 'Pending',
+        icon: CheckCircle,
+        color: '#f59e0b',
+      },
+      {
+        value: 'sold',
+        label: 'Sold',
+        icon: CheckCircle,
+        color: '#3b82f6',
+      },
+      {
+        value: 'cancelled',
+        label: 'Cancelled',
+        icon: Cancel,
+        color: '#ef4444',
+      },
+    ],
+    onSave: (listing, newStatus) => {
+      return { listing_status: newStatus };
     },
   },
 
@@ -64,7 +104,7 @@ const listingCardConfig = {
 
   // Metrics Configuration (1x2 horizontal row - ONLY Price and Commission)
   metrics: [
-    // List Price
+    // List Price (editable)
     {
       label: 'Price',
       field: 'list_price',
@@ -74,9 +114,14 @@ const listingCardConfig = {
         secondary: '#059669',
         bg: alpha('#10b981', 0.08),
       },
+      editable: true,
+      editor: EditListedPrice,
+      onSave: (listing, newPrice) => {
+        return { list_price: newPrice };
+      },
     },
 
-    // Commission (calculated from percentage * price)
+    // Commission (editable with toggle)
     {
       label: 'Commission',
       field: (listing) => {
@@ -90,6 +135,24 @@ const listingCardConfig = {
         secondary: '#4f46e5',
         bg: alpha('#6366f1', 0.08),
       },
+      editable: true,
+      editor: EditListingCommission,
+      editorProps: (listing) => ({
+        value: (listing.list_price || 0) * (listing.total_commission || 0) / 100,
+        commissionPercentage: listing.total_commission !== null && listing.total_commission !== undefined
+          ? parseFloat(listing.total_commission)
+          : null,
+        commissionType: listing.commission_type || 'percentage',
+        purchasePrice: listing.list_price || 0,
+      }),
+      onSave: (listing, updates) => {
+        // EditListingCommission returns { my_commission, commission_percentage, commission_type }
+        return {
+          my_commission: updates.my_commission || updates,
+          total_commission: updates.commission_percentage,
+          commission_type: updates.commission_type,
+        };
+      },
       toggle: {
         maskFn: maskCommission,
         icon: {
@@ -100,25 +163,51 @@ const listingCardConfig = {
     },
   ],
 
-  // Footer Configuration (Beginning Date + Expiration Date)
+  // Footer Configuration (Listing Date + Expiration Date + Progress)
   footer: {
     fields: [
-      // Beginning Date
+      // Listing Date (editable)
       {
-        label: 'Beginning',
+        label: 'Listed',
         field: 'listing_date',
         formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
-        width: '50%',
+        editable: true,
+        editor: EditListingDate,
+        onSave: (listing, newDate) => {
+          return { listing_date: newDate };
+        },
+        width: '33.33%',
       },
 
-      // Expiration Date
+      // Expiration Date (editable with minDate validation)
       {
         label: 'Expires',
         field: 'expiration_date',
         formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
-        width: '50%',
+        editable: true,
+        editor: EditExpirationDate,
+        editorProps: (listing) => ({
+          minDate: listing.listing_date, // Prevent expiration before listing date
+        }),
+        onSave: (listing, newDate) => {
+          return { expiration_date: newDate };
+        },
+        width: '33.33%',
       },
     ],
+
+    progress: {
+      formatter: (listing) => {
+        // Placeholder for future Progress implementation
+        return {
+          label: 'Progress',
+          value: 0,
+          displayValue: '—',
+          showBar: false,
+        };
+      },
+      width: '30%',
+    },
   },
 
   // Quick Actions Configuration
