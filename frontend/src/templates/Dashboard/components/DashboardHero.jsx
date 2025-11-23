@@ -512,7 +512,16 @@ export const DashboardHero = ({
             </Box>
 
             {/* Action Buttons Row */}
-            <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+            <Box sx={{
+              mt: 3,
+              display: 'flex',
+              gap: 2,
+              // Center buttons below 1016px
+              justifyContent: { xs: 'center', md: 'center', lg: 'flex-start' },
+              '@media (max-width: 1016px)': {
+                justifyContent: 'center',
+              },
+            }}>
               {onNewItem && (
                 <Button
                   variant="contained"
@@ -522,6 +531,10 @@ export const DashboardHero = ({
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
                     backdropFilter: 'blur(10px)',
                     '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.3)' },
+                    // Fixed dimensions
+                    height: 44,
+                    minWidth: 180,
+                    px: 3,
                   }}
                 >
                   {config.addButtonLabel || `NEW ${config.entitySingular?.toUpperCase()}`}
@@ -538,6 +551,10 @@ export const DashboardHero = ({
                       borderColor: 'rgba(255, 255, 255, 0.5)',
                       backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     },
+                    // Fixed dimensions
+                    height: 44,
+                    minWidth: 220,
+                    px: 3,
                   }}
                 >
                   {config.analyticsButtonLabel || `${config.entitySingular?.toUpperCase()} ANALYTICS`}
