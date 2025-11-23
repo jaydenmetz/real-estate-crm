@@ -76,10 +76,9 @@ export const listingsConfig = createEntityConfig({
     enableMultiSelect: true,
 
     // Status Mapping (tab label → API status value)
-    // Maps user-facing tab names to database status values
-    statusMapping: {
-      'Closed': 'Sold', // "Closed" tab shows "Sold" listings from database
-    },
+    // Maps user-facing tab names to database status values if they differ
+    // Currently all tab names match database values exactly
+    statusMapping: {},
 
     // Hero Card Configuration
     hero: {
