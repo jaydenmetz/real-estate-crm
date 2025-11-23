@@ -535,6 +535,7 @@ export const DashboardHero = ({
                     height: 44,
                     minWidth: 180,
                     px: 3,
+                    whiteSpace: 'nowrap', // Prevent text wrapping
                   }}
                 >
                   {config.addButtonLabel || `NEW ${config.entitySingular?.toUpperCase()}`}
@@ -555,6 +556,7 @@ export const DashboardHero = ({
                     height: 44,
                     minWidth: 220,
                     px: 3,
+                    whiteSpace: 'nowrap', // Prevent text wrapping
                   }}
                 >
                   {config.analyticsButtonLabel || `${config.entitySingular?.toUpperCase()} ANALYTICS`}
