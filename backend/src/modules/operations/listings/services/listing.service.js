@@ -61,6 +61,8 @@ class ListingsService {
       propertyType,
       minDaysOnMarket,
       maxDaysOnMarket,
+      startDate, // Display start date (YYYY-MM-DD)
+      endDate, // Display end date (YYYY-MM-DD)
       sortBy = 'created_at',
       sortOrder = 'DESC',
       page = 1,
@@ -100,6 +102,29 @@ class ListingsService {
     if (maxDaysOnMarket) {
       params.push(maxDaysOnMarket);
       whereConditions.push(`l.days_on_market <= $${params.length}`);
+    }
+
+    // Date range filter (intersection logic matching escrows)
+    // Show item if its date range overlaps with display range
+    // Item: [listing_date, expiration_date]
+    // Display: [startDate, endDate]
+    if (startDate && endDate) {
+      // Both dates provided - filter for items that overlap with display range
+      params.push(startDate);
+      params.push(endDate);
+      whereConditions.push(`(
+        (l.expiration_date >= $${params.length - 1} OR l.expiration_date IS NULL)
+        AND
+        (l.listing_date <= $${params.length} OR l.listing_date IS NULL)
+      )`);
+    } else if (startDate) {
+      // Only start date - show items that end after start date
+      params.push(startDate);
+      whereConditions.push(`(l.expiration_date >= $${params.length} OR l.expiration_date IS NULL)`);
+    } else if (endDate) {
+      // Only end date - show items that start before end date
+      params.push(endDate);
+      whereConditions.push(`(l.listing_date <= $${params.length} OR l.listing_date IS NULL)`);
     }
 
     // Handle ownership-based scope filtering (multi-tenant)
