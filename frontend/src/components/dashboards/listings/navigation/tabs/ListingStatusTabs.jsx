@@ -14,8 +14,8 @@ export const listingStatusTabs = [
     preferredViewMode: 'card'
   },
   {
-    value: 'Sold',
-    label: 'Sold',
+    value: 'Closed',
+    label: 'Closed',
     preferredViewMode: 'list'
   },
   {

@@ -27,6 +27,13 @@ export const LISTING_STATUS_CONFIG = {
     icon: 'schedule',
     label: 'Pending'
   },
+  'Closed': {
+    color: '#6366f1',
+    bg: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#6366f1', 0.2)}`,
+    icon: 'check_circle',
+    label: 'Closed'
+  },
   'Sold': {
     color: '#6366f1',
     bg: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',

@@ -61,25 +61,31 @@ const listingCardConfig = {
     editable: true,
     options: [
       {
-        value: 'active',
+        value: 'Active',
         label: 'Active',
         icon: CheckCircle,
         color: '#10b981',
       },
       {
-        value: 'pending',
+        value: 'Pending',
         label: 'Pending',
         icon: CheckCircle,
         color: '#f59e0b',
       },
       {
-        value: 'sold',
-        label: 'Sold',
+        value: 'Closed',
+        label: 'Closed',
         icon: CheckCircle,
-        color: '#3b82f6',
+        color: '#6366f1',
       },
       {
-        value: 'cancelled',
+        value: 'Expired',
+        label: 'Expired',
+        icon: CheckCircle,
+        color: '#94a3b8',
+      },
+      {
+        value: 'Cancelled',
         label: 'Cancelled',
         icon: Cancel,
         color: '#ef4444',
