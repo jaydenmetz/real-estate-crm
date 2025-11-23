@@ -3,20 +3,18 @@ import { TableRowTemplate } from '../../../../../templates/Dashboard/view-modes'
 import {
   CheckCircle,
   Cancel,
-  HourglassEmpty,
-  Pending,
+  Home as HomeIcon,
 } from '@mui/icons-material';
-import { alpha } from '@mui/material';
 import { LISTING_STATUS_COLORS } from '../../constants/listingConstants';
+import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
 
 // Import editor components
 import {
-  EditListPrice,
-  EditCommissionAmount,
+  EditListedPrice,
+  EditListingCommission,
   EditListingDate,
   EditExpirationDate,
-  EditPropertyAddress,
 } from '../../editors';
 
 // ============================================================================
@@ -38,100 +36,69 @@ const maskCommission = (value) => {
 // ============================================================================
 
 const listingTableConfig = {
-  // Grid layout: 8 columns with responsive widths
+  // Grid Layout (8 columns)
   gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
 
-  // Status config for row styling
-  statusConfig: {
-    getConfig: (listing) => {
-      const config = LISTING_STATUS_COLORS[listing.listing_status] || LISTING_STATUS_COLORS.Active;
-      return {
-        color: config.color,
-        bg: config.bg,
-      };
-    },
-  },
-
-  // Column configurations
+  // Column Definitions
   columns: [
-    // Property Address (editable, with subtitle)
+    // Property Address (with city, state subtitle)
     {
       label: 'Property',
       field: (listing) => listing.display_address || listing.property_address || 'No Address',
       subtitle: (listing) => {
-        if (listing.city && listing.state) {
-          return `${listing.city}, ${listing.state}${listing.zip_code ? ' ' + listing.zip_code : ''}`;
-        }
-        return 'Location TBD';
+        const parts = [];
+        if (listing.city) parts.push(listing.city);
+        if (listing.state) parts.push(listing.state);
+        return parts.join(', ') || 'Location TBD';
       },
-      editable: true,
-      editor: EditPropertyAddress,
-      editorProps: (listing) => ({
-        value: listing.display_address || listing.property_address,
-        canonicalValue: listing.property_address,
-        data: listing,
-      }),
-      onSave: (listing, addressData) => addressData,
-      align: 'left',
-      bold: true,
-      hoverColor: 'rgba(16, 185, 129, 0.08)',
+      image: {
+        source: (listing) => getBestPropertyImage(listing),
+        fallbackIcon: HomeIcon,
+      },
     },
 
-    // Status (editable)
+    // Status (editable dropdown)
     {
       label: 'Status',
       field: 'listing_status',
-      formatter: (status) => status || 'Active',
-      isStatus: true,
+      formatter: (status) => {
+        const config = LISTING_STATUS_COLORS[status] || LISTING_STATUS_COLORS.Active;
+        return {
+          label: status || 'Active',
+          color: config.color,
+          bg: config.bg,
+        };
+      },
       editable: true,
       statusOptions: [
         {
-          value: 'Coming Soon',
-          label: 'Coming Soon',
-          icon: HourglassEmpty,
-          color: '#3b82f6',
-        },
-        {
-          value: 'Active',
+          value: 'active',
           label: 'Active',
           icon: CheckCircle,
           color: '#10b981',
         },
         {
-          value: 'Pending',
+          value: 'pending',
           label: 'Pending',
-          icon: Pending,
+          icon: CheckCircle,
           color: '#f59e0b',
         },
         {
-          value: 'Sold',
+          value: 'sold',
           label: 'Sold',
           icon: CheckCircle,
-          color: '#6366f1',
+          color: '#3b82f6',
         },
         {
-          value: 'Expired',
-          label: 'Expired',
-          icon: Cancel,
-          color: '#ef4444',
-        },
-        {
-          value: 'Cancelled',
+          value: 'cancelled',
           label: 'Cancelled',
           icon: Cancel,
           color: '#ef4444',
-        },
-        {
-          value: 'Withdrawn',
-          label: 'Withdrawn',
-          icon: Cancel,
-          color: '#6b7280',
         },
       ],
       onSave: (listing, newStatus) => {
         return { listing_status: newStatus };
       },
-      align: 'left',
     },
 
     // List Price (editable)
@@ -140,14 +107,10 @@ const listingTableConfig = {
       field: 'list_price',
       formatter: (value) => formatCurrency(value),
       editable: true,
-      editor: EditListPrice,
+      editor: EditListedPrice,
       onSave: (listing, newPrice) => {
         return { list_price: newPrice };
       },
-      align: 'left',
-      bold: true,
-      color: '#10b981',
-      hoverColor: 'rgba(16, 185, 129, 0.08)',
     },
 
     // Commission (editable with toggle)
@@ -160,90 +123,90 @@ const listingTableConfig = {
       },
       formatter: (value) => formatCurrency(value),
       editable: true,
-      editor: EditCommissionAmount,
+      editor: EditListingCommission,
       editorProps: (listing) => ({
         value: (listing.list_price || 0) * (listing.total_commission || 0) / 100,
         commissionPercentage: listing.total_commission !== null && listing.total_commission !== undefined
           ? parseFloat(listing.total_commission)
           : null,
         commissionType: listing.commission_type || 'percentage',
-        listPrice: listing.list_price || 0,
+        purchasePrice: listing.list_price || 0,
       }),
       onSave: (listing, updates) => {
         return {
-          total_commission: updates.total_commission || updates.commission_percentage,
+          my_commission: updates.my_commission || updates,
+          total_commission: updates.commission_percentage,
           commission_type: updates.commission_type,
         };
       },
       toggle: {
         maskFn: maskCommission,
       },
-      align: 'left',
-      bold: true,
-      color: '#6366f1',
-      hoverColor: 'rgba(99, 102, 241, 0.08)',
     },
 
-    // Beginning Date (editable)
+    // Listing Date (editable)
     {
-      label: 'Beginning',
+      label: 'Listed',
       field: 'listing_date',
-      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
       editable: true,
       editor: EditListingDate,
       onSave: (listing, newDate) => {
         return { listing_date: newDate };
       },
-      align: 'left',
-      hoverColor: alpha('#000', 0.05),
     },
 
-    // Expiration Date (editable)
+    // Expiration Date (editable with minDate validation)
     {
       label: 'Expires',
       field: 'expiration_date',
-      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
       editable: true,
       editor: EditExpirationDate,
+      editorProps: (listing) => ({
+        minDate: listing.listing_date, // Prevent expiration before listing date
+      }),
       onSave: (listing, newDate) => {
         return { expiration_date: newDate };
       },
-      align: 'left',
-      hoverColor: alpha('#000', 0.05),
     },
 
-    // Days on Market
+    // Progress (placeholder for future)
     {
-      label: 'DOM',
-      field: 'days_on_market',
-      formatter: (value) => value ? `${value}` : '0',
-      align: 'center',
-      bold: true,
-      color: (listing) => {
-        const config = LISTING_STATUS_COLORS[listing.listing_status] || LISTING_STATUS_COLORS.Active;
-        return config.color;
+      label: 'Progress',
+      field: () => 0,
+      formatter: (value) => `${value}%`,
+      color: (value) => {
+        if (value >= 75) return '#10b981'; // Green
+        if (value >= 50) return '#3b82f6'; // Blue
+        if (value >= 25) return '#f59e0b'; // Amber
+        return '#ef4444'; // Red
       },
     },
   ],
+
+  // Quick Actions Configuration
+  actions: {
+    view: true,
+    archive: true,
+    restore: true,
+    delete: true,
+  },
 };
 
 /**
- * ListingTableRow - Compact table view for listings dashboard
+ * ListingTableRow - Table row view for listings dashboard
  *
- * Now uses TableRowTemplate with inline configuration for better colocation.
+ * Uses TableRowTemplate with inline configuration for consistency.
  *
- * Reduced from 152 lines to ~260 lines by using TableRowTemplate (460 lines, reusable).
- *
- * Features preserved:
- * - Grid layout with 8 columns (Property, Status, Price, Commission, Listed, Expires, DOM, Actions)
- * - Inline editors: address, status, price, commission (with toggle), dates
+ * Features:
+ * - 8 columns: Property, Status, Price, Commission, Listed, Expires, Progress, Actions
+ * - Inline editors for all editable fields
  * - Commission toggle: show/hide with privacy masking
- * - Status menu: 7 status options with icons
- * - Click vs drag: text selection support
- * - Hover effects and transitions
- * - QuickActionsMenu
- *
- * Matches escrows inline editing pattern for consistency.
+ * - Status menu: 4 status options with icons
+ * - minDate validation for expiration date
+ * - Property thumbnail with fallback icon
+ * - Compact table layout optimized for scanning
  */
 const ListingTableRow = React.memo(({
   listing,

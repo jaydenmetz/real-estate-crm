@@ -1,11 +1,21 @@
 import React from 'react';
 import { ListItemTemplate } from '../../../../../templates/Dashboard/view-modes';
 import {
+  CheckCircle,
+  Cancel,
   Home as HomeIcon,
 } from '@mui/icons-material';
 import { LISTING_STATUS_COLORS } from '../../constants/listingConstants';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+
+// Import editor components
+import {
+  EditListedPrice,
+  EditListingCommission,
+  EditListingDate,
+  EditExpirationDate,
+} from '../../editors';
 
 // ============================================================================
 // COMMISSION MASKING (for privacy toggle)
@@ -33,19 +43,16 @@ const listingListConfig = {
     width: 200,
   },
 
-  // Progress Bar Overlay (days on market)
+  // Progress Bar Overlay (placeholder for future)
   progress: {
-    getValue: (listing) => {
-      const dom = listing.days_on_market || 0;
-      return Math.min(dom, 365); // Cap at 365
-    },
+    getValue: (listing) => 0,
     getColor: (listing) => {
       const config = LISTING_STATUS_COLORS[listing.listing_status] || LISTING_STATUS_COLORS.Active;
       return config.bg;
     },
   },
 
-  // Status Chip Configuration
+  // Status Chip Configuration (editable)
   status: {
     field: 'listing_status',
     getConfig: (status) => {
@@ -56,6 +63,36 @@ const listingListConfig = {
         bg: config.bg,
       };
     },
+    editable: true,
+    options: [
+      {
+        value: 'active',
+        label: 'Active',
+        icon: CheckCircle,
+        color: '#10b981',
+      },
+      {
+        value: 'pending',
+        label: 'Pending',
+        icon: CheckCircle,
+        color: '#f59e0b',
+      },
+      {
+        value: 'sold',
+        label: 'Sold',
+        icon: CheckCircle,
+        color: '#3b82f6',
+      },
+      {
+        value: 'cancelled',
+        label: 'Cancelled',
+        icon: Cancel,
+        color: '#ef4444',
+      },
+    ],
+    onSave: (listing, newStatus) => {
+      return { listing_status: newStatus };
+    },
   },
 
   // Title Configuration (address)
@@ -63,27 +100,31 @@ const listingListConfig = {
     field: (listing) => listing.display_address || listing.property_address || 'No Address',
   },
 
-  // Subtitle Configuration (location)
+  // Subtitle Configuration (city, state - SEPARATE from title for ListItemTemplate)
   subtitle: {
     formatter: (listing) => {
       const parts = [];
       if (listing.city) parts.push(listing.city);
       if (listing.state) parts.push(listing.state);
-      if (listing.zip_code) parts.push(listing.zip_code);
       return parts.join(', ') || 'Location TBD';
     },
   },
 
-  // Metrics Configuration (horizontal row)
+  // Metrics Configuration (horizontal row: Price, Commission, Listed Date, Expiration Date)
   metrics: [
-    // List Price
+    // List Price (editable)
     {
       label: 'Price',
       field: 'list_price',
       formatter: (value) => formatCurrency(value),
+      editable: true,
+      editor: EditListedPrice,
+      onSave: (listing, newPrice) => {
+        return { list_price: newPrice };
+      },
     },
 
-    // Commission (calculated from percentage)
+    // Commission (editable with toggle)
     {
       label: 'Commission',
       field: (listing) => {
@@ -92,23 +133,53 @@ const listingListConfig = {
         return (price * percentage) / 100;
       },
       formatter: (value) => formatCurrency(value),
+      editable: true,
+      editor: EditListingCommission,
+      editorProps: (listing) => ({
+        value: (listing.list_price || 0) * (listing.total_commission || 0) / 100,
+        commissionPercentage: listing.total_commission !== null && listing.total_commission !== undefined
+          ? parseFloat(listing.total_commission)
+          : null,
+        commissionType: listing.commission_type || 'percentage',
+        purchasePrice: listing.list_price || 0,
+      }),
+      onSave: (listing, updates) => {
+        return {
+          my_commission: updates.my_commission || updates,
+          total_commission: updates.commission_percentage,
+          commission_type: updates.commission_type,
+        };
+      },
       toggle: {
         maskFn: maskCommission,
       },
     },
 
-    // Beginning Date
+    // Listing Date (editable)
     {
-      label: 'Beginning',
+      label: 'Listed',
       field: 'listing_date',
       formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
+      editable: true,
+      editor: EditListingDate,
+      onSave: (listing, newDate) => {
+        return { listing_date: newDate };
+      },
     },
 
-    // Expiration Date
+    // Expiration Date (editable with minDate validation)
     {
       label: 'Expires',
       field: 'expiration_date',
       formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
+      editable: true,
+      editor: EditExpirationDate,
+      editorProps: (listing) => ({
+        minDate: listing.listing_date, // Prevent expiration before listing date
+      }),
+      onSave: (listing, newDate) => {
+        return { expiration_date: newDate };
+      },
     },
   ],
 };
@@ -116,16 +187,15 @@ const listingListConfig = {
 /**
  * ListingListItem - Horizontal list view for listings dashboard
  *
- * Now uses ListItemTemplate with inline configuration for better colocation.
+ * Uses ListItemTemplate with inline configuration for consistency.
  *
- * Reduced from 217 lines to ~160 lines by using ListItemTemplate (519 lines, reusable).
- *
- * Features preserved:
- * - Property image sidebar (200px wide)
- * - Days on market progress overlay
- * - Status chip
- * - Commission privacy toggle
- * - Quick actions menu
+ * Features:
+ * - Property image with progress bar overlay (200px wide)
+ * - Inline editors: price, commission (with toggle), dates, status
+ * - Commission toggle: show/hide with privacy masking
+ * - Status menu: 4 status options with icons
+ * - Click vs drag: text selection support
+ * - Hover effects and transitions
  */
 const ListingListItem = React.memo(({
   listing,
