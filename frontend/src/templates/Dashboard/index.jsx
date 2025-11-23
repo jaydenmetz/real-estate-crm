@@ -289,7 +289,7 @@ export const DashboardTemplate = ({
     // Clear custom dates when switching status tabs
     setCustomStartDate(null);
     setCustomEndDate(null);
-  }, [selectedStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedStatus, config.entity.namePlural]);
 
   // Save date range preference to localStorage when it changes
   useEffect(() => {
