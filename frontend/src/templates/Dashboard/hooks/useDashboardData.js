@@ -268,7 +268,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     let filtered = [...dataArray];
 
     // Apply status filter
-    if (selectedStatus !== 'all' && selectedStatus !== 'archived') {
+    if (selectedStatus?.toLowerCase() !== 'all' && selectedStatus?.toLowerCase() !== 'archived') {
       filtered = filtered.filter(item => {
         const statusField = item.escrow_status || item.status || item.lead_status || item.appointment_status;
         // Case-insensitive comparison to match backend
