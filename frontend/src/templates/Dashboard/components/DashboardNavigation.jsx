@@ -131,13 +131,16 @@ export const DashboardNavigation = ({
                 // Check if tab has dropdown configuration (from new status system)
                 const hasDropdown = tab.statuses && tab.statuses.length > 0;
 
-                if (hasDropdown && config?.entity) {
+                // Get entity name (could be config.entity.namePlural or config.entity)
+                const entityName = config?.entity?.namePlural || config?.entity;
+
+                if (hasDropdown && entityName) {
                   // Use StatusTabWithDropdown for status-configured tabs
                   return (
                     <StatusTabWithDropdown
                       key={tab.id || tab.value}
                       category={tab}
-                      entity={config.entity}
+                      entity={entityName}
                       isSelected={selectedStatus === tab.value}
                       onCategoryClick={(categoryId) => {
                         // Switch to category (show all statuses in category)

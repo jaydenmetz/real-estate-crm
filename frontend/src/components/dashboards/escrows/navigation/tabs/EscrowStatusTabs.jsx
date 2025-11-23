@@ -2,30 +2,22 @@
  * EscrowStatusTabs.jsx
  *
  * Status tab configuration for escrows dashboard navigation.
- * Defines which tabs appear and their default view modes.
+ * NOW USING CENTRALIZED STATUS CONFIGURATION SYSTEM.
+ *
+ * Tabs are automatically generated from:
+ * /frontend/src/config/statuses/statusCategories.js
+ *
+ * Each tab includes a dropdown showing all statuses in that category.
+ * Click tab when NOT selected: Switch to category
+ * Click tab when ALREADY selected: Show dropdown to filter by specific status
  *
  * Usage: Imported into escrows.config.js
  */
 
-export const escrowStatusTabs = [
-  {
-    value: 'Active',
-    label: 'Active',
-    preferredViewMode: 'card'
-  },
-  {
-    value: 'Closed',
-    label: 'Closed',
-    preferredViewMode: 'list'
-  },
-  {
-    value: 'Cancelled',
-    label: 'Cancelled',
-    preferredViewMode: 'table'
-  },
-  {
-    value: 'All',
-    label: 'All Escrows',
-    preferredViewMode: 'table'
-  }
-];
+import { getEntityTabs } from '../../../../../config/statuses';
+
+// Generate tabs from centralized status configuration
+export const escrowStatusTabs = getEntityTabs('escrows');
+
+// For backward compatibility (if needed elsewhere)
+export default escrowStatusTabs;
