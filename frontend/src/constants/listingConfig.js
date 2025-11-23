@@ -54,6 +54,13 @@ export const LISTING_STATUS_CONFIG = {
     getBorder: (theme) => `2px solid ${alpha('#ef4444', 0.2)}`,
     icon: 'cancel',
     label: 'Cancelled'
+  },
+  'Off Market': {
+    color: '#64748b',
+    bg: 'linear-gradient(135deg, rgba(100,116,139,0.08) 0%, rgba(71,85,105,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#64748b', 0.2)}`,
+    icon: 'visibility_off',
+    label: 'Off Market'
   }
 };
 

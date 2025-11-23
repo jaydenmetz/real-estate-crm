@@ -6,7 +6,7 @@ import {
   Home as HomeIcon,
 } from '@mui/icons-material';
 import { alpha } from '@mui/material';
-import { LISTING_STATUS_COLORS } from '../../constants/listingConstants';
+import { getStatusConfig } from '../../../../../constants/listingConfig';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
 
@@ -48,9 +48,9 @@ const listingCardConfig = {
   status: {
     field: 'listing_status',
     getConfig: (status) => {
-      const config = LISTING_STATUS_COLORS[status] || LISTING_STATUS_COLORS.Active;
+      const config = getStatusConfig(status);
       return {
-        label: status || 'Active',
+        label: config.label,
         color: config.color,
         bg: config.bg,
       };
