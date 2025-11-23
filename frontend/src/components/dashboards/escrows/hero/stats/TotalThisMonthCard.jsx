@@ -51,7 +51,7 @@ const TotalThisMonthCard = ({
   return (
     <DashboardStatCard
       icon={icon || defaultIcon}
-      title="TOTAL THIS MONTH'S"
+      title="TOTAL THIS MONTH"
       value={count}
       format="number"
       color="#42a5f5"

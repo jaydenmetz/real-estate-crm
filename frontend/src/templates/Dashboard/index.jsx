@@ -51,8 +51,22 @@ export const DashboardTemplate = ({
   // Modal state
   const [newItemModalOpen, setNewItemModalOpen] = useState(false);
 
+  // Helper function: Get default date range for a status
+  const getDefaultDateRange = (status) => {
+    // Check localStorage first (user's last selection for this status)
+    const savedFilter = localStorage.getItem(`${config.entity.namePlural}DateFilter_${status}`);
+    if (savedFilter && savedFilter !== 'null') return savedFilter;
+
+    // Status-specific defaults (if no saved preference)
+    if (status === 'Active') return '1M'; // 1 Month for Active
+    if (status === 'Closed') return '1Y'; // 1 Year for Closed
+    if (status === 'Cancelled') return '1Y'; // 1 Year for Cancelled
+    return null; // All tab and others = no filtering
+  };
+
   // Date range states for the hero
-  const [dateRangeFilter, setDateRangeFilter] = useState(null); // Default to null (no date filtering)
+  // Initialize based on current status (will be updated when status changes)
+  const [dateRangeFilter, setDateRangeFilter] = useState(null);
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // For YTD year selector
@@ -267,6 +281,28 @@ export const DashboardTemplate = ({
     // Update the status
     setSelectedStatusOriginal(newStatus);
   };
+
+  // Initialize date range when component mounts or status changes
+  useEffect(() => {
+    const defaultRange = getDefaultDateRange(selectedStatus);
+    setDateRangeFilter(defaultRange);
+    // Clear custom dates when switching status tabs
+    setCustomStartDate(null);
+    setCustomEndDate(null);
+  }, [selectedStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save date range preference to localStorage when it changes
+  useEffect(() => {
+    if (dateRangeFilter) {
+      localStorage.setItem(
+        `${config.entity.namePlural}DateFilter_${selectedStatus}`,
+        dateRangeFilter
+      );
+    } else {
+      // Remove from localStorage if filter is cleared
+      localStorage.removeItem(`${config.entity.namePlural}DateFilter_${selectedStatus}`);
+    }
+  }, [dateRangeFilter, selectedStatus, config.entity.namePlural]);
 
   // Helper to detect preset ranges (matching Clients)
   const detectPresetRange = (startDate, endDate) => {
