@@ -49,10 +49,13 @@ const listingCardConfig = {
     field: 'listing_status',
     getConfig: (status) => {
       const config = getStatusConfig(status);
+      // CardTemplate expects solid colors for bg, not gradients
+      // Extract solid color from gradient or use color with alpha
+      const solidBg = alpha(config.color, 0.1);
       return {
         label: config.label,
         color: config.color,
-        bg: config.bg,
+        bg: solidBg,
       };
     },
     editable: true,
