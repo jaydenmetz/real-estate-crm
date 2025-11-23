@@ -1,10 +1,9 @@
 /**
- * Listing Editors Barrel Export
- * Centralized export for all listing-specific inline editors
+ * Listing Dashboard Editors
+ * Export all listing-specific editor components
  */
 
-export { EditPropertyAddress } from './EditPropertyAddress';
-export { EditListPrice } from './EditListPrice';
+export { EditListedPrice } from './EditListedPrice';
+export { EditListingCommission } from './EditListingCommission';
 export { EditListingDate } from './EditListingDate';
 export { EditExpirationDate } from './EditExpirationDate';
-export { EditCommissionAmount } from './EditCommissionAmount';

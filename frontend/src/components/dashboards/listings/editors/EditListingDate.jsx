@@ -2,13 +2,13 @@ import React from 'react';
 import { EditDate } from '../../../common/editors/fields/EditDate';
 
 /**
- * Listing-specific Beginning Date Editor
+ * Listing-specific Listing Date Editor (start date)
  * Wraps EditDate with listing-specific context and styling
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void
- * @param {string} value - Current listing date (ISO format)
+ * @param {function} onSave - Save handler (newDateValue) => void
+ * @param {string|Date} value - Current listing date
  */
 export const EditListingDate = ({ open, onClose, onSave, value }) => {
   return (
@@ -16,9 +16,9 @@ export const EditListingDate = ({ open, onClose, onSave, value }) => {
       open={open}
       onClose={onClose}
       onSave={onSave}
-      label="Beginning Date"
+      label="Listing Date"
       value={value}
-      color="#3b82f6" // Blue theme for listings
+      color="#3b82f6" // Blue theme for listing date
     />
   );
 };

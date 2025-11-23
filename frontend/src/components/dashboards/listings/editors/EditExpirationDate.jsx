@@ -2,15 +2,17 @@ import React from 'react';
 import { EditDate } from '../../../common/editors/fields/EditDate';
 
 /**
- * Listing-specific Expiration Date Editor
+ * Listing-specific Expiration Date Editor (end date)
  * Wraps EditDate with listing-specific context and styling
+ * Includes minDate validation to prevent expiration before listing date
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void
- * @param {string} value - Current expiration date (ISO format)
+ * @param {function} onSave - Save handler (newDateValue) => void
+ * @param {string|Date} value - Current expiration date
+ * @param {string|Date} minDate - Minimum selectable date (listing_date)
  */
-export const EditExpirationDate = ({ open, onClose, onSave, value }) => {
+export const EditExpirationDate = ({ open, onClose, onSave, value, minDate }) => {
   return (
     <EditDate
       open={open}
@@ -18,7 +20,8 @@ export const EditExpirationDate = ({ open, onClose, onSave, value }) => {
       onSave={onSave}
       label="Expiration Date"
       value={value}
-      color="#3b82f6" // Blue theme for listings
+      minDate={minDate} // Prevent expiration before listing date
+      color="#8b5cf6" // Purple theme for expiration date
     />
   );
 };
