@@ -25,4 +25,4 @@ export const escrowViewModes = [
   }
 ];
 
-export const escrowDefaultViewMode = 'list';
+export const escrowDefaultViewMode = 'card';
