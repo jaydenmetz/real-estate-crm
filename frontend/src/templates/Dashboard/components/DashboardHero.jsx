@@ -375,7 +375,15 @@ export const DashboardHero = ({
         </Box>
 
         {/* Main Content Row - Stats Grid + Action Buttons */}
-        <Grid container spacing={3} sx={{ flexGrow: 1, margin: 0, width: '100%' }}>
+        <Grid container spacing={3} sx={{
+          flexGrow: 1,
+          margin: 0,
+          width: '100%',
+          // Center the grid + AI manager in 1017-1499px range
+          '@media (min-width: 1017px) and (max-width: 1499px)': {
+            justifyContent: 'center',
+          },
+        }}>
 
           {/* Stats Cards Grid */}
           <Grid item
@@ -408,10 +416,10 @@ export const DashboardHero = ({
                 justifyContent: 'center',
               },
 
-              // 1017-1499px: 2×2 grid, cards flexible 225-275px, left-aligned, AI right
-              '@media (min-width: 1017px)': {
-                gridTemplateColumns: 'repeat(auto-fit, minmax(225px, 275px))',
-                justifyContent: 'flex-start',
+              // 1017-1499px: 2×2 grid, cards flexible 225-275px, centered with AI manager
+              '@media (min-width: 1017px) and (max-width: 1499px)': {
+                gridTemplateColumns: 'repeat(2, minmax(225px, 275px))', // Force 2 columns
+                justifyContent: 'center',
               },
 
               // 1500px+: 1×4 row, cards flexible 225-275px, left-aligned, AI right
@@ -434,8 +442,13 @@ export const DashboardHero = ({
                   justifySelf: 'center',
                 },
 
-                // 1017px+: Left-align when AI is to the right
-                '@media (min-width: 1017px)': {
+                // 1017-1499px: Keep centered in 2×2 grid with AI manager
+                '@media (min-width: 1017px) and (max-width: 1499px)': {
+                  justifySelf: 'center',
+                },
+
+                // 1500px+: Left-align in 1×4 row with AI manager
+                '@media (min-width: 1500px)': {
                   justifySelf: 'start',
                 },
               },
