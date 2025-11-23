@@ -218,4 +218,5 @@ const StatusTabWithDropdown = ({
   );
 };
 
+export { StatusTabWithDropdown };
 export default StatusTabWithDropdown;
