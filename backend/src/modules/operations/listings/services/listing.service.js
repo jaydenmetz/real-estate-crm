@@ -26,9 +26,9 @@ class ListingsService {
   static get validStatusTransitions() {
     return {
       'Coming Soon': ['Active', 'Cancelled'],
-      Active: ['Pending', 'Sold', 'Expired', 'Cancelled', 'Withdrawn'],
-      Pending: ['Active', 'Sold', 'Cancelled'],
-      Sold: [], // Terminal state
+      Active: ['Pending', 'Closed', 'Expired', 'Cancelled', 'Withdrawn'],
+      Pending: ['Active', 'Closed', 'Cancelled'],
+      Closed: [], // Terminal state
       Expired: ['Active', 'Withdrawn'],
       Cancelled: ['Active'],
       Withdrawn: ['Active'],

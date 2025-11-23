@@ -444,7 +444,7 @@ router.get('/health/analytics', authenticate, async (req, res) => {
       SELECT
         COUNT(*) FILTER (WHERE status = 'Active' AND deleted_at IS NULL) as active_listings,
         COUNT(*) FILTER (WHERE status = 'Pending' AND deleted_at IS NULL) as pending_listings,
-        COUNT(*) FILTER (WHERE status = 'Sold' AND deleted_at IS NULL) as sold_listings,
+        COUNT(*) FILTER (WHERE status = 'Closed' AND deleted_at IS NULL) as closed_listings,
         COUNT(*) FILTER (WHERE status = 'Expired' AND deleted_at IS NULL) as expired_listings,
         COUNT(*) FILTER (WHERE status = 'Withdrawn' AND deleted_at IS NULL) as withdrawn_listings,
         COUNT(*) FILTER (WHERE listing_date > CURRENT_DATE - INTERVAL '7 days' AND deleted_at IS NULL) as new_this_week,
@@ -473,7 +473,7 @@ router.get('/health/analytics', authenticate, async (req, res) => {
         PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY EXTRACT(epoch FROM (COALESCE(sold_date, CURRENT_DATE) - listing_date))/86400)
           FILTER (WHERE deleted_at IS NULL) as median_days_on_market,
         MIN(EXTRACT(epoch FROM (COALESCE(sold_date, CURRENT_DATE) - listing_date))/86400)::INT
-          FILTER (WHERE status = 'Sold' AND deleted_at IS NULL) as fastest_sale_days,
+          FILTER (WHERE status = 'Closed' AND deleted_at IS NULL) as fastest_sale_days,
         MAX(EXTRACT(epoch FROM (CURRENT_DATE - listing_date))/86400)::INT
           FILTER (WHERE status = 'Active' AND deleted_at IS NULL) as longest_active_days
       FROM listings
@@ -656,7 +656,7 @@ async function getListingMetrics(user) {
         COUNT(*) as total_listings,
         COUNT(*) FILTER (WHERE status = 'Active') as active,
         COUNT(*) FILTER (WHERE status = 'Pending') as pending,
-        COUNT(*) FILTER (WHERE status = 'Sold') as sold,
+        COUNT(*) FILTER (WHERE status = 'Closed') as closed,
         AVG(price) FILTER (WHERE status = 'Active') as avg_price,
         AVG(EXTRACT(epoch FROM (NOW() - listing_date))/86400)::INT FILTER (WHERE status = 'Active') as avg_dom
       FROM listings

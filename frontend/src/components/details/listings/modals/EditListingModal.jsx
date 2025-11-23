@@ -96,9 +96,10 @@ const ListingForm = ({ open, onClose, listing, onSuccess }) => {
   const statusOptions = [
     'Active',
     'Pending',
-    'Sold',
+    'Closed',
     'Withdrawn',
     'Expired',
+    'Cancelled',
   ];
 
   return (

@@ -17,7 +17,7 @@ function formatListingStatus(status) {
     'Coming Soon': 'Coming Soon',
     'Active': 'Active',
     'Pending': 'Pending',
-    'Sold': 'Sold',
+    'Closed': 'Closed',
     'Expired': 'Expired',
     'Withdrawn': 'Withdrawn',
     'Cancelled': 'Cancelled',

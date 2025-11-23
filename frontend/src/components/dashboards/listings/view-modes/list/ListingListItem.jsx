@@ -5,7 +5,7 @@ import {
   Cancel,
   Home as HomeIcon,
 } from '@mui/icons-material';
-import { LISTING_STATUS_COLORS } from '../../constants/listingConstants';
+import { getStatusConfig } from '../../../../../constants/listingConfig';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
 
@@ -47,7 +47,7 @@ const listingListConfig = {
   progress: {
     getValue: (listing) => 0,
     getColor: (listing) => {
-      const config = LISTING_STATUS_COLORS[listing.listing_status] || LISTING_STATUS_COLORS.Active;
+      const config = getStatusConfig(listing.listing_status);
       return config.bg;
     },
   },
@@ -56,9 +56,9 @@ const listingListConfig = {
   status: {
     field: 'listing_status',
     getConfig: (status) => {
-      const config = LISTING_STATUS_COLORS[status] || LISTING_STATUS_COLORS.Active;
+      const config = getStatusConfig(status);
       return {
-        label: status || 'Active',
+        label: config.label,
         color: config.color,
         bg: config.bg,
       };
@@ -66,25 +66,31 @@ const listingListConfig = {
     editable: true,
     options: [
       {
-        value: 'active',
+        value: 'Active',
         label: 'Active',
         icon: CheckCircle,
         color: '#10b981',
       },
       {
-        value: 'pending',
+        value: 'Pending',
         label: 'Pending',
         icon: CheckCircle,
         color: '#f59e0b',
       },
       {
-        value: 'sold',
-        label: 'Sold',
+        value: 'Closed',
+        label: 'Closed',
         icon: CheckCircle,
-        color: '#3b82f6',
+        color: '#6366f1',
       },
       {
-        value: 'cancelled',
+        value: 'Expired',
+        label: 'Expired',
+        icon: CheckCircle,
+        color: '#94a3b8',
+      },
+      {
+        value: 'Cancelled',
         label: 'Cancelled',
         icon: Cancel,
         color: '#ef4444',

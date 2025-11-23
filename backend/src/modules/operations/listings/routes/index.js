@@ -27,7 +27,7 @@ const createValidation = [
 
 const updateValidation = [
   body('listPrice').optional().isNumeric(),
-  body('listingStatus').optional().isIn(['Coming Soon', 'Active', 'Pending', 'Sold', 'Expired', 'Withdrawn', 'Cancelled']),
+  body('listingStatus').optional().isIn(['Coming Soon', 'Active', 'Pending', 'Closed', 'Expired', 'Withdrawn', 'Cancelled']),
 ];
 
 // Routes with Phase 2 authorization

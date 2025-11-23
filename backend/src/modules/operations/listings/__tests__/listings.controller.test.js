@@ -393,7 +393,7 @@ describe('ListingsController', () => {
 
     // TEST 17: Reject invalid status transition
     it('should reject invalid status transition', async () => {
-      query.mockResolvedValueOnce({ rows: [{ listing_status: 'Sold' }] }); // Terminal state
+      query.mockResolvedValueOnce({ rows: [{ listing_status: 'Closed' }] }); // Terminal state
 
       mockReq.params = { id: 'listing-1' };
       mockReq.body = { status: 'Active' };

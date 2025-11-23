@@ -7,7 +7,7 @@ export const LISTING_STATUS = {
   COMING_SOON: 'Coming Soon',
   ACTIVE: 'Active',
   PENDING: 'Pending',
-  SOLD: 'Sold',
+  CLOSED: 'Closed',
   EXPIRED: 'Expired',
   CANCELLED: 'Cancelled',
   WITHDRAWN: 'Withdrawn',
@@ -18,7 +18,7 @@ export const LISTING_STATUS_LABELS = {
   [LISTING_STATUS.COMING_SOON]: 'Coming Soon',
   [LISTING_STATUS.ACTIVE]: 'Active',
   [LISTING_STATUS.PENDING]: 'Pending',
-  [LISTING_STATUS.SOLD]: 'Sold',
+  [LISTING_STATUS.CLOSED]: 'Closed',
   [LISTING_STATUS.EXPIRED]: 'Expired',
   [LISTING_STATUS.CANCELLED]: 'Cancelled',
   [LISTING_STATUS.WITHDRAWN]: 'Withdrawn',
@@ -38,7 +38,7 @@ export const LISTING_STATUS_COLORS = {
     color: '#f59e0b',
     bg: 'rgba(245, 158, 11, 0.1)',
   },
-  [LISTING_STATUS.SOLD]: {
+  [LISTING_STATUS.CLOSED]: {
     color: '#6366f1',
     bg: 'rgba(99, 102, 241, 0.1)',
   },
