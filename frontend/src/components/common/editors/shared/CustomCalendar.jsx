@@ -23,8 +23,9 @@ import { parseLocalDate } from '../../../../utils/safeDateUtils';
  * @param {Date|string} selectedDate - Currently selected date
  * @param {function} onSelectDate - Callback when date is clicked (Date) => void
  * @param {string} color - Theme color for the calendar
+ * @param {Date|string} minDate - Optional minimum selectable date (dates before this are disabled)
  */
-export const CustomCalendar = ({ selectedDate, onSelectDate, color = '#6366f1' }) => {
+export const CustomCalendar = ({ selectedDate, onSelectDate, color = '#6366f1', minDate = null }) => {
   const [currentMonth, setCurrentMonth] = useState(() => {
     if (selectedDate) {
       // Parse as local date to avoid timezone shifts (for DATE columns)
@@ -114,6 +115,11 @@ export const CustomCalendar = ({ selectedDate, onSelectDate, color = '#6366f1' }
       ? (typeof selectedDate === 'string' ? parseLocalDate(selectedDate) : selectedDate)
       : null;
 
+    // Parse minDate as local date if provided
+    const minDateObj = minDate
+      ? (typeof minDate === 'string' ? parseLocalDate(minDate) : minDate)
+      : null;
+
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
         const currentDay = day;
@@ -121,21 +127,26 @@ export const CustomCalendar = ({ selectedDate, onSelectDate, color = '#6366f1' }
         const isCurrentMonth = isSameMonth(day, monthStart);
         const isTodayDate = isToday(day);
 
+        // Check if date is before minDate (disabled)
+        const isBeforeMin = minDateObj && currentDay < minDateObj;
+        const isDisabled = isBeforeMin;
+
         days.push(
           <Grid item xs={12 / 7} key={day.toString()}>
             <Box
-              onClick={() => onSelectDate(currentDay)}
+              onClick={() => !isDisabled && onSelectDate(currentDay)}
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
                 py: 1.5,
-                cursor: 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
                 position: 'relative',
                 borderRadius: 1,
                 transition: 'all 0.2s',
+                opacity: isDisabled ? 0.4 : 1,
                 '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  backgroundColor: isDisabled ? 'transparent' : 'rgba(255,255,255,0.15)',
                 },
               }}
             >
@@ -143,6 +154,8 @@ export const CustomCalendar = ({ selectedDate, onSelectDate, color = '#6366f1' }
                 sx={{
                   color: isSelected
                     ? 'white'
+                    : isDisabled
+                    ? 'rgba(255,255,255,0.25)' // Same as non-current month dates
                     : isCurrentMonth
                     ? 'rgba(255,255,255,0.9)'
                     : 'rgba(255,255,255,0.3)',

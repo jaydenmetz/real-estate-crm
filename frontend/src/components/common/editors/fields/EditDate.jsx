@@ -16,6 +16,7 @@ import { CustomCalendar } from '../shared/CustomCalendar';
  * @param {string} label - Field label (e.g., "Acceptance Date", "Listed Date")
  * @param {string|Date} value - Current date value (ISO string or Date object)
  * @param {string} color - Calendar color theme
+ * @param {Date|string} minDate - Optional minimum selectable date (for end date validation)
  */
 export const EditDate = ({
   open,
@@ -24,6 +25,7 @@ export const EditDate = ({
   label,
   value,
   color = '#6366f1',
+  minDate = null,
 }) => {
   const [editValue, setEditValue] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -175,6 +177,7 @@ export const EditDate = ({
           disabled={saving}
           inputProps={{
             max: '2099-12-31',
+            min: minDate ? format(typeof minDate === 'string' ? parseLocalDate(minDate) : minDate, 'yyyy-MM-dd') : undefined,
           }}
           sx={{
             '& .MuiOutlinedInput-root': {
@@ -213,6 +216,7 @@ export const EditDate = ({
           selectedDate={editValue}
           onSelectDate={handleCalendarSelect}
           color={color}
+          minDate={minDate}
         />
 
         {/* Action Buttons */}
