@@ -30,6 +30,7 @@ import {
   Archive as ArchiveIcon,
 } from '@mui/icons-material';
 import { BulkActionsButton } from './BulkActionsButton';
+import { StatusTabWithDropdown } from './StatusTabWithDropdown';
 
 export const DashboardNavigation = ({
   config,
@@ -126,9 +127,35 @@ export const DashboardNavigation = ({
                 },
               }}
             >
-              {statusTabs.filter(tab => tab.value !== 'archived').map(tab => (
-                <Tab key={tab.value} label={tab.label} value={tab.value} />
-              ))}
+              {statusTabs.filter(tab => tab.value !== 'archived').map(tab => {
+                // Check if tab has dropdown configuration (from new status system)
+                const hasDropdown = tab.statuses && tab.statuses.length > 0;
+
+                if (hasDropdown && config?.entity) {
+                  // Use StatusTabWithDropdown for status-configured tabs
+                  return (
+                    <StatusTabWithDropdown
+                      key={tab.id || tab.value}
+                      category={tab}
+                      entity={config.entity}
+                      isSelected={selectedStatus === tab.value}
+                      onCategoryClick={(categoryId) => {
+                        // Switch to category (show all statuses in category)
+                        onStatusChange(tab.value);
+                      }}
+                      onStatusClick={(statusId) => {
+                        // Filter by specific status
+                        onStatusChange(statusId);
+                      }}
+                      currentStatus={selectedStatus !== tab.value ? null : selectedStatus}
+                      value={tab.value}
+                    />
+                  );
+                }
+
+                // Regular tab (backward compatible)
+                return <Tab key={tab.value} label={tab.label} value={tab.value} />;
+              })}
             </Tabs>
           </Paper>
         </Box>
