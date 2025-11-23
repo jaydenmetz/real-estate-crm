@@ -130,14 +130,19 @@ class ListingsService {
     const sortColumn = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at';
     const order = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
-    // Get total count
-    const countQuery = `
-      SELECT COUNT(*) as total
+    // Get total count and stats (matching escrows pattern)
+    const statsQuery = `
+      SELECT
+        COUNT(*) as total,
+        COALESCE(SUM(l.list_price::numeric), 0) as total_volume,
+        COALESCE(SUM((l.list_price * l.total_commission / 100)::numeric), 0) as total_commission
       FROM listings l
       ${whereClause}
     `;
-    const countResult = await query(countQuery, params);
-    const total = parseInt(countResult.rows[0].total);
+    const statsResult = await query(statsQuery, params);
+    const total = parseInt(statsResult.rows[0]?.total || 0);
+    const totalVolume = parseFloat(statsResult.rows[0]?.total_volume || 0);
+    const totalCommission = parseFloat(statsResult.rows[0]?.total_commission || 0);
 
     // Get listings with pagination (JOIN with users to get agent name)
     params.push(limit, offset);
@@ -177,6 +182,11 @@ class ListingsService {
 
     return {
       listings: result.rows,
+      stats: {
+        total,
+        totalVolume,
+        totalCommission,
+      },
       pagination: {
         total,
         page: parseInt(page),
