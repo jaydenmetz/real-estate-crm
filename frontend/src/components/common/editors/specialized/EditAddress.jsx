@@ -316,7 +316,7 @@ export const EditAddress = ({
               letterSpacing: '0.5px',
             }}
           >
-            Street Address
+            {selectedAddress || canonicalAddress ? 'Display Name' : 'Street Address'}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1.5 }}>
             <Box sx={{ flex: 1 }}>
