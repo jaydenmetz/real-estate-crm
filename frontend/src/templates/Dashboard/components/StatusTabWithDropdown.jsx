@@ -7,7 +7,7 @@
  * Features:
  * - Click tab when NOT selected: Switch to that category (all statuses)
  * - Click tab when ALREADY selected: Open dropdown to filter by specific status
- * - Dropdown shows: Category Name + Divider + Status List
+ * - Dropdown shows: "All [Category]" option + Divider + Individual status options
  * - Works with status configuration system
  */
 
@@ -16,7 +16,6 @@ import {
   Tab,
   Menu,
   MenuItem,
-  ListSubheader,
   Divider,
   Box,
   Typography,
@@ -138,21 +137,6 @@ const StatusTabWithDropdown = ({
           },
         }}
       >
-        {/* Header: Category Name */}
-        <ListSubheader
-          sx={{
-            lineHeight: '36px',
-            fontWeight: 600,
-            fontSize: '0.875rem',
-            color: 'text.primary',
-            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
-          }}
-        >
-          {dropdown.header}
-        </ListSubheader>
-
-        <Divider sx={{ my: 0.5 }} />
-
         {/* Option: View All in Category */}
         <MenuItem
           onClick={handleCategorySelect}
