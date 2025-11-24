@@ -87,7 +87,8 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
       }
 
       // Add status filter
-      if (selectedStatus !== 'All') {
+      // Skip if "All" or starts with "All " (e.g., "All Escrows", "All Listings")
+      if (selectedStatus !== 'All' && !selectedStatus.startsWith('All ')) {
         // Extract actual status from format "TabValue:StatusId"
         // Example: "All Escrows:Active" → "Active"
         const actualStatus = selectedStatus.includes(':')
