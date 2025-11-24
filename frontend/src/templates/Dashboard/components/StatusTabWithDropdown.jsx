@@ -177,7 +177,7 @@ const StatusTabWithDropdown = ({
               }}
             />
             <Typography variant="body2" sx={{ fontWeight: !currentStatus ? 600 : 400 }}>
-              All {category.label}
+              {category.label.startsWith('All') ? category.label : `All ${category.label}`}
             </Typography>
           </Box>
         </MenuItem>
