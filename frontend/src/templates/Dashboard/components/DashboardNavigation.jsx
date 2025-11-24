@@ -127,7 +127,7 @@ export const DashboardNavigation = ({
                 },
               }}
             >
-              {statusTabs.filter(tab => tab.value !== 'archived').map(tab => {
+              {statusTabs.filter(tab => tab.value !== 'archived').map((tab, index, allTabs) => {
                 // Check if tab has dropdown configuration (from new status system)
                 const hasDropdown = tab.statuses && tab.statuses.length > 0;
 
@@ -148,7 +148,22 @@ export const DashboardNavigation = ({
                 if (hasDropdown && entityName) {
                   // Check if current selected status belongs to this category
                   const statusBelongsToCategory = tab.statuses?.includes(selectedStatus);
-                  const isTabSelected = selectedStatus === tab.value || statusBelongsToCategory;
+
+                  // Check if there's an "All" tab that also contains this status
+                  const allTab = allTabs.find(t =>
+                    t.label?.startsWith('All') && t.statuses?.includes(selectedStatus)
+                  );
+
+                  // Priority: If status belongs to "All" tab, only "All" should be selected
+                  // Otherwise, select this tab if status belongs to it
+                  const isTabSelected = selectedStatus === tab.value ||
+                    (statusBelongsToCategory && (!allTab || tab.label?.startsWith('All')));
+
+                  // For MUI Tabs value matching: use the selectedStatus if it belongs to this category,
+                  // otherwise use the tab's default value
+                  const tabValue = (statusBelongsToCategory && (!allTab || tab.label?.startsWith('All')))
+                    ? selectedStatus
+                    : tab.value;
 
                   // Use StatusTabWithDropdown for status-configured tabs
                   return (
@@ -166,7 +181,7 @@ export const DashboardNavigation = ({
                         onStatusChange(statusId);
                       }}
                       currentStatus={statusBelongsToCategory ? selectedStatus : null}
-                      value={tab.value}
+                      value={tabValue}
                     />
                   );
                 }
