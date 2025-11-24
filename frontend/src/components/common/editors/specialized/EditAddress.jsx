@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
-import { Check, Close, LocationOn, ContentCopy, Apple, Map } from '@mui/icons-material';
+import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, TextField, InputAdornment } from '@mui/material';
+import { Check, Close, LocationOn, ContentCopy, Apple, Map, Tag } from '@mui/icons-material';
 import { ModalDialog } from '../shared/ModalDialog';
 import { AddressInput } from '../shared/AddressInput';
 
@@ -25,6 +25,7 @@ export const EditAddress = ({
 }) => {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [currentInputText, setCurrentInputText] = useState(''); // Track text input changes
+  const [unitNumber, setUnitNumber] = useState(''); // Track unit number
   const [saving, setSaving] = useState(false);
   const [addressMenuAnchor, setAddressMenuAnchor] = useState(null);
 
@@ -61,11 +62,19 @@ export const EditAddress = ({
   const displayAddress = getDisplayAddress();
   const locationSubtitle = getLocationSubtitle();
 
-  // Reset when dialog closes
+  // Reset when dialog closes or extract unit number from existing address
   useEffect(() => {
     if (!open) {
       setSelectedAddress(null);
       setCurrentInputText('');
+      setUnitNumber('');
+    } else {
+      // Extract unit number from display address if it exists (e.g., "123 Main St #9")
+      const display = getDisplayAddress();
+      const unitMatch = display.match(/#(\d+)$/);
+      if (unitMatch) {
+        setUnitNumber(unitMatch[1]);
+      }
     }
   }, [open]);
 
@@ -77,9 +86,22 @@ export const EditAddress = ({
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Helper to add unit number to address if provided
+      const addUnitNumber = (baseAddress) => {
+        if (!unitNumber || !unitNumber.trim()) return baseAddress;
+        // Remove existing unit number if present
+        const cleaned = baseAddress.replace(/#\d+$/, '').trim();
+        return `${cleaned} #${unitNumber.trim()}`;
+      };
+
       // If user selected from autocomplete, use full address object
       if (selectedAddress) {
-        await onSave(selectedAddress);
+        // Add unit number to display_address if provided
+        const updatedAddress = {
+          ...selectedAddress,
+          display_address: addUnitNumber(selectedAddress.display_address || selectedAddress.property_address),
+        };
+        await onSave(updatedAddress);
       }
       // If user just typed text without selecting, save as display_address only
       else if (currentInputText && currentInputText.trim() !== displayAddress) {
@@ -87,11 +109,25 @@ export const EditAddress = ({
         const addressUpdate = typeof value === 'object'
           ? {
               ...value,
-              display_address: currentInputText.trim(),
+              display_address: addUnitNumber(currentInputText.trim()),
             }
           : {
               property_address: value || '',
-              display_address: currentInputText.trim(),
+              display_address: addUnitNumber(currentInputText.trim()),
+            };
+        await onSave(addressUpdate);
+      }
+      // If only unit number changed
+      else if (unitNumber !== (displayAddress.match(/#(\d+)$/)?.[1] || '')) {
+        const baseAddress = selectedAddress?.display_address || selectedAddress?.property_address || currentInputText || displayAddress;
+        const addressUpdate = typeof value === 'object'
+          ? {
+              ...value,
+              display_address: addUnitNumber(baseAddress),
+            }
+          : {
+              property_address: value || '',
+              display_address: addUnitNumber(baseAddress),
             };
         await onSave(addressUpdate);
       } else {
@@ -267,29 +303,84 @@ export const EditAddress = ({
         </Box>
 
         {/* Display Name Input (Editable) */}
-        <Typography
-          variant="caption"
-          sx={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: 'rgba(255,255,255,0.7)',
-            mb: 1,
-            display: 'block',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-          }}
-        >
-          Display Name
-        </Typography>
-        <AddressInput
-          value={displayAddress} // Pass extracted string address, not full object
-          onChange={setSelectedAddress}
-          onInputChange={handleInputChange} // Track text changes for enabling save button
-          onKeyDown={handleKeyPress}
-          disabled={saving}
-          placeholder="Start typing address or customize display name..."
-          autoFocus={true}
-        />
+        <Box sx={{ mb: 2 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontSize: 11,
+              fontWeight: 600,
+              color: 'rgba(255,255,255,0.7)',
+              mb: 1,
+              display: 'block',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}
+          >
+            Street Address
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <AddressInput
+                value={displayAddress.replace(/#\d+$/, '').trim()} // Remove unit number from display
+                onChange={setSelectedAddress}
+                onInputChange={handleInputChange}
+                onKeyDown={handleKeyPress}
+                disabled={saving}
+                placeholder="Start typing address..."
+                autoFocus={true}
+                hideLabel={true} // Tell AddressInput not to show its own label
+              />
+            </Box>
+            <Box sx={{ width: '120px' }}>
+              <TextField
+                value={unitNumber}
+                onChange={(e) => setUnitNumber(e.target.value)}
+                onKeyDown={handleKeyPress}
+                disabled={saving}
+                placeholder="Unit #"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Tag sx={{ color: 'white', fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                    borderRadius: 2,
+                    minHeight: '60px',
+                    '& fieldset': {
+                      borderColor: 'rgba(255,255,255,0.3)',
+                      borderWidth: 2,
+                    },
+                    '&:hover fieldset': {
+                      borderColor: saving ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.5)',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'white',
+                    },
+                    '&.Mui-disabled': {
+                      backgroundColor: 'rgba(255,255,255,0.05)',
+                      '& fieldset': {
+                        borderColor: 'rgba(255,255,255,0.1)',
+                      },
+                    },
+                  },
+                  '& .MuiInputBase-input': {
+                    color: 'white',
+                    fontSize: '15px',
+                    fontWeight: 500,
+                    '&::placeholder': {
+                      color: 'rgba(255,255,255,0.5)',
+                      opacity: 1,
+                    },
+                  },
+                }}
+              />
+            </Box>
+          </Box>
+        </Box>
 
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
@@ -320,7 +411,12 @@ export const EditAddress = ({
               e.stopPropagation();
               handleSave();
             }}
-            disabled={saving || (!selectedAddress && (!currentInputText || currentInputText.trim() === displayAddress))}
+            disabled={
+              saving ||
+              (!selectedAddress &&
+               (!currentInputText || currentInputText.trim() === displayAddress) &&
+               unitNumber === (displayAddress.match(/#(\d+)$/)?.[1] || ''))
+            }
             sx={{
               width: 48,
               height: 48,

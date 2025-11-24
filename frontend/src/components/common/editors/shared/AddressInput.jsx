@@ -22,6 +22,7 @@ import { useAuth } from '../../../../contexts/AuthContext';
  * @param {boolean} disabled - Disabled state
  * @param {string} placeholder - Placeholder text
  * @param {boolean} autoFocus - Auto focus on mount
+ * @param {boolean} hideLabel - Hide the "Display Name" label (default: false)
  */
 export const AddressInput = ({
   value,
@@ -31,6 +32,7 @@ export const AddressInput = ({
   disabled = false,
   placeholder = 'Enter property address',
   autoFocus = true,
+  hideLabel = false,
 }) => {
   const { user } = useAuth();
   const inputRef = useRef(null);
@@ -465,8 +467,8 @@ export const AddressInput = ({
 
   return (
     <Box sx={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
-      {/* Display Name Label - shows after autocomplete selection */}
-      {selectedPlaceData && (
+      {/* Display Name Label - shows after autocomplete selection (unless hideLabel is true) */}
+      {!hideLabel && selectedPlaceData && (
         <Typography
           variant="caption"
           sx={{
