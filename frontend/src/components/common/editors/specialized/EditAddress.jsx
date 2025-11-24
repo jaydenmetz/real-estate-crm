@@ -200,7 +200,7 @@ export const EditAddress = ({
   };
 
   return (
-    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={600}>
+    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520}>
       <Box onClick={(e) => e.stopPropagation()}>
         {/* Canonical Address (Read-Only Display - ALWAYS shows original property_address from DB) */}
         <Box sx={{ mb: 3 }}>
@@ -318,7 +318,7 @@ export const EditAddress = ({
           >
             Street Address
           </Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 1.5 }}>
             <Box sx={{ flex: 1 }}>
               <AddressInput
                 value={displayAddress.replace(/#\d+$/, '').trim()} // Remove unit number from display
@@ -331,17 +331,17 @@ export const EditAddress = ({
                 hideLabel={true} // Tell AddressInput not to show its own label
               />
             </Box>
-            <Box sx={{ width: '90px' }}>
+            <Box sx={{ width: '75px' }}>
               <TextField
                 value={unitNumber}
                 onChange={(e) => setUnitNumber(e.target.value)}
                 onKeyDown={handleKeyPress}
                 disabled={saving}
-                placeholder="Unit #"
+                placeholder="#"
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Tag sx={{ color: 'white', fontSize: 20 }} />
+                      <Tag sx={{ color: 'white', fontSize: 18 }} />
                     </InputAdornment>
                   ),
                 }}
@@ -350,6 +350,7 @@ export const EditAddress = ({
                     backgroundColor: 'rgba(255,255,255,0.15)',
                     borderRadius: 2,
                     minHeight: '60px',
+                    paddingLeft: '8px',
                     '& fieldset': {
                       borderColor: 'rgba(255,255,255,0.3)',
                       borderWidth: 2,
