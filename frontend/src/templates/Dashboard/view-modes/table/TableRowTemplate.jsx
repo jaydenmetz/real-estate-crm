@@ -225,8 +225,8 @@ const TableRowTemplate = React.memo(({
             ? column.formatter(columnValue, data)
             : columnValue;
 
-          // Toggle logic
-          const isToggled = toggleStates[`column_${idx}`];
+          // Toggle logic: true = show value, false/undefined = mask value
+          const isToggled = toggleStates[`column_${idx}`] ?? true; // Default to shown
           const displayValue = column.toggle && !isToggled
             ? column.toggle.maskFn(columnValue)
             : formattedValue;

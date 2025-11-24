@@ -508,7 +508,8 @@ const CardTemplate = React.memo(({
                     ? metric.formatter(metricValue, data)
                     : metricValue;
 
-                  const isToggled = toggleStates[`metric_${idx}`];
+                  // Toggle state: true = show value, false/undefined = mask value
+                  const isToggled = toggleStates[`metric_${idx}`] ?? true; // Default to shown
                   const displayValue = metric.toggle && !isToggled
                     ? metric.toggle.maskFn(metricValue)
                     : formattedValue;
