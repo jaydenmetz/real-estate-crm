@@ -149,19 +149,22 @@ export const DashboardNavigation = ({
                   // Check if current selected status belongs to this category
                   const statusBelongsToCategory = tab.statuses?.includes(selectedStatus);
 
-                  // Check if there's an "All" tab that also contains this status
-                  const allTab = allTabs.find(t =>
-                    t.label?.startsWith('All') && t.statuses?.includes(selectedStatus)
+                  // Check if there's a more-specific tab (non-"All") that also contains this status
+                  const specificTab = allTabs.find(t =>
+                    !t.label?.startsWith('All') &&
+                    t.statuses?.includes(selectedStatus) &&
+                    t.id !== tab.id
                   );
 
-                  // Priority: If status belongs to "All" tab, only "All" should be selected
-                  // Otherwise, select this tab if status belongs to it
+                  // Priority: Specific category tabs (Active, Closed, Cancelled) take priority over "All"
+                  // - If this is a specific tab and status belongs to it: SELECT IT
+                  // - If this is "All" tab and status belongs to it: only select if no specific tab has it
+                  const isSpecificTab = !tab.label?.startsWith('All');
                   const isTabSelected = selectedStatus === tab.value ||
-                    (statusBelongsToCategory && (!allTab || tab.label?.startsWith('All')));
+                    (statusBelongsToCategory && (isSpecificTab || !specificTab));
 
-                  // For MUI Tabs value matching: use the selectedStatus if it belongs to this category,
-                  // otherwise use the tab's default value
-                  const tabValue = (statusBelongsToCategory && (!allTab || tab.label?.startsWith('All')))
+                  // For MUI Tabs value matching: use the selectedStatus if this tab should be selected
+                  const tabValue = (statusBelongsToCategory && (isSpecificTab || !specificTab))
                     ? selectedStatus
                     : tab.value;
 
