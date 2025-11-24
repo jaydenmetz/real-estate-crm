@@ -423,19 +423,8 @@ export const AddressInput = ({
           // Pre-fill the input with the street address so user can edit it
           setAddressSearchText(streetAddress);
 
-          // DEBUG: Log the parsed address components
-          console.log('🗺️ AddressInput Google Places - parsed components:', {
-            streetAddress,
-            city,
-            state,
-            zipCode,
-            county,
-            latitude: place.geometry?.location?.lat(),
-            longitude: place.geometry?.location?.lng(),
-          });
-
           // Initially, both display and canonical are the same
-          const addressObject = {
+          onChange({
             property_address: streetAddress,
             property_address_display: streetAddress,
             city,
@@ -444,11 +433,7 @@ export const AddressInput = ({
             county,
             latitude: place.geometry?.location?.lat(),
             longitude: place.geometry?.location?.lng(),
-          };
-
-          console.log('🗺️ AddressInput Google Places - calling onChange with:', addressObject);
-
-          onChange(addressObject);
+          });
 
           // Reset session token
           sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();

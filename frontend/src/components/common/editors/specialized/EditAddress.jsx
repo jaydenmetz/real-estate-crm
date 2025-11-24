@@ -102,17 +102,11 @@ export const EditAddress = ({
 
       // If user selected from autocomplete, use full address object
       if (selectedAddress) {
-        // DEBUG: Log what we have in selectedAddress
-        console.log('🏠 EditAddress handleSave - selectedAddress:', selectedAddress);
-
         // Add unit number to display_address if provided
         const updatedAddress = {
           ...selectedAddress,
           display_address: addUnitNumber(selectedAddress.display_address || selectedAddress.property_address),
         };
-
-        console.log('🏠 EditAddress handleSave - updatedAddress (sending to onSave):', updatedAddress);
-
         await onSave(updatedAddress);
       }
       // If user just typed text without selecting, save as display_address only

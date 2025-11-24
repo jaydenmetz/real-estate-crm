@@ -91,11 +91,7 @@ const escrowCardConfig = {
       // addressData is the full object from EditAddress with all address components
       // Extract the individual fields to save to database
       // IMPORTANT: Never use addressData itself as fallback - it's the entire object!
-
-      // DEBUG: Log what we're receiving
-      console.log('📍 EditPropertyAddress onSave - addressData:', addressData);
-
-      const updatePayload = {
+      return {
         property_address: addressData.property_address || '',
         display_address: addressData.property_address_display || addressData.display_address || addressData.property_address || '',
         city: addressData.city || '',
@@ -105,10 +101,6 @@ const escrowCardConfig = {
         latitude: addressData.latitude || null,
         longitude: addressData.longitude || null,
       };
-
-      console.log('📍 EditPropertyAddress onSave - updatePayload:', updatePayload);
-
-      return updatePayload;
     },
   },
 
