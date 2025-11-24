@@ -396,7 +396,11 @@ export const AddressInput = ({
             const types = component.types;
             if (types.includes('street_number')) streetNumber = component.long_name;
             if (types.includes('route')) route = component.long_name;
+            // Try multiple city field types (locality, sublocality, postal_town)
             if (types.includes('locality')) city = component.long_name;
+            else if (!city && types.includes('sublocality')) city = component.long_name;
+            else if (!city && types.includes('postal_town')) city = component.long_name;
+            else if (!city && types.includes('administrative_area_level_3')) city = component.long_name; // Small towns
             if (types.includes('administrative_area_level_1')) state = component.short_name;
             if (types.includes('postal_code')) zipCode = component.long_name;
             if (types.includes('administrative_area_level_2')) county = component.long_name.replace(' County', '');
