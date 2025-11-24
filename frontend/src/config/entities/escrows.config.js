@@ -232,7 +232,7 @@ export const escrowsConfig = createEntityConfig({
 
     // Status Tabs Configuration
     statusTabs: escrowStatusTabs,
-    defaultStatus: 'Active',
+    defaultStatus: 'active', // Lowercase to match category ID
 
     // Scope Filter Configuration
     getScopeOptions: getEscrowScopeOptions,

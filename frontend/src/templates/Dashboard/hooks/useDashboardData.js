@@ -24,7 +24,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
 
     return isValidStatus
       ? saved
-      : (config.dashboard?.defaultStatus || config.dashboard?.statusTabs?.[0]?.value || 'All');
+      : (config.dashboard?.defaultStatus || config.dashboard?.statusTabs?.[0]?.value || 'all');
   });
 
   // Scope with localStorage persistence
