@@ -37,14 +37,31 @@ const StatusTabWithDropdown = ({
   const [anchorEl, setAnchorEl] = useState(null);
   const tabRef = useRef(null);
 
+  // Debug logging
+  console.log('StatusTabWithDropdown rendered:', {
+    categoryLabel: category?.label,
+    entity,
+    isSelected,
+    categoryStatuses: category?.statuses
+  });
+
   const handleTabClick = (event) => {
     event.stopPropagation();
 
+    console.log('Tab clicked:', {
+      categoryLabel: category?.label,
+      isSelected,
+      willShowDropdown: isSelected,
+      currentTarget: event.currentTarget
+    });
+
     if (isSelected) {
       // Tab is already selected - show dropdown
+      console.log('Opening dropdown...');
       setAnchorEl(event.currentTarget);
     } else {
       // Tab is not selected - switch to this category
+      console.log('Switching to category:', category.id);
       onCategoryClick(category.id);
     }
   };

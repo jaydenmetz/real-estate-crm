@@ -134,6 +134,17 @@ export const DashboardNavigation = ({
                 // Get entity name (could be config.entity.namePlural or config.entity)
                 const entityName = config?.entity?.namePlural || config?.entity;
 
+                // Debug logging
+                console.log('Tab Debug:', {
+                  tabLabel: tab.label,
+                  tabValue: tab.value,
+                  hasStatuses: !!tab.statuses,
+                  statusesLength: tab.statuses?.length,
+                  hasDropdown,
+                  entityName,
+                  willUseDropdown: hasDropdown && entityName
+                });
+
                 if (hasDropdown && entityName) {
                   // Use StatusTabWithDropdown for status-configured tabs
                   return (
