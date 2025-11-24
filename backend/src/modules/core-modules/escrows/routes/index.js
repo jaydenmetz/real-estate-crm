@@ -431,7 +431,7 @@ router.put(
 );
 
 // Archive (soft delete) escrow
-router.put(
+router.patch(
   '/:id/archive',
   [
     param('id').notEmpty().withMessage('Escrow ID is required'),
@@ -441,7 +441,7 @@ router.put(
 );
 
 // Restore archived escrow
-router.put(
+router.patch(
   '/:id/restore',
   [
     param('id').notEmpty().withMessage('Escrow ID is required'),
