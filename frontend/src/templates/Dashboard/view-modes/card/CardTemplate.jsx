@@ -31,17 +31,7 @@ import {
   getInitials,
   getStatusColor,
 } from '../../lib/utils/fieldRenderers';
-
-/**
- * Decode HTML entities in strings
- * Fixes display of special characters like & becoming &amp;
- */
-const decodeHTML = (html) => {
-  if (!html || typeof html !== 'string') return html;
-  const txt = document.createElement('textarea');
-  txt.innerHTML = html;
-  return txt.value;
-};
+import { decodeHTML } from '../../../../utils/htmlEntities';
 
 /**
  * CardTemplate - Fully featured card component with editing capabilities

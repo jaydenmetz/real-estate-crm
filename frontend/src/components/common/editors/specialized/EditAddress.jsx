@@ -3,6 +3,7 @@ import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText
 import { Check, Close, LocationOn, ContentCopy, Apple, Map, Tag } from '@mui/icons-material';
 import { ModalDialog } from '../shared/ModalDialog';
 import { AddressInput } from '../shared/AddressInput';
+import { decodeHTML, cleanTextForStorage } from '../../../../utils/htmlEntities';
 
 /**
  * Specialized Address Editor
@@ -87,11 +88,12 @@ export const EditAddress = ({
     setSaving(true);
     try {
       // Helper to add unit number to address if provided
+      // Also ensures text is clean (no HTML entities)
       const addUnitNumber = (baseAddress) => {
-        if (!unitNumber || !unitNumber.trim()) return baseAddress;
+        if (!unitNumber || !unitNumber.trim()) return cleanTextForStorage(baseAddress);
         // Remove existing unit number if present
         const cleaned = baseAddress.replace(/#\d+$/, '').trim();
-        return `${cleaned} #${unitNumber.trim()}`;
+        return cleanTextForStorage(`${cleaned} #${unitNumber.trim()}`);
       };
 
       // If user selected from autocomplete, use full address object
