@@ -23,6 +23,10 @@ export const escrowSortOptions = [
   {
     value: 'property_address',
     label: 'Property Address'
+  },
+  {
+    value: 'escrow_status',
+    label: 'Status'
   }
 ];
 

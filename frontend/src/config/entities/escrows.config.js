@@ -485,6 +485,17 @@ export const escrowsConfig = createEntityConfig({
         let aVal = a[field];
         let bVal = b[field];
 
+        // Handle status fields with priority order
+        if (field === 'escrow_status' || field === 'status') {
+          const statusPriority = {
+            'Active': 1,
+            'Closed': 2,
+            'Cancelled': 3
+          };
+          aVal = statusPriority[aVal] || 999;
+          bVal = statusPriority[bVal] || 999;
+        }
+
         // Handle date fields
         if (field.includes('date')) {
           aVal = new Date(aVal || 0);
