@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, TextField, InputAdornment } from '@mui/material';
-import { Check, Close, LocationOn, ContentCopy, Apple, Map, Tag } from '@mui/icons-material';
+import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, TextField, InputAdornment, Chip } from '@mui/material';
+import { Check, Close, LocationOn, ContentCopy, Apple, Map, Tag, Edit as EditIcon } from '@mui/icons-material';
 import { ModalDialog } from '../shared/ModalDialog';
 import { AddressInput } from '../shared/AddressInput';
 import { decodeHTML, cleanTextForStorage } from '../../../../utils/htmlEntities';
@@ -62,6 +62,13 @@ export const EditAddress = ({
   const canonicalAddress = getCanonicalAddress();
   const displayAddress = getDisplayAddress();
   const locationSubtitle = getLocationSubtitle();
+
+  // Get preview address (selectedAddress takes precedence for live preview)
+  const previewAddress = selectedAddress?.property_address || canonicalAddress;
+  const previewLocation = selectedAddress
+    ? [selectedAddress.city, selectedAddress.state, selectedAddress.zip_code].filter(Boolean).join(', ')
+    : locationSubtitle;
+  const hasUnsavedChanges = selectedAddress !== null || currentInputText.trim() !== displayAddress || unitNumber !== (displayAddress.match(/#(\d+)$/)?.[1] || '');
 
   // Reset when dialog closes or extract unit number from existing address
   useEffect(() => {
@@ -204,22 +211,40 @@ export const EditAddress = ({
   return (
     <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520}>
       <Box onClick={(e) => e.stopPropagation()}>
-        {/* Canonical Address (Read-Only Display - ALWAYS shows original property_address from DB) */}
+        {/* Property Address Preview (shows new selection immediately with "Pending" badge) */}
         <Box sx={{ mb: 3 }}>
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: 'rgba(255,255,255,0.7)',
-              mb: 0.5,
-              display: 'block',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
-            Property Address
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: 'rgba(255,255,255,0.7)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              Property Address
+            </Typography>
+            {hasUnsavedChanges && (
+              <Chip
+                icon={<EditIcon sx={{ fontSize: 12 }} />}
+                label="Pending"
+                size="small"
+                sx={{
+                  height: 18,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  backgroundColor: 'rgba(255,255,255,0.25)',
+                  color: 'white',
+                  '& .MuiChip-icon': {
+                    color: 'white',
+                    fontSize: 12,
+                  },
+                }}
+              />
+            )}
+          </Box>
           <Box
             onClick={handleAddressClick}
             sx={{
@@ -230,7 +255,9 @@ export const EditAddress = ({
               borderRadius: 2,
               p: 1,
               mx: -1,
-              transition: 'background-color 0.2s',
+              transition: 'all 0.3s',
+              border: hasUnsavedChanges ? '2px solid rgba(255,255,255,0.4)' : '2px solid transparent',
+              backgroundColor: hasUnsavedChanges ? 'rgba(255,255,255,0.08)' : 'transparent',
               '&:hover': {
                 backgroundColor: 'rgba(255,255,255,0.1)',
               },
@@ -247,10 +274,10 @@ export const EditAddress = ({
                   lineHeight: 1.4,
                 }}
               >
-                {canonicalAddress || 'No address set'}
+                {previewAddress || 'No address set'}
               </Typography>
-              {/* Show location from existing data ONLY (doesn't change when typing) */}
-              {locationSubtitle && (
+              {/* Show location preview (updates immediately when new address selected) */}
+              {previewLocation && (
                 <Typography
                   variant="caption"
                   sx={{
@@ -259,7 +286,7 @@ export const EditAddress = ({
                     mt: 0.5,
                   }}
                 >
-                  {locationSubtitle}
+                  {previewLocation}
                 </Typography>
               )}
             </Box>
