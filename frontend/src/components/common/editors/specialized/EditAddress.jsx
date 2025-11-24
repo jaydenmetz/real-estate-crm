@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, TextField, InputAdornment, Chip } from '@mui/material';
-import { Check, Close, LocationOn, ContentCopy, Apple, Map, Tag, Edit as EditIcon } from '@mui/icons-material';
+import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, TextField, InputAdornment } from '@mui/material';
+import { Check, Close, LocationOn, ContentCopy, Apple, Map, Tag } from '@mui/icons-material';
 import { ModalDialog } from '../shared/ModalDialog';
 import { AddressInput } from '../shared/AddressInput';
 import { decodeHTML, cleanTextForStorage } from '../../../../utils/htmlEntities';
@@ -333,38 +333,22 @@ export const EditAddress = ({
                 </Box>
               </Box>
 
-              {/* New Address (Pending) */}
+              {/* New Address */}
               <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: 'rgba(255,255,255,0.9)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    New Property Address
-                  </Typography>
-                  <Chip
-                    icon={<EditIcon sx={{ fontSize: 12 }} />}
-                    label="Pending"
-                    size="small"
-                    sx={{
-                      height: 18,
-                      fontSize: 10,
-                      fontWeight: 700,
-                      backgroundColor: 'rgba(255,255,255,0.25)',
-                      color: 'white',
-                      '& .MuiChip-icon': {
-                        color: 'white',
-                        fontSize: 12,
-                      },
-                    }}
-                  />
-                </Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: 'rgba(255,255,255,0.9)',
+                    mb: 0.5,
+                    display: 'block',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  New Property Address
+                </Typography>
                 <Box
                   onClick={handleAddressClick}
                   sx={{
