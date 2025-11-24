@@ -79,10 +79,10 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
       }
 
       // Add status filter
-      // Skip if "All" or starts with "All " (e.g., "All Escrows", "All Listings")
-      if (selectedStatus !== 'All' && !selectedStatus.startsWith('All ')) {
+      // Skip if "all" (shows all statuses regardless of entity)
+      if (selectedStatus !== 'all') {
         // Extract actual status from format "TabValue:StatusId"
-        // Example: "All Escrows:Active" → "Active"
+        // Example: "all:Active" → "Active"
         const actualStatus = selectedStatus.includes(':')
           ? selectedStatus.split(':')[1]
           : selectedStatus;
@@ -275,10 +275,9 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     let filtered = [...dataArray];
 
     // Apply status filter
-    // Skip if "All" or starts with "All " (e.g., "All Escrows", "All Listings")
+    // Skip if "all" (shows all statuses) or "archived"
     if (selectedStatus?.toLowerCase() !== 'all' &&
-        selectedStatus?.toLowerCase() !== 'archived' &&
-        !selectedStatus?.toLowerCase().startsWith('all ')) {
+        selectedStatus?.toLowerCase() !== 'archived') {
 
       // Extract actual status if in format "TabValue:StatusId"
       const actualStatus = selectedStatus.includes(':')

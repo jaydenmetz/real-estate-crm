@@ -306,8 +306,8 @@ export const getEntityTabs = (entity) => {
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map(category => ({
       id: category.id,
-      value: category.label,
-      label: category.label,
+      value: category.id, // Use ID for consistency across entities ("all", "active", "closed")
+      label: category.label, // Display label can be entity-specific ("All Escrows", "All Listings")
       displayName: category.displayName,
       statuses: category.statuses,
       preferredViewMode: category.preferredViewMode,
