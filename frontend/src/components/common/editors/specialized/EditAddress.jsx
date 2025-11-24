@@ -63,11 +63,8 @@ export const EditAddress = ({
   const displayAddress = getDisplayAddress();
   const locationSubtitle = getLocationSubtitle();
 
-  // Get preview address (selectedAddress takes precedence for live preview)
-  const previewAddress = selectedAddress?.property_address || canonicalAddress;
-  const previewLocation = selectedAddress
-    ? [selectedAddress.city, selectedAddress.state, selectedAddress.zip_code].filter(Boolean).join(', ')
-    : locationSubtitle;
+  // Check if user has selected a NEW address (different from database)
+  const hasSelectedNewAddress = selectedAddress !== null && selectedAddress.property_address !== canonicalAddress;
   const hasUnsavedChanges = selectedAddress !== null || currentInputText.trim() !== displayAddress || unitNumber !== (displayAddress.match(/#(\d+)$/)?.[1] || '');
 
   // Reset when dialog closes or extract unit number from existing address
@@ -211,86 +208,212 @@ export const EditAddress = ({
   return (
     <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520}>
       <Box onClick={(e) => e.stopPropagation()}>
-        {/* Property Address Preview (shows new selection immediately with "Pending" badge) */}
+        {/* Address Display Section */}
         <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-            <Typography
-              variant="caption"
-              sx={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: 'rgba(255,255,255,0.7)',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              Property Address
-            </Typography>
-            {hasUnsavedChanges && (
-              <Chip
-                icon={<EditIcon sx={{ fontSize: 12 }} />}
-                label="Pending"
-                size="small"
-                sx={{
-                  height: 18,
-                  fontSize: 10,
-                  fontWeight: 700,
-                  backgroundColor: 'rgba(255,255,255,0.25)',
-                  color: 'white',
-                  '& .MuiChip-icon': {
-                    color: 'white',
-                    fontSize: 12,
-                  },
-                }}
-              />
-            )}
-          </Box>
-          <Box
-            onClick={handleAddressClick}
-            sx={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: 1,
-              cursor: 'pointer',
-              borderRadius: 2,
-              p: 1,
-              mx: -1,
-              transition: 'all 0.3s',
-              border: hasUnsavedChanges ? '2px solid rgba(255,255,255,0.4)' : '2px solid transparent',
-              backgroundColor: hasUnsavedChanges ? 'rgba(255,255,255,0.08)' : 'transparent',
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.1)',
-              },
-            }}
-          >
-            <LocationOn sx={{ color: 'white', mt: 0.5, fontSize: 24 }} />
-            <Box sx={{ flex: 1 }}>
+          {!hasSelectedNewAddress ? (
+            /* Show current database address (no editing mode yet) */
+            <>
               <Typography
-                variant="h6"
+                variant="caption"
                 sx={{
-                  fontWeight: 700,
-                  color: 'white',
-                  fontSize: '1rem',
-                  lineHeight: 1.4,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.7)',
+                  mb: 0.5,
+                  display: 'block',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
                 }}
               >
-                {previewAddress || 'No address set'}
+                Current Property Address
               </Typography>
-              {/* Show location preview (updates immediately when new address selected) */}
-              {previewLocation && (
+              <Box
+                onClick={handleAddressClick}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 1,
+                  cursor: 'pointer',
+                  borderRadius: 2,
+                  p: 1,
+                  mx: -1,
+                  transition: 'background-color 0.2s',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                  },
+                }}
+              >
+                <LocationOn sx={{ color: 'white', mt: 0.5, fontSize: 24 }} />
+                <Box sx={{ flex: 1 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      color: 'white',
+                      fontSize: '1rem',
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {canonicalAddress || 'No address set'}
+                  </Typography>
+                  {locationSubtitle && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: 'rgba(255,255,255,0.7)',
+                        display: 'block',
+                        mt: 0.5,
+                      }}
+                    >
+                      {locationSubtitle}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </>
+          ) : (
+            /* Show side-by-side comparison when new address selected */
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {/* Current Address */}
+              <Box>
                 <Typography
                   variant="caption"
                   sx={{
-                    color: 'rgba(255,255,255,0.7)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: 'rgba(255,255,255,0.5)',
+                    mb: 0.5,
                     display: 'block',
-                    mt: 0.5,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
                   }}
                 >
-                  {previewLocation}
+                  Current Address
                 </Typography>
-              )}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 1,
+                    borderRadius: 2,
+                    p: 1,
+                    mx: -1,
+                    backgroundColor: 'rgba(0,0,0,0.15)',
+                    opacity: 0.6,
+                  }}
+                >
+                  <LocationOn sx={{ color: 'white', mt: 0.5, fontSize: 20 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: 600,
+                        color: 'white',
+                        fontSize: '0.875rem',
+                        lineHeight: 1.4,
+                        textDecoration: 'line-through',
+                      }}
+                    >
+                      {canonicalAddress}
+                    </Typography>
+                    {locationSubtitle && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'rgba(255,255,255,0.5)',
+                          display: 'block',
+                          mt: 0.25,
+                          fontSize: '0.7rem',
+                        }}
+                      >
+                        {locationSubtitle}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* New Address (Pending) */}
+              <Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: 'rgba(255,255,255,0.9)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    New Property Address
+                  </Typography>
+                  <Chip
+                    icon={<EditIcon sx={{ fontSize: 12 }} />}
+                    label="Pending"
+                    size="small"
+                    sx={{
+                      height: 18,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      backgroundColor: 'rgba(255,255,255,0.25)',
+                      color: 'white',
+                      '& .MuiChip-icon': {
+                        color: 'white',
+                        fontSize: 12,
+                      },
+                    }}
+                  />
+                </Box>
+                <Box
+                  onClick={handleAddressClick}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 1,
+                    cursor: 'pointer',
+                    borderRadius: 2,
+                    p: 1,
+                    mx: -1,
+                    border: '2px solid rgba(255,255,255,0.5)',
+                    backgroundColor: 'rgba(255,255,255,0.12)',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.18)',
+                      borderColor: 'rgba(255,255,255,0.7)',
+                    },
+                  }}
+                >
+                  <LocationOn sx={{ color: 'white', mt: 0.5, fontSize: 24 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 700,
+                        color: 'white',
+                        fontSize: '1rem',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {selectedAddress.property_address}
+                    </Typography>
+                    {selectedAddress.city && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'rgba(255,255,255,0.8)',
+                          display: 'block',
+                          mt: 0.5,
+                        }}
+                      >
+                        {[selectedAddress.city, selectedAddress.state, selectedAddress.zip_code].filter(Boolean).join(', ')}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
             </Box>
-          </Box>
+          )}
 
           {/* Address Action Menu */}
           <Menu
