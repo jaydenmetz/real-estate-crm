@@ -83,6 +83,11 @@ const StatusTabWithDropdown = ({
   // Get dropdown data
   const dropdown = getCategoryDropdown(entity, category.id);
 
+  // Determine display label: show specific status if filtering, otherwise show category label
+  const displayLabel = currentStatus
+    ? getStatusById(entity, currentStatus)?.label || currentStatus
+    : category.label;
+
   return (
     <>
       <Tab
@@ -90,7 +95,7 @@ const StatusTabWithDropdown = ({
         label={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Typography variant="body2" sx={{ fontWeight: isSelected ? 600 : 400 }}>
-              {category.label}
+              {displayLabel}
             </Typography>
             {isSelected && (
               <KeyboardArrowDown
@@ -189,14 +194,13 @@ const StatusTabWithDropdown = ({
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                {/* Status Indicator Dot */}
+                {/* Status Indicator Dot - Always show with status color */}
                 <Box
                   sx={{
                     width: 8,
                     height: 8,
                     borderRadius: '50%',
                     backgroundColor: status?.color || 'grey.400',
-                    opacity: isCurrentStatus ? 1 : 0,
                   }}
                 />
 

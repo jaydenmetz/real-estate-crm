@@ -146,22 +146,26 @@ export const DashboardNavigation = ({
                 });
 
                 if (hasDropdown && entityName) {
+                  // Check if current selected status belongs to this category
+                  const statusBelongsToCategory = tab.statuses?.includes(selectedStatus);
+                  const isTabSelected = selectedStatus === tab.value || statusBelongsToCategory;
+
                   // Use StatusTabWithDropdown for status-configured tabs
                   return (
                     <StatusTabWithDropdown
                       key={tab.id || tab.value}
                       category={tab}
                       entity={entityName}
-                      isSelected={selectedStatus === tab.value}
+                      isSelected={isTabSelected}
                       onCategoryClick={(categoryId) => {
                         // Switch to category (show all statuses in category)
                         onStatusChange(tab.value);
                       }}
                       onStatusClick={(statusId) => {
-                        // Filter by specific status
+                        // Filter by specific status within this category
                         onStatusChange(statusId);
                       }}
-                      currentStatus={selectedStatus !== tab.value ? null : selectedStatus}
+                      currentStatus={statusBelongsToCategory ? selectedStatus : null}
                       value={tab.value}
                     />
                   );
