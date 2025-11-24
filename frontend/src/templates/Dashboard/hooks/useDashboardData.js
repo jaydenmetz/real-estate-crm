@@ -275,11 +275,20 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     let filtered = [...dataArray];
 
     // Apply status filter
-    if (selectedStatus?.toLowerCase() !== 'all' && selectedStatus?.toLowerCase() !== 'archived') {
+    // Skip if "All" or starts with "All " (e.g., "All Escrows", "All Listings")
+    if (selectedStatus?.toLowerCase() !== 'all' &&
+        selectedStatus?.toLowerCase() !== 'archived' &&
+        !selectedStatus?.toLowerCase().startsWith('all ')) {
+
+      // Extract actual status if in format "TabValue:StatusId"
+      const actualStatus = selectedStatus.includes(':')
+        ? selectedStatus.split(':')[1]
+        : selectedStatus;
+
       filtered = filtered.filter(item => {
         const statusField = item.escrow_status || item.status || item.lead_status || item.appointment_status;
         // Case-insensitive comparison to match backend
-        return statusField?.toLowerCase() === selectedStatus.toLowerCase();
+        return statusField?.toLowerCase() === actualStatus.toLowerCase();
       });
     }
 
