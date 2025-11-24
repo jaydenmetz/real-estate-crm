@@ -10,6 +10,14 @@ import { useQuery } from '@tanstack/react-query';
  * @returns {Object} Dashboard state and handlers
  */
 export const useDashboardData = (config, externalDateRange = null, showArchived = false) => {
+  // Active tab (which tab is selected) - separate from selected status (what to filter by)
+  const [activeTab, setActiveTab] = useState(() => {
+    const saved = localStorage.getItem(`${config.entity.namePlural}ActiveTab`);
+    const validTabs = config.dashboard?.statusTabs?.map(tab => tab.value) || [];
+    const isValid = saved && validTabs.includes(saved);
+    return isValid ? saved : (config.dashboard?.defaultStatus || config.dashboard?.statusTabs?.[0]?.value || 'All');
+  });
+
   // State management with localStorage persistence for selected tab
   const [selectedStatus, setSelectedStatus] = useState(() => {
     const saved = localStorage.getItem(`${config.entity.namePlural}Status`);
@@ -315,6 +323,11 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     localStorage.setItem(`${config.entity.namePlural}Scope`, selectedScope);
   }, [selectedScope, config.entity.namePlural]);
 
+  // Persist activeTab to localStorage
+  useEffect(() => {
+    localStorage.setItem(`${config.entity.namePlural}ActiveTab`, activeTab);
+  }, [activeTab, config.entity.namePlural]);
+
   // Persist selectedStatus (tab) to localStorage
   useEffect(() => {
     localStorage.setItem(`${config.entity.namePlural}Status`, selectedStatus);
@@ -325,6 +338,8 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     loading: isLoading,
     error,
     stats,
+    activeTab,
+    setActiveTab,
     selectedStatus,
     setSelectedStatus,
     selectedScope,
