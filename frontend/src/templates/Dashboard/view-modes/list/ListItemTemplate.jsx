@@ -32,6 +32,17 @@ import {
 } from '../../lib/utils/fieldRenderers';
 
 /**
+ * Decode HTML entities in strings
+ * Fixes display of special characters like & becoming &amp;
+ */
+const decodeHTML = (html) => {
+  if (!html || typeof html !== 'string') return html;
+  const txt = document.createElement('textarea');
+  txt.innerHTML = html;
+  return txt.value;
+};
+
+/**
  * ListItemTemplate - Fully featured horizontal list item with editing
  *
  * Standard template for ALL dashboard list views with complete inline editing support.
@@ -186,10 +197,12 @@ const ListItemTemplate = React.memo(({
 
   const statusConfig = config.status?.getConfig?.(statusValue) || {};
 
-  // Resolve title
-  const titleValue = typeof config.title?.field === 'function'
-    ? config.title.field(data)
-    : resolveField(data, config.title?.field)?.formatted;
+  // Resolve title (decode HTML entities like &amp; → &)
+  const titleValue = decodeHTML(
+    typeof config.title?.field === 'function'
+      ? config.title.field(data)
+      : resolveField(data, config.title?.field)?.formatted
+  );
 
   // Resolve subtitle
   const subtitleValue = config.subtitle?.formatter ? config.subtitle.formatter(data) : '';

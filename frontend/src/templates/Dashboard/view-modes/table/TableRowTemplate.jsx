@@ -32,6 +32,17 @@ import {
 } from '../../lib/utils/fieldRenderers';
 
 /**
+ * Decode HTML entities in strings
+ * Fixes display of special characters like & becoming &amp;
+ */
+const decodeHTML = (html) => {
+  if (!html || typeof html !== 'string') return html;
+  const txt = document.createElement('textarea');
+  txt.innerHTML = html;
+  return txt.value;
+};
+
+/**
  * TableRowTemplate - Fully featured table row with editing
  *
  * Standard template for ALL dashboard table views with complete inline editing support.
@@ -227,9 +238,11 @@ const TableRowTemplate = React.memo(({
 
           // Toggle logic: true = show value, false/undefined = mask value
           const isToggled = toggleStates[`column_${idx}`] ?? true; // Default to shown
-          const displayValue = column.toggle && !isToggled
-            ? column.toggle.maskFn(columnValue)
-            : formattedValue;
+          const displayValue = decodeHTML(
+            column.toggle && !isToggled
+              ? column.toggle.maskFn(columnValue)
+              : formattedValue
+          );
 
           // Status chip rendering
           if (column.isStatus) {
