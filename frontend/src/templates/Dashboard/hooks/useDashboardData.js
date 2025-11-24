@@ -88,9 +88,15 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
 
       // Add status filter
       if (selectedStatus !== 'All') {
+        // Extract actual status from format "TabValue:StatusId"
+        // Example: "All Escrows:Active" → "Active"
+        const actualStatus = selectedStatus.includes(':')
+          ? selectedStatus.split(':')[1]
+          : selectedStatus;
+
         // Use status mapping if defined (e.g., 'Closed' → 'Sold')
         const statusMapping = config.dashboard?.statusMapping || {};
-        params.status = statusMapping[selectedStatus] || selectedStatus;
+        params.status = statusMapping[actualStatus] || actualStatus;
       }
 
       if (selectedScope !== 'all') {

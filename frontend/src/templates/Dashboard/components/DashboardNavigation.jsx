@@ -146,27 +146,19 @@ export const DashboardNavigation = ({
                 });
 
                 if (hasDropdown && entityName) {
-                  // Check if current selected status belongs to this category
-                  const statusBelongsToCategory = tab.statuses?.includes(selectedStatus);
+                  // Parse selectedStatus - could be "Active" or "All Escrows:Active"
+                  const [sourceTab, actualStatus] = selectedStatus.includes(':')
+                    ? selectedStatus.split(':')
+                    : [selectedStatus, null];
 
-                  // Check if there's a more-specific tab (non-"All") that also contains this status
-                  const specificTab = allTabs.find(t =>
-                    !t.label?.startsWith('All') &&
-                    t.statuses?.includes(selectedStatus) &&
-                    t.id !== tab.id
-                  );
+                  // Determine which tab should be selected
+                  const isTabSelected = sourceTab === tab.value;
 
-                  // Priority: Specific category tabs (Active, Closed, Cancelled) take priority over "All"
-                  // - If this is a specific tab and status belongs to it: SELECT IT
-                  // - If this is "All" tab and status belongs to it: only select if no specific tab has it
-                  const isSpecificTab = !tab.label?.startsWith('All');
-                  const isTabSelected = selectedStatus === tab.value ||
-                    (statusBelongsToCategory && (isSpecificTab || !specificTab));
+                  // Determine current status for this tab (for label display)
+                  const currentStatus = isTabSelected && actualStatus ? actualStatus : null;
 
-                  // For MUI Tabs value matching: use the selectedStatus if this tab should be selected
-                  const tabValue = (statusBelongsToCategory && (isSpecificTab || !specificTab))
-                    ? selectedStatus
-                    : tab.value;
+                  // For MUI Tabs value matching
+                  const tabValue = isTabSelected ? selectedStatus : tab.value;
 
                   // Use StatusTabWithDropdown for status-configured tabs
                   return (
@@ -177,13 +169,15 @@ export const DashboardNavigation = ({
                       isSelected={isTabSelected}
                       onCategoryClick={(categoryId) => {
                         // Switch to category (show all statuses in category)
+                        // Use just the tab value (no status suffix)
                         onStatusChange(tab.value);
                       }}
                       onStatusClick={(statusId) => {
                         // Filter by specific status within this category
-                        onStatusChange(statusId);
+                        // Format: "TabValue:StatusId" so we can distinguish source
+                        onStatusChange(`${tab.value}:${statusId}`);
                       }}
-                      currentStatus={statusBelongsToCategory ? selectedStatus : null}
+                      currentStatus={currentStatus}
                       value={tabValue}
                     />
                   );
