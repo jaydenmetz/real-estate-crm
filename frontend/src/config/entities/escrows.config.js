@@ -207,32 +207,32 @@ export const escrowsConfig = createEntityConfig({
       {
         id: 'total_escrows',
         component: TotalEscrowsCard,
-        props: { status: 'all' },
-        visibleWhen: ['all']
+        props: { status: 'All' },
+        visibleWhen: ['All']
       },
       {
         id: 'total_escrows_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'all', dateField: 'created_at' },
-        visibleWhen: ['all']
+        props: { status: 'All', dateField: 'created_at' },
+        visibleWhen: ['All']
       },
       {
         id: 'total_volume',
         component: TotalVolumeCard,
-        props: { status: 'all' },
-        visibleWhen: ['all']
+        props: { status: 'All' },
+        visibleWhen: ['All']
       },
       {
         id: 'total_commission',
         component: TotalCommissionCard,
-        props: { status: 'all' },
-        visibleWhen: ['all']
+        props: { status: 'All' },
+        visibleWhen: ['All']
       },
     ],
 
     // Status Tabs Configuration
     statusTabs: escrowStatusTabs,
-    defaultStatus: 'active', // Lowercase to match category ID
+    defaultStatus: 'Active',
 
     // Scope Filter Configuration
     getScopeOptions: getEscrowScopeOptions,

@@ -485,7 +485,7 @@ export const DashboardTemplate = ({
     const unacknowledgedCount = archivedData.filter(item => {
       // Check if item matches current status
       const itemStatus = item.escrow_status || item.status || item.lead_status || item.appointment_status || item.client_status;
-      const matchesStatus = selectedStatus === 'all' || itemStatus?.toLowerCase() === selectedStatus.toLowerCase();
+      const matchesStatus = selectedStatus === 'All' || itemStatus?.toLowerCase() === selectedStatus.toLowerCase();
 
       if (!matchesStatus) return false;
 

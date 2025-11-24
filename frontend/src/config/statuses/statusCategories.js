@@ -27,7 +27,7 @@
 
 export const ESCROW_CATEGORIES = {
   ACTIVE: {
-    id: 'active',
+    id: 'Active',
     label: 'Active',
     displayName: 'Active Escrows', // For dropdown header
     statuses: ['Active'],
@@ -36,7 +36,7 @@ export const ESCROW_CATEGORIES = {
     sortOrder: 1,
   },
   CLOSED: {
-    id: 'closed',
+    id: 'Closed',
     label: 'Closed',
     displayName: 'Closed Escrows',
     statuses: ['Closed'],
@@ -45,7 +45,7 @@ export const ESCROW_CATEGORIES = {
     sortOrder: 2,
   },
   CANCELLED: {
-    id: 'cancelled',
+    id: 'Cancelled',
     label: 'Cancelled',
     displayName: 'Cancelled Escrows',
     statuses: ['Cancelled'],
@@ -54,7 +54,7 @@ export const ESCROW_CATEGORIES = {
     sortOrder: 3,
   },
   ALL: {
-    id: 'all',
+    id: 'All',
     label: 'All Escrows',
     displayName: 'All Escrows',
     statuses: ['Active', 'Closed', 'Cancelled'],
@@ -70,7 +70,7 @@ export const ESCROW_CATEGORIES = {
 
 export const LISTING_CATEGORIES = {
   ACTIVE: {
-    id: 'active',
+    id: 'Active',
     label: 'Active',
     displayName: 'Active Listings',
     statuses: ['Active', 'ActiveUnderContract', 'Pending'],
@@ -79,7 +79,7 @@ export const LISTING_CATEGORIES = {
     sortOrder: 1,
   },
   CLOSED: {
-    id: 'closed',
+    id: 'Closed',
     label: 'Closed',
     displayName: 'Closed Listings',
     statuses: ['Closed'],
@@ -88,7 +88,7 @@ export const LISTING_CATEGORIES = {
     sortOrder: 2,
   },
   CANCELLED: {
-    id: 'cancelled',
+    id: 'Cancelled',
     label: 'Cancelled',
     displayName: 'Cancelled Listings',
     statuses: ['Cancelled', 'Expired', 'Withdrawn'],
@@ -97,7 +97,7 @@ export const LISTING_CATEGORIES = {
     sortOrder: 3,
   },
   ALL: {
-    id: 'all',
+    id: 'All',
     label: 'All Listings',
     displayName: 'All Listings',
     statuses: ['Active', 'ActiveUnderContract', 'Pending', 'Closed', 'Cancelled', 'Expired', 'Withdrawn'],

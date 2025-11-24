@@ -24,7 +24,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
 
     return isValidStatus
       ? saved
-      : (config.dashboard?.defaultStatus || config.dashboard?.statusTabs?.[0]?.value || 'all');
+      : (config.dashboard?.defaultStatus || config.dashboard?.statusTabs?.[0]?.value || 'All');
   });
 
   // Scope with localStorage persistence
@@ -80,7 +80,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
 
       // Add status filter
       // Skip if "all" (shows all statuses regardless of entity)
-      if (selectedStatus !== 'all') {
+      if (selectedStatus !== 'All') {
         // Extract actual status from format "TabValue:StatusId"
         // Example: "all:Active" → "Active"
         const actualStatus = selectedStatus.includes(':')
@@ -92,7 +92,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
         params.status = statusMapping[actualStatus] || actualStatus;
       }
 
-      if (selectedScope !== 'all') {
+      if (selectedScope !== 'All') {
         params.scope = selectedScope;
       }
 
@@ -275,7 +275,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     let filtered = [...dataArray];
 
     // Apply status filter
-    // Skip if "all" (shows all statuses) or "archived"
+    // Skip if "All" (shows all statuses) or "Archived"
     if (selectedStatus?.toLowerCase() !== 'all' &&
         selectedStatus?.toLowerCase() !== 'archived') {
 
@@ -292,7 +292,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     }
 
     // Apply scope filter
-    if (selectedScope !== 'all') {
+    if (selectedScope !== 'All') {
       filtered = filtered.filter(item => {
         // Scope filtering logic depends on entity
         // For now, just return all (would need config-specific logic)
