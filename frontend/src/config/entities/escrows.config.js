@@ -207,26 +207,26 @@ export const escrowsConfig = createEntityConfig({
       {
         id: 'total_escrows',
         component: TotalEscrowsCard,
-        props: { status: 'All' },
-        visibleWhen: ['All']
+        props: { status: 'all' },
+        visibleWhen: ['all']
       },
       {
         id: 'total_escrows_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'All', dateField: 'created_at' },
-        visibleWhen: ['All']
+        props: { status: 'all', dateField: 'created_at' },
+        visibleWhen: ['all']
       },
       {
         id: 'total_volume',
         component: TotalVolumeCard,
-        props: { status: 'All' },
-        visibleWhen: ['All']
+        props: { status: 'all' },
+        visibleWhen: ['all']
       },
       {
         id: 'total_commission',
         component: TotalCommissionCard,
-        props: { status: 'All' },
-        visibleWhen: ['All']
+        props: { status: 'all' },
+        visibleWhen: ['all']
       },
     ],
 
