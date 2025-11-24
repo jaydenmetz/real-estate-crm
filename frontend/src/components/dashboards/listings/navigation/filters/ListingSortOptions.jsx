@@ -31,6 +31,10 @@ export const listingSortOptions = [
   {
     value: 'square_feet',
     label: 'Square Feet'
+  },
+  {
+    value: 'listing_status',
+    label: 'Status'
   }
 ];
 

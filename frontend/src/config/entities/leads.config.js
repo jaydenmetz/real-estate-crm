@@ -11,6 +11,7 @@
 
 import { createEntityConfig } from '../../utils/config/createEntityConfig';
 import { api } from '../../services/api.service';
+import { createSortFunction } from '../../utils/sortUtils';
 
 // Import widget components
 import ContactWidget from '../../components/details/leads/components/ContactWidget';
@@ -525,38 +526,10 @@ export const leadsConfig = createEntityConfig({
   // UTILS
   // ========================================
   utils: {
-    sortBy: (data, field, order) => {
-      return [...data].sort((a, b) => {
-        let aVal = a[field];
-        let bVal = b[field];
-
-        // Handle null/undefined values
-        if (aVal === null || aVal === undefined) return 1;
-        if (bVal === null || bVal === undefined) return -1;
-
-        // Date comparison
-        if (field === 'created_at' || field === 'updated_at' || field === 'last_contact_date' || field === 'next_follow_up') {
-          aVal = new Date(aVal).getTime();
-          bVal = new Date(bVal).getTime();
-        }
-
-        // Number comparison
-        if (field === 'lead_score') {
-          aVal = parseInt(aVal) || 0;
-          bVal = parseInt(bVal) || 0;
-        }
-
-        // String comparison
-        if (typeof aVal === 'string') {
-          return order === 'asc'
-            ? aVal.localeCompare(bVal)
-            : bVal.localeCompare(aVal);
-        }
-
-        // Number comparison
-        return order === 'asc' ? aVal - bVal : bVal - aVal;
-      });
-    },
+    // Sort leads using centralized sort utility
+    // Automatically handles: status fields, dates, currency, strings
+    // Status priority is derived from category sortOrder in statusCategories.js
+    sortBy: createSortFunction('leads'),
 
     formatters: {
       date: (value) => {

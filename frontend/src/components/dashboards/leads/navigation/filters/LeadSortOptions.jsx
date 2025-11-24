@@ -11,7 +11,8 @@ export const leadSortOptions = [
   { value: 'last_contact', label: 'Last Contact' },
   { value: 'name', label: 'Name (A-Z)' },
   { value: 'priority', label: 'Priority' },
-  { value: 'score', label: 'Lead Score' }
+  { value: 'score', label: 'Lead Score' },
+  { value: 'lead_status', label: 'Status' }
 ];
 
 export const leadDefaultSort = 'created_at';

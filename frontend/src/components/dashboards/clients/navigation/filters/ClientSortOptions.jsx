@@ -11,7 +11,8 @@ export const clientSortOptions = [
   { value: 'last_contact', label: 'Last Contact' },
   { value: 'name', label: 'Name (A-Z)' },
   { value: 'budget', label: 'Budget' },
-  { value: 'priority', label: 'Priority' }
+  { value: 'priority', label: 'Priority' },
+  { value: 'client_status', label: 'Status' }
 ];
 
 export const clientDefaultSort = 'created_at';

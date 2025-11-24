@@ -1,5 +1,6 @@
 import { createEntityConfig } from '../../utils/config/createEntityConfig';
 import { api } from '../../services/api.service';
+import { createSortFunction } from '../../utils/sortUtils';
 
 // Import hero stat cards
 import {
@@ -387,22 +388,9 @@ export const listingsConfig = createEntityConfig({
       if (status === 'all') return listings;
       return listings.filter(l => l.listing_status === status);
     },
-    sortBy: (listings, field, order = 'desc') => {
-      const sorted = [...listings].sort((a, b) => {
-        const aVal = a[field];
-        const bVal = b[field];
-
-        if (typeof aVal === 'string') {
-          return order === 'asc'
-            ? aVal.localeCompare(bVal)
-            : bVal.localeCompare(aVal);
-        }
-
-        return order === 'asc'
-          ? (aVal || 0) - (bVal || 0)
-          : (bVal || 0) - (aVal || 0);
-      });
-      return sorted;
-    }
+    // Sort listings using centralized sort utility
+    // Automatically handles: status fields, dates, currency, strings
+    // Status priority is derived from category sortOrder in statusCategories.js
+    sortBy: createSortFunction('listings')
   }
 });

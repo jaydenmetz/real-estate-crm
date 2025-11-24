@@ -11,6 +11,7 @@
 
 import { createEntityConfig } from '../../utils/config/createEntityConfig';
 import { escrowsAPI } from '../../services/api.service';
+import { createSortFunction } from '../../utils/sortUtils';
 
 // Import dashboard components
 import {
@@ -479,40 +480,10 @@ export const escrowsConfig = createEntityConfig({
       );
     },
 
-    // Sort escrows
-    sortBy: (escrows, field, order = 'asc') => {
-      return [...escrows].sort((a, b) => {
-        let aVal = a[field];
-        let bVal = b[field];
-
-        // Handle status fields with priority order
-        if (field === 'escrow_status' || field === 'status') {
-          const statusPriority = {
-            'Active': 1,
-            'Closed': 2,
-            'Cancelled': 3
-          };
-          aVal = statusPriority[aVal] || 999;
-          bVal = statusPriority[bVal] || 999;
-        }
-
-        // Handle date fields
-        if (field.includes('date')) {
-          aVal = new Date(aVal || 0);
-          bVal = new Date(bVal || 0);
-        }
-
-        // Handle currency fields
-        if (field.includes('price') || field.includes('amount')) {
-          aVal = parseFloat(aVal || 0);
-          bVal = parseFloat(bVal || 0);
-        }
-
-        if (aVal < bVal) return order === 'asc' ? -1 : 1;
-        if (aVal > bVal) return order === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
+    // Sort escrows using centralized sort utility
+    // Automatically handles: status fields, dates, currency, strings
+    // Status priority is derived from category sortOrder in statusCategories.js
+    sortBy: createSortFunction('escrows')
   }
 });
 

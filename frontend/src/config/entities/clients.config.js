@@ -1,5 +1,6 @@
 import { createEntityConfig } from '../../utils/config/createEntityConfig';
 import { clientsAPI } from '../../services/api.service';
+import { createSortFunction } from '../../utils/sortUtils';
 
 export const clientsConfig = createEntityConfig({
   // ========================================
@@ -480,22 +481,9 @@ export const clientsConfig = createEntityConfig({
       if (status === 'all') return clients;
       return clients.filter(c => c.client_status === status);
     },
-    sortBy: (clients, field, order = 'desc') => {
-      const sorted = [...clients].sort((a, b) => {
-        const aVal = a[field];
-        const bVal = b[field];
-
-        if (typeof aVal === 'string') {
-          return order === 'asc'
-            ? aVal.localeCompare(bVal)
-            : bVal.localeCompare(aVal);
-        }
-
-        return order === 'asc'
-          ? (aVal || 0) - (bVal || 0)
-          : (bVal || 0) - (aVal || 0);
-      });
-      return sorted;
-    }
+    // Sort clients using centralized sort utility
+    // Automatically handles: status fields, dates, currency, strings
+    // Status priority is derived from category sortOrder in statusCategories.js
+    sortBy: createSortFunction('clients')
   }
 });
