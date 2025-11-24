@@ -541,6 +541,7 @@ export const DashboardTemplate = ({
           <NavigationComponent
             config={{
               ...config.dashboard,
+              entity: config.entity, // Include entity for dropdown navigation
               scopeOptions: scopeOptions // Override with generated scope options
             }}
             selectedStatus={selectedStatus}
@@ -569,6 +570,7 @@ export const DashboardTemplate = ({
           <DashboardNavigation
             config={{
               ...config.dashboard,
+              entity: config.entity, // Include entity for dropdown navigation
               scopeOptions: scopeOptions // Override with generated scope options
             }}
             selectedStatus={selectedStatus}
