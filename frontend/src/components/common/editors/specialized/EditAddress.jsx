@@ -200,7 +200,7 @@ export const EditAddress = ({
   };
 
   return (
-    <ModalDialog open={open} onClose={onClose} color={color}>
+    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={600}>
       <Box onClick={(e) => e.stopPropagation()}>
         {/* Canonical Address (Read-Only Display - ALWAYS shows original property_address from DB) */}
         <Box sx={{ mb: 3 }}>
@@ -331,7 +331,7 @@ export const EditAddress = ({
                 hideLabel={true} // Tell AddressInput not to show its own label
               />
             </Box>
-            <Box sx={{ width: '120px' }}>
+            <Box sx={{ width: '90px' }}>
               <TextField
                 value={unitNumber}
                 onChange={(e) => setUnitNumber(e.target.value)}

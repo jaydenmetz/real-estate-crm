@@ -9,9 +9,10 @@ import { alpha } from '@mui/material/styles';
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
  * @param {string} color - Theme color for gradient background
+ * @param {number} maxWidth - Maximum width in pixels (default: 400)
  * @param {node} children - Modal content
  */
-export const ModalDialog = ({ open, onClose, color = '#6366f1', children }) => {
+export const ModalDialog = ({ open, onClose, color = '#6366f1', maxWidth = 400, children }) => {
   const handleClose = (event, reason) => {
     // Stop propagation to prevent navigation when clicking backdrop or close button
     if (event) {
@@ -37,6 +38,8 @@ export const ModalDialog = ({ open, onClose, color = '#6366f1', children }) => {
           border: `2px solid ${alpha(color, 0.3)}`,
           boxShadow: `0 20px 60px ${alpha(color, 0.4)}`,
           minWidth: 400,
+          maxWidth: maxWidth,
+          width: '100%',
           p: 3,
         },
       }}
