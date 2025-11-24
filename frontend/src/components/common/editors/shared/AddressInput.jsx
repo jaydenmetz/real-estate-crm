@@ -3,6 +3,7 @@ import { Box, TextField, Autocomplete, CircularProgress, InputAdornment, Typogra
 import { LocationOn, Close } from '@mui/icons-material';
 import debounce from 'lodash/debounce';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { decodeHTML } from '../../../../utils/htmlEntities';
 
 /**
  * Beautiful Address Autocomplete Input Component
@@ -38,7 +39,7 @@ export const AddressInput = ({
   const inputRef = useRef(null);
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [loadingAddress, setLoadingAddress] = useState(false);
-  const [addressSearchText, setAddressSearchText] = useState(value || '');
+  const [addressSearchText, setAddressSearchText] = useState(decodeHTML(value) || '');
   const [selectedPlaceData, setSelectedPlaceData] = useState(null); // Store Google Places data after selection
   const abortControllerRef = useRef(null);
   const autocompleteServiceRef = useRef(null);
@@ -128,10 +129,11 @@ export const AddressInput = ({
     }
   }, [autoFocus]);
 
-  // Sync value prop with internal state when it changes
+  // Sync value prop with internal state when it changes (decode HTML entities for display)
   useEffect(() => {
-    if (value && value !== addressSearchText) {
-      setAddressSearchText(value);
+    const decodedValue = decodeHTML(value) || '';
+    if (decodedValue !== addressSearchText) {
+      setAddressSearchText(decodedValue);
     }
   }, [value]);
 
