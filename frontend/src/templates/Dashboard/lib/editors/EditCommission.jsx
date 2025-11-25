@@ -43,7 +43,11 @@ export const EditCommission = ({
       // Load the appropriate value based on commission type
       // IMPORTANT: Check for null/undefined explicitly, not falsy (0 is valid!)
       if (initialCommissionType === 'percentage') {
-        setEditValue(commissionPercentage !== null && commissionPercentage !== undefined ? commissionPercentage.toString() : '');
+        // Convert decimal to percentage for display (0.0225 → 2.25)
+        const percentValue = commissionPercentage !== null && commissionPercentage !== undefined
+          ? (commissionPercentage * 100).toString()
+          : '';
+        setEditValue(percentValue);
       } else {
         setEditValue(value !== null && value !== undefined ? value.toString() : '');
       }
@@ -196,7 +200,11 @@ export const EditCommission = ({
                 setCommissionType(newType);
                 // Load the database value for the new tab (or empty if none exists)
                 if (newType === 'percentage') {
-                  setEditValue(commissionPercentage !== null && commissionPercentage !== undefined ? commissionPercentage.toString() : '');
+                  // Convert decimal to percentage for display (0.0225 → 2.25)
+                  const percentValue = commissionPercentage !== null && commissionPercentage !== undefined
+                    ? (commissionPercentage * 100).toString()
+                    : '';
+                  setEditValue(percentValue);
                 } else {
                   setEditValue(value !== null && value !== undefined ? value.toString() : '');
                 }
