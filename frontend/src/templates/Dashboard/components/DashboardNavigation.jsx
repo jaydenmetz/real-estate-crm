@@ -146,16 +146,18 @@ export const DashboardNavigation = ({
                 });
 
                 if (hasDropdown && entityName) {
-                  // Parse selectedStatus - could be "Active" or "All Escrows:Active"
-                  const [sourceTab, actualStatus] = selectedStatus.includes(':')
+                  // Parse selectedStatus - format: "Active" or "Active:status1,status2"
+                  const [sourceTab, statusList] = selectedStatus.includes(':')
                     ? selectedStatus.split(':')
                     : [selectedStatus, null];
 
                   // Determine which tab should be selected
                   const isTabSelected = sourceTab === tab.value;
 
-                  // Determine current status for this tab (for label display)
-                  const currentStatus = isTabSelected && actualStatus ? actualStatus : null;
+                  // Parse selected statuses for this tab
+                  const selectedStatuses = isTabSelected && statusList
+                    ? statusList.split(',')
+                    : [];
 
                   // For MUI Tabs value matching
                   const tabValue = isTabSelected ? selectedStatus : tab.value;
@@ -167,17 +169,34 @@ export const DashboardNavigation = ({
                       category={tab}
                       entity={entityName}
                       isSelected={isTabSelected}
+                      selectedStatuses={selectedStatuses}
                       onCategoryClick={(categoryId) => {
-                        // Switch to category (show all statuses in category)
-                        // Use just the tab value (no status suffix)
-                        onStatusChange(tab.value);
+                        // Switch to category - select all statuses in category by default
+                        // Get all status keys for this category
+                        const categoryConfig = tab.statuses || [];
+                        const allStatusKeys = categoryConfig.map(s => s.status_key).join(',');
+                        onStatusChange(`${tab.value}:${allStatusKeys}`);
                       }}
-                      onStatusClick={(statusId) => {
-                        // Filter by specific status within this category
-                        // Format: "TabValue:StatusId" so we can distinguish source
-                        onStatusChange(`${tab.value}:${statusId}`);
+                      onStatusToggle={(statusKey) => {
+                        // Toggle a status in the multi-select
+                        const currentStatuses = selectedStatuses.slice();
+                        const index = currentStatuses.indexOf(statusKey);
+
+                        if (index >= 0) {
+                          // Remove status
+                          currentStatuses.splice(index, 1);
+                        } else {
+                          // Add status
+                          currentStatuses.push(statusKey);
+                        }
+
+                        // Update selection (empty = show all)
+                        if (currentStatuses.length === 0) {
+                          onStatusChange(tab.value); // No filter
+                        } else {
+                          onStatusChange(`${tab.value}:${currentStatuses.join(',')}`);
+                        }
                       }}
-                      currentStatus={currentStatus}
                       value={tabValue}
                     />
                   );

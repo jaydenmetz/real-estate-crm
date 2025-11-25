@@ -2,21 +2,22 @@
  * StatusTabWithDropdown Component
  *
  * A tab with an integrated dropdown menu showing all statuses in the category.
- * When the tab is already selected, clicking it opens a dropdown to filter by specific status.
+ * Multi-select checkboxes with intelligent category controls.
  *
  * Features:
- * - Click tab when NOT selected: Switch to that category (all statuses)
- * - Click tab when ALREADY selected: Open dropdown to filter by specific status
- * - Dropdown shows: "All [Category]" option + Divider + Individual status options
- * - Works with status configuration system
+ * - Click tab when NOT selected: Switch to that category (all statuses selected by default)
+ * - Click tab when ALREADY selected: Open dropdown to manage status filters
+ * - Category checkboxes control all child statuses (indeterminate for partial selection)
+ * - All statuses selected by default when switching tabs
+ * - Empty selection = show all items (no filter)
+ * - No color circles (removed per user request)
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Tab,
   Menu,
   MenuItem,
-  Divider,
   Box,
   Typography,
   alpha,
@@ -30,8 +31,8 @@ const StatusTabWithDropdown = ({
   entity,
   isSelected,
   onCategoryClick,
-  onStatusClick,
-  currentStatus, // Currently selected status (if filtering by single status)
+  onStatusToggle, // Toggle individual status in multi-select array
+  selectedStatuses = [], // Array of selected status keys for this tab
   ...tabProps
 }) => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -39,33 +40,6 @@ const StatusTabWithDropdown = ({
 
   // Get status data from StatusContext (database-driven)
   const { categories: dbCategories, getStatusByKey, loading } = useStatus();
-
-  const handleTabClick = (event) => {
-    event.stopPropagation();
-
-    if (isSelected) {
-      // Tab is already selected - show dropdown
-      setAnchorEl(event.currentTarget);
-    } else {
-      // Tab is not selected - switch to this category
-      onCategoryClick(category.id);
-    }
-  };
-
-  const handleDropdownClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleStatusSelect = (statusId) => {
-    onStatusClick(statusId);
-    handleDropdownClose();
-  };
-
-  const handleCategorySelect = () => {
-    // Select entire category (all statuses)
-    onCategoryClick(category.id);
-    handleDropdownClose();
-  };
 
   // Get category data from database
   const currentCategory = dbCategories?.find(c => c.category_key === category.id);
@@ -75,10 +49,75 @@ const StatusTabWithDropdown = ({
     ? dbCategories?.filter(c => c.category_key !== 'All')
     : null;
 
-  // Determine display label: show specific status if filtering, otherwise show category label
-  const displayLabel = currentStatus
-    ? getStatusByKey(currentStatus)?.label || currentStatus
-    : category.label;
+  // Calculate display label
+  const getDisplayLabel = () => {
+    if (!isSelected || selectedStatuses.length === 0) {
+      return category.label; // Default: show category name
+    }
+
+    // Get all statuses in this category
+    const categoryStatuses = category.id === 'All'
+      ? allCategories?.flatMap(cat => cat.statuses) || []
+      : currentCategory?.statuses || [];
+
+    const totalInCategory = categoryStatuses.length;
+
+    // If all statuses selected, show category name
+    if (selectedStatuses.length === totalInCategory) {
+      return category.label;
+    }
+
+    // If single status selected, show that status name
+    if (selectedStatuses.length === 1) {
+      const status = getStatusByKey(selectedStatuses[0]);
+      return status?.label || selectedStatuses[0];
+    }
+
+    // If multiple but not all, show count
+    return `${category.label} (${selectedStatuses.length})`;
+  };
+
+  const handleTabClick = (event) => {
+    event.stopPropagation();
+
+    if (isSelected) {
+      // Tab is already selected - show dropdown
+      setAnchorEl(event.currentTarget);
+    } else {
+      // Tab is not selected - switch to this category (all statuses selected by default)
+      onCategoryClick(category.id);
+    }
+  };
+
+  const handleDropdownClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleStatusToggle = (statusKey) => {
+    onStatusToggle(statusKey);
+    // Keep dropdown open for multi-select
+  };
+
+  const handleCategoryToggle = (categoryKey) => {
+    // Get all status keys in this category
+    const cat = allCategories?.find(c => c.category_key === categoryKey);
+    if (!cat) return;
+
+    const categoryStatusKeys = cat.statuses.map(s => s.status_key);
+
+    // Check if all statuses in this category are selected
+    const allSelected = categoryStatusKeys.every(key => selectedStatuses.includes(key));
+
+    // Toggle all statuses in this category
+    categoryStatusKeys.forEach(key => {
+      // If all selected, deselect all. Otherwise, select all.
+      if (allSelected && selectedStatuses.includes(key)) {
+        onStatusToggle(key); // Deselect
+      } else if (!allSelected && !selectedStatuses.includes(key)) {
+        onStatusToggle(key); // Select
+      }
+    });
+  };
 
   // Loading state
   if (loading) {
@@ -99,7 +138,7 @@ const StatusTabWithDropdown = ({
         label={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <Typography variant="body2" sx={{ fontWeight: isSelected ? 600 : 400 }}>
-              {displayLabel}
+              {getDisplayLabel()}
             </Typography>
             {isSelected && (
               <KeyboardArrowDown
@@ -151,117 +190,115 @@ const StatusTabWithDropdown = ({
           <>
             {allCategories
               .sort((a, b) => (a.category_sort_order || 0) - (b.category_sort_order || 0))
-              .map((cat) => (
-                <React.Fragment key={cat.category_id}>
-                  {/* Category checkbox */}
-                  <MenuItem
-                    onClick={() => onCategoryClick(cat.category_key)}
-                    sx={{
-                      fontSize: '0.875rem',
-                      py: 1,
-                      fontWeight: 600,
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Checkbox
-                        checked={false} // Categories themselves aren't selectable
-                        size="small"
-                        sx={{ p: 0 }}
-                      />
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {cat.category_label}
-                      </Typography>
-                    </Box>
-                  </MenuItem>
+              .map((cat) => {
+                const categoryStatusKeys = cat.statuses.map(s => s.status_key);
+                const selectedInCategory = categoryStatusKeys.filter(key =>
+                  selectedStatuses.includes(key)
+                ).length;
+                const allCategorySelected = selectedInCategory === categoryStatusKeys.length;
+                const someCategorySelected = selectedInCategory > 0 && selectedInCategory < categoryStatusKeys.length;
 
-                  {/* Indented statuses under this category */}
-                  {cat.statuses.map((status) => {
-                    const isCurrentStatus = currentStatus === status.status_key;
+                return (
+                  <React.Fragment key={cat.category_id}>
+                    {/* Category checkbox */}
+                    <MenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCategoryToggle(cat.category_key);
+                      }}
+                      sx={{
+                        fontSize: '0.875rem',
+                        py: 1,
+                        fontWeight: 600,
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Checkbox
+                          checked={allCategorySelected}
+                          indeterminate={someCategorySelected}
+                          size="small"
+                          sx={{ p: 0 }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {cat.category_label}
+                        </Typography>
+                      </Box>
+                    </MenuItem>
 
-                    return (
-                      <MenuItem
-                        key={status.id}
-                        onClick={() => handleStatusSelect(status.status_key)}
-                        selected={isCurrentStatus}
-                        sx={{
-                          fontSize: '0.875rem',
-                          py: 1,
-                          pl: 4, // Indented under category
-                          fontWeight: isCurrentStatus ? 600 : 400,
-                          '&.Mui-selected': {
-                            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                          },
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                          <Checkbox
-                            checked={isCurrentStatus}
-                            size="small"
-                            sx={{ p: 0 }}
-                          />
-                          <Box
-                            sx={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              backgroundColor: status?.color || 'grey.400',
-                            }}
-                          />
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontWeight: isCurrentStatus ? 600 : 400,
-                              color: isCurrentStatus ? 'text.primary' : 'text.secondary',
-                            }}
-                          >
-                            {status?.label || status.status_key}
-                          </Typography>
-                        </Box>
-                      </MenuItem>
-                    );
-                  })}
-                </React.Fragment>
-              ))}
+                    {/* Indented statuses under this category */}
+                    {cat.statuses.map((status) => {
+                      const isChecked = selectedStatuses.includes(status.status_key);
+
+                      return (
+                        <MenuItem
+                          key={status.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStatusToggle(status.status_key);
+                          }}
+                          sx={{
+                            fontSize: '0.875rem',
+                            py: 1,
+                            pl: 4, // Indented under category
+                            fontWeight: isChecked ? 600 : 400,
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Checkbox
+                              checked={isChecked}
+                              size="small"
+                              sx={{ p: 0 }}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: isChecked ? 600 : 400,
+                                color: isChecked ? 'text.primary' : 'text.secondary',
+                              }}
+                            >
+                              {status?.label || status.status_key}
+                            </Typography>
+                          </Box>
+                        </MenuItem>
+                      );
+                    })}
+                  </React.Fragment>
+                );
+              })}
           </>
         ) : (
           /* ACTIVE/CLOSED/CANCELLED TABS: Flat list with checkboxes */
           currentCategory?.statuses?.map((status) => {
-            const isCurrentStatus = currentStatus === status.status_key;
+            const isChecked = selectedStatuses.includes(status.status_key);
 
             return (
               <MenuItem
                 key={status.id}
-                onClick={() => handleStatusSelect(status.status_key)}
-                selected={isCurrentStatus}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleStatusToggle(status.status_key);
+                }}
                 sx={{
                   fontSize: '0.875rem',
                   py: 1,
                   pl: 1.5,
-                  fontWeight: isCurrentStatus ? 600 : 400,
-                  '&.Mui-selected': {
-                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                  },
+                  fontWeight: isChecked ? 600 : 400,
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                   <Checkbox
-                    checked={isCurrentStatus}
+                    checked={isChecked}
                     size="small"
                     sx={{ p: 0 }}
-                  />
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      backgroundColor: status?.color || 'grey.400',
-                    }}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <Typography
                     variant="body2"
                     sx={{
-                      fontWeight: isCurrentStatus ? 600 : 400,
-                      color: isCurrentStatus ? 'text.primary' : 'text.secondary',
+                      fontWeight: isChecked ? 600 : 400,
+                      color: isChecked ? 'text.primary' : 'text.secondary',
                     }}
                   >
                     {status?.label || status.status_key}
