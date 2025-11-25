@@ -154,9 +154,13 @@ export const DashboardNavigation = ({
                   // Determine which tab should be selected
                   const isTabSelected = sourceTab === tab.value;
 
+                  // Get all status keys available in this tab/category
+                  const allStatusKeysInTab = (tab.statuses || []).map(s => s.status_key);
+
                   // Parse selected statuses for this tab
-                  const selectedStatuses = isTabSelected && statusList
-                    ? statusList.split(',')
+                  // If no statusList provided (just "Active"), default to ALL statuses in that tab
+                  const selectedStatuses = isTabSelected
+                    ? (statusList ? statusList.split(',') : allStatusKeysInTab)
                     : [];
 
                   // For MUI Tabs value matching
@@ -170,12 +174,15 @@ export const DashboardNavigation = ({
                       entity={entityName}
                       isSelected={isTabSelected}
                       selectedStatuses={selectedStatuses}
-                      onCategoryClick={(categoryId) => {
+                      onCategoryClick={(categoryId, allStatusKeys) => {
                         // Switch to category - select all statuses in category by default
-                        // Get all status keys for this category
-                        const categoryConfig = tab.statuses || [];
-                        const allStatusKeys = categoryConfig.map(s => s.status_key).join(',');
-                        onStatusChange(`${tab.value}:${allStatusKeys}`);
+                        // allStatusKeys passed from StatusTabWithDropdown (from database)
+                        if (allStatusKeys && allStatusKeys.length > 0) {
+                          onStatusChange(`${tab.value}:${allStatusKeys.join(',')}`);
+                        } else {
+                          // Fallback: no specific statuses (show all)
+                          onStatusChange(tab.value);
+                        }
                       }}
                       onStatusToggle={(statusKey) => {
                         // Toggle a status in the multi-select

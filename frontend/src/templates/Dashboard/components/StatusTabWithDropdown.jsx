@@ -85,7 +85,15 @@ const StatusTabWithDropdown = ({
       setAnchorEl(event.currentTarget);
     } else {
       // Tab is not selected - switch to this category (all statuses selected by default)
-      onCategoryClick(category.id);
+      // Get all status keys in this category from database
+      const categoryStatuses = category.id === 'All'
+        ? allCategories?.flatMap(cat => cat.statuses) || []
+        : currentCategory?.statuses || [];
+
+      const allStatusKeys = categoryStatuses.map(s => s.status_key);
+
+      // Call onCategoryClick with all status keys
+      onCategoryClick(category.id, allStatusKeys);
     }
   };
 
