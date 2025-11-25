@@ -20,6 +20,7 @@ import {
   Box,
   Typography,
   alpha,
+  Checkbox,
 } from '@mui/material';
 import { KeyboardArrowDown } from '@mui/icons-material';
 import { getCategoryDropdown, getStatusById } from '../../../config/statuses';
@@ -134,7 +135,7 @@ const StatusTabWithDropdown = ({
           horizontal: 'left',
         }}
         PaperProps={{
-          sx: {
+          sx={{
             minWidth: 220,
             maxHeight: 400,
             mt: 0.5,
@@ -142,36 +143,35 @@ const StatusTabWithDropdown = ({
           },
         }}
       >
-        {/* Option: View All in Category */}
-        <MenuItem
-          onClick={handleCategorySelect}
-          selected={!currentStatus} // Highlight if showing all statuses
-          sx={{
-            fontSize: '0.875rem',
-            py: 1,
-            fontWeight: !currentStatus ? 600 : 400,
-            '&.Mui-selected': {
-              backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
-            },
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box
+        {/* Show "All" option only on All tab (category.id === 'all') */}
+        {category.id === 'all' && (
+          <>
+            <MenuItem
+              onClick={handleCategorySelect}
+              selected={!currentStatus}
               sx={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor: 'primary.main',
-                opacity: !currentStatus ? 1 : 0,
+                fontSize: '0.875rem',
+                py: 1,
+                fontWeight: !currentStatus ? 600 : 400,
+                '&.Mui-selected': {
+                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                },
               }}
-            />
-            <Typography variant="body2" sx={{ fontWeight: !currentStatus ? 600 : 400 }}>
-              {category.label.startsWith('All') ? category.label : `All ${category.label}`}
-            </Typography>
-          </Box>
-        </MenuItem>
-
-        <Divider sx={{ my: 0.5 }} />
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Checkbox
+                  checked={!currentStatus}
+                  size="small"
+                  sx={{ p: 0 }}
+                />
+                <Typography variant="body2" sx={{ fontWeight: !currentStatus ? 600 : 400 }}>
+                  {category.label}
+                </Typography>
+              </Box>
+            </MenuItem>
+            <Divider sx={{ my: 0.5 }} />
+          </>
+        )}
 
         {/* Individual Status Options */}
         {dropdown.items.map((statusId) => {
@@ -186,7 +186,7 @@ const StatusTabWithDropdown = ({
               sx={{
                 fontSize: '0.875rem',
                 py: 1,
-                pl: 3,
+                pl: category.id === 'all' ? 3 : 1.5, // Indent only on All tab
                 fontWeight: isCurrentStatus ? 600 : 400,
                 '&.Mui-selected': {
                   backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
@@ -194,7 +194,14 @@ const StatusTabWithDropdown = ({
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                {/* Status Indicator Dot - Always show with status color */}
+                {/* Checkbox instead of dot */}
+                <Checkbox
+                  checked={isCurrentStatus}
+                  size="small"
+                  sx={{ p: 0 }}
+                />
+
+                {/* Status Indicator Dot */}
                 <Box
                   sx={{
                     width: 8,
