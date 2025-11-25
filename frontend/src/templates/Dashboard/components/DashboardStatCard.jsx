@@ -104,6 +104,13 @@ const calculateFontSize = (value, prefix, suffix) => {
  *
  * Structure:
  * Card → CardContent → Title Row + Content Row (value + icon)
+ *
+ * Privacy Toggle Props:
+ * - showPrivacy: Enable privacy toggle button
+ * - privacyControlled: If true, use external isPrivate/onTogglePrivacy (for master toggle)
+ * - isPrivate: External privacy state (used when privacyControlled=true)
+ * - onTogglePrivacy: External toggle handler (used when privacyControlled=true)
+ * - defaultHidden: Initial state for local toggle (used when privacyControlled=false)
  */
 const DashboardStatCard = ({
   icon,
@@ -118,8 +125,20 @@ const DashboardStatCard = ({
   delay = 0,
   showPrivacy = false,
   defaultHidden = true,
+  privacyControlled = false,
+  isPrivate = false,
+  onTogglePrivacy = null,
 }) => {
+  // Local toggle state (only used when not controlled by external state)
   const [showValue, setShowValue] = useState(false);
+
+  // Determine actual privacy state
+  const actualIsPrivate = privacyControlled ? isPrivate : !showValue;
+
+  // Determine toggle handler
+  const handleToggle = privacyControlled && onTogglePrivacy
+    ? onTogglePrivacy
+    : () => setShowValue(prev => !prev);
   const dynamicFontSize = calculateFontSize(value, prefix, suffix);
   const IconComponent = typeof icon === 'string' ? iconMap[icon] : icon;
 
@@ -239,7 +258,7 @@ const DashboardStatCard = ({
             {showPrivacy && (
               <IconButton
                 size="small"
-                onClick={(e) => { e.stopPropagation(); setShowValue(!showValue); }}
+                onClick={(e) => { e.stopPropagation(); handleToggle(); }}
                 sx={{
                   position: 'absolute',
                   left: -8,
@@ -249,7 +268,7 @@ const DashboardStatCard = ({
                   '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)', color: 'white' },
                 }}
               >
-                {showValue ? <VisibilityOff sx={{ fontSize: 18 }} /> : <Visibility sx={{ fontSize: 18 }} />}
+                {!actualIsPrivate ? <VisibilityOff sx={{ fontSize: 18 }} /> : <Visibility sx={{ fontSize: 18 }} />}
               </IconButton>
             )}
 
@@ -265,7 +284,7 @@ const DashboardStatCard = ({
                 ml: showPrivacy ? 1.5 : 0,
               }}
             >
-              {showPrivacy && !showValue ? (
+              {showPrivacy && actualIsPrivate ? (
                 renderAnimatedMask(value)
               ) : typeof value === 'string' ? (
                 <>

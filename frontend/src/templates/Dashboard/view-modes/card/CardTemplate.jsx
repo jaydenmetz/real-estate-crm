@@ -32,6 +32,7 @@ import {
   getStatusColor,
 } from '../../lib/utils/fieldRenderers';
 import { decodeHTML } from '../../../../utils/htmlEntities';
+import { usePrivacy } from '../../../../contexts/PrivacyContext';
 
 /**
  * CardTemplate - Fully featured card component with editing capabilities
@@ -121,6 +122,16 @@ const CardTemplate = React.memo(({
   onSelect,
 }) => {
   const theme = useTheme();
+
+  // Privacy context for master toggle
+  let masterHidden = false;
+  try {
+    const privacy = usePrivacy();
+    masterHidden = privacy?.masterHidden || false;
+  } catch (e) {
+    // Context not available (not wrapped in PrivacyProvider)
+    // This is fine - just means no master toggle control
+  }
 
   // Modal states - one state per potential editor
   const [openEditors, setOpenEditors] = useState({});
@@ -512,8 +523,10 @@ const CardTemplate = React.memo(({
                     : metricValue;
 
                   // Toggle state: true = show value, false/undefined = mask value
+                  // Master toggle (from PrivacyContext) overrides individual toggle
                   const isToggled = toggleStates[`metric_${idx}`] ?? true; // Default to shown
-                  const displayValue = metric.toggle && !isToggled
+                  const shouldMask = masterHidden || !isToggled; // Master hidden OR individual hidden
+                  const displayValue = metric.toggle && shouldMask
                     ? metric.toggle.maskFn(metricValue)
                     : formattedValue;
 
@@ -553,9 +566,14 @@ const CardTemplate = React.memo(({
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         {metric.toggle && (
                           <Box
-                            onClick={(e) => handleToggle(`metric_${idx}`, e)}
+                            onClick={(e) => {
+                              // Only allow toggle when master is NOT hidden
+                              if (!masterHidden) {
+                                handleToggle(`metric_${idx}`, e);
+                              }
+                            }}
                             sx={{
-                              cursor: 'pointer',
+                              cursor: masterHidden ? 'not-allowed' : 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -564,15 +582,16 @@ const CardTemplate = React.memo(({
                               borderRadius: 1,
                               transition: 'all 0.2s',
                               flexShrink: 0,
-                              '&:hover': {
+                              opacity: masterHidden ? 0.4 : 1,
+                              '&:hover': !masterHidden ? {
                                 background: alpha(metricColor.primary, 0.1),
-                              },
+                              } : {},
                             }}
                           >
-                            {isToggled ? (
-                              <VisibilityOffIcon sx={{ fontSize: 14, color: metricColor.primary }} />
-                            ) : (
+                            {shouldMask ? (
                               <VisibilityIcon sx={{ fontSize: 14, color: metricColor.primary }} />
+                            ) : (
+                              <VisibilityOffIcon sx={{ fontSize: 14, color: metricColor.primary }} />
                             )}
                           </Box>
                         )}
