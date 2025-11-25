@@ -66,7 +66,8 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     error,
     refetch,
   } = useQuery({
-    queryKey: [config.entity.namePlural, selectedStatus, selectedScope, dateRangeKey, showArchived],
+    // Remove selectedStatus from queryKey - we'll filter client-side for instant filtering
+    queryKey: [config.entity.namePlural, selectedScope, dateRangeKey, showArchived],
     queryFn: async () => {
       // Build query params
       const params = {
@@ -78,19 +79,12 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
         params.archived = true;
       }
 
-      // Add status filter
-      // Skip if "all" (shows all statuses regardless of entity)
-      if (selectedStatus !== 'All') {
-        // Extract actual status from format "TabValue:StatusId"
-        // Example: "all:Active" → "Active"
-        const actualStatus = selectedStatus.includes(':')
-          ? selectedStatus.split(':')[1]
-          : selectedStatus;
-
-        // Use status mapping if defined (e.g., 'Closed' → 'Sold')
-        const statusMapping = config.dashboard?.statusMapping || {};
-        params.status = statusMapping[actualStatus] || actualStatus;
-      }
+      // REMOVED: Status filter - now done client-side
+      // This allows:
+      // 1. Single API call fetches ALL data
+      // 2. Instant tab switching (no loading spinners)
+      // 3. Multi-select filtering (Active + Cancelled together)
+      // 4. Checkbox toggles update instantly
 
       if (selectedScope !== 'All') {
         params.scope = selectedScope;
@@ -148,11 +142,40 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     refetchOnWindowFocus: false,
   });
 
-  // Calculate stats from data (FILTERED BY DATE RANGE)
-  const stats = useMemo(() => {
-    // Ensure rawData is an array (handle undefined/null as empty array)
-    // Data is already filtered by backend (status, scope, date range)
+  // CLIENT-SIDE STATUS FILTERING
+  // Filter data based on selected statuses from dropdown checkboxes
+  const filteredData = useMemo(() => {
     let dataArray = Array.isArray(rawData) ? rawData : [];
+
+    // Parse selectedStatus format: "Active:status1,status2" or "All" or "Active"
+    const [sourceTab, statusList] = selectedStatus.includes(':')
+      ? selectedStatus.split(':')
+      : [selectedStatus, null];
+
+    // If specific statuses selected, filter by them
+    if (statusList) {
+      const selectedStatusKeys = statusList.split(',');
+
+      // Get the status field name for this entity (escrow_status, lead_status, etc.)
+      const statusField = config.entity.statusField ||
+        `${config.entity.name.toLowerCase()}_status` ||
+        'status';
+
+      dataArray = dataArray.filter(item => {
+        const itemStatus = item[statusField] || item.status;
+        return selectedStatusKeys.includes(itemStatus);
+      });
+    }
+    // If tab is "All" with no specific statuses, show everything
+    // If tab is specific category with no list (like just "Active"), show everything (legacy compat)
+
+    return dataArray;
+  }, [rawData, selectedStatus, config.entity]);
+
+  // Calculate stats from data (FILTERED BY DATE RANGE AND STATUS)
+  const stats = useMemo(() => {
+    // Use filtered data instead of raw data
+    let dataArray = filteredData;
 
     const statsData = {};
 
@@ -336,7 +359,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
   }, [selectedStatus, config.entity.namePlural]);
 
   return {
-    data: rawData,
+    data: filteredData, // Return filtered data, not raw data
     loading: isLoading,
     error,
     stats,
