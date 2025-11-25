@@ -3,6 +3,7 @@ import { DashboardTemplate } from '../../../templates/Dashboard';
 import { escrowsConfig } from '../../../config/entities/escrows.config';
 import { EscrowCard, EscrowListItem, EscrowTableRow } from './view-modes';
 import { NewEscrowModal } from './modals/NewEscrowModal';
+import { PrivacyProvider } from '../../../contexts/PrivacyContext';
 
 /**
  * EscrowsDashboard - Config-driven dashboard using DashboardTemplate
@@ -20,16 +21,23 @@ import { NewEscrowModal } from './modals/NewEscrowModal';
  *   - Card (grid): EscrowCard component
  *   - List: EscrowListItem component (horizontal with image)
  *   - Table: EscrowTableRow component (compact table)
+ *
+ * Privacy Context:
+ * - PrivacyProvider enables master toggle control for commission privacy
+ * - Top stat card (TotalCommissionCard) acts as master toggle
+ * - Individual cards respect master state while allowing independent control
  */
 const EscrowsDashboard = () => {
   return (
-    <DashboardTemplate
-      config={escrowsConfig}
-      CardComponent={EscrowCard}
-      ListComponent={EscrowListItem}
-      TableComponent={EscrowTableRow}
-      NewItemModal={NewEscrowModal}
-    />
+    <PrivacyProvider entityType="escrows">
+      <DashboardTemplate
+        config={escrowsConfig}
+        CardComponent={EscrowCard}
+        ListComponent={EscrowListItem}
+        TableComponent={EscrowTableRow}
+        NewItemModal={NewEscrowModal}
+      />
+    </PrivacyProvider>
   );
 };
 

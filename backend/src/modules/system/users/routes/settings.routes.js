@@ -72,6 +72,7 @@ router.put('/', authenticate, async (req, res) => {
       activityVisibility,
       calendarSync,
       emailSignature,
+      commissionPrivacyDefault,
     } = req.body;
 
     const updates = [];
@@ -142,6 +143,12 @@ router.put('/', authenticate, async (req, res) => {
       paramCount++;
       updates.push(`email_signature = $${paramCount}`);
       values.push(emailSignature);
+    }
+
+    if (commissionPrivacyDefault !== undefined) {
+      paramCount++;
+      updates.push(`commission_privacy_default = $${paramCount}`);
+      values.push(commissionPrivacyDefault);
     }
 
     if (updates.length === 0) {

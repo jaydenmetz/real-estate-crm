@@ -194,6 +194,7 @@ const Settings = () => {
     theme: 'light',
     emailNotifications: {},
     smsNotifications: {},
+    commissionPrivacyDefault: true,
     // Transaction Defaults
     transactionDefaults: {
       brokerName: 'Josh Riley',
@@ -343,7 +344,8 @@ const Settings = () => {
     updateSettingsMutation.mutate({
       theme: formData.theme,
       emailNotifications: formData.emailNotifications,
-      smsNotifications: formData.smsNotifications
+      smsNotifications: formData.smsNotifications,
+      commissionPrivacyDefault: formData.commissionPrivacyDefault
     });
   };
 
@@ -988,6 +990,32 @@ const Settings = () => {
                       <Switch
                         checked={formData.showOffice}
                         onChange={handleSwitchChange('showOffice')}
+                      />
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                </List>
+
+                <Divider sx={{ my: 3 }} />
+
+                <Typography variant="h6" gutterBottom>
+                  Financial Information Privacy
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Control the default visibility of sensitive financial information like commissions
+                </Typography>
+                <List>
+                  <ListItem>
+                    <ListItemText
+                      primary="Hide Commission by Default"
+                      secondary="When enabled, commission amounts will be hidden by default. You can always toggle visibility using the eye icon."
+                    />
+                    <ListItemSecondaryAction>
+                      <Switch
+                        checked={formData.commissionPrivacyDefault || false}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          commissionPrivacyDefault: e.target.checked
+                        })}
                       />
                     </ListItemSecondaryAction>
                   </ListItem>
