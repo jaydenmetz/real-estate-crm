@@ -226,7 +226,7 @@ const StatusTabWithDropdown = ({
                           indeterminate={someCategorySelected}
                           size="small"
                           sx={{ p: 0 }}
-                          onClick={(e) => e.stopPropagation()}
+                          readOnly
                         />
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
                           {cat.category_label}
@@ -257,7 +257,7 @@ const StatusTabWithDropdown = ({
                               checked={isChecked}
                               size="small"
                               sx={{ p: 0 }}
-                              onClick={(e) => e.stopPropagation()}
+                              readOnly
                             />
                             <Typography
                               variant="body2"
