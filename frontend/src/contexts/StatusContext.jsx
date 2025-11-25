@@ -45,12 +45,16 @@ export const StatusProvider = ({ children, entityType }) => {
     setLoading(true);
     setError(null);
 
+    console.log('StatusContext: Starting fetch for', entityType);
+
     try {
       // Fetch both statuses and categories in parallel
       const [statusData, categoryData] = await Promise.all([
         getStatuses(entityType),
         getStatusCategories(entityType),
       ]);
+
+      console.log('StatusContext: API calls completed successfully');
 
       console.log('StatusContext: Fetched data from API:', {
         entityType,
@@ -62,7 +66,12 @@ export const StatusProvider = ({ children, entityType }) => {
       setStatuses(statusData || []);
       setCategories(categoryData || []);
     } catch (err) {
-      console.error(`Failed to fetch status config for ${entityType}:`, err);
+      console.error(`❌ Failed to fetch status config for ${entityType}:`, err);
+      console.error('Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
       setError(err.message || 'Failed to load status configuration');
 
       // Set empty arrays as fallback
