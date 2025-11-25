@@ -156,7 +156,7 @@ const StatusTabWithDropdown = ({
           horizontal: 'left',
         }}
         PaperProps={{
-          sx={{
+          sx: {
             minWidth: 220,
             maxHeight: 400,
             mt: 0.5,
