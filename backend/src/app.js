@@ -253,6 +253,7 @@ apiRouter.use('/contact-roles', require('./modules/crm/contacts/routes/contact-r
 // System Modules - Platform-level features
 apiRouter.use('/teams', require('./modules/system/teams/routes'));
 apiRouter.use('/statuses', require('./modules/system/statuses/routes'));
+apiRouter.use('/preferences', require('./modules/system/preferences/routes/preferences.routes'));
 
 
 // Workflow Modules - Task and project management
