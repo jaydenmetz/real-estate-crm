@@ -86,11 +86,11 @@ const StatusTabWithDropdown = ({
   };
 
   // Get category data from database
-  const currentCategory = dbCategories.find(c => c.category_key === category.id);
+  const currentCategory = dbCategories?.find(c => c.category_key === category.id);
 
   // For "All" tab, get all categories except "All" itself
   const allCategories = category.id === 'All'
-    ? dbCategories.filter(c => c.category_key !== 'All')
+    ? dbCategories?.filter(c => c.category_key !== 'All')
     : null;
 
   // Determine display label: show specific status if filtering, otherwise show category label
