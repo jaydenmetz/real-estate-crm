@@ -23,7 +23,7 @@ import {
   Checkbox,
 } from '@mui/material';
 import { KeyboardArrowDown } from '@mui/icons-material';
-import { getCategoryDropdown, getStatusById, getEntityCategories } from '../../../config/statuses';
+import { useStatus } from '../../../contexts/StatusContext';
 
 const StatusTabWithDropdown = ({
   category,
@@ -37,12 +37,16 @@ const StatusTabWithDropdown = ({
   const [anchorEl, setAnchorEl] = useState(null);
   const tabRef = useRef(null);
 
+  // Get status data from StatusContext (database-driven)
+  const { categories: dbCategories, getStatusByKey, loading } = useStatus();
+
   // Debug logging
   console.log('StatusTabWithDropdown rendered:', {
     categoryLabel: category?.label,
     entity,
     isSelected,
-    categoryStatuses: category?.statuses
+    dbCategoriesLoaded: dbCategories?.length > 0,
+    loading
   });
 
   const handleTabClick = (event) => {
@@ -81,16 +85,30 @@ const StatusTabWithDropdown = ({
     handleDropdownClose();
   };
 
-  // Get dropdown data
-  const dropdown = getCategoryDropdown(entity, category.id);
+  // Get category data from database
+  const currentCategory = dbCategories.find(c => c.category_key === category.id);
 
-  // For "All" tab, get all categories to show grouped view
-  const allCategories = category.id === 'all' ? getEntityCategories(entity) : null;
+  // For "All" tab, get all categories except "All" itself
+  const allCategories = category.id === 'All'
+    ? dbCategories.filter(c => c.category_key !== 'All')
+    : null;
 
   // Determine display label: show specific status if filtering, otherwise show category label
   const displayLabel = currentStatus
-    ? getStatusById(entity, currentStatus)?.label || currentStatus
+    ? getStatusByKey(currentStatus)?.label || currentStatus
     : category.label;
+
+  // Loading state
+  if (loading) {
+    return (
+      <Tab
+        label={category.label}
+        disabled
+        sx={{ textTransform: 'none', minHeight: 48, px: 2 }}
+        {...tabProps}
+      />
+    );
+  }
 
   return (
     <>
@@ -147,16 +165,15 @@ const StatusTabWithDropdown = ({
         }}
       >
         {/* ALL TAB: Show grouped categories with indented statuses */}
-        {category.id === 'all' && allCategories ? (
+        {category.id === 'All' && allCategories ? (
           <>
-            {Object.values(allCategories)
-              .filter(cat => cat.id !== 'all') // Don't show "All" category itself
-              .sort((a, b) => a.sortOrder - b.sortOrder)
+            {allCategories
+              .sort((a, b) => (a.category_sort_order || 0) - (b.category_sort_order || 0))
               .map((cat) => (
-                <React.Fragment key={cat.id}>
+                <React.Fragment key={cat.category_id}>
                   {/* Category checkbox */}
                   <MenuItem
-                    onClick={() => onCategoryClick(cat.id)}
+                    onClick={() => onCategoryClick(cat.category_key)}
                     sx={{
                       fontSize: '0.875rem',
                       py: 1,
@@ -170,20 +187,19 @@ const StatusTabWithDropdown = ({
                         sx={{ p: 0 }}
                       />
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {cat.label}
+                        {cat.category_label}
                       </Typography>
                     </Box>
                   </MenuItem>
 
                   {/* Indented statuses under this category */}
-                  {cat.statuses.map((statusId) => {
-                    const status = getStatusById(entity, statusId);
-                    const isCurrentStatus = currentStatus === statusId;
+                  {cat.statuses.map((status) => {
+                    const isCurrentStatus = currentStatus === status.status_key;
 
                     return (
                       <MenuItem
-                        key={statusId}
-                        onClick={() => handleStatusSelect(statusId)}
+                        key={status.id}
+                        onClick={() => handleStatusSelect(status.status_key)}
                         selected={isCurrentStatus}
                         sx={{
                           fontSize: '0.875rem',
@@ -216,7 +232,7 @@ const StatusTabWithDropdown = ({
                               color: isCurrentStatus ? 'text.primary' : 'text.secondary',
                             }}
                           >
-                            {status?.label || statusId}
+                            {status?.label || status.status_key}
                           </Typography>
                         </Box>
                       </MenuItem>
@@ -227,14 +243,13 @@ const StatusTabWithDropdown = ({
           </>
         ) : (
           /* ACTIVE/CLOSED/CANCELLED TABS: Flat list with checkboxes */
-          dropdown.items.map((statusId) => {
-            const status = getStatusById(entity, statusId);
-            const isCurrentStatus = currentStatus === statusId;
+          currentCategory?.statuses?.map((status) => {
+            const isCurrentStatus = currentStatus === status.status_key;
 
             return (
               <MenuItem
-                key={statusId}
-                onClick={() => handleStatusSelect(statusId)}
+                key={status.id}
+                onClick={() => handleStatusSelect(status.status_key)}
                 selected={isCurrentStatus}
                 sx={{
                   fontSize: '0.875rem',
@@ -267,12 +282,12 @@ const StatusTabWithDropdown = ({
                       color: isCurrentStatus ? 'text.primary' : 'text.secondary',
                     }}
                   >
-                    {status?.label || statusId}
+                    {status?.label || status.status_key}
                   </Typography>
                 </Box>
               </MenuItem>
             );
-          })
+          }) || []
         )}
       </Menu>
     </>
