@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS statuses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Ownership
-  team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+  team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
 
   -- Entity relationship
   entity_type VARCHAR(50) NOT NULL, -- escrows, listings, clients, leads, appointments
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS status_categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Ownership
-  team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+  team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
 
   -- Category details
   entity_type VARCHAR(50) NOT NULL,
@@ -178,13 +178,12 @@ CREATE INDEX idx_status_change_log_user ON status_change_log(changed_by);
  */
 
 -- First, ensure we have a system team for defaults
-INSERT INTO teams (id, name, slug, team_type)
+INSERT INTO teams (team_id, name, subdomain)
 VALUES (
   '00000000-0000-0000-0000-000000000000',
   'System Defaults',
-  'system-defaults',
-  'system'
-) ON CONFLICT (id) DO NOTHING;
+  'system-defaults'
+) ON CONFLICT (team_id) DO NOTHING;
 
 -- Escrow Statuses
 INSERT INTO statuses (team_id, entity_type, status_key, label, color, is_default, is_final, sort_order)
