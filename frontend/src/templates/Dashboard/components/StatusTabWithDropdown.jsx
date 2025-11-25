@@ -23,7 +23,7 @@ import {
   Checkbox,
 } from '@mui/material';
 import { KeyboardArrowDown } from '@mui/icons-material';
-import { getCategoryDropdown, getStatusById } from '../../../config/statuses';
+import { getCategoryDropdown, getStatusById, getEntityCategories } from '../../../config/statuses';
 
 const StatusTabWithDropdown = ({
   category,
@@ -84,6 +84,9 @@ const StatusTabWithDropdown = ({
   // Get dropdown data
   const dropdown = getCategoryDropdown(entity, category.id);
 
+  // For "All" tab, get all categories to show grouped view
+  const allCategories = category.id === 'all' ? getEntityCategories(entity) : null;
+
   // Determine display label: show specific status if filtering, otherwise show category label
   const displayLabel = currentStatus
     ? getStatusById(entity, currentStatus)?.label || currentStatus
@@ -143,88 +146,134 @@ const StatusTabWithDropdown = ({
           },
         }}
       >
-        {/* Show "All" option only on All tab (category.id === 'all') */}
-        {category.id === 'all' && (
+        {/* ALL TAB: Show grouped categories with indented statuses */}
+        {category.id === 'all' && allCategories ? (
           <>
-            <MenuItem
-              onClick={handleCategorySelect}
-              selected={!currentStatus}
-              sx={{
-                fontSize: '0.875rem',
-                py: 1,
-                fontWeight: !currentStatus ? 600 : 400,
-                '&.Mui-selected': {
-                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                },
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Checkbox
-                  checked={!currentStatus}
-                  size="small"
-                  sx={{ p: 0 }}
-                />
-                <Typography variant="body2" sx={{ fontWeight: !currentStatus ? 600 : 400 }}>
-                  {category.label}
-                </Typography>
-              </Box>
-            </MenuItem>
-            <Divider sx={{ my: 0.5 }} />
+            {Object.values(allCategories)
+              .filter(cat => cat.id !== 'all') // Don't show "All" category itself
+              .sort((a, b) => a.sortOrder - b.sortOrder)
+              .map((cat) => (
+                <React.Fragment key={cat.id}>
+                  {/* Category checkbox */}
+                  <MenuItem
+                    onClick={() => onCategoryClick(cat.id)}
+                    sx={{
+                      fontSize: '0.875rem',
+                      py: 1,
+                      fontWeight: 600,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Checkbox
+                        checked={false} // Categories themselves aren't selectable
+                        size="small"
+                        sx={{ p: 0 }}
+                      />
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {cat.label}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+
+                  {/* Indented statuses under this category */}
+                  {cat.statuses.map((statusId) => {
+                    const status = getStatusById(entity, statusId);
+                    const isCurrentStatus = currentStatus === statusId;
+
+                    return (
+                      <MenuItem
+                        key={statusId}
+                        onClick={() => handleStatusSelect(statusId)}
+                        selected={isCurrentStatus}
+                        sx={{
+                          fontSize: '0.875rem',
+                          py: 1,
+                          pl: 4, // Indented under category
+                          fontWeight: isCurrentStatus ? 600 : 400,
+                          '&.Mui-selected': {
+                            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                          },
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Checkbox
+                            checked={isCurrentStatus}
+                            size="small"
+                            sx={{ p: 0 }}
+                          />
+                          <Box
+                            sx={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: '50%',
+                              backgroundColor: status?.color || 'grey.400',
+                            }}
+                          />
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: isCurrentStatus ? 600 : 400,
+                              color: isCurrentStatus ? 'text.primary' : 'text.secondary',
+                            }}
+                          >
+                            {status?.label || statusId}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
           </>
+        ) : (
+          /* ACTIVE/CLOSED/CANCELLED TABS: Flat list with checkboxes */
+          dropdown.items.map((statusId) => {
+            const status = getStatusById(entity, statusId);
+            const isCurrentStatus = currentStatus === statusId;
+
+            return (
+              <MenuItem
+                key={statusId}
+                onClick={() => handleStatusSelect(statusId)}
+                selected={isCurrentStatus}
+                sx={{
+                  fontSize: '0.875rem',
+                  py: 1,
+                  pl: 1.5,
+                  fontWeight: isCurrentStatus ? 600 : 400,
+                  '&.Mui-selected': {
+                    backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                  },
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                  <Checkbox
+                    checked={isCurrentStatus}
+                    size="small"
+                    sx={{ p: 0 }}
+                  />
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      backgroundColor: status?.color || 'grey.400',
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: isCurrentStatus ? 600 : 400,
+                      color: isCurrentStatus ? 'text.primary' : 'text.secondary',
+                    }}
+                  >
+                    {status?.label || statusId}
+                  </Typography>
+                </Box>
+              </MenuItem>
+            );
+          })
         )}
-
-        {/* Individual Status Options */}
-        {dropdown.items.map((statusId) => {
-          const status = getStatusById(entity, statusId);
-          const isCurrentStatus = currentStatus === statusId;
-
-          return (
-            <MenuItem
-              key={statusId}
-              onClick={() => handleStatusSelect(statusId)}
-              selected={isCurrentStatus}
-              sx={{
-                fontSize: '0.875rem',
-                py: 1,
-                pl: category.id === 'all' ? 3 : 1.5, // Indent only on All tab
-                fontWeight: isCurrentStatus ? 600 : 400,
-                '&.Mui-selected': {
-                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                },
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                {/* Checkbox instead of dot */}
-                <Checkbox
-                  checked={isCurrentStatus}
-                  size="small"
-                  sx={{ p: 0 }}
-                />
-
-                {/* Status Indicator Dot */}
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    backgroundColor: status?.color || 'grey.400',
-                  }}
-                />
-
-                {/* Status Label */}
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: isCurrentStatus ? 600 : 400,
-                    color: isCurrentStatus ? 'text.primary' : 'text.secondary',
-                  }}
-                >
-                  {status?.label || statusId}
-                </Typography>
-              </Box>
-            </MenuItem>
-          );
-        })}
       </Menu>
     </>
   );
