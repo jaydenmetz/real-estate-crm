@@ -14,7 +14,7 @@ import apiInstance from './api.service';
  */
 export const getStatuses = async (entityType) => {
   const response = await apiInstance.get(`/statuses/${entityType}`);
-  return response.data.data;
+  return response.data.data || response.data;
 };
 
 /**
@@ -40,7 +40,7 @@ export const getStatuses = async (entityType) => {
  */
 export const getStatusCategories = async (entityType) => {
   const response = await apiInstance.get(`/statuses/${entityType}/categories`);
-  return response.data.data;
+  return response.data.data || response.data;
 };
 
 /**
@@ -51,7 +51,7 @@ export const getStatusCategories = async (entityType) => {
  */
 export const getStatusHistory = async (entityType, entityId) => {
   const response = await apiInstance.get(`/statuses/${entityType}/${entityId}/history`);
-  return response.data.data;
+  return response.data.data || response.data;
 };
 
 /**
@@ -62,7 +62,7 @@ export const getStatusHistory = async (entityType, entityId) => {
  */
 export const createCustomStatus = async (entityType, statusData) => {
   const response = await apiInstance.post(`/statuses/${entityType}`, statusData);
-  return response.data.data;
+  return response.data.data || response.data;
 };
 
 /**
@@ -76,7 +76,7 @@ export const validateTransition = async (fromStatusId, toStatusId) => {
     fromStatusId,
     toStatusId,
   });
-  return response.data.data;
+  return response.data.data || response.data;
 };
 
 export default {
