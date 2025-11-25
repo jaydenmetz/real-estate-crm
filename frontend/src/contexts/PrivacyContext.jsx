@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { apiInstance } from '../services/api.service';
+import apiInstance from '../services/api.service';
 
 /**
  * Privacy Context for Master Toggle Control
