@@ -142,40 +142,10 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     refetchOnWindowFocus: false,
   });
 
-  // CLIENT-SIDE STATUS FILTERING
-  // Filter data based on selected statuses from dropdown checkboxes
-  const filteredData = useMemo(() => {
-    let dataArray = Array.isArray(rawData) ? rawData : [];
-
-    // Parse selectedStatus format: "Active:status1,status2" or "All" or "Active"
-    const [sourceTab, statusList] = selectedStatus.includes(':')
-      ? selectedStatus.split(':')
-      : [selectedStatus, null];
-
-    // If specific statuses selected, filter by them
-    if (statusList) {
-      const selectedStatusKeys = statusList.split(',');
-
-      // Get the status field name for this entity (escrow_status, lead_status, etc.)
-      const statusField = config.entity.statusField ||
-        `${config.entity.name.toLowerCase()}_status` ||
-        'status';
-
-      dataArray = dataArray.filter(item => {
-        const itemStatus = item[statusField] || item.status;
-        return selectedStatusKeys.includes(itemStatus);
-      });
-    }
-    // If tab is "All" with no specific statuses, show everything
-    // If tab is specific category with no list (like just "Active"), show everything (legacy compat)
-
-    return dataArray;
-  }, [rawData, selectedStatus, config.entity]);
-
-  // Calculate stats from data (FILTERED BY DATE RANGE AND STATUS)
+  // Calculate stats from data (NOT filtered by selected statuses yet - stats need ALL data)
   const stats = useMemo(() => {
-    // Use filtered data instead of raw data
-    let dataArray = filteredData;
+    // Use raw data for stats (so totals are always accurate)
+    let dataArray = Array.isArray(rawData) ? rawData : [];
 
     const statsData = {};
 
@@ -289,7 +259,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     return statsData;
   }, [rawData, selectedStatus, dateRange, externalDateRange, config.dashboard.stats]);
 
-  // Filter and sort data
+  // Filter and sort data (CLIENT-SIDE for instant multi-select)
   const filteredData = useMemo(() => {
     if (!rawData) return [];
 
@@ -297,21 +267,31 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     const dataArray = Array.isArray(rawData) ? rawData : [];
     let filtered = [...dataArray];
 
-    // Apply status filter
-    // Skip if "All" (shows all statuses) or "Archived"
+    // Apply status filter (UPDATED for multi-select checkbox support)
+    // Format: "Active:status1,status2,status3" or "All" or "Active"
     if (selectedStatus?.toLowerCase() !== 'all' &&
         selectedStatus?.toLowerCase() !== 'archived') {
 
-      // Extract actual status if in format "TabValue:StatusId"
-      const actualStatus = selectedStatus.includes(':')
-        ? selectedStatus.split(':')[1]
-        : selectedStatus;
+      // Parse multi-select format
+      const [sourceTab, statusList] = selectedStatus.includes(':')
+        ? selectedStatus.split(':')
+        : [selectedStatus, null];
 
-      filtered = filtered.filter(item => {
-        const statusField = item.escrow_status || item.status || item.lead_status || item.appointment_status;
-        // Case-insensitive comparison to match backend
-        return statusField?.toLowerCase() === actualStatus.toLowerCase();
-      });
+      if (statusList) {
+        // Multi-select: filter by comma-separated status list
+        const selectedStatusKeys = statusList.split(',');
+
+        filtered = filtered.filter(item => {
+          const statusField = item.escrow_status || item.status || item.lead_status || item.appointment_status;
+          return selectedStatusKeys.includes(statusField);
+        });
+      } else {
+        // Legacy single-select: filter by exact tab name
+        filtered = filtered.filter(item => {
+          const statusField = item.escrow_status || item.status || item.lead_status || item.appointment_status;
+          return statusField?.toLowerCase() === sourceTab.toLowerCase();
+        });
+      }
     }
 
     // Apply scope filter
