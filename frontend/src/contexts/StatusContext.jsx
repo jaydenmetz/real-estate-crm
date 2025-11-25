@@ -52,6 +52,13 @@ export const StatusProvider = ({ children, entityType }) => {
         getStatusCategories(entityType),
       ]);
 
+      console.log('StatusContext: Fetched data from API:', {
+        entityType,
+        statusCount: statusData?.length || 0,
+        categoryCount: categoryData?.length || 0,
+        categories: categoryData,
+      });
+
       setStatuses(statusData || []);
       setCategories(categoryData || []);
     } catch (err) {
