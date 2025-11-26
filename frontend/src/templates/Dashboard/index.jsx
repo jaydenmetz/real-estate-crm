@@ -552,6 +552,8 @@ export const DashboardTemplate = ({
             onViewModeChange={setViewMode}
             sortBy={sortBy}
             onSortByChange={setSortBy}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
             showCalendar={showCalendar}
             onShowCalendarChange={setShowCalendar}
             showArchived={showArchived}
@@ -581,6 +583,8 @@ export const DashboardTemplate = ({
             onViewModeChange={setViewMode}
             sortBy={sortBy}
             onSortByChange={setSortBy}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
             showCalendar={showCalendar}
             onShowCalendarChange={setShowCalendar}
             showArchived={showArchived}
@@ -627,8 +631,8 @@ export const DashboardTemplate = ({
           selectedItems={selectedItems}
           onSelectItem={handleSelectItem}
           dateRangeFilter={dateRangeFilter}
-          customStartDate={customStartDate}
-          customEndDate={customEndDate}
+          customStartDate={calculatedDateRange?.startDate || customStartDate}
+          customEndDate={calculatedDateRange?.endDate || customEndDate}
         />
 
       {/* New Item Modal */}

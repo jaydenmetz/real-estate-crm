@@ -28,6 +28,8 @@ import {
 import {
   Sort,
   Archive as ArchiveIcon,
+  ArrowUpward,
+  ArrowDownward,
 } from '@mui/icons-material';
 import { BulkActionsButton } from './BulkActionsButton';
 import { StatusTabWithDropdown } from './StatusTabWithDropdown';
@@ -42,6 +44,8 @@ export const DashboardNavigation = ({
   onViewModeChange,
   sortBy,
   onSortByChange,
+  sortOrder = 'asc',
+  onSortOrderChange,
   showCalendar,
   onShowCalendarChange,
   showArchived = false,
@@ -334,6 +338,34 @@ export const DashboardNavigation = ({
                   ))}
                 </Select>
               </FormControl>
+            </Box>
+          )}
+
+          {/* Sort Order Toggle - Ascending/Descending */}
+          {sortOptions.length > 0 && onSortOrderChange && (
+            <Box sx={{ order: { xs: 3, sm: 0 } }}>
+              <IconButton
+                onClick={() => onSortOrderChange(sortOrder === 'asc' ? 'desc' : 'asc')}
+                size="small"
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1,
+                  width: 36,
+                  height: 36,
+                  '&:hover': {
+                    backgroundColor: alpha('#000', 0.04),
+                    borderColor: 'primary.main',
+                  },
+                }}
+                title={sortOrder === 'asc' ? 'Sort Ascending' : 'Sort Descending'}
+              >
+                {sortOrder === 'asc' ? (
+                  <ArrowUpward sx={{ fontSize: '1.125rem', color: 'text.secondary' }} />
+                ) : (
+                  <ArrowDownward sx={{ fontSize: '1.125rem', color: 'text.secondary' }} />
+                )}
+              </IconButton>
             </Box>
           )}
 
