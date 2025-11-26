@@ -79,7 +79,7 @@ export const DashboardContent = ({
       if (!statusStr) return '';
 
       // Parse format: "CategoryKey:status1,status2" or just "CategoryKey"
-      // Examples: "Active:Active", "All:Active,Closed", "Active"
+      // Examples: "Active:Active", "All:Active,Closed", "Active", "Closed:Closed"
 
       // Remove "All:" prefix completely if present
       let cleaned = statusStr.replace(/^All:/, '');
@@ -87,8 +87,9 @@ export const DashboardContent = ({
       // If result is empty or just "All", return empty string (no status prefix)
       if (!cleaned || cleaned === 'All') return '';
 
-      // Split by comma and clean up
-      const parts = cleaned.split(',').map(s => s.trim()).filter(Boolean);
+      // Split by BOTH colon and comma to handle "Closed:Closed" format
+      // Replace colons with commas, then split by comma
+      const parts = cleaned.replace(/:/g, ',').split(',').map(s => s.trim()).filter(Boolean);
 
       // Remove duplicates (e.g., "Active:Active" becomes just "Active")
       const uniqueParts = [...new Set(parts)];
