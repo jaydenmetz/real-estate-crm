@@ -260,7 +260,7 @@ const StatusTabWithDropdown = ({
                               sx={{
                                 fontSize: '0.875rem',
                                 py: 1,
-                                pl: 4, // Indented under category
+                                pl: 5, // Indented under category (increased from 4 to 5)
                                 fontWeight: isChecked ? 600 : 400,
                               }}
                             >
@@ -385,7 +385,7 @@ const StatusTabWithDropdown = ({
                         sx={{
                           fontSize: '0.875rem',
                           py: 1,
-                          pl: 4, // Indented under category
+                          pl: 5, // Indented under category (increased from 4 to 5)
                           fontWeight: isChecked ? 600 : 400,
                         }}
                       >
