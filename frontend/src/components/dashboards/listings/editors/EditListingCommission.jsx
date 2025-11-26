@@ -9,8 +9,19 @@ import { EditCommission } from '../../../../templates/Dashboard/lib/editors';
  * @param {function} onClose - Close handler
  * @param {function} onSave - Save handler (newValue) => void
  * @param {number} value - Current commission amount
+ * @param {number} commissionPercentage - Current commission percentage
+ * @param {string} commissionType - Commission type ('percentage' or 'flat')
+ * @param {number} purchasePrice - List price for percentage calculation
  */
-export const EditListingCommission = ({ open, onClose, onSave, value }) => {
+export const EditListingCommission = ({
+  open,
+  onClose,
+  onSave,
+  value,
+  commissionPercentage,
+  commissionType,
+  purchasePrice,
+}) => {
   return (
     <EditCommission
       open={open}
@@ -18,6 +29,9 @@ export const EditListingCommission = ({ open, onClose, onSave, value }) => {
       onSave={onSave}
       label="Commission"
       value={value}
+      commissionPercentage={commissionPercentage}
+      commissionType={commissionType}
+      purchasePrice={purchasePrice}
       color="#f59e0b" // Amber theme for commission
     />
   );
