@@ -132,18 +132,31 @@ export const EditDate = ({
     // Allow manual typing in YYYY-MM-DD format, convert to Date object
     const dateString = e.target.value;
     console.log('Manual input:', dateString);
-    if (dateString) {
+
+    // HTML5 date input only emits complete YYYY-MM-DD values or empty string
+    // If empty, clear the date
+    if (!dateString) {
+      setEditValue(null);
+      return;
+    }
+
+    // If we have a complete date string (10 characters: YYYY-MM-DD)
+    if (dateString.length === 10) {
       try {
         // Parse as local date to avoid timezone shifts
         const date = parseLocalDate(dateString);
         if (isValid(date)) {
           console.log('Parsed manual date:', date);
           setEditValue(date);
+        } else {
+          console.warn('Invalid date string:', dateString);
         }
       } catch (error) {
         console.error('Invalid date input:', error);
       }
     }
+    // For partial inputs (typing in progress), HTML5 input handles display
+    // We don't need to do anything - let the user finish typing
   };
 
   const handleKeyPress = (e) => {
