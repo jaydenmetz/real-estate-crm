@@ -1,4 +1,4 @@
-const db = require('../../../config/infrastructure/database');
+const db = require('../../../../config/infrastructure/database');
 
 class PreferencesService {
   /**
