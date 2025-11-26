@@ -35,7 +35,8 @@ export const StatusProvider = ({ children, entityType }) => {
   const {
     data: statuses = [],
     isLoading: statusesLoading,
-    error: statusesError
+    error: statusesError,
+    refetch: refetchStatuses
   } = useQuery({
     queryKey: ['statuses', entityType],
     queryFn: () => getStatuses(entityType),
@@ -48,7 +49,8 @@ export const StatusProvider = ({ children, entityType }) => {
   const {
     data: categories = [],
     isLoading: categoriesLoading,
-    error: categoriesError
+    error: categoriesError,
+    refetch: refetchCategories
   } = useQuery({
     queryKey: ['statusCategories', entityType],
     queryFn: () => getStatusCategories(entityType),
@@ -85,8 +87,9 @@ export const StatusProvider = ({ children, entityType }) => {
 
   // Refresh status configuration (for real-time updates)
   const refresh = useCallback(() => {
-    fetchStatusConfig();
-  }, [fetchStatusConfig]);
+    refetchStatuses();
+    refetchCategories();
+  }, [refetchStatuses, refetchCategories]);
 
   const value = {
     // Data
