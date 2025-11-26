@@ -631,6 +631,7 @@ export const DashboardTemplate = ({
           batchRestoring={batchRestoring}
           handleSelectAll={handleSelectAll}
           handleClearSelection={handleClearSelection}
+          showArchived={showArchived}
           selectedYear={archiveYear}
           onYearChange={setArchiveYear}
           yearOptions={archiveYearOptions}

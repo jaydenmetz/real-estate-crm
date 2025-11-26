@@ -42,6 +42,7 @@ export const DashboardContent = ({
   batchRestoring,
   handleSelectAll,
   handleClearSelection,
+  showArchived = false, // NEW: Flag to indicate if showing archived items
   // Year filtering for archive view
   selectedYear,
   onYearChange,
@@ -339,10 +340,11 @@ export const DashboardContent = ({
                     }}
                     viewMode={viewMode}
                     index={index}
-                    isArchived={false}
+                    isArchived={showArchived}
                     onUpdate={onUpdate ? (id, updates) => onUpdate(id, updates) : undefined}
                     onDelete={onDelete ? () => onDelete(itemId) : undefined}
                     onArchive={onArchive ? () => onArchive(itemId) : undefined}
+                    onRestore={onRestore ? () => onRestore(itemId) : undefined}
                     customActions={customActions}
                     animationType="spring"
                     isSelectable={isSelectable}
