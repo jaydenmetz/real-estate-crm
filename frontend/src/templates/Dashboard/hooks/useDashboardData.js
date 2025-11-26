@@ -165,7 +165,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
       // Count items by status
       countByStatus: (status) => {
         return dataArray.filter(item => {
-          const itemStatus = item.escrow_status || item.status || item.lead_status || item.appointment_status || item.client_status;
+          const itemStatus = item.escrow_status || item.listing_status || item.status || item.lead_status || item.appointment_status || item.client_status;
           return itemStatus?.toLowerCase() === status.toLowerCase();
         }).length;
       },
@@ -174,7 +174,7 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
       sumByStatus: (status, field) => {
         return dataArray
           .filter(item => {
-            const itemStatus = item.escrow_status || item.status || item.lead_status || item.appointment_status || item.client_status;
+            const itemStatus = item.escrow_status || item.listing_status || item.status || item.lead_status || item.appointment_status || item.client_status;
             return itemStatus?.toLowerCase() === status.toLowerCase();
           })
           .reduce((sum, item) => sum + (parseFloat(item[field] || 0)), 0);
@@ -287,13 +287,13 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
         const selectedStatusKeys = statusList.split(',').map(s => s.toLowerCase());
 
         filtered = filtered.filter(item => {
-          const statusField = item.escrow_status || item.status || item.lead_status || item.appointment_status;
+          const statusField = item.escrow_status || item.listing_status || item.status || item.lead_status || item.appointment_status || item.client_status;
           return selectedStatusKeys.includes(statusField?.toLowerCase());
         });
       } else {
         // Legacy single-select: filter by exact tab name
         filtered = filtered.filter(item => {
-          const statusField = item.escrow_status || item.status || item.lead_status || item.appointment_status;
+          const statusField = item.escrow_status || item.listing_status || item.status || item.lead_status || item.appointment_status || item.client_status;
           return statusField?.toLowerCase() === sourceTab.toLowerCase();
         });
       }
