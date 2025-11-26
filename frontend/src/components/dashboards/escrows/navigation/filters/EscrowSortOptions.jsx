@@ -9,25 +9,25 @@
 
 export const escrowSortOptions = [
   {
-    value: 'created_at',
-    label: 'Created'
-  },
-  {
-    value: 'closing_date',
-    label: 'Closing Date'
+    value: 'property_address',
+    label: 'Address'
   },
   {
     value: 'purchase_price',
     label: 'Purchase Price'
   },
   {
-    value: 'property_address',
-    label: 'Property Address'
+    value: 'commission_amount',
+    label: 'Commission'
   },
   {
-    value: 'escrow_status',
-    label: 'Status'
+    value: 'acceptance_date',
+    label: 'Acceptance Date'
+  },
+  {
+    value: 'closing_date',
+    label: 'Closing Date'
   }
 ];
 
-export const escrowDefaultSort = 'created_at';
+export const escrowDefaultSort = 'closing_date';
