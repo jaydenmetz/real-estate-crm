@@ -132,7 +132,11 @@ export const EditCommission = ({
 
     // Calculate based on commission type
     let displayAmount = 0;
-    if (commissionType === 'percentage' && purchasePrice) {
+    if (commissionType === 'percentage') {
+      // If no purchase price, show percentage with note
+      if (!purchasePrice || purchasePrice === 0) {
+        return `${parseFloat(editValue)}% (set price first)`;
+      }
       // Convert percentage to decimal (3 → 0.03) and multiply by purchase price
       displayAmount = (parseFloat(editValue) / 100) * purchasePrice;
     } else if (commissionType === 'flat') {
