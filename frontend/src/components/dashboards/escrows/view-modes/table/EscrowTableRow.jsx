@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TableRowTemplate } from '../../../../../templates/Dashboard/view-modes';
 import {
   CheckCircle,
@@ -7,6 +7,7 @@ import {
 import { alpha } from '@mui/material';
 import { getStatusConfig } from '../../../../../constants/escrowConfig';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+import { useStatus } from '../../../../../contexts/StatusContext';
 
 // Import editor components
 import {
@@ -32,185 +33,184 @@ const maskCommission = (value) => {
 };
 
 // ============================================================================
-// TABLE VIEW CONFIGURATION
+// TABLE VIEW CONFIGURATION HOOK
 // ============================================================================
 
-const escrowTableConfig = {
-  // Grid layout: 8 columns with responsive widths
-  gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
+/**
+ * Hook to generate table config with database-driven status options
+ * @param {Array} statuses - Status array from StatusContext
+ * @returns {Object} Table configuration object
+ */
+const useEscrowTableConfig = (statuses) => {
+  return useMemo(() => {
+    // Transform database statuses into dropdown options
+    const statusOptions = statuses.map((status) => ({
+      value: status.status_key,
+      label: status.label,
+      icon: status.status_key === 'Cancelled' ? Cancel : CheckCircle,
+      color: status.color,
+    }));
 
-  // Status config for row styling
-  statusConfig: {
-    getConfig: (escrow) => {
-      const config = getStatusConfig(escrow.escrow_status);
-      return {
-        color: config.color,
-        bg: config.bg,
-      };
-    },
-  },
+    return {
+      // Grid layout: 8 columns with responsive widths
+      gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
 
-  // Column configurations
-  columns: [
-    // Property Address (editable, with subtitle)
-    {
-      label: 'Property',
-      field: (escrow) => escrow.display_address || escrow.property_address || 'No Address',
-      subtitle: (escrow) => {
-        if (escrow.city && escrow.state) {
-          return `${escrow.city}, ${escrow.state}${escrow.zip_code ? ' ' + escrow.zip_code : ''}`;
-        }
-        return 'Location TBD';
+      // Status config for row styling
+      statusConfig: {
+        getConfig: (escrow) => {
+          const config = getStatusConfig(escrow.escrow_status);
+          return {
+            color: config.color,
+            bg: config.bg,
+          };
+        },
       },
-      editable: true,
-      editor: EditPropertyAddress,
-      editorProps: (escrow) => ({
-        value: escrow.display_address || escrow.property_address,
-        canonicalValue: escrow.property_address,
-        data: escrow,
-      }),
-      onSave: (escrow, addressData) => addressData,
-      align: 'left',
-      bold: true,
-      hoverColor: 'rgba(16, 185, 129, 0.08)',
-    },
 
-    // Status (editable)
-    {
-      label: 'Status',
-      field: 'escrow_status',
-      formatter: (status) => getStatusConfig(status).label,
-      isStatus: true,
-      editable: true,
-      statusOptions: [
+      // Column configurations
+      columns: [
+        // Property Address (editable, with subtitle)
         {
-          value: 'Active',
-          label: 'Active',
-          icon: CheckCircle,
+          label: 'Property',
+          field: (escrow) => escrow.display_address || escrow.property_address || 'No Address',
+          subtitle: (escrow) => {
+            if (escrow.city && escrow.state) {
+              return `${escrow.city}, ${escrow.state}${escrow.zip_code ? ' ' + escrow.zip_code : ''}`;
+            }
+            return 'Location TBD';
+          },
+          editable: true,
+          editor: EditPropertyAddress,
+          editorProps: (escrow) => ({
+            value: escrow.display_address || escrow.property_address,
+            canonicalValue: escrow.property_address,
+            data: escrow,
+          }),
+          onSave: (escrow, addressData) => addressData,
+          align: 'left',
+          bold: true,
+          hoverColor: 'rgba(16, 185, 129, 0.08)',
+        },
+
+        // Status (editable)
+        {
+          label: 'Status',
+          field: 'escrow_status',
+          formatter: (status) => getStatusConfig(status).label,
+          isStatus: true,
+          editable: true,
+          statusOptions: statusOptions,
+          onSave: (escrow, newStatus) => {
+            return { escrow_status: newStatus };
+          },
+          align: 'left',
+        },
+
+        // Purchase Price (editable)
+        {
+          label: 'Price',
+          field: 'purchase_price',
+          formatter: (value) => formatCurrency(value),
+          editable: true,
+          editor: EditPurchasePrice,
+          onSave: (escrow, newPrice) => {
+            return { purchase_price: newPrice };
+          },
+          align: 'left',
+          bold: true,
           color: '#10b981',
+          hoverColor: 'rgba(16, 185, 129, 0.08)',
         },
+
+        // Commission (editable with toggle)
         {
-          value: 'Closed',
-          label: 'Closed',
-          icon: CheckCircle,
-          color: '#3b82f6',
+          label: 'Commission',
+          field: (escrow) => escrow.my_commission || escrow.gross_commission || 0,
+          formatter: (value) => formatCurrency(value),
+          editable: true,
+          editor: EditCommissionAmount,
+          editorProps: (escrow) => ({
+            value: escrow.my_commission || escrow.gross_commission || 0,
+            // Normalize commission percentage: parseFloat removes trailing zeros
+            // Use null if no percentage stored (allows placeholder to show)
+            commissionPercentage: escrow.commission_percentage !== null && escrow.commission_percentage !== undefined
+              ? parseFloat(escrow.commission_percentage)
+              : null,
+            commissionType: escrow.commission_type || 'percentage',
+            purchasePrice: escrow.purchase_price || 0,
+          }),
+          onSave: (escrow, updates) => {
+            return {
+              my_commission: updates.my_commission || updates,
+              commission_percentage: updates.commission_percentage,
+              commission_type: updates.commission_type,
+            };
+          },
+          toggle: {
+            maskFn: maskCommission,
+          },
+          align: 'left',
+          bold: true,
+          color: '#6366f1',
+          hoverColor: 'rgba(99, 102, 241, 0.08)',
         },
+
+        // Acceptance Date (editable)
         {
-          value: 'Cancelled',
-          label: 'Cancelled',
-          icon: Cancel,
-          color: '#ef4444',
+          label: 'Acceptance',
+          field: 'acceptance_date',
+          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+          editable: true,
+          editor: EditAcceptanceDate,
+          onSave: (escrow, newDate) => {
+            return { acceptance_date: newDate };
+          },
+          align: 'left',
+          hoverColor: alpha('#000', 0.05),
+        },
+
+        // Closing Date (editable) - Dynamic label based on status
+        {
+          label: (escrow) => {
+            const status = escrow?.escrow_status?.toLowerCase();
+            if (status === 'closed') return 'Closed';
+            if (status === 'cancelled') return 'Cancelled';
+            return 'Closes'; // Active and default
+          },
+          field: 'closing_date',
+          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+          editable: true,
+          editor: EditClosingDate,
+          onSave: (escrow, newDate) => {
+            return { closing_date: newDate };
+          },
+          align: 'left',
+          hoverColor: alpha('#000', 0.05),
+        },
+
+        // Progress (read-only)
+        {
+          label: 'Progress',
+          field: (escrow) => {
+            const totalTasks = escrow.checklist_total || 0;
+            const completedTasks = escrow.checklist_completed || 0;
+            if (totalTasks === 0) return 0;
+            return Math.round((completedTasks / totalTasks) * 100);
+          },
+          formatter: (value) => `${value}%`,
+          align: 'center',
+          bold: true,
+          color: (escrow) => getStatusConfig(escrow.escrow_status).color,
         },
       ],
-      onSave: (escrow, newStatus) => {
-        return { escrow_status: newStatus };
-      },
-      align: 'left',
-    },
-
-    // Purchase Price (editable)
-    {
-      label: 'Price',
-      field: 'purchase_price',
-      formatter: (value) => formatCurrency(value),
-      editable: true,
-      editor: EditPurchasePrice,
-      onSave: (escrow, newPrice) => {
-        return { purchase_price: newPrice };
-      },
-      align: 'left',
-      bold: true,
-      color: '#10b981',
-      hoverColor: 'rgba(16, 185, 129, 0.08)',
-    },
-
-    // Commission (editable with toggle)
-    {
-      label: 'Commission',
-      field: (escrow) => escrow.my_commission || escrow.gross_commission || 0,
-      formatter: (value) => formatCurrency(value),
-      editable: true,
-      editor: EditCommissionAmount,
-      editorProps: (escrow) => ({
-        value: escrow.my_commission || escrow.gross_commission || 0,
-        // Normalize commission percentage: parseFloat removes trailing zeros
-        // Use null if no percentage stored (allows placeholder to show)
-        commissionPercentage: escrow.commission_percentage !== null && escrow.commission_percentage !== undefined
-          ? parseFloat(escrow.commission_percentage)
-          : null,
-        commissionType: escrow.commission_type || 'percentage',
-        purchasePrice: escrow.purchase_price || 0,
-      }),
-      onSave: (escrow, updates) => {
-        return {
-          my_commission: updates.my_commission || updates,
-          commission_percentage: updates.commission_percentage,
-          commission_type: updates.commission_type,
-        };
-      },
-      toggle: {
-        maskFn: maskCommission,
-      },
-      align: 'left',
-      bold: true,
-      color: '#6366f1',
-      hoverColor: 'rgba(99, 102, 241, 0.08)',
-    },
-
-    // Acceptance Date (editable)
-    {
-      label: 'Acceptance',
-      field: 'acceptance_date',
-      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
-      editable: true,
-      editor: EditAcceptanceDate,
-      onSave: (escrow, newDate) => {
-        return { acceptance_date: newDate };
-      },
-      align: 'left',
-      hoverColor: alpha('#000', 0.05),
-    },
-
-    // Closing Date (editable) - Dynamic label based on status
-    {
-      label: (escrow) => {
-        const status = escrow?.escrow_status?.toLowerCase();
-        if (status === 'closed') return 'Closed';
-        if (status === 'cancelled') return 'Cancelled';
-        return 'Closes'; // Active and default
-      },
-      field: 'closing_date',
-      formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
-      editable: true,
-      editor: EditClosingDate,
-      onSave: (escrow, newDate) => {
-        return { closing_date: newDate };
-      },
-      align: 'left',
-      hoverColor: alpha('#000', 0.05),
-    },
-
-    // Progress (read-only)
-    {
-      label: 'Progress',
-      field: (escrow) => {
-        const totalTasks = escrow.checklist_total || 0;
-        const completedTasks = escrow.checklist_completed || 0;
-        if (totalTasks === 0) return 0;
-        return Math.round((completedTasks / totalTasks) * 100);
-      },
-      formatter: (value) => `${value}%`,
-      align: 'center',
-      bold: true,
-      color: (escrow) => getStatusConfig(escrow.escrow_status).color,
-    },
-  ],
+    };
+  }, [statuses]);
 };
 
 /**
  * EscrowTableRow - Compact table view for escrows dashboard
  *
  * Now uses TableRowTemplate with inline configuration for better colocation.
+ * Now uses database-driven status options from StatusContext.
  *
  * Reduced from 374 lines to ~240 lines by using TableRowTemplate (460 lines, reusable).
  *
@@ -218,7 +218,7 @@ const escrowTableConfig = {
  * - Grid layout with 8 columns (Property, Status, Price, Commission, Acceptance, Closing, Progress, Actions)
  * - Inline editors: address, price, commission (with toggle), dates, status
  * - Commission toggle: show/hide with privacy masking
- * - Status menu: 3 status options with icons
+ * - Status menu: dynamically populated from database
  * - Click vs drag: text selection support
  * - Hover effects and transitions
  * - QuickActionsMenu
@@ -236,10 +236,16 @@ const EscrowTableRow = React.memo(({
   isSelected,
   onSelect,
 }) => {
+  // Get statuses from context
+  const { statuses } = useStatus();
+
+  // Generate config with database-driven status options
+  const config = useEscrowTableConfig(statuses);
+
   return (
     <TableRowTemplate
       data={escrow}
-      config={escrowTableConfig}
+      config={config}
       onClick={onClick}
       onUpdate={onUpdate}
       onArchive={onArchive}
