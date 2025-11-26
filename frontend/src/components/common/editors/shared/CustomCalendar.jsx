@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton, Grid } from '@mui/material';
 import { ChevronLeft, ChevronRight } from '@mui/icons-material';
 import {
@@ -12,7 +12,8 @@ import {
   format,
   isSameMonth,
   isSameDay,
-  isToday
+  isToday,
+  isValid
 } from 'date-fns';
 import { parseLocalDate } from '../../../../utils/safeDateUtils';
 
@@ -34,6 +35,17 @@ export const CustomCalendar = ({ selectedDate, onSelectDate, color = '#6366f1', 
     }
     return new Date();
   });
+
+  // Auto-navigate to selected date's month when selectedDate changes (e.g., manual typing in date input)
+  useEffect(() => {
+    if (selectedDate) {
+      const date = typeof selectedDate === 'string' ? parseLocalDate(selectedDate) : selectedDate;
+      if (date && isValid(date)) {
+        console.log('📅 CustomCalendar: Jumping to month:', format(date, 'MMMM yyyy'));
+        setCurrentMonth(date);
+      }
+    }
+  }, [selectedDate]);
 
   const renderHeader = () => {
     return (
