@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ListItemTemplate } from '../../../../../templates/Dashboard/view-modes';
 import {
   CheckCircle,
@@ -8,6 +8,7 @@ import {
 import { getStatusConfig } from '../../../../../constants/listingConfig';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+import { useStatus } from '../../../../../contexts/StatusContext';
 
 // Import editor components
 import {
@@ -32,10 +33,34 @@ const maskCommission = (value) => {
 };
 
 // ============================================================================
-// LIST VIEW CONFIGURATION
+// LIST VIEW CONFIGURATION HOOK
 // ============================================================================
 
-const listingListConfig = {
+/**
+ * Hook to generate list config with database-driven status options
+ * @param {Array} statuses - Status array from StatusContext
+ * @returns {Object} List configuration object
+ */
+const useListingListConfig = (statuses) => {
+  return useMemo(() => {
+    // Transform database statuses into dropdown options
+    // Fallback to hardcoded options if database statuses not loaded yet
+    const statusOptions = statuses && statuses.length > 0
+      ? statuses.map((status) => ({
+          value: status.status_key,
+          label: status.label,
+          icon: status.status_key === 'Cancelled' ? Cancel : CheckCircle,
+          color: status.color,
+        }))
+      : [
+          { value: 'Active', label: 'Active', icon: CheckCircle, color: '#10b981' },
+          { value: 'Pending', label: 'Pending', icon: CheckCircle, color: '#f59e0b' },
+          { value: 'Closed', label: 'Closed', icon: CheckCircle, color: '#6366f1' },
+          { value: 'Expired', label: 'Expired', icon: CheckCircle, color: '#94a3b8' },
+          { value: 'Cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
+        ];
+
+    return {
   // Image/Left Section Configuration
   image: {
     source: (listing) => getBestPropertyImage(listing),
@@ -64,38 +89,7 @@ const listingListConfig = {
       };
     },
     editable: true,
-    options: [
-      {
-        value: 'Active',
-        label: 'Active',
-        icon: CheckCircle,
-        color: '#10b981',
-      },
-      {
-        value: 'Pending',
-        label: 'Pending',
-        icon: CheckCircle,
-        color: '#f59e0b',
-      },
-      {
-        value: 'Closed',
-        label: 'Closed',
-        icon: CheckCircle,
-        color: '#6366f1',
-      },
-      {
-        value: 'Expired',
-        label: 'Expired',
-        icon: CheckCircle,
-        color: '#94a3b8',
-      },
-      {
-        value: 'Cancelled',
-        label: 'Cancelled',
-        icon: Cancel,
-        color: '#ef4444',
-      },
-    ],
+    options: statusOptions,
     onSave: (listing, newStatus) => {
       return { listing_status: newStatus };
     },
@@ -188,18 +182,21 @@ const listingListConfig = {
       },
     },
   ],
+    };
+  }, [statuses]);
 };
 
 /**
  * ListingListItem - Horizontal list view for listings dashboard
  *
  * Uses ListItemTemplate with inline configuration for consistency.
+ * Now uses database-driven status options from StatusContext.
  *
  * Features:
  * - Property image with progress bar overlay (200px wide)
  * - Inline editors: price, commission (with toggle), dates, status
  * - Commission toggle: show/hide with privacy masking
- * - Status menu: 4 status options with icons
+ * - Database-driven status options
  * - Click vs drag: text selection support
  * - Hover effects and transitions
  */
@@ -216,10 +213,16 @@ const ListingListItem = React.memo(({
   isSelected,
   onSelect,
 }) => {
+  // Get statuses from context
+  const { statuses } = useStatus();
+
+  // Generate config with database-driven status options
+  const config = useListingListConfig(statuses);
+
   return (
     <ListItemTemplate
       data={listing}
-      config={listingListConfig}
+      config={config}
       onClick={onClick}
       onUpdate={onUpdate}
       onArchive={onArchive}

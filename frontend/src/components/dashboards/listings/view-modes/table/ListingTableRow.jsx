@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TableRowTemplate } from '../../../../../templates/Dashboard/view-modes';
 import {
   CheckCircle,
@@ -8,6 +8,7 @@ import {
 import { getStatusConfig } from '../../../../../constants/listingConfig';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+import { useStatus } from '../../../../../contexts/StatusContext';
 
 // Import editor components
 import {
@@ -32,10 +33,34 @@ const maskCommission = (value) => {
 };
 
 // ============================================================================
-// TABLE VIEW CONFIGURATION
+// TABLE VIEW CONFIGURATION HOOK
 // ============================================================================
 
-const listingTableConfig = {
+/**
+ * Hook to generate table config with database-driven status options
+ * @param {Array} statuses - Status array from StatusContext
+ * @returns {Object} Table configuration object
+ */
+const useListingTableConfig = (statuses) => {
+  return useMemo(() => {
+    // Transform database statuses into dropdown options
+    // Fallback to hardcoded options if database statuses not loaded yet
+    const statusOptions = statuses && statuses.length > 0
+      ? statuses.map((status) => ({
+          value: status.status_key,
+          label: status.label,
+          icon: status.status_key === 'Cancelled' ? Cancel : CheckCircle,
+          color: status.color,
+        }))
+      : [
+          { value: 'Active', label: 'Active', icon: CheckCircle, color: '#10b981' },
+          { value: 'Pending', label: 'Pending', icon: CheckCircle, color: '#f59e0b' },
+          { value: 'Closed', label: 'Closed', icon: CheckCircle, color: '#6366f1' },
+          { value: 'Expired', label: 'Expired', icon: CheckCircle, color: '#94a3b8' },
+          { value: 'Cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
+        ];
+
+    return {
   // Grid Layout (8 columns)
   gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
 
@@ -70,38 +95,7 @@ const listingTableConfig = {
         };
       },
       editable: true,
-      statusOptions: [
-        {
-          value: 'Active',
-          label: 'Active',
-          icon: CheckCircle,
-          color: '#10b981',
-        },
-        {
-          value: 'Pending',
-          label: 'Pending',
-          icon: CheckCircle,
-          color: '#f59e0b',
-        },
-        {
-          value: 'Closed',
-          label: 'Closed',
-          icon: CheckCircle,
-          color: '#6366f1',
-        },
-        {
-          value: 'Expired',
-          label: 'Expired',
-          icon: CheckCircle,
-          color: '#94a3b8',
-        },
-        {
-          value: 'Cancelled',
-          label: 'Cancelled',
-          icon: Cancel,
-          color: '#ef4444',
-        },
-      ],
+      statusOptions: statusOptions,
       onSave: (listing, newStatus) => {
         return { listing_status: newStatus };
       },
@@ -198,18 +192,21 @@ const listingTableConfig = {
     restore: true,
     delete: true,
   },
+    };
+  }, [statuses]);
 };
 
 /**
  * ListingTableRow - Table row view for listings dashboard
  *
  * Uses TableRowTemplate with inline configuration for consistency.
+ * Now uses database-driven status options from StatusContext.
  *
  * Features:
  * - 8 columns: Property, Status, Price, Commission, Listed, Expires, Progress, Actions
  * - Inline editors for all editable fields
  * - Commission toggle: show/hide with privacy masking
- * - Status menu: 4 status options with icons
+ * - Database-driven status options
  * - minDate validation for expiration date
  * - Property thumbnail with fallback icon
  * - Compact table layout optimized for scanning
@@ -227,10 +224,16 @@ const ListingTableRow = React.memo(({
   isSelected,
   onSelect,
 }) => {
+  // Get statuses from context
+  const { statuses } = useStatus();
+
+  // Generate config with database-driven status options
+  const config = useListingTableConfig(statuses);
+
   return (
     <TableRowTemplate
       data={listing}
-      config={listingTableConfig}
+      config={config}
       onClick={onClick}
       onUpdate={onUpdate}
       onArchive={onArchive}
