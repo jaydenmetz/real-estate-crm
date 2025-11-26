@@ -284,8 +284,14 @@ const EscrowCard = React.memo(({
   // Get statuses from context
   const { statuses } = useStatus();
 
+  // Debug: Log statuses to see what we're getting
+  console.log('[EscrowCard] statuses:', statuses);
+
   // Generate config with database-driven status options
   const config = useEscrowCardConfig(statuses);
+
+  // Debug: Log the generated options
+  console.log('[EscrowCard] config.status.options:', config.status.options);
 
   return (
     <CardTemplate
