@@ -218,16 +218,25 @@ const CardTemplate = React.memo(({
   }, []);
 
   const handleStatusChange = useCallback(async (newStatus) => {
+    console.log('[CardTemplate] Status change requested:', {
+      currentStatus: statusValue,
+      newStatus,
+      dataId: data.id,
+      fullData: data
+    });
+
     if (onUpdate && config.status?.onSave) {
       try {
         const updates = config.status.onSave(data, newStatus);
+        console.log('[CardTemplate] Calling onUpdate with:', { id: data.id, updates });
         await onUpdate(data.id, updates);
+        console.log('[CardTemplate] onUpdate completed successfully');
       } catch (error) {
-        console.error('Failed to update status:', error);
+        console.error('[CardTemplate] Failed to update status:', error);
       }
     }
     handleStatusClose();
-  }, [data, config.status, onUpdate, handleStatusClose]);
+  }, [data, config.status, onUpdate, handleStatusClose, statusValue]);
 
   // Quick actions menu handlers
   const handleActionsMenuOpen = useCallback((e) => {

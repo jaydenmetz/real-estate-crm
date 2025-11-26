@@ -342,7 +342,7 @@ export const DashboardTemplate = ({
   };
 
   const handleUpdate = async (id, updates) => {
-    console.log('🟡 DashboardTemplate handleUpdate called:', {
+    console.log('🟡 [DashboardTemplate] handleUpdate called:', {
       id,
       updates,
       idType: typeof id,
@@ -350,10 +350,17 @@ export const DashboardTemplate = ({
       entity: config.entity.name
     });
     try {
-      await config.api.update(id, updates);
-      await refetch();
+      const result = await config.api.update(id, updates);
+      console.log('✅ [DashboardTemplate] API update successful:', result);
+
+      console.log('🔄 [DashboardTemplate] Calling refetch...');
+      const refetchResult = await refetch();
+      console.log('✅ [DashboardTemplate] Refetch completed:', {
+        dataLength: refetchResult?.data?.length,
+        firstItem: refetchResult?.data?.[0]
+      });
     } catch (err) {
-      console.error(`Failed to update ${config.entity.name}:`, err);
+      console.error(`❌ [DashboardTemplate] Failed to update ${config.entity.name}:`, err);
     }
   };
 
