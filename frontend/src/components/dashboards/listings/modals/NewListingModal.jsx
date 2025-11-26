@@ -1090,4 +1090,5 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
   );
 };
 
+export { NewListingModal };
 export default NewListingModal;

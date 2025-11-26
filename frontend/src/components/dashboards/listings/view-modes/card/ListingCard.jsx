@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CardTemplate } from '../../../../../templates/Dashboard/view-modes';
 import {
   CheckCircle,
@@ -9,6 +9,7 @@ import { alpha } from '@mui/material';
 import { getStatusConfig } from '../../../../../constants/listingConfig';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+import { useStatus } from '../../../../../contexts/StatusContext';
 
 // Import editor components
 import {
@@ -33,10 +34,34 @@ const maskCommission = (value) => {
 };
 
 // ============================================================================
-// CARD VIEW CONFIGURATION
+// CARD VIEW CONFIGURATION HOOK
 // ============================================================================
 
-const listingCardConfig = {
+/**
+ * Hook to generate card config with database-driven status options
+ * @param {Array} statuses - Status array from StatusContext
+ * @returns {Object} Card configuration object
+ */
+const useListingCardConfig = (statuses) => {
+  return useMemo(() => {
+    // Transform database statuses into dropdown options
+    // Fallback to hardcoded options if database statuses not loaded yet
+    const statusOptions = statuses && statuses.length > 0
+      ? statuses.map((status) => ({
+          value: status.status_key,
+          label: status.label,
+          icon: status.status_key === 'Cancelled' ? Cancel : CheckCircle,
+          color: status.color,
+        }))
+      : [
+          { value: 'Active', label: 'Active', icon: CheckCircle, color: '#10b981' },
+          { value: 'Pending', label: 'Pending', icon: CheckCircle, color: '#f59e0b' },
+          { value: 'Closed', label: 'Closed', icon: CheckCircle, color: '#6366f1' },
+          { value: 'Expired', label: 'Expired', icon: CheckCircle, color: '#94a3b8' },
+          { value: 'Cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
+        ];
+
+    return {
   // Image/Header Configuration
   image: {
     source: (listing) => getBestPropertyImage(listing),
@@ -59,38 +84,7 @@ const listingCardConfig = {
       };
     },
     editable: true,
-    options: [
-      {
-        value: 'Active',
-        label: 'Active',
-        icon: CheckCircle,
-        color: '#10b981',
-      },
-      {
-        value: 'Pending',
-        label: 'Pending',
-        icon: CheckCircle,
-        color: '#f59e0b',
-      },
-      {
-        value: 'Closed',
-        label: 'Closed',
-        icon: CheckCircle,
-        color: '#6366f1',
-      },
-      {
-        value: 'Expired',
-        label: 'Expired',
-        icon: CheckCircle,
-        color: '#94a3b8',
-      },
-      {
-        value: 'Cancelled',
-        label: 'Cancelled',
-        icon: Cancel,
-        color: '#ef4444',
-      },
-    ],
+    options: statusOptions,
     onSave: (listing, newStatus) => {
       return { listing_status: newStatus };
     },
@@ -226,18 +220,22 @@ const listingCardConfig = {
     restore: true,
     delete: true,
   },
+    };
+  }, [statuses]);
 };
 
 /**
  * ListingCard - Card view for listings dashboard
  *
  * Now uses CardTemplate with inline configuration for better colocation.
+ * Now uses database-driven status options from StatusContext.
  * Matches escrows implementation exactly for consistency.
  *
  * Features:
  * - Quick actions menu (Archive/Delete/View)
  * - Status badges and color coding
  * - Commission privacy toggle
+ * - Database-driven status options
  * - Consistent with all other dashboard view modes
  */
 const ListingCard = React.memo(({
@@ -253,10 +251,16 @@ const ListingCard = React.memo(({
   isSelected,
   onSelect,
 }) => {
+  // Get statuses from context
+  const { statuses } = useStatus();
+
+  // Generate config with database-driven status options
+  const config = useListingCardConfig(statuses);
+
   return (
     <CardTemplate
       data={listing}
-      config={listingCardConfig}
+      config={config}
       onClick={onClick}
       onUpdate={onUpdate}
       onArchive={onArchive}
