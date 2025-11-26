@@ -284,11 +284,11 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
 
       if (statusList) {
         // Multi-select: filter by comma-separated status list
-        const selectedStatusKeys = statusList.split(',');
+        const selectedStatusKeys = statusList.split(',').map(s => s.toLowerCase());
 
         filtered = filtered.filter(item => {
           const statusField = item.escrow_status || item.status || item.lead_status || item.appointment_status;
-          return selectedStatusKeys.includes(statusField);
+          return selectedStatusKeys.includes(statusField?.toLowerCase());
         });
       } else {
         // Legacy single-select: filter by exact tab name
