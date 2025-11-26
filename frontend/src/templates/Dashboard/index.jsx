@@ -626,6 +626,9 @@ export const DashboardTemplate = ({
           isSelectable={config.dashboard?.enableMultiSelect || false}
           selectedItems={selectedItems}
           onSelectItem={handleSelectItem}
+          dateRangeFilter={dateRangeFilter}
+          customStartDate={customStartDate}
+          customEndDate={customEndDate}
         />
 
       {/* New Item Modal */}

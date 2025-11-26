@@ -49,6 +49,10 @@ export const DashboardContent = ({
   isSelectable = false,
   selectedItems = [],
   onSelectItem,
+  // Date range props
+  dateRangeFilter,
+  customStartDate,
+  customEndDate,
 }) => {
   // Loading state
   if (loading) {
@@ -70,6 +74,60 @@ export const DashboardContent = ({
 
   // Empty state
   if (!data || data.length === 0) {
+    // Format status text intelligently
+    const formatStatusText = (statusStr) => {
+      if (!statusStr) return 'All';
+
+      // Remove "All:" prefix if present
+      const cleaned = statusStr.replace(/^All:,*/, '').replace(/^All$/, '');
+      if (!cleaned) return 'All';
+
+      // Split by comma, clean up, and filter empty
+      const parts = cleaned.split(',').map(s => s.trim()).filter(Boolean);
+
+      if (parts.length === 0) return 'All';
+      if (parts.length === 1) return parts[0];
+      if (parts.length === 2) return `${parts[0]} or ${parts[1]}`;
+
+      // 3+ items: "A, B, or C"
+      const lastPart = parts[parts.length - 1];
+      const firstParts = parts.slice(0, -1).join(', ');
+      return `${firstParts}, or ${lastPart}`;
+    };
+
+    // Format date range for display
+    const formatDateRange = () => {
+      if (!dateRangeFilter && !customStartDate && !customEndDate) {
+        return 'All Time';
+      }
+
+      const formatDate = (dateStr) => {
+        if (!dateStr) return null;
+        try {
+          const date = new Date(dateStr);
+          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } catch {
+          return null;
+        }
+      };
+
+      if (customStartDate && customEndDate) {
+        return `${formatDate(customStartDate)} - ${formatDate(customEndDate)}`;
+      } else if (customStartDate) {
+        return `From ${formatDate(customStartDate)}`;
+      } else if (customEndDate) {
+        return `Until ${formatDate(customEndDate)}`;
+      } else if (dateRangeFilter) {
+        // Preset filters like "This Month", "Last 30 Days", etc.
+        return dateRangeFilter.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      }
+
+      return 'All Time';
+    };
+
+    const formattedStatus = formatStatusText(selectedStatus);
+    const dateRangeText = formatDateRange();
+
     return (
       <Paper
         sx={{
@@ -85,12 +143,15 @@ export const DashboardContent = ({
         }}
       >
         <Typography variant="h6" color="textSecondary" gutterBottom>
-          No {selectedStatus} {config.entity.namePlural} found
+          No {formattedStatus} {config.entity.namePlural} Found
         </Typography>
-        <Typography variant="body2" color="textSecondary">
+        <Typography variant="body2" color="textSecondary" sx={{ mb: 1.5 }}>
           {config.dashboard.hero.showAddButton
             ? `Click "New ${config.entity.label}" to get started`
             : 'Try adjusting your filters'}
+        </Typography>
+        <Typography variant="caption" color="text.disabled" sx={{ fontStyle: 'italic' }}>
+          Showing: {dateRangeText}
         </Typography>
       </Paper>
     );
