@@ -2,15 +2,21 @@
  * StatusTabWithDropdown Component
  *
  * A tab with an integrated dropdown menu showing all statuses in the category.
- * Multi-select checkboxes with intelligent category controls.
+ * Multi-select checkboxes with intelligent category controls and smart nesting.
  *
  * Features:
  * - Click tab when NOT selected: Switch to that category (all statuses selected by default)
  * - Click tab when ALREADY selected: Open dropdown to manage status filters
+ * - Smart nesting: Only shows category header + indented children if category has 2+ statuses
+ * - Single status categories: Display flat (no redundant parent/child)
  * - Category checkboxes control all child statuses (indeterminate for partial selection)
  * - All statuses selected by default when switching tabs
  * - Empty selection = show all items (no filter)
  * - No color circles (removed per user request)
+ *
+ * Examples:
+ * - Escrows (Active=1, Closed=1, Cancelled=1): All tabs show flat list
+ * - Listings (Active=3, Closed=1): Active tab shows nested, Closed shows flat
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -193,7 +199,7 @@ const StatusTabWithDropdown = ({
           },
         }}
       >
-        {/* ALL TAB: Show grouped categories with indented statuses */}
+        {/* ALL TAB: Show grouped categories with smart nesting */}
         {category.id === 'All' && allCategories ? (
           <>
             {allCategories
@@ -206,115 +212,246 @@ const StatusTabWithDropdown = ({
                 const allCategorySelected = selectedInCategory === categoryStatusKeys.length;
                 const someCategorySelected = selectedInCategory > 0 && selectedInCategory < categoryStatusKeys.length;
 
+                // Smart display: Only show nested structure if category has multiple statuses
+                const hasMultipleStatuses = cat.statuses.length > 1;
+
                 return (
                   <React.Fragment key={cat.category_id}>
-                    {/* Category checkbox */}
-                    <MenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCategoryToggle(cat.category_key);
-                      }}
-                      sx={{
-                        fontSize: '0.875rem',
-                        py: 1,
-                        fontWeight: 600,
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Checkbox
-                          checked={allCategorySelected}
-                          indeterminate={someCategorySelected}
-                          size="small"
-                          sx={{ p: 0 }}
-                          readOnly
-                        />
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {cat.category_label}
-                        </Typography>
-                      </Box>
-                    </MenuItem>
-
-                    {/* Indented statuses under this category */}
-                    {cat.statuses.map((status) => {
-                      const isChecked = selectedStatuses.includes(status.status_key);
-
-                      return (
+                    {hasMultipleStatuses ? (
+                      /* Multiple statuses: Show category header + indented children */
+                      <>
+                        {/* Category checkbox (parent) */}
                         <MenuItem
-                          key={status.id}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleStatusToggle(status.status_key);
+                            handleCategoryToggle(cat.category_key);
                           }}
                           sx={{
                             fontSize: '0.875rem',
                             py: 1,
-                            pl: 4, // Indented under category
-                            fontWeight: isChecked ? 600 : 400,
+                            fontWeight: 600,
                           }}
                         >
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Checkbox
-                              checked={isChecked}
+                              checked={allCategorySelected}
+                              indeterminate={someCategorySelected}
                               size="small"
                               sx={{ p: 0 }}
                               readOnly
                             />
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontWeight: isChecked ? 600 : 400,
-                                color: isChecked ? 'text.primary' : 'text.secondary',
-                              }}
-                            >
-                              {status?.label || status.status_key}
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {cat.category_label}
                             </Typography>
                           </Box>
                         </MenuItem>
-                      );
-                    })}
+
+                        {/* Indented child statuses */}
+                        {cat.statuses.map((status) => {
+                          const isChecked = selectedStatuses.includes(status.status_key);
+
+                          return (
+                            <MenuItem
+                              key={status.id}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStatusToggle(status.status_key);
+                              }}
+                              sx={{
+                                fontSize: '0.875rem',
+                                py: 1,
+                                pl: 4, // Indented under category
+                                fontWeight: isChecked ? 600 : 400,
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <Checkbox
+                                  checked={isChecked}
+                                  size="small"
+                                  sx={{ p: 0 }}
+                                  readOnly
+                                />
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    fontWeight: isChecked ? 600 : 400,
+                                    color: isChecked ? 'text.primary' : 'text.secondary',
+                                  }}
+                                >
+                                  {status?.label || status.status_key}
+                                </Typography>
+                              </Box>
+                            </MenuItem>
+                          );
+                        })}
+                      </>
+                    ) : (
+                      /* Single status: Show flat (no redundant nesting) */
+                      cat.statuses.map((status) => {
+                        const isChecked = selectedStatuses.includes(status.status_key);
+
+                        return (
+                          <MenuItem
+                            key={status.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStatusToggle(status.status_key);
+                            }}
+                            sx={{
+                              fontSize: '0.875rem',
+                              py: 1,
+                              pl: 1.5, // No indentation for single status
+                              fontWeight: isChecked ? 600 : 400,
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                              <Checkbox
+                                checked={isChecked}
+                                size="small"
+                                sx={{ p: 0 }}
+                                readOnly
+                              />
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontWeight: isChecked ? 600 : 400,
+                                  color: isChecked ? 'text.primary' : 'text.secondary',
+                                }}
+                              >
+                                {status?.label || status.status_key}
+                              </Typography>
+                            </Box>
+                          </MenuItem>
+                        );
+                      })
+                    )}
                   </React.Fragment>
                 );
               })}
           </>
         ) : (
-          /* ACTIVE/CLOSED/CANCELLED TABS: Flat list with checkboxes */
-          currentCategory?.statuses?.map((status) => {
-            const isChecked = selectedStatuses.includes(status.status_key);
+          /* INDIVIDUAL TABS: Smart nesting based on status count */
+          (() => {
+            const hasMultipleStatuses = (currentCategory?.statuses?.length || 0) > 1;
 
-            return (
-              <MenuItem
-                key={status.id}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleStatusToggle(status.status_key);
-                }}
-                sx={{
-                  fontSize: '0.875rem',
-                  py: 1,
-                  pl: 1.5,
-                  fontWeight: isChecked ? 600 : 400,
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <Checkbox
-                    checked={isChecked}
-                    size="small"
-                    sx={{ p: 0 }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <Typography
-                    variant="body2"
+            if (hasMultipleStatuses) {
+              // Multiple statuses: Show category header + indented children
+              const categoryStatusKeys = currentCategory.statuses.map(s => s.status_key);
+              const selectedInCategory = categoryStatusKeys.filter(key =>
+                selectedStatuses.includes(key)
+              ).length;
+              const allCategorySelected = selectedInCategory === categoryStatusKeys.length;
+              const someCategorySelected = selectedInCategory > 0 && selectedInCategory < categoryStatusKeys.length;
+
+              return (
+                <>
+                  {/* Category checkbox (parent) */}
+                  <MenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCategoryToggle(currentCategory.category_key);
+                    }}
                     sx={{
-                      fontWeight: isChecked ? 600 : 400,
-                      color: isChecked ? 'text.primary' : 'text.secondary',
+                      fontSize: '0.875rem',
+                      py: 1,
+                      fontWeight: 600,
                     }}
                   >
-                    {status?.label || status.status_key}
-                  </Typography>
-                </Box>
-              </MenuItem>
-            );
-          }) || []
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Checkbox
+                        checked={allCategorySelected}
+                        indeterminate={someCategorySelected}
+                        size="small"
+                        sx={{ p: 0 }}
+                        readOnly
+                      />
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {currentCategory.category_label}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+
+                  {/* Indented child statuses */}
+                  {currentCategory.statuses.map((status) => {
+                    const isChecked = selectedStatuses.includes(status.status_key);
+
+                    return (
+                      <MenuItem
+                        key={status.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStatusToggle(status.status_key);
+                        }}
+                        sx={{
+                          fontSize: '0.875rem',
+                          py: 1,
+                          pl: 4, // Indented under category
+                          fontWeight: isChecked ? 600 : 400,
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Checkbox
+                            checked={isChecked}
+                            size="small"
+                            sx={{ p: 0 }}
+                            readOnly
+                          />
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: isChecked ? 600 : 400,
+                              color: isChecked ? 'text.primary' : 'text.secondary',
+                            }}
+                          >
+                            {status?.label || status.status_key}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    );
+                  })}
+                </>
+              );
+            } else {
+              // Single status: Show flat (no redundant nesting)
+              return currentCategory?.statuses?.map((status) => {
+                const isChecked = selectedStatuses.includes(status.status_key);
+
+                return (
+                  <MenuItem
+                    key={status.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStatusToggle(status.status_key);
+                    }}
+                    sx={{
+                      fontSize: '0.875rem',
+                      py: 1,
+                      pl: 1.5, // No indentation
+                      fontWeight: isChecked ? 600 : 400,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <Checkbox
+                        checked={isChecked}
+                        size="small"
+                        sx={{ p: 0 }}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: isChecked ? 600 : 400,
+                          color: isChecked ? 'text.primary' : 'text.secondary',
+                        }}
+                      >
+                        {status?.label || status.status_key}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                );
+              }) || [];
+            }
+          })()
         )}
       </Menu>
     </>
