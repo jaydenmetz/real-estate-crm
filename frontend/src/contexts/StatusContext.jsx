@@ -67,9 +67,24 @@ export const StatusProvider = ({ children, entityType }) => {
     categoriesLength: categories?.length,
     statusesLoading,
     categoriesLoading,
-    statusesError,
-    categoriesError
+    statusesError: statusesError?.message || statusesError,
+    categoriesError: categoriesError?.message || categoriesError,
+    entityType
   });
+
+  // Additional debug: Log when data changes
+  if (statuses.length > 0) {
+    console.log('[StatusContext] ✅ Statuses loaded:', statuses);
+  }
+  if (categories.length > 0) {
+    console.log('[StatusContext] ✅ Categories loaded:', categories);
+  }
+  if (statusesError) {
+    console.error('[StatusContext] ❌ Statuses error:', statusesError);
+  }
+  if (categoriesError) {
+    console.error('[StatusContext] ❌ Categories error:', categoriesError);
+  }
 
   const loading = statusesLoading || categoriesLoading;
   const error = statusesError || categoriesError;

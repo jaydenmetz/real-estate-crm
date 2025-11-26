@@ -13,8 +13,12 @@ import apiInstance from './api.service';
  * @returns {Promise<Array>} Array of status objects with id, status_key, label, color, icon, etc.
  */
 export const getStatuses = async (entityType) => {
+  console.log('[statuses.service] Fetching statuses for:', entityType);
   const response = await apiInstance.get(`/statuses/${entityType}`);
-  return response.data.data || response.data;
+  console.log('[statuses.service] Raw response:', response);
+  const data = response.data.data || response.data;
+  console.log('[statuses.service] Returning data:', data);
+  return data;
 };
 
 /**
@@ -39,8 +43,12 @@ export const getStatuses = async (entityType) => {
  * ]
  */
 export const getStatusCategories = async (entityType) => {
+  console.log('[statuses.service] Fetching categories for:', entityType);
   const response = await apiInstance.get(`/statuses/${entityType}/categories`);
-  return response.data.data || response.data;
+  console.log('[statuses.service] Raw categories response:', response);
+  const data = response.data.data || response.data;
+  console.log('[statuses.service] Returning categories:', data);
+  return data;
 };
 
 /**
