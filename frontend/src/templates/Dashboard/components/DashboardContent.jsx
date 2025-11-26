@@ -76,31 +76,35 @@ export const DashboardContent = ({
   if (!data || data.length === 0) {
     // Format status text intelligently
     const formatStatusText = (statusStr) => {
-      if (!statusStr) return 'All';
+      if (!statusStr) return '';
 
-      // Remove "All:" prefix if present
-      const cleaned = statusStr.replace(/^All:,*/, '').replace(/^All$/, '');
-      if (!cleaned) return 'All';
+      // Parse format: "CategoryKey:status1,status2" or just "CategoryKey"
+      // Examples: "Active:Active", "All:Active,Closed", "Active"
 
-      // Split by comma, clean up, and filter empty
+      // Remove "All:" prefix completely if present
+      let cleaned = statusStr.replace(/^All:/, '');
+
+      // If result is empty or just "All", return empty string (no status prefix)
+      if (!cleaned || cleaned === 'All') return '';
+
+      // Split by comma and clean up
       const parts = cleaned.split(',').map(s => s.trim()).filter(Boolean);
 
-      if (parts.length === 0) return 'All';
-      if (parts.length === 1) return parts[0];
-      if (parts.length === 2) return `${parts[0]} or ${parts[1]}`;
+      // Remove duplicates (e.g., "Active:Active" becomes just "Active")
+      const uniqueParts = [...new Set(parts)];
+
+      if (uniqueParts.length === 0) return '';
+      if (uniqueParts.length === 1) return uniqueParts[0];
+      if (uniqueParts.length === 2) return `${uniqueParts[0]} or ${uniqueParts[1]}`;
 
       // 3+ items: "A, B, or C"
-      const lastPart = parts[parts.length - 1];
-      const firstParts = parts.slice(0, -1).join(', ');
+      const lastPart = uniqueParts[uniqueParts.length - 1];
+      const firstParts = uniqueParts.slice(0, -1).join(', ');
       return `${firstParts}, or ${lastPart}`;
     };
 
     // Format date range for display
     const formatDateRange = () => {
-      if (!dateRangeFilter && !customStartDate && !customEndDate) {
-        return 'All Time';
-      }
-
       const formatDate = (dateStr) => {
         if (!dateStr) return null;
         try {
@@ -114,15 +118,15 @@ export const DashboardContent = ({
       if (customStartDate && customEndDate) {
         return `${formatDate(customStartDate)} - ${formatDate(customEndDate)}`;
       } else if (customStartDate) {
-        return `From ${formatDate(customStartDate)}`;
+        return `${formatDate(customStartDate)} onwards`;
       } else if (customEndDate) {
-        return `Until ${formatDate(customEndDate)}`;
-      } else if (dateRangeFilter) {
+        return `Up to ${formatDate(customEndDate)}`;
+      } else if (dateRangeFilter && dateRangeFilter !== 'all_time') {
         // Preset filters like "This Month", "Last 30 Days", etc.
         return dateRangeFilter.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       }
 
-      return 'All Time';
+      return 'All Dates';
     };
 
     const formattedStatus = formatStatusText(selectedStatus);
@@ -143,7 +147,7 @@ export const DashboardContent = ({
         }}
       >
         <Typography variant="h6" color="textSecondary" gutterBottom>
-          No {formattedStatus} {config.entity.namePlural} Found
+          No {formattedStatus}{formattedStatus ? ' ' : ''}{config.entity.namePlural} Found
         </Typography>
         <Typography variant="body2" color="textSecondary" sx={{ mb: 1.5 }}>
           {config.dashboard.hero.showAddButton
@@ -151,7 +155,7 @@ export const DashboardContent = ({
             : 'Try adjusting your filters'}
         </Typography>
         <Typography variant="caption" color="text.disabled" sx={{ fontStyle: 'italic' }}>
-          Showing: {dateRangeText}
+          Dates Displayed: {dateRangeText}
         </Typography>
       </Paper>
     );
