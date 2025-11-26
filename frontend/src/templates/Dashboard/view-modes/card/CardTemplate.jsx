@@ -218,8 +218,13 @@ const CardTemplate = React.memo(({
   }, []);
 
   const handleStatusChange = useCallback(async (newStatus) => {
+    // Get current status value dynamically (can't use statusValue due to declaration order)
+    const currentStatus = typeof config.status?.field === 'function'
+      ? config.status.field(data)
+      : data?.[config.status?.field];
+
     console.log('[CardTemplate] Status change requested:', {
-      currentStatus: statusValue,
+      currentStatus,
       newStatus,
       dataId: data.id,
       fullData: data
@@ -236,7 +241,7 @@ const CardTemplate = React.memo(({
       }
     }
     handleStatusClose();
-  }, [data, config.status, onUpdate, handleStatusClose, statusValue]);
+  }, [data, config.status, onUpdate, handleStatusClose]);
 
   // Quick actions menu handlers
   const handleActionsMenuOpen = useCallback((e) => {
