@@ -42,7 +42,7 @@ export const StatusProvider = ({ children, entityType }) => {
     queryFn: () => getStatuses(entityType),
     enabled: !!entityType,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (v5: renamed from cacheTime)
   });
 
   // Fetch categories with React Query (automatic caching!)
@@ -56,7 +56,7 @@ export const StatusProvider = ({ children, entityType }) => {
     queryFn: () => getStatusCategories(entityType),
     enabled: !!entityType,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (v5: renamed from cacheTime)
   });
 
   const loading = statusesLoading || categoriesLoading;

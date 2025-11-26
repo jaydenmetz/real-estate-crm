@@ -131,7 +131,7 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false, // Disable auto-refetch on focus - controlled per-hook
       retry: process.env.NODE_ENV === 'production' ? 3 : 1, // Retry once in dev (was false)
       staleTime: 30000, // 30s cache in both dev and production (was 0 in dev)
-      cacheTime: 5 * 60 * 1000, // Keep data in cache for 5 minutes
+      gcTime: 5 * 60 * 1000, // Keep data in cache for 5 minutes (v5: renamed from cacheTime)
       refetchOnMount: false, // Don't refetch on component mount if data exists
       refetchOnReconnect: true, // Refetch when internet reconnects
     },

@@ -65,7 +65,7 @@ export const useUserPreference = (key, defaultValue) => {
     queryKey: ['preference', key],
     queryFn: () => getPreference(key),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (v5: renamed from cacheTime)
     retry: 1,
     refetchOnMount: false, // Don't refetch if we have cached data
     onSuccess: (data) => {
