@@ -31,6 +31,7 @@ import {
   getStatusColor,
 } from '../../lib/utils/fieldRenderers';
 import { decodeHTML } from '../../../../utils/htmlEntities';
+import { usePrivacy } from '../../../../contexts/PrivacyContext';
 
 /**
  * ListItemTemplate - Fully featured horizontal list item with editing
@@ -100,6 +101,16 @@ const ListItemTemplate = React.memo(({
   onSelect,
 }) => {
   const theme = useTheme();
+
+  // Privacy context for master toggle
+  let masterHidden = false;
+  try {
+    const privacy = usePrivacy();
+    masterHidden = privacy?.masterHidden || false;
+  } catch (e) {
+    // Context not available (not wrapped in PrivacyProvider)
+    // This is fine - just means no master toggle control
+  }
 
   // Modal states
   const [openEditors, setOpenEditors] = useState({});
@@ -423,8 +434,10 @@ const ListItemTemplate = React.memo(({
                   : metricValue;
 
                 // Toggle state: true = show value, false/undefined = mask value
+                // Master toggle (from PrivacyContext) overrides individual toggle
                 const isToggled = toggleStates[`metric_${idx}`] ?? true; // Default to shown
-                const displayValue = metric.toggle && !isToggled
+                const shouldMask = masterHidden || !isToggled; // Master hidden OR individual hidden
+                const displayValue = metric.toggle && shouldMask
                   ? metric.toggle.maskFn(metricValue)
                   : formattedValue;
 
@@ -466,13 +479,23 @@ const ListItemTemplate = React.memo(({
                       {metric.toggle && (
                         <IconButton
                           size="small"
-                          onClick={(e) => handleToggle(`metric_${idx}`, e)}
-                          sx={{ p: 0.25 }}
+                          onClick={(e) => {
+                            // Only allow toggle when master is NOT hidden
+                            if (!masterHidden) {
+                              handleToggle(`metric_${idx}`, e);
+                            }
+                          }}
+                          disabled={masterHidden}
+                          sx={{
+                            p: 0.25,
+                            cursor: masterHidden ? 'not-allowed' : 'pointer',
+                            opacity: masterHidden ? 0.4 : 1,
+                          }}
                         >
-                          {isToggled ? (
-                            <VisibilityOffIcon sx={{ fontSize: 14 }} />
-                          ) : (
+                          {shouldMask ? (
                             <VisibilityIcon sx={{ fontSize: 14 }} />
+                          ) : (
+                            <VisibilityOffIcon sx={{ fontSize: 14 }} />
                           )}
                         </IconButton>
                       )}

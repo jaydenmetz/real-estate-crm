@@ -31,6 +31,7 @@ import {
   getStatusColor,
 } from '../../lib/utils/fieldRenderers';
 import { decodeHTML } from '../../../../utils/htmlEntities';
+import { usePrivacy } from '../../../../contexts/PrivacyContext';
 
 /**
  * TableRowTemplate - Fully featured table row with editing
@@ -87,6 +88,16 @@ const TableRowTemplate = React.memo(({
   onSelect,
 }) => {
   const theme = useTheme();
+
+  // Privacy context for master toggle
+  let masterHidden = false;
+  try {
+    const privacy = usePrivacy();
+    masterHidden = privacy?.masterHidden || false;
+  } catch (e) {
+    // Context not available (not wrapped in PrivacyProvider)
+    // This is fine - just means no master toggle control
+  }
 
   // Modal states
   const [openEditors, setOpenEditors] = useState({});
@@ -227,9 +238,11 @@ const TableRowTemplate = React.memo(({
             : columnValue;
 
           // Toggle logic: true = show value, false/undefined = mask value
+          // Master toggle (from PrivacyContext) overrides individual toggle
           const isToggled = toggleStates[`column_${idx}`] ?? true; // Default to shown
+          const shouldMask = masterHidden || !isToggled; // Master hidden OR individual hidden
           const displayValue = decodeHTML(
-            column.toggle && !isToggled
+            column.toggle && shouldMask
               ? column.toggle.maskFn(columnValue)
               : formattedValue
           );
@@ -285,13 +298,25 @@ const TableRowTemplate = React.memo(({
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: column.align || 'flex-start' }}>
                 {column.toggle && (
                   <IconButton
-                    onClick={(e) => handleToggle(`column_${idx}`, e)}
-                    sx={{ width: 20, height: 20, p: 0 }}
+                    onClick={(e) => {
+                      // Only allow toggle when master is NOT hidden
+                      if (!masterHidden) {
+                        handleToggle(`column_${idx}`, e);
+                      }
+                    }}
+                    disabled={masterHidden}
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      p: 0,
+                      cursor: masterHidden ? 'not-allowed' : 'pointer',
+                      opacity: masterHidden ? 0.4 : 1,
+                    }}
                   >
-                    {isToggled ? (
-                      <VisibilityOffIcon sx={{ fontSize: 14 }} />
-                    ) : (
+                    {shouldMask ? (
                       <VisibilityIcon sx={{ fontSize: 14 }} />
+                    ) : (
+                      <VisibilityOffIcon sx={{ fontSize: 14 }} />
                     )}
                   </IconButton>
                 )}
