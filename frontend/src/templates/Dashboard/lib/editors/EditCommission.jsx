@@ -43,15 +43,11 @@ export const EditCommission = ({
       // Load the appropriate value based on commission type
       // IMPORTANT: Check for null/undefined explicitly, not falsy (0 is valid!)
       if (initialCommissionType === 'percentage') {
-        // Handle mixed database formats (some store as percentage 3.0, some as decimal 0.03)
-        // Heuristic: If value > 1, it's already a percentage; if ≤ 1, it's a decimal
-        let percentValue = '';
-        if (commissionPercentage !== null && commissionPercentage !== undefined) {
-          const rawValue = parseFloat(commissionPercentage);
-          // If rawValue > 1, assume it's stored as percentage (e.g., 2.5 = 2.5%)
-          // If rawValue ≤ 1, assume it's stored as decimal (e.g., 0.025 = 2.5%)
-          percentValue = rawValue > 1 ? rawValue.toString() : (rawValue * 100).toString();
-        }
+        // Database stores as percentage (e.g., 2.5 = 2.5%, 0.75 = 0.75%)
+        // Display it directly without conversion
+        const percentValue = commissionPercentage !== null && commissionPercentage !== undefined
+          ? commissionPercentage.toString()
+          : '';
         setEditValue(percentValue);
       } else {
         setEditValue(value !== null && value !== undefined ? value.toString() : '');
@@ -86,9 +82,9 @@ export const EditCommission = ({
       };
 
       if (commissionType === 'percentage') {
-        // ALWAYS save percentage as decimal (2.25 → 0.0225) to standardize database format
-        // This ensures consistency: all new saves will use decimal format going forward
-        updates.commission_percentage = newValue / 100;
+        // Save percentage as-is (2.25 stays as 2.25, representing 2.25%)
+        // Calculate dollar amount by dividing by 100 (2.25% of price)
+        updates.commission_percentage = newValue;
         updates.my_commission = purchasePrice ? (purchasePrice * newValue) / 100 : 0;
       } else {
         // Save flat dollar amount and clear percentage
@@ -210,14 +206,11 @@ export const EditCommission = ({
                 setCommissionType(newType);
                 // Load the database value for the new tab (or empty if none exists)
                 if (newType === 'percentage') {
-                  // Handle mixed database formats (some store as percentage 3.0, some as decimal 0.03)
-                  let percentValue = '';
-                  if (commissionPercentage !== null && commissionPercentage !== undefined) {
-                    const rawValue = parseFloat(commissionPercentage);
-                    // If rawValue > 1, assume it's stored as percentage (e.g., 2.5 = 2.5%)
-                    // If rawValue ≤ 1, assume it's stored as decimal (e.g., 0.025 = 2.5%)
-                    percentValue = rawValue > 1 ? rawValue.toString() : (rawValue * 100).toString();
-                  }
+                  // Database stores as percentage (e.g., 2.5 = 2.5%, 0.75 = 0.75%)
+                  // Display it directly without conversion
+                  const percentValue = commissionPercentage !== null && commissionPercentage !== undefined
+                    ? commissionPercentage.toString()
+                    : '';
                   setEditValue(percentValue);
                 } else {
                   setEditValue(value !== null && value !== undefined ? value.toString() : '');
