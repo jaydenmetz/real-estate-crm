@@ -19,6 +19,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   Archive as ArchiveIcon,
   Unarchive as UnarchiveIcon,
+  DeleteForever as DeleteForeverIcon,
   CheckBox as CheckBoxIcon,
   CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
 } from '@mui/icons-material';
@@ -136,6 +137,14 @@ export const BulkActionsButton = ({
                       <UnarchiveIcon fontSize="small" />
                     </ListItemIcon>
                     <ListItemText primary={`Restore (${selectedCount})`} />
+                  </MenuItem>
+                )}
+                {onDelete && (
+                  <MenuItem onClick={() => handleAction(onDelete)}>
+                    <ListItemIcon>
+                      <DeleteForeverIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary={`Delete (${selectedCount})`} />
                   </MenuItem>
                 )}
               </>
