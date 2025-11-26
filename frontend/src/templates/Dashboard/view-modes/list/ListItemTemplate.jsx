@@ -485,11 +485,15 @@ const ListItemTemplate = React.memo(({
                         <IconButton
                           size="small"
                           onClick={(e) => {
-                            handleToggle(`metric_${idx}`, e);
+                            // Only allow toggle when master is NOT hidden
+                            if (!masterHidden) {
+                              handleToggle(`metric_${idx}`, e);
+                            }
                           }}
                           sx={{
                             p: 0.25,
-                            cursor: 'pointer',
+                            cursor: masterHidden ? 'not-allowed' : 'pointer',
+                            opacity: masterHidden ? 0.4 : 1,
                           }}
                         >
                           {shouldMask ? (

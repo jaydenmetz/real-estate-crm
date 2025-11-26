@@ -304,13 +304,17 @@ const TableRowTemplate = React.memo(({
                 {column.toggle && (
                   <IconButton
                     onClick={(e) => {
-                      handleToggle(`column_${idx}`, e);
+                      // Only allow toggle when master is NOT hidden
+                      if (!masterHidden) {
+                        handleToggle(`column_${idx}`, e);
+                      }
                     }}
                     sx={{
                       width: 20,
                       height: 20,
                       p: 0,
-                      cursor: 'pointer',
+                      cursor: masterHidden ? 'not-allowed' : 'pointer',
+                      opacity: masterHidden ? 0.4 : 1,
                     }}
                   >
                     {shouldMask ? (
