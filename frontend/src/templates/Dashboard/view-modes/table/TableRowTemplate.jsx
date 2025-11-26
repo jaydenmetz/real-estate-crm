@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   TableRow,
   TableCell,
@@ -102,6 +102,11 @@ const TableRowTemplate = React.memo(({
   // Modal states
   const [openEditors, setOpenEditors] = useState({});
   const [toggleStates, setToggleStates] = useState({});
+
+  // Reset all toggle states when master toggle changes (syncs all items to master state)
+  useEffect(() => {
+    setToggleStates({});
+  }, [masterHidden]);
 
   // Actions menu state
   const [anchorEl, setAnchorEl] = useState(null);
@@ -238,9 +243,9 @@ const TableRowTemplate = React.memo(({
             : columnValue;
 
           // Toggle logic: true = show value, false/undefined = mask value
-          // Master toggle (from PrivacyContext) overrides individual toggle
-          const isToggled = toggleStates[`column_${idx}`] ?? true; // Default to shown
-          const shouldMask = masterHidden || !isToggled; // Master hidden OR individual hidden
+          // Use individual toggle state (masterHidden used for syncing, not blocking)
+          const isToggled = toggleStates[`column_${idx}`] ?? !masterHidden; // Default matches master state
+          const shouldMask = !isToggled; // Only check individual toggle
           const displayValue = decodeHTML(
             column.toggle && shouldMask
               ? column.toggle.maskFn(columnValue)
@@ -299,18 +304,13 @@ const TableRowTemplate = React.memo(({
                 {column.toggle && (
                   <IconButton
                     onClick={(e) => {
-                      // Only allow toggle when master is NOT hidden
-                      if (!masterHidden) {
-                        handleToggle(`column_${idx}`, e);
-                      }
+                      handleToggle(`column_${idx}`, e);
                     }}
-                    disabled={masterHidden}
                     sx={{
                       width: 20,
                       height: 20,
                       p: 0,
-                      cursor: masterHidden ? 'not-allowed' : 'pointer',
-                      opacity: masterHidden ? 0.4 : 1,
+                      cursor: 'pointer',
                     }}
                   >
                     {shouldMask ? (

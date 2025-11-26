@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -115,6 +115,11 @@ const ListItemTemplate = React.memo(({
   // Modal states
   const [openEditors, setOpenEditors] = useState({});
   const [toggleStates, setToggleStates] = useState({});
+
+  // Reset all toggle states when master toggle changes (syncs all items to master state)
+  useEffect(() => {
+    setToggleStates({});
+  }, [masterHidden]);
 
   // Status menu state
   const [statusMenuAnchor, setStatusMenuAnchor] = useState(null);
@@ -434,9 +439,9 @@ const ListItemTemplate = React.memo(({
                   : metricValue;
 
                 // Toggle state: true = show value, false/undefined = mask value
-                // Master toggle (from PrivacyContext) overrides individual toggle
-                const isToggled = toggleStates[`metric_${idx}`] ?? true; // Default to shown
-                const shouldMask = masterHidden || !isToggled; // Master hidden OR individual hidden
+                // Use individual toggle state (masterHidden used for syncing, not blocking)
+                const isToggled = toggleStates[`metric_${idx}`] ?? !masterHidden; // Default matches master state
+                const shouldMask = !isToggled; // Only check individual toggle
                 const displayValue = metric.toggle && shouldMask
                   ? metric.toggle.maskFn(metricValue)
                   : formattedValue;
@@ -480,16 +485,11 @@ const ListItemTemplate = React.memo(({
                         <IconButton
                           size="small"
                           onClick={(e) => {
-                            // Only allow toggle when master is NOT hidden
-                            if (!masterHidden) {
-                              handleToggle(`metric_${idx}`, e);
-                            }
+                            handleToggle(`metric_${idx}`, e);
                           }}
-                          disabled={masterHidden}
                           sx={{
                             p: 0.25,
-                            cursor: masterHidden ? 'not-allowed' : 'pointer',
-                            opacity: masterHidden ? 0.4 : 1,
+                            cursor: 'pointer',
                           }}
                         >
                           {shouldMask ? (
