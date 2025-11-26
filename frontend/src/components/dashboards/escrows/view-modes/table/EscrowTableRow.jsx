@@ -84,19 +84,19 @@ const escrowTableConfig = {
       editable: true,
       statusOptions: [
         {
-          value: 'active',
+          value: 'Active',
           label: 'Active',
           icon: CheckCircle,
           color: '#10b981',
         },
         {
-          value: 'closed',
+          value: 'Closed',
           label: 'Closed',
           icon: CheckCircle,
           color: '#3b82f6',
         },
         {
-          value: 'cancelled',
+          value: 'Cancelled',
           label: 'Cancelled',
           icon: Cancel,
           color: '#ef4444',
