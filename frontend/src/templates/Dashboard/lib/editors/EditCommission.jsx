@@ -81,8 +81,8 @@ export const EditCommission = ({
       };
 
       if (commissionType === 'percentage') {
-        // Save percentage and calculate dollar amount
-        updates.commission_percentage = newValue;
+        // Save percentage as decimal (2.25 → 0.0225) and calculate dollar amount
+        updates.commission_percentage = newValue / 100;
         updates.my_commission = purchasePrice ? (purchasePrice * newValue) / 100 : 0;
       } else {
         // Save flat dollar amount and clear percentage
