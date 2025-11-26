@@ -59,6 +59,18 @@ export const StatusProvider = ({ children, entityType }) => {
     gcTime: 10 * 60 * 1000, // 10 minutes (v5: renamed from cacheTime)
   });
 
+  // Debug logging
+  console.log('[StatusContext] Data from React Query:', {
+    statuses: statuses,
+    statusesLength: statuses?.length,
+    categories: categories,
+    categoriesLength: categories?.length,
+    statusesLoading,
+    categoriesLoading,
+    statusesError,
+    categoriesError
+  });
+
   const loading = statusesLoading || categoriesLoading;
   const error = statusesError || categoriesError;
 
