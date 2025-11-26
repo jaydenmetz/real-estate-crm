@@ -114,7 +114,9 @@ const StatusTabWithDropdown = ({
 
   const handleCategoryToggle = (categoryKey) => {
     // Get all status keys in this category
-    const cat = allCategories?.find(c => c.category_key === categoryKey);
+    // Try both allCategories (for "All" tab) and currentCategory (for individual tabs)
+    const cat = allCategories?.find(c => c.category_key === categoryKey) ||
+                (currentCategory?.category_key === categoryKey ? currentCategory : null);
     if (!cat) return;
 
     const categoryStatusKeys = cat.statuses.map(s => s.status_key);
@@ -124,11 +126,16 @@ const StatusTabWithDropdown = ({
 
     // Toggle all statuses in this category
     categoryStatusKeys.forEach(key => {
-      // If all selected, deselect all. Otherwise, select all.
-      if (allSelected && selectedStatuses.includes(key)) {
-        onStatusToggle(key); // Deselect
-      } else if (!allSelected && !selectedStatuses.includes(key)) {
-        onStatusToggle(key); // Select
+      if (allSelected) {
+        // All selected: deselect this status (regardless of current state)
+        if (selectedStatuses.includes(key)) {
+          onStatusToggle(key);
+        }
+      } else {
+        // Not all selected: select this status (regardless of current state)
+        if (!selectedStatuses.includes(key)) {
+          onStatusToggle(key);
+        }
       }
     });
   };
