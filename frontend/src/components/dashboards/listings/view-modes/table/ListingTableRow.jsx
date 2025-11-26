@@ -150,9 +150,10 @@ const useListingTableConfig = (statuses) => {
         purchasePrice: listing.list_price || 0,
       }),
       onSave: (listing, updates) => {
+        // For listings, we save to listing_commission (not my_commission or total_commission)
+        // total_commission is a computed column (listing_commission + buyer_commission)
         return {
-          my_commission: updates.my_commission || updates,
-          total_commission: updates.commission_percentage,
+          listing_commission: updates.commission_percentage,
           commission_type: updates.commission_type,
         };
       },
