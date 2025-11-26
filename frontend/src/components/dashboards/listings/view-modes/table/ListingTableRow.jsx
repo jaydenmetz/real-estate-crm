@@ -146,7 +146,7 @@ const useListingTableConfig = (statuses) => {
 
     // Listing Date (editable)
     {
-      label: 'Listed',
+      label: 'Beginning',
       field: 'listing_date',
       formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
       editable: true,
@@ -156,9 +156,16 @@ const useListingTableConfig = (statuses) => {
       },
     },
 
-    // Expiration Date (editable with minDate validation)
+    // Expiration Date (editable with minDate validation) - Dynamic label based on status
     {
-      label: 'Expires',
+      label: (listing) => {
+        const status = listing?.listing_status;
+        if (status === 'Closed') return 'Closed';
+        if (status === 'Cancelled') return 'Cancelled';
+        if (status === 'Expired') return 'Expired';
+        if (status === 'Withdrawn') return 'Withdrawn';
+        return 'Expires'; // Active, Active Under Contract, Pending, and default
+      },
       field: 'expiration_date',
       formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
       editable: true,
