@@ -16,7 +16,8 @@
  * - Status transition validation
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getStatuses, getStatusCategories } from '../services/statuses.service';
 
 export const StatusContext = createContext(null);
@@ -24,52 +25,40 @@ export const StatusContext = createContext(null);
 /**
  * Status Provider Component
  * Fetches status configuration from database and provides to children
+ * Uses React Query for automatic caching and deduplication
  *
  * @param {ReactNode} children - Child components
  * @param {string} entityType - escrows, listings, clients, leads, appointments
  */
 export const StatusProvider = ({ children, entityType }) => {
-  const [statuses, setStatuses] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // Fetch statuses with React Query (automatic caching!)
+  const {
+    data: statuses = [],
+    isLoading: statusesLoading,
+    error: statusesError
+  } = useQuery({
+    queryKey: ['statuses', entityType],
+    queryFn: () => getStatuses(entityType),
+    enabled: !!entityType,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-  // Fetch statuses and categories from database
-  const fetchStatusConfig = useCallback(async () => {
-    if (!entityType) {
-      setError('Entity type is required');
-      setLoading(false);
-      return;
-    }
+  // Fetch categories with React Query (automatic caching!)
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    error: categoriesError
+  } = useQuery({
+    queryKey: ['statusCategories', entityType],
+    queryFn: () => getStatusCategories(entityType),
+    enabled: !!entityType,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Fetch both statuses and categories in parallel
-      const [statusData, categoryData] = await Promise.all([
-        getStatuses(entityType),
-        getStatusCategories(entityType),
-      ]);
-
-      setStatuses(statusData || []);
-      setCategories(categoryData || []);
-    } catch (err) {
-      console.error(`Failed to fetch status config for ${entityType}:`, err);
-      setError(err.message || 'Failed to load status configuration');
-
-      // Set empty arrays as fallback
-      setStatuses([]);
-      setCategories([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [entityType]);
-
-  // Fetch on mount and when entityType changes
-  useEffect(() => {
-    fetchStatusConfig();
-  }, [fetchStatusConfig]);
+  const loading = statusesLoading || categoriesLoading;
+  const error = statusesError || categoriesError;
 
   // Helper: Get status by key
   const getStatusByKey = useCallback((statusKey) => {

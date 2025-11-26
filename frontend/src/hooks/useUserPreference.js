@@ -65,7 +65,9 @@ export const useUserPreference = (key, defaultValue) => {
     queryKey: ['preference', key],
     queryFn: () => getPreference(key),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
     retry: 1,
+    refetchOnMount: false, // Don't refetch if we have cached data
     onSuccess: (data) => {
       if (data !== null && data !== undefined) {
         // Database value exists - sync to localStorage and state

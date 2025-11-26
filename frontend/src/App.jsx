@@ -124,13 +124,16 @@ const theme = createTheme({
 });
 
 // React Query Client Configuration
-// Updated: Oct 18, 2025 - Force clean rebuild
+// Updated: Nov 25, 2025 - Optimize caching to prevent duplicate API calls
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false, // Disable auto-refetch on focus - controlled per-hook
-      retry: process.env.NODE_ENV === 'production' ? 3 : false,
-      staleTime: process.env.NODE_ENV === 'production' ? 30000 : 0,
+      retry: process.env.NODE_ENV === 'production' ? 3 : 1, // Retry once in dev (was false)
+      staleTime: 30000, // 30s cache in both dev and production (was 0 in dev)
+      cacheTime: 5 * 60 * 1000, // Keep data in cache for 5 minutes
+      refetchOnMount: false, // Don't refetch on component mount if data exists
+      refetchOnReconnect: true, // Refetch when internet reconnects
     },
     mutations: {
       retry: 1,
