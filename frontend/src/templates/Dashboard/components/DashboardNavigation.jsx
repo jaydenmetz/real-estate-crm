@@ -349,19 +349,20 @@ export const DashboardNavigation = ({
                 size="small"
                 sx={{
                   border: '1px solid',
-                  borderColor: 'divider',
+                  borderColor: sortOrder === 'asc' ? 'primary.main' : 'divider',
+                  backgroundColor: sortOrder === 'asc' ? alpha('#1976d2', 0.08) : 'transparent',
                   borderRadius: 1,
                   width: 36,
                   height: 36,
                   '&:hover': {
-                    backgroundColor: alpha('#000', 0.04),
+                    backgroundColor: sortOrder === 'asc' ? alpha('#1976d2', 0.12) : alpha('#000', 0.04),
                     borderColor: 'primary.main',
                   },
                 }}
-                title={sortOrder === 'asc' ? 'Sort Ascending' : 'Sort Descending'}
+                title={sortOrder === 'asc' ? 'Ascending (A→Z) - Click for Descending' : 'Descending (Z→A) - Click for Ascending'}
               >
                 {sortOrder === 'asc' ? (
-                  <ArrowUpward sx={{ fontSize: '1.125rem', color: 'text.secondary' }} />
+                  <ArrowUpward sx={{ fontSize: '1.125rem', color: 'primary.main' }} />
                 ) : (
                   <ArrowDownward sx={{ fontSize: '1.125rem', color: 'text.secondary' }} />
                 )}
