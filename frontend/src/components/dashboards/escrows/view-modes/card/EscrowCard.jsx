@@ -70,7 +70,7 @@ const useEscrowCardConfig = (statuses) => {
 
       // Status Chip Configuration (top-left, editable)
       status: {
-        field: 'escrow_status',
+        field: 'status', // API returns 'status', not 'escrow_status'
         getConfig: (status) => {
           const config = getStatusConfig(status);
           return {
@@ -82,7 +82,7 @@ const useEscrowCardConfig = (statuses) => {
         editable: true,
         options: statusOptions,
         onSave: (escrow, newStatus) => {
-          return { escrow_status: newStatus };
+          return { escrow_status: newStatus }; // But API expects 'escrow_status' for updates
         },
       },
 
@@ -198,7 +198,7 @@ const useEscrowCardConfig = (statuses) => {
           // Close Date (editable) - Dynamic label based on status
           {
             label: (escrow) => {
-              const status = escrow?.escrow_status?.toLowerCase();
+              const status = escrow?.status?.toLowerCase(); // Use 'status' field
               if (status === 'closed') return 'Closed';
               if (status === 'cancelled') return 'Cancelled';
               return 'Closes'; // Active and default

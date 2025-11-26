@@ -76,14 +76,14 @@ const useEscrowListConfig = (statuses) => {
           return Math.round((completedTasks / totalTasks) * 100);
         },
         getColor: (escrow) => {
-          const config = getStatusConfig(escrow.escrow_status);
+          const config = getStatusConfig(escrow.status); // Use 'status' field
           return config.bg;
         },
       },
 
       // Status Chip Configuration (editable)
       status: {
-        field: 'escrow_status',
+        field: 'status', // API returns 'status', not 'escrow_status'
         getConfig: (status) => {
           const config = getStatusConfig(status);
           return {
@@ -95,7 +95,7 @@ const useEscrowListConfig = (statuses) => {
         editable: true,
         options: statusOptions,
         onSave: (escrow, newStatus) => {
-          return { escrow_status: newStatus };
+          return { escrow_status: newStatus }; // But API expects 'escrow_status' for updates
         },
       },
 
@@ -191,7 +191,7 @@ const useEscrowListConfig = (statuses) => {
         // Closing Date (editable) - Dynamic label based on status
         {
           label: (escrow) => {
-            const status = escrow?.escrow_status?.toLowerCase();
+            const status = escrow?.status?.toLowerCase(); // Use 'status' field
             if (status === 'closed') return 'Closed';
             if (status === 'cancelled') return 'Cancelled';
             return 'Closes'; // Active and default

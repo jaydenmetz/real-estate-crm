@@ -65,7 +65,7 @@ const useEscrowTableConfig = (statuses) => {
       // Status config for row styling
       statusConfig: {
         getConfig: (escrow) => {
-          const config = getStatusConfig(escrow.escrow_status);
+          const config = getStatusConfig(escrow.status); // Use 'status' field
           return {
             color: config.color,
             bg: config.bg,
@@ -101,13 +101,13 @@ const useEscrowTableConfig = (statuses) => {
         // Status (editable)
         {
           label: 'Status',
-          field: 'escrow_status',
+          field: 'status', // API returns 'status', not 'escrow_status'
           formatter: (status) => getStatusConfig(status).label,
           isStatus: true,
           editable: true,
           statusOptions: statusOptions,
           onSave: (escrow, newStatus) => {
-            return { escrow_status: newStatus };
+            return { escrow_status: newStatus }; // But API expects 'escrow_status' for updates
           },
           align: 'left',
         },
@@ -178,7 +178,7 @@ const useEscrowTableConfig = (statuses) => {
         // Closing Date (editable) - Dynamic label based on status
         {
           label: (escrow) => {
-            const status = escrow?.escrow_status?.toLowerCase();
+            const status = escrow?.status?.toLowerCase(); // Use 'status' field
             if (status === 'closed') return 'Closed';
             if (status === 'cancelled') return 'Cancelled';
             return 'Closes'; // Active and default
@@ -206,7 +206,7 @@ const useEscrowTableConfig = (statuses) => {
           formatter: (value) => `${value}%`,
           align: 'center',
           bold: true,
-          color: (escrow) => getStatusConfig(escrow.escrow_status).color,
+          color: (escrow) => getStatusConfig(escrow.status).color, // Use 'status' field
         },
       ],
     };
