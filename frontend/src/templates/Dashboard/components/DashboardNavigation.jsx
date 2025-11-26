@@ -247,7 +247,7 @@ export const DashboardNavigation = ({
               onArchive={onBulkArchive}
               onDelete={onBulkDelete}
               onRestore={onBulkRestore}
-              isArchived={false}
+              isArchived={showArchived}
               customActions={bulkActions}
             />
           </Box>
