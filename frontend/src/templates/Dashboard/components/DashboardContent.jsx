@@ -180,7 +180,7 @@ export const DashboardContent = ({
     const headersByEntity = {
       escrow: [
         'Property', 'Status', 'Price', 'Commission',
-        'Acceptance', 'Close', 'Progress', 'Actions'
+        'Acceptance', 'Close Date', 'Progress', 'Actions'
       ],
       listing: [
         'Property', 'Status', 'List Price', 'Commission',

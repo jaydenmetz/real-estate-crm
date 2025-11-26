@@ -478,7 +478,7 @@ const ListItemTemplate = React.memo(({
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {metric.label}
+                      {typeof metric.label === 'function' ? metric.label(data) : metric.label}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       {metric.toggle && (

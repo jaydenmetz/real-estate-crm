@@ -171,9 +171,14 @@ const escrowTableConfig = {
       hoverColor: alpha('#000', 0.05),
     },
 
-    // Closing Date (editable)
+    // Closing Date (editable) - Dynamic label based on status
     {
-      label: 'Closing',
+      label: (escrow) => {
+        const status = escrow?.escrow_status?.toLowerCase();
+        if (status === 'closed') return 'Closed';
+        if (status === 'cancelled') return 'Cancelled';
+        return 'Closes'; // Active and default
+      },
       field: 'closing_date',
       formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
       editable: true,

@@ -191,9 +191,14 @@ const escrowCardConfig = {
         width: '33.33%',
       },
 
-      // Close Date (editable)
+      // Close Date (editable) - Dynamic label based on status
       {
-        label: 'Close',
+        label: (escrow) => {
+          const status = escrow?.escrow_status?.toLowerCase();
+          if (status === 'closed') return 'Closed';
+          if (status === 'cancelled') return 'Cancelled';
+          return 'Closes'; // Active and default
+        },
         field: 'closing_date',
         formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
         editable: true,

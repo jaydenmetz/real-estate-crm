@@ -627,10 +627,13 @@ const CardTemplate = React.memo(({
                     ? field.formatter(fieldValue, data)
                     : fieldValue;
 
+                  // Resolve label (support function or string)
+                  const fieldLabel = typeof field.label === 'function' ? field.label(data) : field.label;
+
                   return (
                     <Box key={idx} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, width: field.width || '33.33%' }}>
                       <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        {field.label}
+                        {fieldLabel}
                       </Typography>
                       {field.editable && onUpdate ? (
                         <Box
