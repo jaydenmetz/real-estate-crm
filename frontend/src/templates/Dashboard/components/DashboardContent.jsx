@@ -81,6 +81,11 @@ export const DashboardContent = ({
   if (!data || data.length === 0) {
     // Format status text intelligently
     const formatStatusText = (statusStr) => {
+      // If viewing archived items, always show "Archived"
+      if (showArchived) {
+        return 'Archived';
+      }
+
       if (!statusStr) return '';
 
       // Parse format: "CategoryKey:status1,status2" or just "CategoryKey"
