@@ -45,12 +45,19 @@ const maskCommission = (value) => {
 const useEscrowListConfig = (statuses) => {
   return useMemo(() => {
     // Transform database statuses into dropdown options
-    const statusOptions = statuses.map((status) => ({
-      value: status.status_key,
-      label: status.label,
-      icon: status.status_key === 'Cancelled' ? Cancel : CheckCircle,
-      color: status.color,
-    }));
+    // Fallback to hardcoded options if database statuses not loaded yet
+    const statusOptions = statuses && statuses.length > 0
+      ? statuses.map((status) => ({
+          value: status.status_key,
+          label: status.label,
+          icon: status.status_key === 'Cancelled' ? Cancel : CheckCircle,
+          color: status.color,
+        }))
+      : [
+          { value: 'Active', label: 'Active', icon: CheckCircle, color: '#10b981' },
+          { value: 'Closed', label: 'Closed', icon: CheckCircle, color: '#3b82f6' },
+          { value: 'Cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
+        ];
 
     return {
       // Image/Left Section Configuration
