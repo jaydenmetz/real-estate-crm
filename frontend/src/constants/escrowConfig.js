@@ -13,13 +13,6 @@ export const ESCROW_STATUS_CONFIG = {
     icon: 'trending_up',
     label: 'Active'
   },
-  'Pending Acceptance': {
-    color: '#f59e0b',
-    bg: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(217,119,6,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#f59e0b', 0.2)}`,
-    icon: 'schedule',
-    label: 'Pending'
-  },
   'Closed': {
     color: '#6366f1',
     bg: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
