@@ -79,8 +79,8 @@ const StatusTabWithDropdown = ({
       return status?.label || selectedStatuses[0];
     }
 
-    // If multiple but not all, show count
-    return `${category.label} (${selectedStatuses.length})`;
+    // If multiple but not all, just show category name (count is redundant with stat cards)
+    return category.label;
   };
 
   const handleTabClick = (event) => {

@@ -531,7 +531,7 @@ export const DashboardTemplate = ({
         selectedYear={selectedYear}
         setSelectedYear={setSelectedYear}
         StatCardComponent={DashboardStatCard}
-        allData={data}
+        allData={filteredData} // Use filtered data so stats reflect checkbox selections
       />
 
         {/* Stats are now embedded in Hero, so no separate stats section needed */}
