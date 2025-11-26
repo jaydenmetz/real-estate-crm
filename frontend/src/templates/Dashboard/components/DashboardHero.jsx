@@ -344,6 +344,7 @@ export const DashboardHero = ({
               onClose={() => setStartDateEditorOpen(false)}
               value={customStartDate || dateRange?.startDate}
               color={config.gradient?.match(/#[0-9A-Fa-f]{6}/)?.[0] || '#667eea'}
+              maxDate={customEndDate || dateRange?.endDate} // Validation: Start date must be before end date
               onSave={(newDate) => {
                 const parsedDate = new Date(newDate);
                 setCustomStartDate(parsedDate);
@@ -354,12 +355,24 @@ export const DashboardHero = ({
                   setDateRangeFilter(null);
                 }
               }}
+              onSaveSuccess={(savedDate) => {
+                // Auto-progression: Open end date editor after saving start date
+                setStartDateEditorOpen(false);
+                setTimeout(() => {
+                  // Pre-fill end date with start date if not already set
+                  if (!customEndDate) {
+                    setCustomEndDate(savedDate);
+                  }
+                  setEndDateEditorOpen(true);
+                }, 300); // Small delay for smooth transition
+              }}
             />
             <EditDisplayEndDate
               open={endDateEditorOpen}
               onClose={() => setEndDateEditorOpen(false)}
               value={customEndDate || dateRange?.endDate}
               color={config.gradient?.match(/#[0-9A-Fa-f]{6}/)?.[0] || '#667eea'}
+              minDate={customStartDate || dateRange?.startDate} // Validation: End date must be after start date
               onSave={(newDate) => {
                 const parsedDate = new Date(newDate);
                 setCustomEndDate(parsedDate);

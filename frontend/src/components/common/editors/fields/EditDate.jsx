@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, IconButton, TextField } from '@mui/material';
+import { Box, Typography, IconButton, TextField, Alert } from '@mui/material';
 import { Check, Close, Event } from '@mui/icons-material';
-import { format, isValid } from 'date-fns';
+import { format, isValid, isBefore, isAfter } from 'date-fns';
 import { parseLocalDate } from '../../../../utils/safeDateUtils';
 import { ModalDialog } from '../shared/ModalDialog';
 import { CustomCalendar } from '../shared/CustomCalendar';
@@ -17,6 +17,8 @@ import { CustomCalendar } from '../shared/CustomCalendar';
  * @param {string|Date} value - Current date value (ISO string or Date object)
  * @param {string} color - Calendar color theme
  * @param {Date|string} minDate - Optional minimum selectable date (for end date validation)
+ * @param {Date|string} maxDate - Optional maximum selectable date (for start date validation)
+ * @param {function} onSaveSuccess - Optional callback after successful save (for auto-progression)
  */
 export const EditDate = ({
   open,
@@ -26,6 +28,8 @@ export const EditDate = ({
   value,
   color = '#6366f1',
   minDate = null,
+  maxDate = null,
+  onSaveSuccess = null,
 }) => {
   const [editValue, setEditValue] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -49,6 +53,29 @@ export const EditDate = ({
       setEditValue(null);
     }
   }, [open, value]);
+
+  // Validation: Check if editValue violates min/max bounds
+  const getValidationError = () => {
+    if (!editValue || !isValid(editValue)) return null;
+
+    if (minDate) {
+      const min = typeof minDate === 'string' ? parseLocalDate(minDate) : minDate;
+      if (isValid(min) && isBefore(editValue, min)) {
+        return `Please select a date after ${format(min, 'MMM d, yyyy')}`;
+      }
+    }
+
+    if (maxDate) {
+      const max = typeof maxDate === 'string' ? parseLocalDate(maxDate) : maxDate;
+      if (isValid(max) && isAfter(editValue, max)) {
+        return `Please select a date before ${format(max, 'MMM d, yyyy')}`;
+      }
+    }
+
+    return null;
+  };
+
+  const validationError = getValidationError();
 
   const handleSave = async () => {
     if (!editValue) {
@@ -82,6 +109,12 @@ export const EditDate = ({
       console.log('Saving date:', { editValue, dateToSave, dateString });
 
       await onSave(dateString);
+
+      // Call success callback for auto-progression (e.g., open end date editor)
+      if (onSaveSuccess) {
+        onSaveSuccess(dateToSave);
+      }
+
       onClose();
     } catch (error) {
       console.error('Failed to save date:', error);
@@ -167,6 +200,24 @@ export const EditDate = ({
           {formatDisplayDate(value)}
         </Typography>
 
+        {/* Validation Alert */}
+        {validationError && (
+          <Alert
+            severity="warning"
+            sx={{
+              mb: 2,
+              backgroundColor: 'rgba(255, 152, 0, 0.1)',
+              color: 'white',
+              border: '1px solid rgba(255, 152, 0, 0.3)',
+              '& .MuiAlert-icon': {
+                color: 'rgba(255, 152, 0, 0.9)',
+              },
+            }}
+          >
+            {validationError}
+          </Alert>
+        )}
+
         {/* Manual Date Input (Optional) */}
         <TextField
           fullWidth
@@ -176,7 +227,7 @@ export const EditDate = ({
           type="date"
           disabled={saving}
           inputProps={{
-            max: '2099-12-31',
+            max: maxDate ? format(typeof maxDate === 'string' ? parseLocalDate(maxDate) : maxDate, 'yyyy-MM-dd') : '2099-12-31',
             min: minDate ? format(typeof minDate === 'string' ? parseLocalDate(minDate) : minDate, 'yyyy-MM-dd') : undefined,
           }}
           sx={{
@@ -210,6 +261,21 @@ export const EditDate = ({
             },
           }}
         />
+
+        {/* Live Preview */}
+        {editValue && isValid(editValue) && (
+          <Typography
+            variant="body2"
+            sx={{
+              mt: 1.5,
+              color: 'rgba(255,255,255,0.7)',
+              fontStyle: 'italic',
+              fontSize: '0.95rem',
+            }}
+          >
+            Preview: {format(editValue, 'MMMM d, yyyy')}
+          </Typography>
+        )}
 
         {/* Custom Calendar */}
         <CustomCalendar
