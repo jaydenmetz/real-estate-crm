@@ -147,7 +147,7 @@ export const DashboardContent = ({
         }}
       >
         <Typography variant="h6" color="textSecondary" gutterBottom>
-          No {formattedStatus}{formattedStatus ? ' ' : ''}{config.entity.namePlural} Found
+          No {formattedStatus}{formattedStatus ? ' ' : ''}{config.entity.namePlural.charAt(0).toUpperCase() + config.entity.namePlural.slice(1)} Found
         </Typography>
         <Typography variant="body2" color="textSecondary" sx={{ mb: 1.5 }}>
           {config.dashboard.hero.showAddButton
