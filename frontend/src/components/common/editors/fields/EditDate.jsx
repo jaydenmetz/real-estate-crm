@@ -234,7 +234,8 @@ export const EditDate = ({
         {/* Manual Date Input (Optional) */}
         <TextField
           fullWidth
-          value={typeof editValue === 'string' ? editValue : editValue ? format(editValue, 'yyyy-MM-dd') : ''}
+          defaultValue={typeof editValue === 'string' ? editValue : editValue ? format(editValue, 'yyyy-MM-dd') : ''}
+          key={editValue ? format(editValue, 'yyyy-MM-dd') : 'empty'} // Force re-render when editValue changes externally (e.g., calendar click)
           onChange={handleManualInput}
           onKeyDown={handleKeyPress}
           type="date"
