@@ -16,6 +16,7 @@ import {
   EditListingCommission,
   EditListingDate,
   EditExpirationDate,
+  EditPropertyAddress,
 } from '../../editors';
 
 // ============================================================================
@@ -66,7 +67,7 @@ const useListingTableConfig = (statuses) => {
 
   // Column Definitions
   columns: [
-    // Property Address (with city, state subtitle)
+    // Property Address (with city, state subtitle, editable)
     {
       label: 'Property',
       field: (listing) => listing.display_address || listing.property_address || 'No Address',
@@ -79,6 +80,22 @@ const useListingTableConfig = (statuses) => {
       image: {
         source: (listing) => getBestPropertyImage(listing),
         fallbackIcon: HomeIcon,
+      },
+      editable: true,
+      editor: EditPropertyAddress,
+      onSave: (listing, addressData) => {
+        // addressData is the full object from EditAddress with all address components
+        // Extract the individual fields to save to database
+        return {
+          property_address: addressData.property_address || '',
+          display_address: addressData.property_address_display || addressData.display_address || addressData.property_address || '',
+          city: addressData.city || '',
+          state: addressData.state || '',
+          zip_code: addressData.zip_code || '',
+          county: addressData.county || '',
+          latitude: addressData.latitude || null,
+          longitude: addressData.longitude || null,
+        };
       },
     },
 
