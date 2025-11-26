@@ -130,54 +130,54 @@ export const listingsConfig = createEntityConfig({
       {
         id: 'total_closed_listings',
         component: TotalListingsCard,
-        props: { status: 'Sold' },
+        props: { status: 'Closed' },
         visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'Sold', dateField: 'closing_date' },
+        props: { status: 'Closed', dateField: 'closing_date' },
         visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_volume',
         component: TotalVolumeCard,
-        props: { status: 'Sold' },
+        props: { status: 'Closed' },
         visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_commission',
         component: TotalCommissionCard,
-        props: { status: 'Sold' },
+        props: { status: 'Closed' },
         visibleWhen: ['Closed']
       },
 
       // ========================================
-      // EXPIRED TAB STATS
+      // CANCELLED TAB STATS
       // ========================================
       {
-        id: 'total_expired_listings',
+        id: 'total_cancelled_listings',
         component: TotalListingsCard,
-        props: { status: 'Expired' },
-        visibleWhen: ['Expired']
+        props: { status: 'Cancelled' },
+        visibleWhen: ['Cancelled']
       },
       {
-        id: 'total_expired_this_month',
+        id: 'total_cancelled_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'Expired', dateField: 'expiration_date' },
-        visibleWhen: ['Expired']
+        props: { status: 'Cancelled', dateField: 'created_at' },
+        visibleWhen: ['Cancelled']
       },
       {
-        id: 'total_expired_volume',
+        id: 'total_cancelled_volume',
         component: TotalVolumeCard,
-        props: { status: 'Expired' },
-        visibleWhen: ['Expired']
+        props: { status: 'Cancelled' },
+        visibleWhen: ['Cancelled']
       },
       {
-        id: 'total_expired_commission',
+        id: 'total_cancelled_commission',
         component: TotalCommissionCard,
-        props: { status: 'Expired' },
-        visibleWhen: ['Expired']
+        props: { status: 'Cancelled' },
+        visibleWhen: ['Cancelled']
       },
 
       // ========================================
@@ -186,32 +186,32 @@ export const listingsConfig = createEntityConfig({
       {
         id: 'total_listings',
         component: TotalListingsCard,
-        props: { status: 'all' },
-        visibleWhen: ['all']
+        props: { status: 'All' },
+        visibleWhen: ['All']
       },
       {
         id: 'total_listings_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'all', dateField: 'created_at' },
-        visibleWhen: ['all']
+        props: { status: 'All', dateField: 'created_at' },
+        visibleWhen: ['All']
       },
       {
         id: 'total_volume',
         component: TotalVolumeCard,
-        props: { status: 'all' },
-        visibleWhen: ['all']
+        props: { status: 'All' },
+        visibleWhen: ['All']
       },
       {
         id: 'total_commission',
         component: TotalCommissionCard,
-        props: { status: 'all' },
-        visibleWhen: ['all']
+        props: { status: 'All' },
+        visibleWhen: ['All']
       },
     ],
 
     // Status Tabs Configuration
     statusTabs: listingStatusTabs,
-    defaultStatus: 'active',
+    defaultStatus: 'Active',
 
     // Scope Filter Configuration
     getScopeOptions: getListingScopeOptions,
