@@ -453,11 +453,17 @@ export const DashboardHero = ({
                 },
               },
             }}>
-              {/* Render stat cards based on selected status */}
-              {statsConfig && statsConfig
-                .filter(statCfg => !statCfg.visibleWhen || statCfg.visibleWhen.includes(selectedStatus))
-                .slice(0, 4) // Max 4 stat cards
-                .map((statCfg, index) => {
+              {/* Render stat cards based on tab selection (not checkbox filters) */}
+              {(() => {
+                // Extract tab portion from multi-select format (e.g., "Active:Active,Pending" → "Active")
+                const tabSelection = selectedStatus?.includes(':')
+                  ? selectedStatus.split(':')[0]
+                  : selectedStatus;
+
+                return statsConfig && statsConfig
+                  .filter(statCfg => !statCfg.visibleWhen || statCfg.visibleWhen.includes(tabSelection))
+                  .slice(0, 4) // Max 4 stat cards
+                  .map((statCfg, index) => {
                   // Check if this is a component-based stat (new approach)
                   if (statCfg.component) {
                     const StatComponent = statCfg.component;
@@ -508,7 +514,8 @@ export const DashboardHero = ({
                       trend={stats?.[statCfg.id]?.trend}
                     />
                   );
-                })}
+                });
+              })()}
             </Box>
 
             {/* Action Buttons Row */}
