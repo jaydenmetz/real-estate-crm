@@ -67,11 +67,15 @@ class ListingsService {
       sortOrder = 'DESC',
       page = 1,
       limit = 20,
+      archived = 'false', // Archive view filter (matches escrows implementation)
     } = filters;
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const params = [];
-    const whereConditions = ['l.is_archived = false'];
+
+    // Handle archive filter (matches escrows implementation)
+    const showArchived = archived === 'true' || archived === true;
+    const whereConditions = [`l.is_archived = ${showArchived}`];
 
     // Add filters
     if (status) {
