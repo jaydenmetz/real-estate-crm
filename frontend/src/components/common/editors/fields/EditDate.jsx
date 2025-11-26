@@ -131,11 +131,12 @@ export const EditDate = ({
   const handleManualInput = (e) => {
     // Allow manual typing in YYYY-MM-DD format, convert to Date object
     const dateString = e.target.value;
-    console.log('Manual input:', dateString);
+    console.log('📅 Manual input received:', dateString, 'Length:', dateString?.length);
 
     // HTML5 date input only emits complete YYYY-MM-DD values or empty string
     // If empty, clear the date
     if (!dateString) {
+      console.log('❌ Empty date string, clearing editValue');
       setEditValue(null);
       return;
     }
@@ -145,15 +146,19 @@ export const EditDate = ({
       try {
         // Parse as local date to avoid timezone shifts
         const date = parseLocalDate(dateString);
+        console.log('🔄 Parsed date:', date, 'Valid:', isValid(date));
+
         if (isValid(date)) {
-          console.log('Parsed manual date:', date);
+          console.log('✅ Setting editValue to:', date);
           setEditValue(date);
         } else {
-          console.warn('Invalid date string:', dateString);
+          console.warn('⚠️ Invalid date string:', dateString);
         }
       } catch (error) {
-        console.error('Invalid date input:', error);
+        console.error('❌ Error parsing date:', error);
       }
+    } else {
+      console.log('⏳ Partial input, waiting for complete date...');
     }
     // For partial inputs (typing in progress), HTML5 input handles display
     // We don't need to do anything - let the user finish typing
