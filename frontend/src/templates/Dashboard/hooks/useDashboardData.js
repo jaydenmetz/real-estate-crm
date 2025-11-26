@@ -51,7 +51,12 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
       : null // Default to null (no date filtering)
   );
   const [sortBy, setSortBy] = useState(config.dashboard?.sortOptions?.[0]?.value || 'created_at');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortOrder, setSortOrder] = useState(() => {
+    // Load saved sort order from localStorage (per entity type AND per status tab)
+    // This allows different tabs to have different sort orders (e.g., Active asc, Closed desc)
+    const saved = localStorage.getItem(`${config.entity.namePlural}SortOrder_${selectedStatus}`);
+    return saved || 'desc'; // Default to descending if not saved
+  });
 
   // Create stable date range key to prevent unnecessary refetches
   const dateRangeKey = useMemo(() => {
@@ -327,6 +332,19 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
   useEffect(() => {
     localStorage.setItem(`${config.entity.namePlural}ViewMode`, viewMode);
   }, [viewMode, config.entity.namePlural]);
+
+  // Persist sortOrder to localStorage (per status tab for consistency across devices/sessions)
+  useEffect(() => {
+    localStorage.setItem(`${config.entity.namePlural}SortOrder_${selectedStatus}`, sortOrder);
+  }, [sortOrder, selectedStatus, config.entity.namePlural]);
+
+  // Load saved sortOrder when switching status tabs
+  useEffect(() => {
+    const saved = localStorage.getItem(`${config.entity.namePlural}SortOrder_${selectedStatus}`);
+    if (saved && saved !== sortOrder) {
+      setSortOrder(saved);
+    }
+  }, [selectedStatus, config.entity.namePlural]);
 
   // Persist selectedScope to localStorage
   useEffect(() => {
