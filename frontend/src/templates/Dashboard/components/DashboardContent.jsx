@@ -13,6 +13,7 @@ import {
   DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useStatus } from '../../../contexts/StatusContext';
 
 /**
  * DashboardContent - Config-driven content grid/list with animations
@@ -72,6 +73,9 @@ export const DashboardContent = ({
     );
   }
 
+  // Get status context for label lookup
+  const { getStatusByKey } = useStatus();
+
   // Empty state
   if (!data || data.length === 0) {
     // Format status text intelligently
@@ -94,13 +98,19 @@ export const DashboardContent = ({
       // Remove duplicates (e.g., "Active:Active" becomes just "Active")
       const uniqueParts = [...new Set(parts)];
 
-      if (uniqueParts.length === 0) return '';
-      if (uniqueParts.length === 1) return uniqueParts[0];
-      if (uniqueParts.length === 2) return `${uniqueParts[0]} or ${uniqueParts[1]}`;
+      // Convert status keys to labels using StatusContext
+      const labeledParts = uniqueParts.map(statusKey => {
+        const status = getStatusByKey(statusKey);
+        return status?.label || statusKey; // Fallback to key if label not found
+      });
+
+      if (labeledParts.length === 0) return '';
+      if (labeledParts.length === 1) return labeledParts[0];
+      if (labeledParts.length === 2) return `${labeledParts[0]} or ${labeledParts[1]}`;
 
       // 3+ items: "A, B, or C"
-      const lastPart = uniqueParts[uniqueParts.length - 1];
-      const firstParts = uniqueParts.slice(0, -1).join(', ');
+      const lastPart = labeledParts[labeledParts.length - 1];
+      const firstParts = labeledParts.slice(0, -1).join(', ');
       return `${firstParts}, or ${lastPart}`;
     };
 
