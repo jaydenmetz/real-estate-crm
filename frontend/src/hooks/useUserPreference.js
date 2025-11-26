@@ -68,15 +68,17 @@ export const useUserPreference = (key, defaultValue) => {
     gcTime: 10 * 60 * 1000, // 10 minutes (v5: renamed from cacheTime)
     retry: 1,
     refetchOnMount: false, // Don't refetch if we have cached data
-    onSuccess: (data) => {
-      if (data !== null && data !== undefined) {
-        // Database value exists - sync to localStorage and state
-        const extractedValue = data.value !== undefined ? data.value : data;
-        localStorage.setItem(key, JSON.stringify(extractedValue));
-        setValue(extractedValue);
-      }
-    },
   });
+
+  // Sync database value to localStorage and state (replaces deprecated onSuccess)
+  useEffect(() => {
+    if (dbValue !== null && dbValue !== undefined) {
+      // Database value exists - sync to localStorage and state
+      const extractedValue = dbValue.value !== undefined ? dbValue.value : dbValue;
+      localStorage.setItem(key, JSON.stringify(extractedValue));
+      setValue(extractedValue);
+    }
+  }, [dbValue, key]);
 
   // 3. Mutation for updating preference in database
   const mutation = useMutation({
