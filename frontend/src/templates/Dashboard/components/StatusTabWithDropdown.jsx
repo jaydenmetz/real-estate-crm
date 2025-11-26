@@ -210,7 +210,6 @@ const StatusTabWithDropdown = ({
                   selectedStatuses.includes(key)
                 ).length;
                 const allCategorySelected = selectedInCategory === categoryStatusKeys.length;
-                const someCategorySelected = selectedInCategory > 0 && selectedInCategory < categoryStatusKeys.length;
 
                 // Smart display: Only show nested structure if category has multiple statuses
                 const hasMultipleStatuses = cat.statuses.length > 1;
@@ -235,7 +234,6 @@ const StatusTabWithDropdown = ({
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Checkbox
                               checked={allCategorySelected}
-                              indeterminate={someCategorySelected}
                               size="small"
                               sx={{ p: 0 }}
                               readOnly
@@ -341,7 +339,6 @@ const StatusTabWithDropdown = ({
                 selectedStatuses.includes(key)
               ).length;
               const allCategorySelected = selectedInCategory === categoryStatusKeys.length;
-              const someCategorySelected = selectedInCategory > 0 && selectedInCategory < categoryStatusKeys.length;
 
               return (
                 <>
@@ -360,7 +357,6 @@ const StatusTabWithDropdown = ({
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Checkbox
                         checked={allCategorySelected}
-                        indeterminate={someCategorySelected}
                         size="small"
                         sx={{ p: 0 }}
                         readOnly
