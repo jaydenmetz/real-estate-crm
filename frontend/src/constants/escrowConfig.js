@@ -38,9 +38,19 @@ export const ESCROW_STATUS_CONFIG = {
 
 /**
  * Get status config with fallback to Active
+ * Case-insensitive lookup to handle both 'active' and 'Active'
  * @param {string} status - Escrow status
  * @returns {object} Status configuration
  */
 export const getStatusConfig = (status) => {
-  return ESCROW_STATUS_CONFIG[status] || ESCROW_STATUS_CONFIG.Active;
+  if (!status) return ESCROW_STATUS_CONFIG.Active;
+
+  // Normalize status to match config keys
+  // Examples: 'active' → 'Active', 'cancelled' → 'Cancelled', 'pending acceptance' → 'Pending Acceptance'
+  const normalized = status
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+
+  return ESCROW_STATUS_CONFIG[normalized] || ESCROW_STATUS_CONFIG.Active;
 };
