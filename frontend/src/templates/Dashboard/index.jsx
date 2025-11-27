@@ -520,6 +520,7 @@ export const DashboardTemplate = ({
           analyticsButtonLabel: config.dashboard.hero.analyticsButtonLabel,
           addButtonLabel: config.dashboard.hero.addButtonLabel,
           showAIAssistant: config.dashboard.hero.showAIAssistant,
+          aiAssistantWidget: config.dashboard.hero.aiAssistantWidget, // Pass custom widget
           aiAssistantLabel: config.dashboard.hero.aiAssistantLabel,
           aiAssistantDescription: config.dashboard.hero.aiAssistantDescription,
         }}
