@@ -1,5 +1,5 @@
 import React from 'react';
-import DashboardStatCard from '../../../../../templates/Dashboard/components/DashboardStatCard';
+import DashboardStatCard from '../../../../../components/common/DashboardStatCard';
 
 /**
  * TotalClientsCard - Displays count of clients by status

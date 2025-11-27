@@ -1,5 +1,5 @@
 import React from 'react';
-import DashboardStatCard from '../../../../../templates/Dashboard/components/DashboardStatCard';
+import DashboardStatCard from '../../../../../components/common/DashboardStatCard';
 
 /**
  * QualifiedLeadsCard - Shows count of qualified leads
