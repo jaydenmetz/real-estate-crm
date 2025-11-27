@@ -111,7 +111,7 @@ export const escrowsConfig = createEntityConfig({
       dateRangeFilters: ['1D', '1M', '1Y', 'YTD', 'Custom'],
       defaultDateRange: '1M',
       showAIAssistant: true,
-      aiAssistantWidget: <AIAssistantCarousel />, // Custom carousel widget
+      aiAssistantWidget: AIAssistantCarousel, // Component reference (not JSX)
       aiAssistantLabel: 'AI Escrow Manager',
       aiAssistantDescription: 'Hire an AI assistant to manage escrows, track deadlines, and automate document workflows.',
       showAnalyticsButton: true,

@@ -622,96 +622,101 @@ export const DashboardHero = ({
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Card
-                    elevation={0}
-                    sx={{
-                      width: '300px',
-                      height: '300px',
-                      minWidth: '300px',
-                      minHeight: '300px',
-                      maxWidth: '300px',
-                      maxHeight: '300px',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)',
-                      backdropFilter: 'blur(10px)',
-                      border: '2px dashed rgba(255, 255, 255, 0.3)',
-                      borderRadius: 3,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        border: '2px dashed rgba(255, 255, 255, 0.5)',
-                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.12) 100%)',
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                      <Box>
-                        <Box
-                          sx={{
-                            width: 64,
-                            height: 64,
-                            borderRadius: '50%',
-                            background: 'rgba(255, 255, 255, 0.15)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            margin: '0 auto',
-                            mb: 2,
-                          }}
-                        >
-                          <Typography sx={{ fontSize: '2rem' }}>🤖</Typography>
-                        </Box>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: 'rgba(255, 255, 255, 0.95)',
-                            fontWeight: 700,
-                            mb: 1,
-                            letterSpacing: '0.02em',
-                          }}
-                        >
-                          {config.aiAssistantLabel || 'AI Assistant'}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            mb: 2,
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          {config.aiAssistantDescription || 'Hire an AI assistant to automate workflows.'}
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: 'inline-block',
-                            px: 2,
-                            py: 0.75,
-                            borderRadius: 2,
-                            background: 'rgba(255, 255, 255, 0.2)',
-                            backdropFilter: 'blur(5px)',
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
+                  {/* Render custom widget if provided, otherwise default card */}
+                  {config.aiAssistantWidget ? (
+                    React.createElement(config.aiAssistantWidget)
+                  ) : (
+                    <Card
+                      elevation={0}
+                      sx={{
+                        width: '300px',
+                        height: '300px',
+                        minWidth: '300px',
+                        minHeight: '300px',
+                        maxWidth: '300px',
+                        maxHeight: '300px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)',
+                        backdropFilter: 'blur(10px)',
+                        border: '2px dashed rgba(255, 255, 255, 0.3)',
+                        borderRadius: 3,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          border: '2px dashed rgba(255, 255, 255, 0.5)',
+                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.12) 100%)',
+                        }
+                      }}
+                    >
+                      <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                        <Box>
+                          <Box
                             sx={{
-                              color: 'white',
-                              fontWeight: 600,
-                              letterSpacing: '0.1em',
-                              textTransform: 'uppercase',
-                              fontSize: '0.75rem',
+                              width: 64,
+                              height: 64,
+                              borderRadius: '50%',
+                              background: 'rgba(255, 255, 255, 0.15)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              margin: '0 auto',
+                              mb: 2,
                             }}
                           >
-                            Coming Soon
+                            <Typography sx={{ fontSize: '2rem' }}>🤖</Typography>
+                          </Box>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              color: 'rgba(255, 255, 255, 0.95)',
+                              fontWeight: 700,
+                              mb: 1,
+                              letterSpacing: '0.02em',
+                            }}
+                          >
+                            {config.aiAssistantLabel || 'AI Assistant'}
                           </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: 'rgba(255, 255, 255, 0.7)',
+                              mb: 2,
+                              fontSize: '0.875rem',
+                            }}
+                          >
+                            {config.aiAssistantDescription || 'Hire an AI assistant to automate workflows.'}
+                          </Typography>
+                          <Box
+                            sx={{
+                              display: 'inline-block',
+                              px: 2,
+                              py: 0.75,
+                              borderRadius: 2,
+                              background: 'rgba(255, 255, 255, 0.2)',
+                              backdropFilter: 'blur(5px)',
+                            }}
+                          >
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: 'white',
+                                fontWeight: 600,
+                                letterSpacing: '0.1em',
+                                textTransform: 'uppercase',
+                                fontSize: '0.75rem',
+                              }}
+                            >
+                              Coming Soon
+                            </Typography>
+                          </Box>
                         </Box>
-                      </Box>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  )}
                 </motion.div>
               </Box>
             </Grid>
