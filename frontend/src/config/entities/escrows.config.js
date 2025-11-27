@@ -38,6 +38,9 @@ import FinancialsWidget_White from '../../components/details/escrows/components/
 import PeopleWidget_White from '../../components/details/escrows/components/PeopleWidget_White';
 import ChecklistsWidget_White from '../../components/details/escrows/components/ChecklistsWidget_White';
 
+// Import AI Assistant Carousel
+import AIAssistantCarousel from '../../components/dashboards/escrows/hero/AIAssistantCarousel';
+
 export const escrowsConfig = createEntityConfig({
   // ========================================
   // ENTITY METADATA
@@ -108,6 +111,7 @@ export const escrowsConfig = createEntityConfig({
       dateRangeFilters: ['1D', '1M', '1Y', 'YTD', 'Custom'],
       defaultDateRange: '1M',
       showAIAssistant: true,
+      aiAssistantWidget: <AIAssistantCarousel />, // Custom carousel widget
       aiAssistantLabel: 'AI Escrow Manager',
       aiAssistantDescription: 'Hire an AI assistant to manage escrows, track deadlines, and automate document workflows.',
       showAnalyticsButton: true,
