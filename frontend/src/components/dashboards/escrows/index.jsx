@@ -5,6 +5,7 @@ import { EscrowCard, EscrowListItem, EscrowTableRow } from './view-modes';
 import { NewEscrowModal } from './modals/NewEscrowModal';
 import { PrivacyProvider } from '../../../contexts/PrivacyContext';
 import { StatusProvider } from '../../../contexts/StatusContext';
+import EscrowsHeroCarousel from './hero/EscrowsHeroCarousel';
 
 /**
  * EscrowsDashboard - Config-driven dashboard using DashboardTemplate
@@ -16,6 +17,7 @@ import { StatusProvider } from '../../../contexts/StatusContext';
  * handled by the template system using the entity configuration.
  *
  * Custom Components:
+ * - Hero: EscrowsHeroCarousel (carousel wrapper for hero section)
  * - Stat Cards: Reusable stat card components in hero/stats/
  * - Navigation: Uses template DashboardNavigation (no custom component)
  * - View Modes:
@@ -43,6 +45,7 @@ const EscrowsDashboard = () => {
           ListComponent={EscrowListItem}
           TableComponent={EscrowTableRow}
           NewItemModal={NewEscrowModal}
+          HeroComponent={EscrowsHeroCarousel}
         />
       </PrivacyProvider>
     </StatusProvider>

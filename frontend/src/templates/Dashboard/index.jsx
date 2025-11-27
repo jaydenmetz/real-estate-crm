@@ -31,7 +31,8 @@ export const DashboardTemplate = ({
   NewItemModal,
   customFilters = null,
   customActions = null,
-  NavigationComponent = null // Optional custom navigation component
+  NavigationComponent = null, // Optional custom navigation component
+  HeroComponent = null // Optional custom hero component (e.g., carousel wrapper)
 }) => {
   // Auth context for personalized scope options
   const { user } = useAuth();
@@ -510,37 +511,72 @@ export const DashboardTemplate = ({
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       {/* Hero Card with embedded stats - ClientHeroCard style */}
-      <DashboardHero
-        config={{
-          title: config.entity.labelPlural,
-          subtitle: `Manage your ${config.entity.namePlural}`,
-          gradient: `linear-gradient(135deg, ${config.entity.colorGradient.start} 0%, ${config.entity.colorGradient.end} 100%)`,
-          entitySingular: config.entity.label,
-          showAnalyticsButton: config.dashboard.hero.showAnalyticsButton,
-          analyticsButtonLabel: config.dashboard.hero.analyticsButtonLabel,
-          addButtonLabel: config.dashboard.hero.addButtonLabel,
-          showAIAssistant: config.dashboard.hero.showAIAssistant,
-          aiAssistantWidget: config.dashboard.hero.aiAssistantWidget, // Pass custom widget
-          aiAssistantLabel: config.dashboard.hero.aiAssistantLabel,
-          aiAssistantDescription: config.dashboard.hero.aiAssistantDescription,
-        }}
-        stats={stats}
-        statsConfig={config.dashboard.stats}
-        selectedStatus={selectedStatus}
-        onNewItem={config.dashboard.hero.showAddButton ? () => setNewItemModalOpen(true) : null}
-        dateRangeFilter={dateRangeFilter}
-        setDateRangeFilter={setDateRangeFilter}
-        customStartDate={customStartDate}
-        setCustomStartDate={setCustomStartDate}
-        customEndDate={customEndDate}
-        setCustomEndDate={setCustomEndDate}
-        dateRange={calculatedDateRange}
-        detectPresetRange={detectPresetRange}
-        selectedYear={selectedYear}
-        setSelectedYear={setSelectedYear}
-        StatCardComponent={DashboardStatCard}
-        allData={filteredData} // Use filtered data so stats reflect checkbox selections
-      />
+      {/* Render custom hero component if provided, otherwise render default DashboardHero */}
+      {HeroComponent ? (
+        <HeroComponent
+          config={{
+            title: config.entity.labelPlural,
+            subtitle: `Manage your ${config.entity.namePlural}`,
+            gradient: `linear-gradient(135deg, ${config.entity.colorGradient.start} 0%, ${config.entity.colorGradient.end} 100%)`,
+            entitySingular: config.entity.label,
+            showAnalyticsButton: config.dashboard.hero.showAnalyticsButton,
+            analyticsButtonLabel: config.dashboard.hero.analyticsButtonLabel,
+            addButtonLabel: config.dashboard.hero.addButtonLabel,
+            showAIAssistant: config.dashboard.hero.showAIAssistant,
+            aiAssistantWidget: config.dashboard.hero.aiAssistantWidget,
+            aiAssistantLabel: config.dashboard.hero.aiAssistantLabel,
+            aiAssistantDescription: config.dashboard.hero.aiAssistantDescription,
+          }}
+          stats={stats}
+          statsConfig={config.dashboard.stats}
+          selectedStatus={selectedStatus}
+          onNewItem={config.dashboard.hero.showAddButton ? () => setNewItemModalOpen(true) : null}
+          dateRangeFilter={dateRangeFilter}
+          setDateRangeFilter={setDateRangeFilter}
+          customStartDate={customStartDate}
+          setCustomStartDate={setCustomStartDate}
+          customEndDate={customEndDate}
+          setCustomEndDate={setCustomEndDate}
+          dateRange={calculatedDateRange}
+          detectPresetRange={detectPresetRange}
+          selectedYear={selectedYear}
+          setSelectedYear={setSelectedYear}
+          StatCardComponent={DashboardStatCard}
+          allData={filteredData}
+        />
+      ) : (
+        <DashboardHero
+          config={{
+            title: config.entity.labelPlural,
+            subtitle: `Manage your ${config.entity.namePlural}`,
+            gradient: `linear-gradient(135deg, ${config.entity.colorGradient.start} 0%, ${config.entity.colorGradient.end} 100%)`,
+            entitySingular: config.entity.label,
+            showAnalyticsButton: config.dashboard.hero.showAnalyticsButton,
+            analyticsButtonLabel: config.dashboard.hero.analyticsButtonLabel,
+            addButtonLabel: config.dashboard.hero.addButtonLabel,
+            showAIAssistant: config.dashboard.hero.showAIAssistant,
+            aiAssistantWidget: config.dashboard.hero.aiAssistantWidget, // Pass custom widget
+            aiAssistantLabel: config.dashboard.hero.aiAssistantLabel,
+            aiAssistantDescription: config.dashboard.hero.aiAssistantDescription,
+          }}
+          stats={stats}
+          statsConfig={config.dashboard.stats}
+          selectedStatus={selectedStatus}
+          onNewItem={config.dashboard.hero.showAddButton ? () => setNewItemModalOpen(true) : null}
+          dateRangeFilter={dateRangeFilter}
+          setDateRangeFilter={setDateRangeFilter}
+          customStartDate={customStartDate}
+          setCustomStartDate={setCustomStartDate}
+          customEndDate={customEndDate}
+          setCustomEndDate={setCustomEndDate}
+          dateRange={calculatedDateRange}
+          detectPresetRange={detectPresetRange}
+          selectedYear={selectedYear}
+          setSelectedYear={setSelectedYear}
+          StatCardComponent={DashboardStatCard}
+          allData={filteredData} // Use filtered data so stats reflect checkbox selections
+        />
+      )}
 
         {/* Stats are now embedded in Hero, so no separate stats section needed */}
 
