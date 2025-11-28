@@ -37,7 +37,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     propertyAddress: '',
     displayAddress: '',
     city: '',
-    state: 'CA',
+    state: '',
     zipCode: '',
     county: '',
     latitude: null,
