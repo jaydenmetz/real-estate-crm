@@ -208,8 +208,8 @@ export const EditAddress = ({
   return (
     <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520}>
       <Box onClick={(e) => e.stopPropagation()}>
-        {/* Address Display Section - Only show if there's an existing address OR new address selected */}
-        {(canonicalAddress || hasSelectedNewAddress) && (
+        {/* Address Display Section - Only show if there's an existing address */}
+        {canonicalAddress && (
           <Box sx={{ mb: 3 }}>
             {!hasSelectedNewAddress ? (
               /* Show current database address (no editing mode yet) */
