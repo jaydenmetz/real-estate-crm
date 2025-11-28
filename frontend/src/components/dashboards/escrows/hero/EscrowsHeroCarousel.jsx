@@ -8,6 +8,7 @@ import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardHero } from '../../../../templates/Dashboard/components/DashboardHero';
 import AIManagerModal from './AIManagerModal';
+import LockedStatCard from './pages/AIManagerPage/LockedStatCard';
 
 /**
  * EscrowsHeroCarousel - Wraps the entire hero section in a carousel
@@ -206,7 +207,7 @@ const EscrowsHeroCarousel = ({
               exit={{ opacity: 0, x: -300 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Page 2: AI Manager focused view (placeholder for now) */}
+              {/* Page 2: AI Manager focused view with locked stats */}
               <DashboardHero
                 config={{
                   ...config,
@@ -254,7 +255,7 @@ const EscrowsHeroCarousel = ({
                 detectPresetRange={detectPresetRange}
                 selectedYear={selectedYear}
                 setSelectedYear={setSelectedYear}
-                StatCardComponent={StatCardComponent}
+                StatCardComponent={LockedStatCard} // Use locked stat cards for AI Manager page
                 allData={[]} // Empty data for demo stats
               />
             </motion.div>

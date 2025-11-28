@@ -8,12 +8,25 @@ import * as Icons from '@mui/icons-material';
  *
  * Used on Page 2 (AI Manager page) to tease premium features.
  * Shows "--" values with lock icon overlay.
+ *
+ * Compatible with DashboardHero StatCardComponent interface
  */
 const LockedStatCard = ({
   icon = 'Dashboard',
   title = 'STAT NAME',
   subtitle,
   color = '#9e9e9e',
+  // Accept these props from DashboardHero but ignore them
+  value,
+  prefix,
+  suffix,
+  backgroundColor,
+  textColor,
+  valueColor,
+  delay,
+  goal,
+  trend,
+  ...rest
 }) => {
   const IconComponent = Icons[icon] || Icons.Dashboard;
 
