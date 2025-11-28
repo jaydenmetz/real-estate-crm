@@ -414,6 +414,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             onSave={handleRepresentationTypeSave}
             value={formData.representationType}
             color={currentStepConfig.color}
+            inline={true}
           />
         );
 
