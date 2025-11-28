@@ -100,7 +100,6 @@ const EscrowsHeroCarousel = ({
       {...swipeHandlers}
       sx={{
         position: 'relative',
-        mb: 6, // Extra margin for dots
       }}
     >
       {/* Navigation Arrows (outside hero card) */}
@@ -261,41 +260,43 @@ const EscrowsHeroCarousel = ({
             </motion.div>
           )}
         </AnimatePresence>
-      </Box>
 
-      {/* Carousel Dots */}
-      {totalPages > 1 && (
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 1.5,
-            justifyContent: 'center',
-            mt: 3,
-          }}
-        >
-          {Array.from({ length: totalPages }).map((_, index) => (
-            <Box
-              key={index}
-              onClick={() => goToPage(index)}
-              sx={{
-                width: currentPage === index ? 32 : 8,
-                height: 8,
-                borderRadius: 4,
-                background: currentPage === index
-                  ? 'rgba(0,0,0,0.6)'
-                  : 'rgba(0,0,0,0.2)',
-                cursor: 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
+        {/* Carousel Dots - positioned inside hero at bottom right */}
+        {totalPages > 1 && (
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 24,
+              right: 24,
+              display: 'flex',
+              gap: 1.5,
+              zIndex: 10,
+            }}
+          >
+            {Array.from({ length: totalPages }).map((_, index) => (
+              <Box
+                key={index}
+                onClick={() => goToPage(index)}
+                sx={{
+                  width: currentPage === index ? 32 : 8,
+                  height: 8,
+                  borderRadius: 4,
                   background: currentPage === index
-                    ? 'rgba(0,0,0,0.8)'
-                    : 'rgba(0,0,0,0.4)',
-                },
-              }}
-            />
-          ))}
-        </Box>
-      )}
+                    ? 'rgba(255,255,255,0.9)'
+                    : 'rgba(255,255,255,0.4)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    background: currentPage === index
+                      ? 'rgba(255,255,255,1)'
+                      : 'rgba(255,255,255,0.6)',
+                  },
+                }}
+              />
+            ))}
+          </Box>
+        )}
+      </Box>
 
       {/* AI Manager Modal */}
       <AIManagerModal
