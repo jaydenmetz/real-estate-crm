@@ -208,81 +208,71 @@ export const EditAddress = ({
   return (
     <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520}>
       <Box onClick={(e) => e.stopPropagation()}>
-        {/* Address Display Section */}
-        <Box sx={{ mb: 3 }}>
-          {!hasSelectedNewAddress ? (
-            /* Show current database address (no editing mode yet) */
-            <>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: 'rgba(255,255,255,0.7)',
-                  mb: 0.5,
-                  display: 'block',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}
-              >
-                Current Property Address
-              </Typography>
-              <Box
-                onClick={handleAddressClick}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 1,
-                  cursor: 'pointer',
-                  borderRadius: 2,
-                  p: 1,
-                  mx: -1,
-                  transition: 'background-color 0.2s',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                  },
-                }}
-              >
-                <LocationOn sx={{ color: 'white', mt: 0.5, fontSize: 24 }} />
-                <Box sx={{ flex: 1 }}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 700,
-                      color: canonicalAddress ? 'white' : 'rgba(255,255,255,0.5)',
-                      fontSize: '1rem',
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {canonicalAddress || 'Street Address'}
-                  </Typography>
-                  {locationSubtitle ? (
+        {/* Address Display Section - Only show if there's an existing address OR new address selected */}
+        {(canonicalAddress || hasSelectedNewAddress) && (
+          <Box sx={{ mb: 3 }}>
+            {!hasSelectedNewAddress ? (
+              /* Show current database address (no editing mode yet) */
+              <>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: 'rgba(255,255,255,0.7)',
+                    mb: 0.5,
+                    display: 'block',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  Current Property Address
+                </Typography>
+                <Box
+                  onClick={handleAddressClick}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 1,
+                    cursor: 'pointer',
+                    borderRadius: 2,
+                    p: 1,
+                    mx: -1,
+                    transition: 'background-color 0.2s',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.1)',
+                    },
+                  }}
+                >
+                  <LocationOn sx={{ color: 'white', mt: 0.5, fontSize: 24 }} />
+                  <Box sx={{ flex: 1 }}>
                     <Typography
-                      variant="caption"
+                      variant="h6"
                       sx={{
-                        color: 'rgba(255,255,255,0.7)',
-                        display: 'block',
-                        mt: 0.5,
+                        fontWeight: 700,
+                        color: 'white',
+                        fontSize: '1rem',
+                        lineHeight: 1.4,
                       }}
                     >
-                      {locationSubtitle}
+                      {canonicalAddress}
                     </Typography>
-                  ) : (
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: 'rgba(255,255,255,0.5)',
-                        display: 'block',
-                        mt: 0.5,
-                      }}
-                    >
-                      City, State, Zip Code
-                    </Typography>
-                  )}
+                    {locationSubtitle && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'rgba(255,255,255,0.7)',
+                          display: 'block',
+                          mt: 0.5,
+                        }}
+                      >
+                        {locationSubtitle}
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
-              </Box>
-            </>
-          ) : (
+              </>
+            ) : (
             /* Show side-by-side comparison when new address selected */
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {/* Current Address */}
@@ -409,9 +399,11 @@ export const EditAddress = ({
               </Box>
             </Box>
           )}
+        </Box>
+        )}
 
-          {/* Address Action Menu */}
-          <Menu
+        {/* Address Action Menu */}
+        <Menu
             anchorEl={addressMenuAnchor}
             open={Boolean(addressMenuAnchor)}
             onClose={handleAddressMenuClose}
@@ -447,7 +439,6 @@ export const EditAddress = ({
               <ListItemText>Open in Google Maps</ListItemText>
             </MenuItem>
           </Menu>
-        </Box>
 
         {/* Display Name Input (Editable) */}
         <Box sx={{ mb: 2 }}>
