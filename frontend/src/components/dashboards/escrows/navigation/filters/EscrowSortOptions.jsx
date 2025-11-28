@@ -9,24 +9,24 @@
 
 export const escrowSortOptions = [
   {
-    value: 'property_address',
-    label: 'Address'
-  },
-  {
-    value: 'purchase_price',
-    label: 'Purchase Price'
-  },
-  {
-    value: 'commission_amount',
-    label: 'Commission'
+    value: 'closing_date',
+    label: 'Closing Date'
   },
   {
     value: 'acceptance_date',
     label: 'Acceptance Date'
   },
   {
-    value: 'closing_date',
-    label: 'Closing Date'
+    value: 'commission_amount',
+    label: 'Commission'
+  },
+  {
+    value: 'purchase_price',
+    label: 'Purchase Price'
+  },
+  {
+    value: 'property_address',
+    label: 'Address'
   }
 ];
 
