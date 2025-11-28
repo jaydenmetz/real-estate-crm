@@ -268,7 +268,7 @@ const EscrowsHeroCarousel = ({
           <Box
             sx={{
               position: 'absolute',
-              bottom: 10,
+              bottom: 30,
               left: '50%',
               transform: 'translateX(-50%)',
               display: 'flex',
