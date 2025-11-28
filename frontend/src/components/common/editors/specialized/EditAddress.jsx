@@ -249,12 +249,12 @@ export const EditAddress = ({
                     variant="h6"
                     sx={{
                       fontWeight: 700,
-                      color: 'white',
+                      color: canonicalAddress ? 'white' : 'rgba(255,255,255,0.5)',
                       fontSize: '1rem',
                       lineHeight: 1.4,
                     }}
                   >
-                    {canonicalAddress || 'No address set'}
+                    {canonicalAddress || 'Street Address, City, State, Zip Code'}
                   </Typography>
                   {locationSubtitle && (
                     <Typography
