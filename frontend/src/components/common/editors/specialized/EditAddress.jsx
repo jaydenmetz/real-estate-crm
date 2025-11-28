@@ -254,9 +254,9 @@ export const EditAddress = ({
                       lineHeight: 1.4,
                     }}
                   >
-                    {canonicalAddress || 'Street Address, City, State, Zip Code'}
+                    {canonicalAddress || 'Street Address'}
                   </Typography>
-                  {locationSubtitle && (
+                  {locationSubtitle ? (
                     <Typography
                       variant="caption"
                       sx={{
@@ -266,6 +266,17 @@ export const EditAddress = ({
                       }}
                     >
                       {locationSubtitle}
+                    </Typography>
+                  ) : (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: 'rgba(255,255,255,0.5)',
+                        display: 'block',
+                        mt: 0.5,
+                      }}
+                    >
+                      City, State, Zip Code
                     </Typography>
                   )}
                 </Box>
