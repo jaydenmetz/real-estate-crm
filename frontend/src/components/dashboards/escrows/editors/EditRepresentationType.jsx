@@ -54,7 +54,7 @@ export const EditRepresentationType = ({
   };
 
   return (
-    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={400}>
+    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={500}>
       <Box onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyPress} tabIndex={0}>
         {/* Label */}
         <Typography
@@ -85,25 +85,38 @@ export const EditRepresentationType = ({
           Who do you represent?
         </Typography>
 
-        {/* Representation Type Toggle */}
+        {/* Representation Type Toggle - Horizontal */}
         <ToggleButtonGroup
           value={selectedType}
           exclusive
           onChange={handleChange}
-          orientation="vertical"
           fullWidth
           sx={{
-            backgroundColor: 'rgba(255,255,255,0.1)',
+            gap: 1.5,
+            '& .MuiToggleButtonGroup-grouped': {
+              border: 'none',
+              '&:not(:first-of-type)': {
+                marginLeft: 0,
+                borderRadius: 2,
+              },
+              '&:first-of-type': {
+                borderRadius: 2,
+              },
+            },
             '& .MuiToggleButton-root': {
               color: 'rgba(255,255,255,0.7)',
+              backgroundColor: 'rgba(255,255,255,0.1)',
               borderColor: 'rgba(255,255,255,0.2)',
               fontWeight: 600,
-              py: 2,
-              fontSize: '1rem',
+              py: 2.5,
+              px: 2,
+              fontSize: '0.95rem',
               display: 'flex',
-              justifyContent: 'flex-start',
-              gap: 2,
+              flexDirection: 'column',
+              gap: 1,
               textTransform: 'none',
+              borderRadius: 2,
+              transition: 'all 0.2s',
               '&.Mui-selected': {
                 backgroundColor: 'rgba(255,255,255,0.25)',
                 color: 'white',
@@ -119,39 +132,24 @@ export const EditRepresentationType = ({
           }}
         >
           <ToggleButton value="buyer">
-            <Person sx={{ fontSize: 24 }} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <Typography variant="body1" fontWeight={600}>
-                Buyer
-              </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                Representing the buyer
-              </Typography>
-            </Box>
+            <Person sx={{ fontSize: 28 }} />
+            <Typography variant="body2" fontWeight={600}>
+              Buyer
+            </Typography>
           </ToggleButton>
 
           <ToggleButton value="seller">
-            <Home sx={{ fontSize: 24 }} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <Typography variant="body1" fontWeight={600}>
-                Seller
-              </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                Representing the seller
-              </Typography>
-            </Box>
+            <Home sx={{ fontSize: 28 }} />
+            <Typography variant="body2" fontWeight={600}>
+              Seller
+            </Typography>
           </ToggleButton>
 
           <ToggleButton value="dual">
-            <Group sx={{ fontSize: 24 }} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <Typography variant="body1" fontWeight={600}>
-                Dual Agency
-              </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                Representing both parties
-              </Typography>
-            </Box>
+            <Group sx={{ fontSize: 28 }} />
+            <Typography variant="body2" fontWeight={600}>
+              Dual
+            </Typography>
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
