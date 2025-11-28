@@ -16,6 +16,12 @@ import { motion } from 'framer-motion';
 import { Add as AddIcon, Assessment as AssessmentIcon } from '@mui/icons-material';
 import { EditDisplayStartDate, EditDisplayEndDate } from '../editors';
 
+// Shadow wrapper to apply drop-shadow without being clipped by overflow:hidden
+const ShadowWrapper = styled(Box)({
+  filter: 'drop-shadow(0 20px 40px rgba(0, 0, 0, 0.15))',
+  marginBottom: '32px', // spacing(4) = 32px
+});
+
 // Styled Components matching ClientHeroCard
 const HeroSection = styled(Box)(({ theme }) => ({
   position: 'relative',
@@ -24,9 +30,6 @@ const HeroSection = styled(Box)(({ theme }) => ({
   background: 'linear-gradient(135deg, #0891B2 0%, #06B6D4 100%)', // Default cyan, will be overridden
   color: 'white',
   padding: theme.spacing(4),
-  marginBottom: theme.spacing(4),
-  // Use filter drop-shadow instead of boxShadow to respect border-radius
-  filter: 'drop-shadow(0 20px 40px rgba(0, 0, 0, 0.15))',
   [theme.breakpoints.down('md')]: {
     padding: theme.spacing(3),
   },
@@ -114,9 +117,10 @@ export const DashboardHero = ({
   const availableYears = getAvailableYears();
 
   return (
-    <HeroSection sx={{
-      background: config.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    }}>
+    <ShadowWrapper>
+      <HeroSection sx={{
+        background: config.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      }}>
       {/* Wrapper for header and main content */}
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
@@ -725,5 +729,6 @@ export const DashboardHero = ({
         </Grid>
       </Box>
     </HeroSection>
+    </ShadowWrapper>
   );
 };
