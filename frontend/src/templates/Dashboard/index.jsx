@@ -269,14 +269,21 @@ export const DashboardTemplate = ({
     refetch,
   } = useDashboardData(config, calculatedDateRange, showArchived);
 
-  // Wrapper for setSelectedStatus that also changes viewMode based on tab's preferredViewMode
+  // Wrapper for setSelectedStatus that also changes viewMode based on tab's preferredViewMode or defaultViewMode object
   const setSelectedStatus = (newStatus) => {
     // Find the tab config for this status
     const statusTab = config.dashboard?.statusTabs?.find(tab => tab.value === newStatus);
 
-    // If tab has a preferredViewMode, switch to it
+    // Check if tab has a preferredViewMode (legacy)
     if (statusTab?.preferredViewMode) {
       setViewMode(statusTab.preferredViewMode);
+    }
+    // Or check if defaultViewMode is an object with per-tab defaults
+    else if (config.dashboard?.defaultViewMode && typeof config.dashboard.defaultViewMode === 'object') {
+      const tabDefaultView = config.dashboard.defaultViewMode[newStatus];
+      if (tabDefaultView) {
+        setViewMode(tabDefaultView);
+      }
     }
 
     // Update the status

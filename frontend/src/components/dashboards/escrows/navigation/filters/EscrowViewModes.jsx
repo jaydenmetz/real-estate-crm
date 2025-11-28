@@ -25,4 +25,9 @@ export const escrowViewModes = [
   }
 ];
 
-export const escrowDefaultViewMode = 'card';
+export const escrowDefaultViewMode = {
+  Active: 'card',
+  Closed: 'list',
+  Cancelled: 'table',
+  All: 'card'
+};

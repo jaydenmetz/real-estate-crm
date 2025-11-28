@@ -43,7 +43,26 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
       'calendar': 'table'
     };
     const migratedValue = saved && migrationMap[saved] ? migrationMap[saved] : saved;
-    return migratedValue || config.dashboard?.defaultViewMode || 'list';
+
+    // If no saved value, determine default
+    if (!migratedValue) {
+      const defaultViewMode = config.dashboard?.defaultViewMode;
+
+      // Check if defaultViewMode is an object (per-tab defaults)
+      if (defaultViewMode && typeof defaultViewMode === 'object') {
+        // Get the saved status or fallback to default status
+        const savedStatus = localStorage.getItem(`${config.entity.namePlural}Status`);
+        const currentStatus = savedStatus || config.dashboard?.defaultStatus || config.dashboard?.statusTabs?.[0]?.value || 'All';
+
+        // Return the view mode for the current status, fallback to 'list'
+        return defaultViewMode[currentStatus] || 'list';
+      }
+
+      // If defaultViewMode is a string, use it directly (backward compatibility)
+      return defaultViewMode || 'list';
+    }
+
+    return migratedValue;
   });
   const [dateRange, setDateRange] = useState(
     config.dashboard?.hero?.defaultDateRange
