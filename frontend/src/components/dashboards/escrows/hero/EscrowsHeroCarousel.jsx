@@ -261,13 +261,14 @@ const EscrowsHeroCarousel = ({
           )}
         </AnimatePresence>
 
-        {/* Carousel Dots - positioned inside hero at bottom right */}
+        {/* Carousel Dots - centered at bottom of hero card */}
         {totalPages > 1 && (
           <Box
             sx={{
               position: 'absolute',
               bottom: 24,
-              right: 24,
+              left: '50%',
+              transform: 'translateX(-50%)',
               display: 'flex',
               gap: 1.5,
               zIndex: 10,
