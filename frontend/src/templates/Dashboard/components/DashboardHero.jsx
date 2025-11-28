@@ -25,7 +25,8 @@ const HeroSection = styled(Box)(({ theme }) => ({
   color: 'white',
   padding: theme.spacing(4),
   marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+  // Use filter drop-shadow instead of boxShadow to respect border-radius
+  filter: 'drop-shadow(0 20px 40px rgba(0, 0, 0, 0.15))',
   [theme.breakpoints.down('md')]: {
     padding: theme.spacing(3),
   },
