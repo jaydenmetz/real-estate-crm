@@ -97,7 +97,6 @@ const EscrowsHeroCarousel = ({
 
   return (
     <Box
-      {...swipeHandlers}
       sx={{
         position: 'relative',
       }}
@@ -166,7 +165,10 @@ const EscrowsHeroCarousel = ({
       )}
 
       {/* Hero Pages */}
-      <Box sx={{ position: 'relative', overflow: 'hidden' }}>
+      <Box
+        {...swipeHandlers}
+        sx={{ position: 'relative', overflow: 'hidden' }}
+      >
         <AnimatePresence mode="wait">
           {currentPage === 0 && (
             <motion.div
