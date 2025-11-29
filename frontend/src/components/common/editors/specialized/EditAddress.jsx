@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, TextField, InputAdornment } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { Check, Close, LocationOn, ContentCopy, Apple, Map, Tag } from '@mui/icons-material';
 import { ModalDialog } from '../shared/ModalDialog';
 import { AddressInput } from '../shared/AddressInput';
@@ -592,8 +593,21 @@ export const EditAddress = ({
 
   // Render with or without modal wrapper based on mode
   if (inline) {
-    // Inline mode: Return content directly
-    return content;
+    // Inline mode: Wrap content in styled Box (replicate ModalDialog styling)
+    return (
+      <Box
+        sx={{
+          borderRadius: 3,
+          background: `linear-gradient(135deg, ${alpha(color, 0.95)} 0%, ${alpha(color, 0.85)} 100%)`,
+          backdropFilter: 'blur(20px)',
+          border: `2px solid ${alpha(color, 0.3)}`,
+          boxShadow: `0 20px 60px ${alpha(color, 0.4)}`,
+          p: 3,
+        }}
+      >
+        {content}
+      </Box>
+    );
   }
 
   // Standalone mode: Wrap in ModalDialog
