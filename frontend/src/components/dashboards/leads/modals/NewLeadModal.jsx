@@ -21,7 +21,7 @@ import {
   Email,
 } from '@mui/icons-material';
 import { leadsAPI } from '../../../../services/api.service';
-import PrivacyControl from '../../../common/PrivacyControl';
+import PrivacyControl from '../../../common/settings/PrivacyControl';
 
 const NewLeadModal = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);

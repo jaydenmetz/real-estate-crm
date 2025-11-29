@@ -10,7 +10,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { CLIENT_STATUS_COLORS } from '../../constants/clientConstants';
 import { formatCurrency, formatDate as formatDateUtil } from '../../../../../utils/formatters';
-import { QuickActionsMenu } from '../../../../common/QuickActionsMenu';
+import { QuickActionsMenu } from '../../../../common/ui/QuickActionsMenu';
 
 /**
  * ClientTableRow - Compact table view (no large avatar)

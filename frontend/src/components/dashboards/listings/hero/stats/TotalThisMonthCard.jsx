@@ -1,6 +1,6 @@
 import React from 'react';
 import { startOfMonth } from 'date-fns';
-import DashboardStatCard from '../../../../../components/common/DashboardStatCard';
+import DashboardStatCard from '../../../../../components/common/ui/DashboardStatCard';
 import { parseLocalDate } from '../../../../../utils/safeDateUtils';
 
 /**

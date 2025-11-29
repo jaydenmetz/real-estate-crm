@@ -16,7 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { LEAD_STATUS_COLORS } from '../../constants/leadConstants';
 import { formatDate as formatDateUtil } from '../../../../../utils/formatters';
-import { QuickActionsMenu } from '../../../../common/QuickActionsMenu';
+import { QuickActionsMenu } from '../../../../common/ui/QuickActionsMenu';
 
 /**
  * LeadListItem - Full-width horizontal list view with avatar on left

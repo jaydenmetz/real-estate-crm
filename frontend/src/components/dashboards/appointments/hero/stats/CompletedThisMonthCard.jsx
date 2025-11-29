@@ -1,5 +1,5 @@
 import React from 'react';
-import DashboardStatCard from '../../../../../components/common/DashboardStatCard';
+import DashboardStatCard from '../../../../../components/common/ui/DashboardStatCard';
 
 /**
  * CompletedThisMonthCard - Shows count of appointments completed this month

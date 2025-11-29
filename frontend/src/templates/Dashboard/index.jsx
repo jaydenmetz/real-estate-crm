@@ -4,7 +4,7 @@ import { DashboardHero } from './components/DashboardHero';
 import { DashboardStats } from './components/DashboardStats';
 import { DashboardNavigation } from './components/DashboardNavigation';
 import { DashboardContent } from './components/DashboardContent';
-import DashboardStatCard from '../../components/common/DashboardStatCard';
+import DashboardStatCard from '../../components/common/ui/DashboardStatCard';
 import { useDashboardData } from './hooks/useDashboardData';
 import { useAuth } from '../../contexts/AuthContext';
 

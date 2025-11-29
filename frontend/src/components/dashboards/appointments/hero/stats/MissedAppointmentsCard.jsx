@@ -1,5 +1,5 @@
 import React from 'react';
-import DashboardStatCard from '../../../../../components/common/DashboardStatCard';
+import DashboardStatCard from '../../../../../components/common/ui/DashboardStatCard';
 
 /**
  * MissedAppointmentsCard - Shows count of no-show/cancelled appointments

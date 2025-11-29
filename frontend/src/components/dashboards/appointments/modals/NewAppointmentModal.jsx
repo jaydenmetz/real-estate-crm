@@ -27,7 +27,7 @@ import {
 import { appointmentsAPI, leadsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../../../utils/googleMapsLoader';
-import PrivacyControl from '../../../common/PrivacyControl';
+import PrivacyControl from '../../../common/settings/PrivacyControl';
 
 const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();

@@ -15,7 +15,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { APPOINTMENT_STATUS_COLORS } from '../../constants/appointmentConstants';
 import { formatDate as formatDateUtil } from '../../../../../utils/formatters';
-import { QuickActionsMenu } from '../../../../common/QuickActionsMenu';
+import { QuickActionsMenu } from '../../../../common/ui/QuickActionsMenu';
 
 /**
  * AppointmentListItem - Full-width horizontal list view

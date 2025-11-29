@@ -23,7 +23,7 @@ import {
   Link as LinkIcon,
 } from '@mui/icons-material';
 import { clientsAPI, leadsAPI } from '../../../../services/api.service';
-import PrivacyControl from '../../../common/PrivacyControl';
+import PrivacyControl from '../../../common/settings/PrivacyControl';
 
 const NewClientModal = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);

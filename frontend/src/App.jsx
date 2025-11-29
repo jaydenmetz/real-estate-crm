@@ -16,17 +16,17 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import LoginPage from './components/auth/LoginPage';
 import RegisterPage from './components/auth/RegisterPage';
-import UserAwareErrorBoundary from './components/common/UserAwareErrorBoundary';
+import UserAwareErrorBoundary from './components/common/error-handling/UserAwareErrorBoundary';
 
 // Components
-import Navigation from './components/common/Navigation';
-import ErrorBoundary from './components/common/ErrorBoundary';
-import GlobalErrorBoundary from './components/common/GlobalErrorBoundary';
-import ConnectionStatus from './components/common/ConnectionStatus';
+import Navigation from './components/common/layout/Navigation';
+import ErrorBoundary from './components/common/error-handling/ErrorBoundary';
+import GlobalErrorBoundary from './components/common/error-handling/GlobalErrorBoundary';
+import ConnectionStatus from './components/common/status/ConnectionStatus';
 
 // Dashboard Components
 import HomeDashboard from './components/dashboards/home';
-import ProjectRoadmapDashboard from './components/common/ProjectRoadmapDashboard';
+import ProjectRoadmapDashboard from './components/common/admin/ProjectRoadmapDashboard';
 import EscrowsDashboard from './components/dashboards/escrows';
 import EscrowDetail from './components/details/escrows';
 import ListingsDashboard from './components/dashboards/listings';

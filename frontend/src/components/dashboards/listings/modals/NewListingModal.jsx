@@ -40,7 +40,7 @@ import { listingsAPI, clientsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../../../utils/googleMapsLoader';
 import NewClientModal from '../../clients/modals/NewClientModal';
-import PrivacyControl from '../../../common/PrivacyControl';
+import PrivacyControl from '../../../common/settings/PrivacyControl';
 
 const NewListingModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
