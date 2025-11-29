@@ -211,9 +211,9 @@ export const EditAddress = ({
     <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520} hideBackdrop={inline}>
       <Box onClick={(e) => e.stopPropagation()}>
         {/* Address Display Section */}
-        {/* In inline mode: Show "Selected Address" ONLY when selectedAddress exists */}
-        {/* In edit mode: Show "Current Property Address" when canonicalAddress exists */}
-        {((inline && selectedAddress) || (!inline && canonicalAddress)) && (
+        {/* In inline mode (NewEscrowModal): ONLY show "Selected Address" when user selects new address via autocomplete */}
+        {/* In standalone edit mode: Show "Current Property Address" when database has existing address */}
+        {(inline ? selectedAddress : canonicalAddress) && (
           <Box sx={{ mb: 3 }}>
             {!hasSelectedNewAddress ? (
               /* Show current database address (no editing mode yet) */
@@ -242,17 +242,13 @@ export const EditAddress = ({
                     borderRadius: 2,
                     p: 1,
                     mx: -1,
-                    ...(inline && selectedAddress ? {
-                      // In inline mode with selected address: Show bordered box like "Current Property Address"
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      backgroundColor: 'rgba(255,255,255,0.08)',
-                    } : {}),
+                    // Always show border when address section is visible (both inline and standalone modes)
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    backgroundColor: 'rgba(255,255,255,0.08)',
                     transition: 'all 0.2s',
                     '&:hover': {
-                      backgroundColor: inline && selectedAddress ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.1)',
-                      ...(inline && selectedAddress ? {
-                        borderColor: 'rgba(255,255,255,0.4)',
-                      } : {}),
+                      backgroundColor: 'rgba(255,255,255,0.12)',
+                      borderColor: 'rgba(255,255,255,0.4)',
                     },
                   }}
                 >
