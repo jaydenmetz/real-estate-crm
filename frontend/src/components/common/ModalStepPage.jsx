@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { ArrowBack, ArrowForward, CheckCircle, Close } from '@mui/icons-material';
 
@@ -7,12 +7,14 @@ import { ArrowBack, ArrowForward, CheckCircle, Close } from '@mui/icons-material
  * ModalStepPage - Reusable page wrapper for step-based modal flows
  *
  * Provides consistent navigation UI across all steps:
+ * - Title (top-left)
  * - Close button (top-right, hover-to-show)
  * - Back arrow (bottom-left, hidden on first step)
  * - Forward/Submit arrow (bottom-right)
  * - Progress dots (bottom-center, 30px from bottom)
  *
  * @param {ReactNode} children - Step content (any editor component)
+ * @param {string} title - Modal title (e.g., "Create New Escrow")
  * @param {string} color - Theme color for gradient background
  * @param {number} currentStep - Current step index (0-based)
  * @param {number} totalSteps - Total number of steps
@@ -25,7 +27,8 @@ import { ArrowBack, ArrowForward, CheckCircle, Close } from '@mui/icons-material
  */
 export const ModalStepPage = ({
   children,
-  color = '#10b981',
+  title = '',
+  color = '#3b82f6', // Default to blue hero color
   currentStep = 0,
   totalSteps = 1,
   onNext,
@@ -46,14 +49,30 @@ export const ModalStepPage = ({
         backdropFilter: 'blur(20px)',
         border: `2px solid ${alpha(color, 0.3)}`,
         boxShadow: `0 20px 60px ${alpha(color, 0.4)}`,
-        pt: '30px', // Top buffer for close button
-        px: 2.5,
+        pt: 3, // Top padding for title
+        px: 3,
         pb: 10, // Bottom padding for navigation (30px + arrows/dots height)
-        maxHeight: '85vh',
+        width: 700, // Fixed width
+        height: 600, // Fixed height
         display: 'flex',
         flexDirection: 'column',
       }}
     >
+      {/* Title - Top-left */}
+      {title && (
+        <Typography
+          variant="h5"
+          sx={{
+            color: 'white',
+            fontWeight: 700,
+            mb: 3,
+            letterSpacing: '-0.5px',
+          }}
+        >
+          {title}
+        </Typography>
+      )}
+
       {/* Close Button Hover Area - Top-right corner */}
       <Box
         sx={{

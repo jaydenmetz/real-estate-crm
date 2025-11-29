@@ -84,71 +84,26 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   // Dynamic step configuration based on representation type
   const steps = useMemo(() => {
     const baseSteps = [
-      {
-        id: 'property',
-        label: 'Property Address',
-        color: '#10b981',
-        maxWidth: 500,
-      },
-      {
-        id: 'representation-and-clients',
-        label: 'Representation & Clients',
-        color: '#3b82f6',
-        maxWidth: 600,
-      },
-      {
-        id: 'purchase-price',
-        label: 'Purchase Price',
-        color: '#10b981',
-        maxWidth: 400,
-      },
+      { id: 'property', label: 'Property Address' },
+      { id: 'representation-and-clients', label: 'Representation & Clients' },
+      { id: 'purchase-price', label: 'Purchase Price' },
     ];
 
     // Add commission steps (dual agency gets two)
     if (formData.representationType === 'dual') {
       baseSteps.push(
-        {
-          id: 'buyer-commission',
-          label: "Buyer's Commission",
-          color: '#10b981',
-          maxWidth: 450,
-        },
-        {
-          id: 'seller-commission',
-          label: 'Listing Commission',
-          color: '#f59e0b',
-          maxWidth: 450,
-        }
+        { id: 'buyer-commission', label: "Buyer's Commission" },
+        { id: 'seller-commission', label: 'Listing Commission' }
       );
     } else {
-      baseSteps.push({
-        id: 'commission',
-        label: 'Commission',
-        color: '#10b981',
-        maxWidth: 450,
-      });
+      baseSteps.push({ id: 'commission', label: 'Commission' });
     }
 
     // Add date steps
     baseSteps.push(
-      {
-        id: 'acceptance-date',
-        label: 'Acceptance Date',
-        color: '#3b82f6',
-        maxWidth: 400,
-      },
-      {
-        id: 'closing-date',
-        label: 'Closing Date',
-        color: '#8b5cf6',
-        maxWidth: 400,
-      },
-      {
-        id: 'preview',
-        label: 'Preview & Confirm',
-        color: '#10b981',
-        maxWidth: 600,
-      }
+      { id: 'acceptance-date', label: 'Acceptance Date' },
+      { id: 'closing-date', label: 'Closing Date' },
+      { id: 'preview', label: 'Preview & Confirm' }
     );
 
     return baseSteps;
@@ -417,7 +372,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             commissionPercentage={isBuyerCommission ? formData.buyerCommissionPercentage : formData.sellerCommissionPercentage}
             commissionType={isBuyerCommission ? formData.buyerCommissionType : formData.sellerCommissionType}
             purchasePrice={formData.purchasePrice}
-            color={currentStepConfig.color}
+            color="#3b82f6" // Consistent blue color
             inline={true}
           />
         );
@@ -515,15 +470,13 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           borderRadius: 3,
           background: 'transparent',
           boxShadow: 'none',
-          maxWidth: currentStepConfig?.maxWidth || 400,
-          width: '100%',
-          transition: 'max-width 0.3s ease',
         },
       }}
     >
       {!showSuccess ? (
         <ModalStepPage
-          color={currentStepConfig?.color || '#10b981'}
+          title="Create New Escrow"
+          color="#3b82f6" // Consistent blue hero color
           currentStep={currentStep}
           totalSteps={totalSteps}
           onNext={handleNext}
