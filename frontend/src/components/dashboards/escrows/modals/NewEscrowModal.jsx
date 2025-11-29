@@ -472,8 +472,10 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             border: `2px solid ${alpha(currentStepConfig?.color || '#10b981', 0.3)}`,
             boxShadow: `0 20px 60px ${alpha(currentStepConfig?.color || '#10b981', 0.4)}`,
             p: 2.5,
-            pb: 10, // Extra padding at bottom for fixed navigation (30px + arrow height)
-            minHeight: 450,
+            pb: 12, // Bottom padding for navigation (60px arrows + 30px dots + spacing)
+            maxHeight: '85vh',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
           {/* Close Button - Top-right corner */}
@@ -499,8 +501,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             </IconButton>
           </Box>
 
-          {/* Step Content - Scrollable content area */}
-          <Box sx={{ overflowY: 'auto', maxHeight: 'calc(100% - 100px)', pr: 1 }}>
+          {/* Step Content - Flexible scrollable area */}
+          <Box sx={{ flex: 1, overflowY: 'auto', pr: 1, minHeight: 0 }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
