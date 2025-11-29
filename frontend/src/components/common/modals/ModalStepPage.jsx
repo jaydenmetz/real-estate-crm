@@ -51,9 +51,10 @@ export const ModalStepPage = ({
         boxShadow: `0 20px 60px ${alpha(color, 0.4)}`,
         pt: 3, // Top padding for title
         px: 3,
-        pb: 10, // Bottom padding for navigation (30px + arrows/dots height)
+        pb: 15, // 120px bottom padding (100px buffer + 20px for arrows)
         width: 700, // Fixed width
-        height: 700, // Increased height to fit calendar without scrolling
+        minHeight: 500, // Default minimum height (auto-expands for larger components)
+        maxHeight: '90vh', // Maximum height constrained to viewport
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -65,7 +66,7 @@ export const ModalStepPage = ({
           sx={{
             color: 'white',
             fontWeight: 700,
-            mb: 3,
+            mb: 12.5, // 100px buffer between modal title and component label
             letterSpacing: '-0.5px',
           }}
         >
