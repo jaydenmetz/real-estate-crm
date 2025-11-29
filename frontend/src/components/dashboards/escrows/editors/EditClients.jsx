@@ -432,7 +432,19 @@ export const EditClients = ({
 
   // Render content
   const content = (
-    <Box onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyPress}>
+    <Box
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={handleKeyPress}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center', // Vertical center
+        alignItems: 'center', // Horizontal center
+        minHeight: '100%',
+        width: '100%',
+      }}
+    >
+      <Box sx={{ width: '100%', maxWidth: '100%' }}>
       {/* Representation Type Selector (Combined Mode Only) */}
       {showRepresentationType && (
         <>
@@ -748,6 +760,7 @@ export const EditClients = ({
           )}
         </>
       )}
+      </Box>
     </Box>
   );
 

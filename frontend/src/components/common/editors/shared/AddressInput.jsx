@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Box, TextField, Autocomplete, CircularProgress, InputAdornment, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { LocationOn, Close } from '@mui/icons-material';
 import debounce from 'lodash/debounce';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -24,6 +25,7 @@ import { decodeHTML } from '../../../../utils/htmlEntities';
  * @param {string} placeholder - Placeholder text
  * @param {boolean} autoFocus - Auto focus on mount
  * @param {boolean} hideLabel - Hide the "Display Name" label (default: false)
+ * @param {string} color - Theme color for dropdown background (default: green)
  */
 export const AddressInput = ({
   value,
@@ -34,6 +36,7 @@ export const AddressInput = ({
   placeholder = 'Enter property address',
   autoFocus = true,
   hideLabel = false,
+  color = '#10b981', // Default green theme
 }) => {
   const { user } = useAuth();
   const inputRef = useRef(null);
@@ -565,7 +568,7 @@ export const AddressInput = ({
           popper: {
             sx: {
               '& .MuiPaper-root': {
-                backgroundColor: 'rgba(16, 185, 129, 0.95)', // Green theme matching the modal
+                backgroundColor: alpha(color, 0.95), // Match modal background color
                 backdropFilter: 'blur(10px)',
                 border: '2px solid rgba(255,255,255,0.3)',
                 borderRadius: 2,

@@ -166,7 +166,18 @@ export const EditCommission = ({
   };
 
   const content = (
-    <Box onClick={(e) => e.stopPropagation()}>
+    <Box
+      onClick={(e) => e.stopPropagation()}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center', // Vertical center
+        alignItems: 'center', // Horizontal center
+        minHeight: '100%',
+        width: '100%',
+      }}
+    >
+      <Box sx={{ width: '100%', maxWidth: '100%' }}>
       {/* Label */}
       <Typography
         variant="caption"
@@ -318,6 +329,7 @@ export const EditCommission = ({
           </IconButton>
         </Box>
       )}
+      </Box>
     </Box>
   );
 

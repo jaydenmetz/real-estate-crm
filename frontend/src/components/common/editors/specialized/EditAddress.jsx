@@ -210,7 +210,18 @@ export const EditAddress = ({
 
   // Render content
   const content = (
-    <Box onClick={(e) => e.stopPropagation()}>
+    <Box
+      onClick={(e) => e.stopPropagation()}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center', // Vertical center
+        alignItems: 'center', // Horizontal center
+        minHeight: '100%',
+        width: '100%',
+      }}
+    >
+      <Box sx={{ width: '100%', maxWidth: '100%' }}>
         {/* Address Display Section */}
         {/* In inline mode (NewEscrowModal): ONLY show "Selected Address" when user selects new address via autocomplete */}
         {/* In standalone edit mode: Show "Current Property Address" when database has existing address */}
@@ -483,6 +494,7 @@ export const EditAddress = ({
                 placeholder="Start typing address..."
                 autoFocus={true}
                 hideLabel={true} // Tell AddressInput not to show its own label
+                color={color} // Pass color for dropdown background
               />
             </Box>
             <Box sx={{ width: '75px' }}>
@@ -592,6 +604,7 @@ export const EditAddress = ({
           </Box>
         )}
       </Box>
+    </Box>
   );
 
   // Render with or without modal wrapper based on mode

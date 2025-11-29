@@ -320,6 +320,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               county: formData.county,
             }}
             inline={true}
+            color="#3b82f6" // Blue theme to match modal
           />
         );
 

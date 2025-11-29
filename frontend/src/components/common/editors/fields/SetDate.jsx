@@ -188,7 +188,18 @@ export const SetDate = ({
   };
 
   const content = (
-    <Box onClick={(e) => e.stopPropagation()}>
+    <Box
+      onClick={(e) => e.stopPropagation()}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center', // Vertical center
+        alignItems: 'center', // Horizontal center
+        minHeight: '100%',
+        width: '100%',
+      }}
+    >
+      <Box sx={{ width: '100%', maxWidth: '100%' }}>
         {/* Label */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <Event sx={{ color: 'rgba(255,255,255,0.9)', fontSize: 20 }} />
@@ -356,6 +367,7 @@ export const SetDate = ({
             </IconButton>
           </Box>
         )}
+      </Box>
     </Box>
   );
 
