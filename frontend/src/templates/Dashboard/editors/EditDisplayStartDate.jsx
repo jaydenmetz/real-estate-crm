@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { EditorModal } from '../../../components/common/modals/EditorModal';
-import { Date } from '../../../components/common/setters/Date';
+import { DateSetter } from '../../../components/common/setters/Date';
 
 export const EditDisplayStartDate = ({ open, onClose, onSave, value }) => {
   const [editValue, setEditValue] = useState(value);
@@ -16,7 +16,7 @@ export const EditDisplayStartDate = ({ open, onClose, onSave, value }) => {
 
   return (
     <EditorModal open={open} onClose={onClose} onSave={handleSave} color="#3b82f6">
-      <Date label="Display Start Date" value={editValue} onChange={setEditValue} color="#3b82f6" />
+      <DateSetter label="Display Start Date" value={editValue} onChange={setEditValue} color="#3b82f6" />
     </EditorModal>
   );
 };
