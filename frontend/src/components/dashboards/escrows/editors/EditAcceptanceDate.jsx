@@ -9,8 +9,9 @@ import { EditDate } from '../../../common/editors/fields/EditDate';
  * @param {function} onClose - Close handler
  * @param {function} onSave - Save handler (newDateValue) => void
  * @param {string|Date} value - Current acceptance date
+ * @param {boolean} inline - If true, hides action buttons (used in flow contexts)
  */
-export const EditAcceptanceDate = ({ open, onClose, onSave, value }) => {
+export const EditAcceptanceDate = ({ open, onClose, onSave, value, inline = false }) => {
   return (
     <EditDate
       open={open}
@@ -19,6 +20,7 @@ export const EditAcceptanceDate = ({ open, onClose, onSave, value }) => {
       label="Acceptance Date"
       value={value}
       color="#3b82f6" // Blue theme for acceptance date
+      inline={inline}
     />
   );
 };

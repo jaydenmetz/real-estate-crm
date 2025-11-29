@@ -9,8 +9,9 @@ import { EditDate } from '../../../common/editors/fields/EditDate';
  * @param {function} onClose - Close handler
  * @param {function} onSave - Save handler (newDateValue) => void
  * @param {string|Date} value - Current closing date
+ * @param {boolean} inline - If true, hides action buttons (used in flow contexts)
  */
-export const EditClosingDate = ({ open, onClose, onSave, value }) => {
+export const EditClosingDate = ({ open, onClose, onSave, value, inline = false }) => {
   return (
     <EditDate
       open={open}
@@ -19,6 +20,7 @@ export const EditClosingDate = ({ open, onClose, onSave, value }) => {
       label="Closing Date"
       value={value}
       color="#8b5cf6" // Purple theme for closing date
+      inline={inline}
     />
   );
 };

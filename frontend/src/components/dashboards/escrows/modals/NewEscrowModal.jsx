@@ -468,6 +468,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             onClose={() => {}}
             onSave={handleAcceptanceDateSave}
             value={formData.acceptanceDate}
+            inline={true}
           />
         );
 
@@ -478,6 +479,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             onClose={() => {}}
             onSave={handleClosingDateSave}
             value={formData.closeOfEscrowDate}
+            inline={true}
           />
         );
 

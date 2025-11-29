@@ -19,6 +19,7 @@ import { CustomCalendar } from '../shared/CustomCalendar';
  * @param {Date|string} minDate - Optional minimum selectable date (for end date validation)
  * @param {Date|string} maxDate - Optional maximum selectable date (for start date validation)
  * @param {function} onSaveSuccess - Optional callback after successful save (for auto-progression)
+ * @param {boolean} inline - If true, hides action buttons (used in flow contexts like NewEscrowModal)
  */
 export const EditDate = ({
   open,
@@ -30,6 +31,7 @@ export const EditDate = ({
   minDate = null,
   maxDate = null,
   onSaveSuccess = null,
+  inline = false,
 }) => {
   const [editValue, setEditValue] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -186,7 +188,7 @@ export const EditDate = ({
   };
 
   return (
-    <ModalDialog open={open} onClose={onClose} color={color}>
+    <ModalDialog open={open} onClose={onClose} color={color} hideBackdrop={inline}>
       <Box onClick={(e) => e.stopPropagation()}>
         {/* Label */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -205,18 +207,20 @@ export const EditDate = ({
           </Typography>
         </Box>
 
-        {/* Current Date Display */}
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 900,
-            color: 'white',
-            mb: 3,
-            letterSpacing: '-1px',
-          }}
-        >
-          {formatDisplayDate(value)}
-        </Typography>
+        {/* Current Date Display - Only show if not inline OR if value exists */}
+        {(!inline || value) && (
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 900,
+              color: 'white',
+              mb: 3,
+              letterSpacing: '-1px',
+            }}
+          >
+            {formatDisplayDate(value)}
+          </Typography>
+        )}
 
         {/* Validation Alert */}
         {validationError && (
@@ -304,53 +308,55 @@ export const EditDate = ({
           minDate={minDate}
         />
 
-        {/* Action Buttons */}
-        <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            disabled={saving}
-            sx={{
-              width: 48,
-              height: 48,
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.25)',
-              },
-              '&:disabled': {
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                color: 'rgba(255,255,255,0.3)',
-              },
-            }}
-          >
-            <Close />
-          </IconButton>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSave();
-            }}
-            disabled={saving || !editValue}
-            sx={{
-              width: 48,
-              height: 48,
-              backgroundColor: 'white',
-              color: color,
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.9)',
-              },
-              '&:disabled': {
-                backgroundColor: 'rgba(255,255,255,0.3)',
-                color: 'rgba(0,0,0,0.2)',
-              },
-            }}
-          >
-            <Check />
-          </IconButton>
-        </Box>
+        {/* Action Buttons - Only show in standalone mode (not inline) */}
+        {!inline && (
+          <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              disabled={saving}
+              sx={{
+                width: 48,
+                height: 48,
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.25)',
+                },
+                '&:disabled': {
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  color: 'rgba(255,255,255,0.3)',
+                },
+              }}
+            >
+              <Close />
+            </IconButton>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSave();
+              }}
+              disabled={saving || !editValue}
+              sx={{
+                width: 48,
+                height: 48,
+                backgroundColor: 'white',
+                color: color,
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.9)',
+                },
+                '&:disabled': {
+                  backgroundColor: 'rgba(255,255,255,0.3)',
+                  color: 'rgba(0,0,0,0.2)',
+                },
+              }}
+            >
+              <Check />
+            </IconButton>
+          </Box>
+        )}
       </Box>
     </ModalDialog>
   );
