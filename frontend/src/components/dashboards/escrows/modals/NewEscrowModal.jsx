@@ -472,133 +472,123 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             border: `2px solid ${alpha(currentStepConfig?.color || '#10b981', 0.3)}`,
             boxShadow: `0 20px 60px ${alpha(currentStepConfig?.color || '#10b981', 0.4)}`,
             p: 3,
-            pb: 12, // Extra padding for navigation controls
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 400,
           }}
         >
-          {/* Close Button - Inside colored box at top-right */}
-          <IconButton
-            onClick={handleClose}
-            disabled={saving}
-            sx={{
-              position: 'absolute',
-              top: 16,
-              right: 16,
-              zIndex: 1500,
-              width: 40,
-              height: 40,
-              backgroundColor: 'rgba(0,0,0,0.4)',
-              backdropFilter: 'blur(10px)',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(0,0,0,0.6)',
-              },
-              '&:disabled': {
-                opacity: 0.3,
-              },
-            }}
-          >
-            <Close fontSize="small" />
-          </IconButton>
-
-          {/* Render current step editor */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentStep}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
+          {/* Close Button - Top-right corner */}
+          <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1500 }}>
+            <IconButton
+              onClick={handleClose}
+              disabled={saving}
+              sx={{
+                width: 40,
+                height: 40,
+                backgroundColor: 'rgba(0,0,0,0.4)',
+                backdropFilter: 'blur(10px)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(0,0,0,0.6)',
+                },
+                '&:disabled': {
+                  opacity: 0.3,
+                },
+              }}
             >
-              {renderStep()}
-            </motion.div>
-          </AnimatePresence>
+              <Close fontSize="small" />
+            </IconButton>
+          </Box>
 
-          {/* Navigation Arrows - Inside colored box at bottom */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 70,
-              left: 0,
-              right: 0,
-              display: 'flex',
-              justifyContent: 'space-between',
-              px: 3,
-              pointerEvents: 'none',
-            }}
-          >
-            {/* Back Arrow */}
-            {currentStep > 0 && (
+          {/* Step Content - Middle (flex-grow to push navigation to bottom) */}
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+                style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
+              >
+                {renderStep()}
+              </motion.div>
+            </AnimatePresence>
+          </Box>
+
+          {/* Navigation Controls - Bottom */}
+          <Box sx={{ mt: 3, position: 'relative' }}>
+            {/* Progress Dots - Bottom center */}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 1,
+                mb: 2,
+              }}
+            >
+              {steps.map((step, index) => (
+                <Box
+                  key={step.id}
+                  sx={{
+                    width: currentStep === index ? 24 : 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: currentStep === index
+                      ? 'rgba(255,255,255,0.9)'
+                      : 'rgba(255,255,255,0.4)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setCurrentStep(index)}
+                />
+              ))}
+            </Box>
+
+            {/* Navigation Arrows - Bottom left and right */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {/* Back Arrow - Bottom-left (only show if not first step) */}
+              {currentStep > 0 ? (
+                <IconButton
+                  onClick={handleBack}
+                  disabled={saving}
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                    backdropFilter: 'blur(10px)',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.25)',
+                    },
+                  }}
+                >
+                  <ArrowBack />
+                </IconButton>
+              ) : (
+                <Box sx={{ width: 48, height: 48 }} /> // Spacer for alignment
+              )}
+
+              {/* Forward/Submit Arrow - Bottom-right */}
               <IconButton
-                onClick={handleBack}
+                onClick={handleNext}
                 disabled={saving}
                 sx={{
                   width: 48,
                   height: 48,
-                  backgroundColor: 'rgba(255,255,255,0.15)',
-                  backdropFilter: 'blur(10px)',
-                  color: 'white',
-                  pointerEvents: 'auto',
+                  backgroundColor: 'white',
+                  color: currentStepConfig?.color || '#10b981',
                   '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.25)',
+                    backgroundColor: 'rgba(255,255,255,0.9)',
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'rgba(255,255,255,0.3)',
                   },
                 }}
               >
-                <ArrowBack />
+                {isLastStep ? <CheckCircle /> : <ArrowForward />}
               </IconButton>
-            )}
-
-            <Box sx={{ flex: 1 }} />
-
-            {/* Next/Submit Arrow */}
-            <IconButton
-              onClick={handleNext}
-              disabled={saving}
-              sx={{
-                width: 48,
-                height: 48,
-                backgroundColor: 'white',
-                color: currentStepConfig?.color || '#10b981',
-                pointerEvents: 'auto',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.9)',
-                },
-                '&:disabled': {
-                  backgroundColor: 'rgba(255,255,255,0.3)',
-                },
-              }}
-            >
-              {isLastStep ? <CheckCircle /> : <ArrowForward />}
-            </IconButton>
-          </Box>
-
-          {/* Progress Dots - Inside colored box at bottom */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 16,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              gap: 1,
-              zIndex: 10,
-            }}
-          >
-            {steps.map((step, index) => (
-              <Box
-                key={step.id}
-                sx={{
-                  width: currentStep === index ? 24 : 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: currentStep === index
-                    ? 'rgba(255,255,255,0.9)'
-                    : 'rgba(255,255,255,0.4)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  cursor: 'pointer',
-                }}
-                onClick={() => setCurrentStep(index)}
-              />
-            ))}
+            </Box>
           </Box>
         </Box>
       ) : (
