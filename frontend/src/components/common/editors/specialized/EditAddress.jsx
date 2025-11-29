@@ -33,6 +33,17 @@ export const EditAddress = ({
   const [saving, setSaving] = useState(false);
   const [addressMenuAnchor, setAddressMenuAnchor] = useState(null);
 
+  // Handler that updates local state AND calls onSave in inline mode
+  const handleAddressSelect = (addressData) => {
+    setSelectedAddress(addressData);
+
+    // In inline mode, immediately notify parent of changes
+    if (inline && onSave && addressData) {
+      // Save immediately when address is selected
+      onSave(addressData);
+    }
+  };
+
   // Extract canonical address (source of truth for geocoding)
   const getCanonicalAddress = () => {
     if (!value) return '';
@@ -484,7 +495,7 @@ export const EditAddress = ({
             <Box sx={{ flex: 1 }}>
               <AddressInput
                 value={displayAddress.replace(/#\d+$/, '').trim()} // Remove unit number from display
-                onChange={setSelectedAddress}
+                onChange={handleAddressSelect}
                 onInputChange={handleInputChange}
                 onKeyDown={handleKeyPress}
                 disabled={saving}
