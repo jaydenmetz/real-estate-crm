@@ -214,7 +214,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       latitude: addressData.latitude || null,
       longitude: addressData.longitude || null,
     });
-    handleNext();
+    // Don't auto-advance - let user review selected address before clicking arrow
   };
 
   const handleRepresentationTypeChange = (type) => {
