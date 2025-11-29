@@ -14,7 +14,7 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EditPropertyAddress } from '../editors/EditPropertyAddress';
-import { EditRepresentationAndClients } from '../editors/EditRepresentationAndClients';
+import { EditClients } from '../editors/EditClients';
 import { EditPurchasePrice } from '../editors/EditPurchasePrice';
 import { EditCommission } from '../../../../templates/Dashboard/lib/editors/EditCommission';
 import { EditAcceptanceDate } from '../editors/EditAcceptanceDate';
@@ -368,16 +368,26 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
       case 'representation-and-clients':
         return (
-          <Box onClick={(e) => e.stopPropagation()}>
-            <EditRepresentationAndClients
-              representationType={formData.representationType}
-              onRepresentationTypeChange={handleRepresentationTypeChange}
-              buyerClients={formData.buyerClients}
-              sellerClients={formData.sellerClients}
-              onBuyerClientsChange={handleBuyerClientsChange}
-              onSellerClientsChange={handleSellerClientsChange}
-            />
-          </Box>
+          <EditClients
+            open={true}
+            onClose={() => {}}
+            onSave={(data) => {
+              setFormData({
+                ...formData,
+                representationType: data.representationType,
+                buyerClients: data.buyerClients,
+                sellerClients: data.sellerClients,
+              });
+            }}
+            values={{
+              representationType: formData.representationType,
+              buyerClients: formData.buyerClients,
+              sellerClients: formData.sellerClients,
+            }}
+            showRepresentationType={true}
+            onRepresentationTypeChange={handleRepresentationTypeChange}
+            inline={true}
+          />
         );
 
       case 'purchase-price':
