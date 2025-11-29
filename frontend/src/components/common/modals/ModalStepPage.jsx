@@ -51,7 +51,7 @@ export const ModalStepPage = ({
         boxShadow: `0 20px 60px ${alpha(color, 0.4)}`,
         pt: 3, // Top padding for title
         px: 3,
-        pb: 15, // 120px bottom padding (100px buffer + 20px for arrows)
+        pb: 12.5, // 100px bottom padding to match top spacing
         width: 700, // Fixed width
         minHeight: 500, // Default minimum height (auto-expands for larger components)
         maxHeight: '90vh', // Maximum height constrained to viewport
