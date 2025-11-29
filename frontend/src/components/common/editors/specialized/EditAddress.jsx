@@ -211,9 +211,9 @@ export const EditAddress = ({
     <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520} hideBackdrop={inline}>
       <Box onClick={(e) => e.stopPropagation()}>
         {/* Address Display Section */}
-        {/* In inline mode: Show "Selected Address" when selectedAddress exists */}
+        {/* In inline mode: HIDE this section */}
         {/* In edit mode: Show "Current Property Address" when canonicalAddress exists */}
-        {((inline && selectedAddress) || (!inline && canonicalAddress)) && (
+        {!inline && canonicalAddress && (
           <Box sx={{ mb: 3 }}>
             {!hasSelectedNewAddress ? (
               /* Show current database address (no editing mode yet) */
@@ -356,7 +356,7 @@ export const EditAddress = ({
                     letterSpacing: '0.5px',
                   }}
                 >
-                  New Property Address
+                  {inline ? 'Selected Address' : 'New Property Address'}
                 </Typography>
                 <Box
                   onClick={handleAddressClick}
@@ -462,7 +462,7 @@ export const EditAddress = ({
               letterSpacing: '0.5px',
             }}
           >
-            {inline && selectedAddress ? 'Selected Address' : selectedAddress || canonicalAddress ? 'Display Name' : 'Street Address'}
+            {selectedAddress || canonicalAddress ? 'Display Name' : 'Street Address'}
           </Typography>
           <Box sx={{ display: 'flex', gap: 1.5 }}>
             <Box sx={{ flex: 1 }}>
