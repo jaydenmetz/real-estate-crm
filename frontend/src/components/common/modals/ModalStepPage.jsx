@@ -66,7 +66,7 @@ export const ModalStepPage = ({
           sx={{
             color: 'white',
             fontWeight: 700,
-            mb: 12.5, // 100px buffer between modal title and component label
+            mb: 6.25, // 50px buffer between modal title and component label
             letterSpacing: '-0.5px',
           }}
         >
