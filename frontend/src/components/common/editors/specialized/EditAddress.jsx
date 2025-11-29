@@ -214,12 +214,12 @@ export const EditAddress = ({
       onClick={(e) => e.stopPropagation()}
       sx={{
         display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center', // Horizontal center only
         width: '100%',
       }}
     >
-      <Box sx={{ width: '100%', maxWidth: '100%' }}>
+      {/* Horizontal centering: Spacer - Component - Spacer */}
+      <Box sx={{ flex: 1 }} /> {/* Left spacer */}
+      <Box sx={{ flex: 0, minWidth: 0 }}>
         {/* Address Display Section */}
         {/* In inline mode (NewEscrowModal): ONLY show "Selected Address" when user selects new address via autocomplete */}
         {/* In standalone edit mode: Show "Current Property Address" when database has existing address */}
@@ -602,6 +602,7 @@ export const EditAddress = ({
           </Box>
         )}
       </Box>
+      <Box sx={{ flex: 1 }} /> {/* Right spacer */}
     </Box>
   );
 

@@ -437,12 +437,12 @@ export const EditClients = ({
       onKeyDown={handleKeyPress}
       sx={{
         display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center', // Horizontal center only
         width: '100%',
       }}
     >
-      <Box sx={{ width: '100%', maxWidth: '100%' }}>
+      {/* Horizontal centering: Spacer - Component - Spacer */}
+      <Box sx={{ flex: 1 }} /> {/* Left spacer */}
+      <Box sx={{ flex: 0, minWidth: 0 }}>
       {/* Representation Type Selector (Combined Mode Only) */}
       {showRepresentationType && (
         <>
@@ -759,6 +759,7 @@ export const EditClients = ({
         </>
       )}
       </Box>
+      <Box sx={{ flex: 1 }} /> {/* Right spacer */}
     </Box>
   );
 
