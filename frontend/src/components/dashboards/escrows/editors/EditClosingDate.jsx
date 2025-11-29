@@ -1,9 +1,9 @@
 import React from 'react';
-import { EditDate } from '../../../common/editors/fields/EditDate';
+import { SetDate } from '../../../common/editors/fields/SetDate';
 
 /**
  * Escrow-specific Closing Date Editor
- * Wraps EditDate with escrow-specific context and styling
+ * Wraps SetDate with escrow-specific context and styling
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
@@ -13,7 +13,7 @@ import { EditDate } from '../../../common/editors/fields/EditDate';
  */
 export const EditClosingDate = ({ open, onClose, onSave, value, inline = false }) => {
   return (
-    <EditDate
+    <SetDate
       open={open}
       onClose={onClose}
       onSave={onSave}

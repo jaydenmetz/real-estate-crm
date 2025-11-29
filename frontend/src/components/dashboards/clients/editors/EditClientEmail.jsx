@@ -1,9 +1,9 @@
 import React from 'react';
-import { EditEmail } from '../../../common/editors/fields/EditEmail';
+import { SetEmail } from '../../../common/editors/fields/SetEmail';
 
 /**
  * Client-specific Email Editor
- * Wraps EditEmail with client-specific context and styling
+ * Wraps SetEmail with client-specific context and styling
  * Includes email validation
  *
  * @param {boolean} open - Dialog open state
@@ -13,7 +13,7 @@ import { EditEmail } from '../../../common/editors/fields/EditEmail';
  */
 export const EditClientEmail = ({ open, onClose, onSave, value }) => {
   return (
-    <EditEmail
+    <SetEmail
       open={open}
       onClose={onClose}
       onSave={onSave}

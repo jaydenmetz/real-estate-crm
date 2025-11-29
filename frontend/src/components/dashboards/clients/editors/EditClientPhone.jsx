@@ -1,9 +1,9 @@
 import React from 'react';
-import { EditPhone } from '../../../common/editors/fields/EditPhone';
+import { SetPhone } from '../../../common/editors/fields/SetPhone';
 
 /**
  * Client-specific Phone Editor
- * Wraps EditPhone with client-specific context and styling
+ * Wraps SetPhone with client-specific context and styling
  * Includes phone number formatting and validation
  *
  * @param {boolean} open - Dialog open state
@@ -13,7 +13,7 @@ import { EditPhone } from '../../../common/editors/fields/EditPhone';
  */
 export const EditClientPhone = ({ open, onClose, onSave, value }) => {
   return (
-    <EditPhone
+    <SetPhone
       open={open}
       onClose={onClose}
       onSave={onSave}

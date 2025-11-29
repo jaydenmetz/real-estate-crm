@@ -1,9 +1,9 @@
 import React from 'react';
-import { EditDate } from '../../../common/editors/fields/EditDate';
+import { SetDate } from '../../../common/editors/fields/SetDate';
 
 /**
  * Listing-specific Expiration Date Editor (end date)
- * Wraps EditDate with listing-specific context and styling
+ * Wraps SetDate with listing-specific context and styling
  * Includes minDate validation to prevent expiration before listing date
  *
  * @param {boolean} open - Dialog open state
@@ -14,7 +14,7 @@ import { EditDate } from '../../../common/editors/fields/EditDate';
  */
 export const EditExpirationDate = ({ open, onClose, onSave, value, minDate }) => {
   return (
-    <EditDate
+    <SetDate
       open={open}
       onClose={onClose}
       onSave={onSave}

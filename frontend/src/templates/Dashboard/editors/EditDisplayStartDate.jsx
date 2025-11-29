@@ -1,9 +1,9 @@
 import React from 'react';
-import { EditDate } from '../../../components/common/editors/fields/EditDate';
+import { SetDate } from '../../../components/common/editors/fields/SetDate';
 
 /**
  * Dashboard-specific Display Start Date Editor
- * Wraps EditDate with dashboard-specific context and styling
+ * Wraps SetDate with dashboard-specific context and styling
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
@@ -23,7 +23,7 @@ export const EditDisplayStartDate = ({
   onSaveSuccess
 }) => {
   return (
-    <EditDate
+    <SetDate
       open={open}
       onClose={onClose}
       onSave={onSave}

@@ -7,7 +7,7 @@ import { ModalDialog } from '../shared/ModalDialog';
 import { CustomCalendar } from '../shared/CustomCalendar';
 
 /**
- * Generic Date Editor
+ * Generic Date Setter
  * Reusable component for editing any date value
  *
  * @param {boolean} open - Dialog open state
@@ -21,7 +21,7 @@ import { CustomCalendar } from '../shared/CustomCalendar';
  * @param {function} onSaveSuccess - Optional callback after successful save (for auto-progression)
  * @param {boolean} inline - If true, hides action buttons (used in flow contexts like NewEscrowModal)
  */
-export const EditDate = ({
+export const SetDate = ({
   open,
   onClose,
   onSave,

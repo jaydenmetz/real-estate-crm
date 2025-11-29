@@ -2,60 +2,51 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import { Check, Close } from '@mui/icons-material';
 import { ModalDialog } from '../shared/ModalDialog';
-import { PhoneInput } from '../shared/PhoneInput';
-import { validatePhone, formatPhoneDisplay, parsePhoneForStorage } from '../../../../utils/validators';
+import { CurrencyInput } from '../shared/CurrencyInput';
 
 /**
- * Generic Phone Number Editor
- * Reusable component for editing any phone number field
+ * Generic Currency Setter
+ * Reusable component for editing any currency value
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void - receives raw digits
- * @param {string} label - Field label (e.g., "Phone Number", "Cell Phone")
- * @param {string} value - Current phone number (raw digits or formatted)
+ * @param {function} onSave - Save handler (newValue) => void
+ * @param {string} label - Field label (e.g., "Purchase Price", "Listed Price")
+ * @param {number} value - Current value
  * @param {string} color - Theme color
+ * @param {string} prefix - Currency prefix (default: $)
  */
-export const EditPhone = ({
+export const SetCurrency = ({
   open,
   onClose,
   onSave,
-  label = 'Phone Number',
+  label,
   value,
-  color = '#6366f1',
+  color = '#10b981',
+  prefix = '$',
 }) => {
   const [editValue, setEditValue] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
 
   // Initialize editValue when dialog opens
   useEffect(() => {
     if (open) {
-      // Strip formatting from incoming value
-      const cleaned = parsePhoneForStorage(value || '');
-      setEditValue(cleaned);
-      setError(null);
+      setEditValue(value?.toString() || '');
     }
   }, [open, value]);
 
   const handleSave = async () => {
-    // Validate
-    const validation = validatePhone(editValue);
-    if (!validation.valid) {
-      setError(validation.error);
+    if (!editValue || isNaN(parseFloat(editValue))) {
       return;
     }
 
     setSaving(true);
-    setError(null);
     try {
-      // Save raw digits only
-      const valueToSave = parsePhoneForStorage(editValue);
+      const valueToSave = parseFloat(editValue);
       await onSave(valueToSave);
       onClose();
     } catch (error) {
-      console.error('Failed to save phone:', error);
-      setError('Failed to save phone number');
+      console.error('Failed to save:', error);
     } finally {
       setSaving(false);
     }
@@ -69,10 +60,14 @@ export const EditPhone = ({
     }
   };
 
-  const handleChange = (rawValue) => {
-    setEditValue(rawValue);
-    // Clear error when user starts typing
-    if (error) setError(null);
+  const formatDisplayValue = (val) => {
+    if (!val) return `${prefix}0.00`;
+    const num = parseFloat(val);
+    if (isNaN(num)) return `${prefix}0.00`;
+    return `${prefix}${num.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   };
 
   return (
@@ -101,26 +96,24 @@ export const EditPhone = ({
             fontWeight: 900,
             color: 'white',
             mb: 3,
-            letterSpacing: '-0.5px',
+            letterSpacing: '-1px',
           }}
         >
-          {formatPhoneDisplay(value) || 'No phone number'}
+          {formatDisplayValue(value)}
         </Typography>
 
-        {/* Phone Input */}
-        <Box sx={{ mb: 3 }}>
-          <PhoneInput
-            value={editValue}
-            onChange={handleChange}
-            onKeyDown={handleKeyPress}
-            disabled={saving}
-            autoFocus={true}
-            error={error}
-          />
-        </Box>
+        {/* Edit Input */}
+        <CurrencyInput
+          value={editValue}
+          onChange={setEditValue}
+          onKeyDown={handleKeyPress}
+          disabled={saving}
+          prefix={prefix}
+          placeholder="Enter new value"
+        />
 
         {/* Action Buttons */}
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+        <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
@@ -130,13 +123,13 @@ export const EditPhone = ({
             sx={{
               width: 48,
               height: 48,
-              backgroundColor: 'rgba(255,255,255,0.2)',
+              backgroundColor: 'rgba(255,255,255,0.15)',
               color: 'white',
               '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.3)',
+                backgroundColor: 'rgba(255,255,255,0.25)',
               },
-              '&.Mui-disabled': {
-                backgroundColor: 'rgba(255,255,255,0.1)',
+              '&:disabled': {
+                backgroundColor: 'rgba(255,255,255,0.05)',
                 color: 'rgba(255,255,255,0.3)',
               },
             }}
@@ -148,7 +141,7 @@ export const EditPhone = ({
               e.stopPropagation();
               handleSave();
             }}
-            disabled={saving || !editValue}
+            disabled={saving || !editValue || isNaN(parseFloat(editValue))}
             sx={{
               width: 48,
               height: 48,
@@ -157,9 +150,9 @@ export const EditPhone = ({
               '&:hover': {
                 backgroundColor: 'rgba(255,255,255,0.9)',
               },
-              '&.Mui-disabled': {
+              '&:disabled': {
                 backgroundColor: 'rgba(255,255,255,0.3)',
-                color: 'rgba(255,255,255,0.5)',
+                color: 'rgba(0,0,0,0.2)',
               },
             }}
           >

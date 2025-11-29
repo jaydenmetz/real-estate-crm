@@ -1,9 +1,9 @@
 import React from 'react';
-import { EditPhone } from '../../../common/editors/fields/EditPhone';
+import { SetPhone } from '../../../common/editors/fields/SetPhone';
 
 /**
  * Lead-specific Phone Editor
- * Wraps EditPhone with lead-specific context and styling
+ * Wraps SetPhone with lead-specific context and styling
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
@@ -12,7 +12,7 @@ import { EditPhone } from '../../../common/editors/fields/EditPhone';
  */
 export const EditLeadPhone = ({ open, onClose, onSave, value }) => {
   return (
-    <EditPhone
+    <SetPhone
       open={open}
       onClose={onClose}
       onSave={onSave}

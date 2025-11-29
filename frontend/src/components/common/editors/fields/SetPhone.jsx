@@ -2,27 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import { Check, Close } from '@mui/icons-material';
 import { ModalDialog } from '../shared/ModalDialog';
-import { EmailInput } from '../shared/EmailInput';
-import { validateEmail, parseEmailForStorage } from '../../../../utils/validators';
+import { PhoneInput } from '../shared/PhoneInput';
+import { validatePhone, formatPhoneDisplay, parsePhoneForStorage } from '../../../../utils/validators';
 
 /**
- * Generic Email Editor
- * Reusable component for editing any email address field
+ * Generic Phone Number Editor
+ * Reusable component for editing any phone number field
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void - receives lowercase email
- * @param {string} label - Field label (e.g., "Email Address", "Work Email")
- * @param {string} value - Current email address
+ * @param {function} onSave - Save handler (newValue) => void - receives raw digits
+ * @param {string} label - Field label (e.g., "Phone Number", "Cell Phone")
+ * @param {string} value - Current phone number (raw digits or formatted)
  * @param {string} color - Theme color
  */
-export const EditEmail = ({
+export const SetPhone = ({
   open,
   onClose,
   onSave,
-  label = 'Email Address',
+  label = 'Phone Number',
   value,
-  color = '#8b5cf6',
+  color = '#6366f1',
 }) => {
   const [editValue, setEditValue] = useState('');
   const [saving, setSaving] = useState(false);
@@ -31,14 +31,16 @@ export const EditEmail = ({
   // Initialize editValue when dialog opens
   useEffect(() => {
     if (open) {
-      setEditValue(value || '');
+      // Strip formatting from incoming value
+      const cleaned = parsePhoneForStorage(value || '');
+      setEditValue(cleaned);
       setError(null);
     }
   }, [open, value]);
 
   const handleSave = async () => {
     // Validate
-    const validation = validateEmail(editValue);
+    const validation = validatePhone(editValue);
     if (!validation.valid) {
       setError(validation.error);
       return;
@@ -47,13 +49,13 @@ export const EditEmail = ({
     setSaving(true);
     setError(null);
     try {
-      // Save lowercase, trimmed email
-      const valueToSave = parseEmailForStorage(editValue);
+      // Save raw digits only
+      const valueToSave = parsePhoneForStorage(editValue);
       await onSave(valueToSave);
       onClose();
     } catch (error) {
-      console.error('Failed to save email:', error);
-      setError('Failed to save email address');
+      console.error('Failed to save phone:', error);
+      setError('Failed to save phone number');
     } finally {
       setSaving(false);
     }
@@ -67,8 +69,8 @@ export const EditEmail = ({
     }
   };
 
-  const handleChange = (newValue) => {
-    setEditValue(newValue);
+  const handleChange = (rawValue) => {
+    setEditValue(rawValue);
     // Clear error when user starts typing
     if (error) setError(null);
   };
@@ -100,15 +102,14 @@ export const EditEmail = ({
             color: 'white',
             mb: 3,
             letterSpacing: '-0.5px',
-            wordBreak: 'break-all',
           }}
         >
-          {value || 'No email address'}
+          {formatPhoneDisplay(value) || 'No phone number'}
         </Typography>
 
-        {/* Email Input */}
+        {/* Phone Input */}
         <Box sx={{ mb: 3 }}>
-          <EmailInput
+          <PhoneInput
             value={editValue}
             onChange={handleChange}
             onKeyDown={handleKeyPress}

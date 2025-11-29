@@ -1,9 +1,9 @@
 import React from 'react';
-import { EditDate } from '../../../common/editors/fields/EditDate';
+import { SetDate } from '../../../common/editors/fields/SetDate';
 
 /**
  * Listing-specific Listing Date Editor (start date)
- * Wraps EditDate with listing-specific context and styling
+ * Wraps SetDate with listing-specific context and styling
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
@@ -12,7 +12,7 @@ import { EditDate } from '../../../common/editors/fields/EditDate';
  */
 export const EditListingDate = ({ open, onClose, onSave, value }) => {
   return (
-    <EditDate
+    <SetDate
       open={open}
       onClose={onClose}
       onSave={onSave}

@@ -1,9 +1,9 @@
 import React from 'react';
-import { EditEmail } from '../../../common/editors/fields/EditEmail';
+import { SetEmail } from '../../../common/editors/fields/SetEmail';
 
 /**
  * Lead-specific Email Editor
- * Wraps EditEmail with lead-specific context and styling
+ * Wraps SetEmail with lead-specific context and styling
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
@@ -12,7 +12,7 @@ import { EditEmail } from '../../../common/editors/fields/EditEmail';
  */
 export const EditLeadEmail = ({ open, onClose, onSave, value }) => {
   return (
-    <EditEmail
+    <SetEmail
       open={open}
       onClose={onClose}
       onSave={onSave}

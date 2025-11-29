@@ -1,9 +1,9 @@
 import React from 'react';
-import { EditCurrency } from '../../../common/editors/fields/EditCurrency';
+import { SetCurrency } from '../../../common/editors/fields/SetCurrency';
 
 /**
  * Listing-specific Listed Price Editor
- * Wraps EditCurrency with listing-specific context and styling
+ * Wraps SetCurrency with listing-specific context and styling
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
@@ -12,7 +12,7 @@ import { EditCurrency } from '../../../common/editors/fields/EditCurrency';
  */
 export const EditListedPrice = ({ open, onClose, onSave, value }) => {
   return (
-    <EditCurrency
+    <SetCurrency
       open={open}
       onClose={onClose}
       onSave={onSave}

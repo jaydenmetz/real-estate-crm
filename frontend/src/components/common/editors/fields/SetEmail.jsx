@@ -2,51 +2,58 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import { Check, Close } from '@mui/icons-material';
 import { ModalDialog } from '../shared/ModalDialog';
-import { CurrencyInput } from '../shared/CurrencyInput';
+import { EmailInput } from '../shared/EmailInput';
+import { validateEmail, parseEmailForStorage } from '../../../../utils/validators';
 
 /**
- * Generic Currency Editor
- * Reusable component for editing any currency value
+ * Generic Email Setter
+ * Reusable component for editing any email address field
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void
- * @param {string} label - Field label (e.g., "Purchase Price", "Listed Price")
- * @param {number} value - Current value
+ * @param {function} onSave - Save handler (newValue) => void - receives lowercase email
+ * @param {string} label - Field label (e.g., "Email Address", "Work Email")
+ * @param {string} value - Current email address
  * @param {string} color - Theme color
- * @param {string} prefix - Currency prefix (default: $)
  */
-export const EditCurrency = ({
+export const SetEmail = ({
   open,
   onClose,
   onSave,
-  label,
+  label = 'Email Address',
   value,
-  color = '#10b981',
-  prefix = '$',
+  color = '#8b5cf6',
 }) => {
   const [editValue, setEditValue] = useState('');
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   // Initialize editValue when dialog opens
   useEffect(() => {
     if (open) {
-      setEditValue(value?.toString() || '');
+      setEditValue(value || '');
+      setError(null);
     }
   }, [open, value]);
 
   const handleSave = async () => {
-    if (!editValue || isNaN(parseFloat(editValue))) {
+    // Validate
+    const validation = validateEmail(editValue);
+    if (!validation.valid) {
+      setError(validation.error);
       return;
     }
 
     setSaving(true);
+    setError(null);
     try {
-      const valueToSave = parseFloat(editValue);
+      // Save lowercase, trimmed email
+      const valueToSave = parseEmailForStorage(editValue);
       await onSave(valueToSave);
       onClose();
     } catch (error) {
-      console.error('Failed to save:', error);
+      console.error('Failed to save email:', error);
+      setError('Failed to save email address');
     } finally {
       setSaving(false);
     }
@@ -60,14 +67,10 @@ export const EditCurrency = ({
     }
   };
 
-  const formatDisplayValue = (val) => {
-    if (!val) return `${prefix}0.00`;
-    const num = parseFloat(val);
-    if (isNaN(num)) return `${prefix}0.00`;
-    return `${prefix}${num.toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
+  const handleChange = (newValue) => {
+    setEditValue(newValue);
+    // Clear error when user starts typing
+    if (error) setError(null);
   };
 
   return (
@@ -96,24 +99,27 @@ export const EditCurrency = ({
             fontWeight: 900,
             color: 'white',
             mb: 3,
-            letterSpacing: '-1px',
+            letterSpacing: '-0.5px',
+            wordBreak: 'break-all',
           }}
         >
-          {formatDisplayValue(value)}
+          {value || 'No email address'}
         </Typography>
 
-        {/* Edit Input */}
-        <CurrencyInput
-          value={editValue}
-          onChange={setEditValue}
-          onKeyDown={handleKeyPress}
-          disabled={saving}
-          prefix={prefix}
-          placeholder="Enter new value"
-        />
+        {/* Email Input */}
+        <Box sx={{ mb: 3 }}>
+          <EmailInput
+            value={editValue}
+            onChange={handleChange}
+            onKeyDown={handleKeyPress}
+            disabled={saving}
+            autoFocus={true}
+            error={error}
+          />
+        </Box>
 
         {/* Action Buttons */}
-        <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
@@ -123,13 +129,13 @@ export const EditCurrency = ({
             sx={{
               width: 48,
               height: 48,
-              backgroundColor: 'rgba(255,255,255,0.15)',
+              backgroundColor: 'rgba(255,255,255,0.2)',
               color: 'white',
               '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.25)',
+                backgroundColor: 'rgba(255,255,255,0.3)',
               },
-              '&:disabled': {
-                backgroundColor: 'rgba(255,255,255,0.05)',
+              '&.Mui-disabled': {
+                backgroundColor: 'rgba(255,255,255,0.1)',
                 color: 'rgba(255,255,255,0.3)',
               },
             }}
@@ -141,7 +147,7 @@ export const EditCurrency = ({
               e.stopPropagation();
               handleSave();
             }}
-            disabled={saving || !editValue || isNaN(parseFloat(editValue))}
+            disabled={saving || !editValue}
             sx={{
               width: 48,
               height: 48,
@@ -150,9 +156,9 @@ export const EditCurrency = ({
               '&:hover': {
                 backgroundColor: 'rgba(255,255,255,0.9)',
               },
-              '&:disabled': {
+              '&.Mui-disabled': {
                 backgroundColor: 'rgba(255,255,255,0.3)',
-                color: 'rgba(0,0,0,0.2)',
+                color: 'rgba(255,255,255,0.5)',
               },
             }}
           >

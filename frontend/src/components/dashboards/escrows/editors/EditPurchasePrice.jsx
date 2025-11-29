@@ -1,9 +1,9 @@
 import React from 'react';
-import { EditCurrency } from '../../../common/editors/fields/EditCurrency';
+import { SetCurrency } from '../../../common/editors/fields/SetCurrency';
 
 /**
  * Escrow-specific Purchase Price Editor
- * Wraps EditCurrency with escrow-specific context and styling
+ * Wraps SetCurrency with escrow-specific context and styling
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
@@ -12,7 +12,7 @@ import { EditCurrency } from '../../../common/editors/fields/EditCurrency';
  */
 export const EditPurchasePrice = ({ open, onClose, onSave, value }) => {
   return (
-    <EditCurrency
+    <SetCurrency
       open={open}
       onClose={onClose}
       onSave={onSave}
