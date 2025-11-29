@@ -593,21 +593,8 @@ export const EditAddress = ({
 
   // Render with or without modal wrapper based on mode
   if (inline) {
-    // Inline mode: Wrap content in styled Box (replicate ModalDialog styling)
-    return (
-      <Box
-        sx={{
-          borderRadius: 3,
-          background: `linear-gradient(135deg, ${alpha(color, 0.95)} 0%, ${alpha(color, 0.85)} 100%)`,
-          backdropFilter: 'blur(20px)',
-          border: `2px solid ${alpha(color, 0.3)}`,
-          boxShadow: `0 20px 60px ${alpha(color, 0.4)}`,
-          p: 3,
-        }}
-      >
-        {content}
-      </Box>
-    );
+    // Inline mode: Return content directly (parent will provide colored wrapper)
+    return content;
   }
 
   // Standalone mode: Wrap in ModalDialog

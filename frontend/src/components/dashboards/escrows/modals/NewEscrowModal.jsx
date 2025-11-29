@@ -6,6 +6,7 @@ import {
   Fade,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   ArrowBack,
   ArrowForward,
@@ -460,48 +461,45 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           transition: 'max-width 0.3s ease',
         },
       }}
-      sx={{
-        '&:hover .close-button': {
-          opacity: 1,
-        },
-      }}
     >
-      {/* Close Button - Shows on hover (at Dialog level) */}
-      {!showSuccess && (
-        <IconButton
-          className="close-button"
-          onClick={handleClose}
-          disabled={saving}
-          sx={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            zIndex: 1500,
-            width: 40,
-            height: 40,
-            opacity: 0,
-            transition: 'opacity 0.2s ease',
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            backdropFilter: 'blur(10px)',
-            color: 'white',
-            '&:hover': {
-              backgroundColor: 'rgba(0,0,0,0.6)',
-            },
-            '&:disabled': {
-              opacity: 0.3,
-            },
-          }}
-        >
-          <Close fontSize="small" />
-        </IconButton>
-      )}
-
       {!showSuccess ? (
         <Box
           sx={{
             position: 'relative',
+            borderRadius: 3,
+            background: `linear-gradient(135deg, ${alpha(currentStepConfig?.color || '#10b981', 0.95)} 0%, ${alpha(currentStepConfig?.color || '#10b981', 0.85)} 100%)`,
+            backdropFilter: 'blur(20px)',
+            border: `2px solid ${alpha(currentStepConfig?.color || '#10b981', 0.3)}`,
+            boxShadow: `0 20px 60px ${alpha(currentStepConfig?.color || '#10b981', 0.4)}`,
+            p: 3,
+            pb: 12, // Extra padding for navigation controls
           }}
         >
+          {/* Close Button - Inside colored box at top-right */}
+          <IconButton
+            onClick={handleClose}
+            disabled={saving}
+            sx={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              zIndex: 1500,
+              width: 40,
+              height: 40,
+              backgroundColor: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(10px)',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(0,0,0,0.6)',
+              },
+              '&:disabled': {
+                opacity: 0.3,
+              },
+            }}
+          >
+            <Close fontSize="small" />
+          </IconButton>
+
           {/* Render current step editor */}
           <AnimatePresence mode="wait">
             <motion.div
@@ -515,7 +513,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             </motion.div>
           </AnimatePresence>
 
-          {/* Navigation Arrows */}
+          {/* Navigation Arrows - Inside colored box at bottom */}
           <Box
             sx={{
               position: 'absolute',
@@ -573,7 +571,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             </IconButton>
           </Box>
 
-          {/* Progress Dots */}
+          {/* Progress Dots - Inside colored box at bottom */}
           <Box
             sx={{
               position: 'absolute',
