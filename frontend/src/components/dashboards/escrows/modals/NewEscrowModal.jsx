@@ -191,7 +191,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     console.log('💰 Purchase Price saved:', price);
     console.log('📊 Form data after purchase price:', updatedData);
     setFormData(updatedData);
-    handleNext();
+    // Don't auto-advance - let user click forward arrow when ready
   };
 
   const handleCommissionSave = (updates) => {
@@ -248,7 +248,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     console.log('📅 Acceptance Date saved:', date);
     console.log('📊 Form data after acceptance date:', updatedData);
     setFormData(updatedData);
-    handleNext();
+    // Don't auto-advance - let user click forward arrow when ready
   };
 
   const handleClosingDateSave = (date) => {
@@ -256,7 +256,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     console.log('📅 Closing Date saved:', date);
     console.log('📊 Form data after closing date:', updatedData);
     setFormData(updatedData);
-    handleNext();
+    // Don't auto-advance - let user click forward arrow when ready
   };
 
   // Final submission
