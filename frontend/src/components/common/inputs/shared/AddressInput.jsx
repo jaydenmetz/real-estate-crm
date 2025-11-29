@@ -530,6 +530,7 @@ export const AddressInput = ({
         disabled={disabled}
         filterOptions={(x) => x} // Don't filter - we're controlling the options
         getOptionLabel={(option) => typeof option === 'string' ? option : option.label}
+        open={addressSuggestions.length > 0 || loadingAddress} // Only open dropdown when we have suggestions or are loading
         renderInput={(params) => (
           <TextField
             {...params}
