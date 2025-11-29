@@ -6,7 +6,7 @@ import { CheckCircle, Clock } from 'lucide-react';
 import CountUp from 'react-countup';
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
-import TutorialNavigation from '../inputs/TutorialNavigation';
+import TutorialNavigation from '../shared/TutorialNavigation';
 import OnboardingService from '../../../services/onboarding.service';
 
 const EscrowStep = () => {

@@ -3,7 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Box, Container, Typography, Paper } from '@mui/material';
 import { motion } from 'framer-motion';
 import { TrendingUp, DollarSign, Flame } from 'lucide-react';
-import TutorialNavigation from '../inputs/TutorialNavigation';
+import TutorialNavigation from '../shared/TutorialNavigation';
 import OnboardingService from '../../../services/onboarding.service';
 
 const LeadsStep = () => {

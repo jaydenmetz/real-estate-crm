@@ -33,7 +33,7 @@ import {
   Speed,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import CopyButton from './CopyButton';
+import CopyButton from '../ui/CopyButton';
 
 const ErrorContainer = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),

@@ -53,8 +53,8 @@ import {
   WifiOff,
 } from '@mui/icons-material';
 import UserMenu from './UserMenu';
-import { useWebSocket } from '../../hooks/useWebSocket';
-import WebSocketIndicator from './WebSocketIndicator';
+import { useWebSocket } from '../../../hooks/useWebSocket';
+import WebSocketIndicator from '../status/WebSocketIndicator';
 
 const EnhancedNavigation = () => {
   const navigate = useNavigate();

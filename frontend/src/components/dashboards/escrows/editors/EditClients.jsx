@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction, Chip, TextField, Autocomplete, CircularProgress, Button, ToggleButtonGroup, ToggleButton, Divider } from '@mui/material';
 import { Check, Close, PersonAdd, Delete, Person, Home, Group } from '@mui/icons-material';
-import { ModalDialog } from '../../../common/editors/shared/ModalDialog';
+import { ModalContainer as ModalDialog } from '../../../common/modals/ModalContainer';
 import { clientsAPI } from '../../../../services/api.service';
 import debounce from 'lodash/debounce';
 

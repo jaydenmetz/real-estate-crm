@@ -4,7 +4,7 @@ import { Box, Container, Typography, Paper } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Globe, TrendingUp, DollarSign, Users } from 'lucide-react';
 import CountUp from 'react-countup';
-import TutorialNavigation from '../inputs/TutorialNavigation';
+import TutorialNavigation from '../shared/TutorialNavigation';
 import OnboardingService from '../../../services/onboarding.service';
 
 const MarketplaceStep = () => {

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Container, Paper, Typography, Button, Box, Alert, Divider } from '@mui/material';
 import { Home, Refresh, Email, BugReport } from '@mui/icons-material';
-import authService from '../../services/auth.service';
-import CopyButton from './CopyButton';
-import { safeFormatDate } from '../../utils/safeDateUtils';
+import authService from '../../../services/auth.service';
+import CopyButton from '../ui/CopyButton';
+import { safeFormatDate } from '../../../utils/safeDateUtils';
 
 class UserAwareErrorBoundary extends React.Component {
   constructor(props) {

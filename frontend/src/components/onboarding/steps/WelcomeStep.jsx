@@ -3,7 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Box, Container, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import { TrendingUp, Home, Users, Calendar, BarChart2, Globe } from 'lucide-react';
-import TutorialNavigation from '../inputs/TutorialNavigation';
+import TutorialNavigation from '../shared/TutorialNavigation';
 import OnboardingService from '../../../services/onboarding.service';
 
 const WelcomeStep = () => {

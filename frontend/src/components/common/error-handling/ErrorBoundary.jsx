@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { Error as ErrorIcon } from '@mui/icons-material';
 import * as Sentry from '@sentry/react';
-import CopyButton from './CopyButton';
+import CopyButton from '../ui/CopyButton';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {

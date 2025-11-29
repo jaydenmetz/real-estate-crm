@@ -23,7 +23,7 @@ import {
   Public,
   Edit,
 } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const UserMenu = () => {
   const navigate = useNavigate();

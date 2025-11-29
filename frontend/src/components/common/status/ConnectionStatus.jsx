@@ -13,7 +13,7 @@ import {
   CloudDone,
   CloudOff
 } from '@mui/icons-material';
-import websocketService from '../../services/websocket.service';
+import websocketService from '../../../services/websocket.service';
 
 /**
  * ConnectionStatus - Floating indicator showing WebSocket connection state

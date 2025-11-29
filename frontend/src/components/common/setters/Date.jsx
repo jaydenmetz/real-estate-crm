@@ -3,7 +3,7 @@ import { Box, Typography, TextField, Alert } from '@mui/material';
 import { Event } from '@mui/icons-material';
 import { format, isValid, isBefore, isAfter } from 'date-fns';
 import { parseLocalDate } from '../../../utils/safeDateUtils';
-import { CustomCalendar } from '../inputs/CustomCalendar';
+import { CustomCalendar } from '../inputs/shared/CustomCalendar';
 
 /**
  * Date Setter - Pure date input component
