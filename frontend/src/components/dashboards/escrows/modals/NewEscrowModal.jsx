@@ -403,6 +403,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               zip_code: formData.zipCode,
               county: formData.county,
             }}
+            inline={true}
           />
         );
 
@@ -430,6 +431,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             representationType={formData.representationType}
             role={stepId === 'buyer-clients' ? 'buyer' : 'seller'}
             color={currentStepConfig.color}
+            inline={true}
           />
         );
 

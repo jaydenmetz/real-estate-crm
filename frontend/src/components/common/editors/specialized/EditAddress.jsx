@@ -15,6 +15,7 @@ import { decodeHTML, cleanTextForStorage } from '../../../../utils/htmlEntities'
  * @param {string} label - Field label (default: "Address")
  * @param {string} value - Current address value (full formatted address)
  * @param {string} color - Theme color
+ * @param {boolean} inline - If true, hides action buttons (used in flow contexts)
  */
 export const EditAddress = ({
   open,
@@ -23,6 +24,7 @@ export const EditAddress = ({
   label = 'Address',
   value,
   color = '#10b981',
+  inline = false,
 }) => {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [currentInputText, setCurrentInputText] = useState(''); // Track text input changes
@@ -206,10 +208,12 @@ export const EditAddress = ({
   };
 
   return (
-    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520}>
+    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520} hideBackdrop={inline}>
       <Box onClick={(e) => e.stopPropagation()}>
-        {/* Address Display Section - Only show if there's an existing address */}
-        {canonicalAddress && (
+        {/* Address Display Section */}
+        {/* In inline mode: Show "Selected Address" when selectedAddress exists */}
+        {/* In edit mode: Show "Current Property Address" when canonicalAddress exists */}
+        {((inline && selectedAddress) || (!inline && canonicalAddress)) && (
           <Box sx={{ mb: 3 }}>
             {!hasSelectedNewAddress ? (
               /* Show current database address (no editing mode yet) */
@@ -226,7 +230,7 @@ export const EditAddress = ({
                     letterSpacing: '0.5px',
                   }}
                 >
-                  Current Property Address
+                  {inline && selectedAddress ? 'Selected Address' : 'Current Property Address'}
                 </Typography>
                 <Box
                   onClick={handleAddressClick}
@@ -255,9 +259,11 @@ export const EditAddress = ({
                         lineHeight: 1.4,
                       }}
                     >
-                      {canonicalAddress}
+                      {inline && selectedAddress
+                        ? selectedAddress.formatted_address
+                        : canonicalAddress}
                     </Typography>
-                    {locationSubtitle && (
+                    {((inline && selectedAddress) || locationSubtitle) && (
                       <Typography
                         variant="caption"
                         sx={{
@@ -266,7 +272,9 @@ export const EditAddress = ({
                           mt: 0.5,
                         }}
                       >
-                        {locationSubtitle}
+                        {inline && selectedAddress
+                          ? [selectedAddress.city, selectedAddress.state, selectedAddress.zip_code].filter(Boolean).join(', ')
+                          : locationSubtitle}
                       </Typography>
                     )}
                   </Box>
@@ -521,58 +529,60 @@ export const EditAddress = ({
           </Box>
         </Box>
 
-        {/* Action Buttons */}
-        <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            disabled={saving}
-            sx={{
-              width: 48,
-              height: 48,
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.25)',
-              },
-              '&:disabled': {
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                color: 'rgba(255,255,255,0.3)',
-              },
-            }}
-          >
-            <Close />
-          </IconButton>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSave();
-            }}
-            disabled={
-              saving ||
-              (!selectedAddress &&
-               (!currentInputText || currentInputText.trim() === displayAddress) &&
-               unitNumber === (displayAddress.match(/#(\d+)$/)?.[1] || ''))
-            }
-            sx={{
-              width: 48,
-              height: 48,
-              backgroundColor: 'white',
-              color: color,
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.9)',
-              },
-              '&:disabled': {
-                backgroundColor: 'rgba(255,255,255,0.3)',
-                color: 'rgba(0,0,0,0.2)',
-              },
-            }}
-          >
-            <Check />
-          </IconButton>
-        </Box>
+        {/* Action Buttons - Only show in standalone mode (not inline) */}
+        {!inline && (
+          <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              disabled={saving}
+              sx={{
+                width: 48,
+                height: 48,
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.25)',
+                },
+                '&:disabled': {
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  color: 'rgba(255,255,255,0.3)',
+                },
+              }}
+            >
+              <Close />
+            </IconButton>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSave();
+              }}
+              disabled={
+                saving ||
+                (!selectedAddress &&
+                 (!currentInputText || currentInputText.trim() === displayAddress) &&
+                 unitNumber === (displayAddress.match(/#(\d+)$/)?.[1] || ''))
+              }
+              sx={{
+                width: 48,
+                height: 48,
+                backgroundColor: 'white',
+                color: color,
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.9)',
+                },
+                '&:disabled': {
+                  backgroundColor: 'rgba(255,255,255,0.3)',
+                  color: 'rgba(0,0,0,0.2)',
+                },
+              }}
+            >
+              <Check />
+            </IconButton>
+          </Box>
+        )}
       </Box>
     </ModalDialog>
   );

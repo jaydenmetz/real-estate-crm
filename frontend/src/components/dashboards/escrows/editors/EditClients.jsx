@@ -16,6 +16,7 @@ import debounce from 'lodash/debounce';
  * @param {string} representationType - 'buyer' | 'seller' | 'dual'
  * @param {string} role - For dual agency: 'buyer' | 'seller'
  * @param {string} color - Theme color
+ * @param {boolean} inline - If true, hides action buttons (used in flow contexts)
  */
 export const EditClients = ({
   open,
@@ -25,6 +26,7 @@ export const EditClients = ({
   representationType = 'buyer',
   role, // Only used for dual agency
   color = '#10b981',
+  inline = false,
 }) => {
   const [selectedClients, setSelectedClients] = useState([]);
   const [clientSearch, setClientSearch] = useState('');
@@ -175,7 +177,7 @@ export const EditClients = ({
   };
 
   return (
-    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={500}>
+    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={500} hideBackdrop={inline}>
       <Box onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyPress}>
         {/* Label */}
         <Typography
@@ -321,53 +323,55 @@ export const EditClients = ({
           }
         />
 
-        {/* Action Buttons */}
-        <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            disabled={saving}
-            sx={{
-              width: 48,
-              height: 48,
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.25)',
-              },
-              '&:disabled': {
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                color: 'rgba(255,255,255,0.3)',
-              },
-            }}
-          >
-            <Close />
-          </IconButton>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSave();
-            }}
-            disabled={saving || selectedClients.length === 0}
-            sx={{
-              width: 48,
-              height: 48,
-              backgroundColor: 'white',
-              color: color,
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.9)',
-              },
-              '&:disabled': {
-                backgroundColor: 'rgba(255,255,255,0.3)',
-                color: 'rgba(0,0,0,0.2)',
-              },
-            }}
-          >
-            <Check />
-          </IconButton>
-        </Box>
+        {/* Action Buttons - Only show in standalone mode (not inline) */}
+        {!inline && (
+          <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              disabled={saving}
+              sx={{
+                width: 48,
+                height: 48,
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.25)',
+                },
+                '&:disabled': {
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  color: 'rgba(255,255,255,0.3)',
+                },
+              }}
+            >
+              <Close />
+            </IconButton>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSave();
+              }}
+              disabled={saving || selectedClients.length === 0}
+              sx={{
+                width: 48,
+                height: 48,
+                backgroundColor: 'white',
+                color: color,
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.9)',
+                },
+                '&:disabled': {
+                  backgroundColor: 'rgba(255,255,255,0.3)',
+                  color: 'rgba(0,0,0,0.2)',
+                },
+              }}
+            >
+              <Check />
+            </IconButton>
+          </Box>
+        )}
       </Box>
     </ModalDialog>
   );
