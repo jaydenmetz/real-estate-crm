@@ -9,8 +9,9 @@ import { SetCurrency } from '../../../common/editors/fields/SetCurrency';
  * @param {function} onClose - Close handler
  * @param {function} onSave - Save handler (newValue) => void
  * @param {number} value - Current purchase price
+ * @param {boolean} inline - If true, renders without ModalDialog wrapper
  */
-export const EditPurchasePrice = ({ open, onClose, onSave, value }) => {
+export const EditPurchasePrice = ({ open, onClose, onSave, value, inline = false }) => {
   return (
     <SetCurrency
       open={open}
@@ -20,6 +21,7 @@ export const EditPurchasePrice = ({ open, onClose, onSave, value }) => {
       value={value}
       color="#10b981" // Green theme for purchase price
       prefix="$"
+      inline={inline}
     />
   );
 };

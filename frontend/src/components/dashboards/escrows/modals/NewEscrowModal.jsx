@@ -392,6 +392,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             onClose={() => {}}
             onSave={handlePurchasePriceSave}
             value={formData.purchasePrice}
+            inline={true}
           />
         );
 
@@ -410,6 +411,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             commissionType={isBuyerCommission ? formData.buyerCommissionType : formData.sellerCommissionType}
             purchasePrice={formData.purchasePrice}
             color={currentStepConfig.color}
+            inline={true}
           />
         );
 

@@ -15,6 +15,7 @@ import { CurrencyInput } from '../shared/CurrencyInput';
  * @param {number} value - Current value
  * @param {string} color - Theme color
  * @param {string} prefix - Currency prefix (default: $)
+ * @param {boolean} inline - If true, returns content without ModalDialog wrapper
  */
 export const SetCurrency = ({
   open,
@@ -24,6 +25,7 @@ export const SetCurrency = ({
   value,
   color = '#10b981',
   prefix = '$',
+  inline = false,
 }) => {
   const [editValue, setEditValue] = useState('');
   const [saving, setSaving] = useState(false);
@@ -70,49 +72,49 @@ export const SetCurrency = ({
     })}`;
   };
 
-  return (
-    <ModalDialog open={open} onClose={onClose} color={color}>
-      <Box onClick={(e) => e.stopPropagation()}>
-        {/* Label */}
-        <Typography
-          variant="caption"
-          sx={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.9)',
-            mb: 1,
-            display: 'block',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-          }}
-        >
-          {label}
-        </Typography>
+  const content = (
+    <Box onClick={(e) => e.stopPropagation()}>
+      {/* Label */}
+      <Typography
+        variant="caption"
+        sx={{
+          fontSize: 12,
+          fontWeight: 700,
+          color: 'rgba(255,255,255,0.9)',
+          mb: 1,
+          display: 'block',
+          textTransform: 'uppercase',
+          letterSpacing: '1px',
+        }}
+      >
+        {label}
+      </Typography>
 
-        {/* Current Value Display */}
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 900,
-            color: 'white',
-            mb: 3,
-            letterSpacing: '-1px',
-          }}
-        >
-          {formatDisplayValue(value)}
-        </Typography>
+      {/* Current Value Display */}
+      <Typography
+        variant="h4"
+        sx={{
+          fontWeight: 900,
+          color: 'white',
+          mb: 3,
+          letterSpacing: '-1px',
+        }}
+      >
+        {formatDisplayValue(value)}
+      </Typography>
 
-        {/* Edit Input */}
-        <CurrencyInput
-          value={editValue}
-          onChange={setEditValue}
-          onKeyDown={handleKeyPress}
-          disabled={saving}
-          prefix={prefix}
-          placeholder="Enter new value"
-        />
+      {/* Edit Input */}
+      <CurrencyInput
+        value={editValue}
+        onChange={setEditValue}
+        onKeyDown={handleKeyPress}
+        disabled={saving}
+        prefix={prefix}
+        placeholder="Enter new value"
+      />
 
-        {/* Action Buttons */}
+      {/* Action Buttons - Only show in standalone mode */}
+      {!inline && (
         <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
           <IconButton
             onClick={(e) => {
@@ -159,7 +161,19 @@ export const SetCurrency = ({
             <Check />
           </IconButton>
         </Box>
-      </Box>
+      )}
+    </Box>
+  );
+
+  // Inline mode: Return content directly without modal wrapper
+  if (inline) {
+    return content;
+  }
+
+  // Standalone mode: Wrap in ModalDialog
+  return (
+    <ModalDialog open={open} onClose={onClose} color={color}>
+      {content}
     </ModalDialog>
   );
 };

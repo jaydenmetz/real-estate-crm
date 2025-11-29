@@ -18,6 +18,7 @@ import { PercentageInput } from '../../../../components/common/editors/shared/Pe
  * @param {string} commissionType - Initial commission type ('percentage' or 'flat')
  * @param {number} purchasePrice - Purchase price for percentage calculation
  * @param {string} color - Theme color
+ * @param {boolean} inline - If true, renders without ModalDialog wrapper
  */
 export const EditCommission = ({
   open,
@@ -29,6 +30,7 @@ export const EditCommission = ({
   commissionType: initialCommissionType = 'percentage',
   purchasePrice = 0,
   color = '#10b981',
+  inline = false,
 }) => {
   const [editValue, setEditValue] = useState('');
   const [commissionType, setCommissionType] = useState(initialCommissionType);
@@ -163,112 +165,112 @@ export const EditCommission = ({
     return formatted;
   };
 
-  return (
-    <ModalDialog open={open} onClose={onClose} color={color}>
-      <Box onClick={(e) => e.stopPropagation()}>
-        {/* Label */}
-        <Typography
-          variant="caption"
-          sx={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.9)',
-            mb: 1,
-            display: 'block',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-          }}
-        >
-          {label}
-        </Typography>
+  const content = (
+    <Box onClick={(e) => e.stopPropagation()}>
+      {/* Label */}
+      <Typography
+        variant="caption"
+        sx={{
+          fontSize: 12,
+          fontWeight: 700,
+          color: 'rgba(255,255,255,0.9)',
+          mb: 1,
+          display: 'block',
+          textTransform: 'uppercase',
+          letterSpacing: '1px',
+        }}
+      >
+        {label}
+      </Typography>
 
-        {/* Current Value Display - Shows calculated commission amount */}
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 900,
-            color: 'white',
-            mb: 3,
-            letterSpacing: '-1px',
-          }}
-        >
-          {getDisplayValue()}
-        </Typography>
+      {/* Current Value Display - Shows calculated commission amount */}
+      <Typography
+        variant="h4"
+        sx={{
+          fontWeight: 900,
+          color: 'white',
+          mb: 3,
+          letterSpacing: '-1px',
+        }}
+      >
+        {getDisplayValue()}
+      </Typography>
 
-        {/* Commission Type Toggle */}
-        <Box sx={{ mb: 3 }}>
-          <ToggleButtonGroup
-            value={commissionType}
-            exclusive
-            onChange={(e, newType) => {
-              e.stopPropagation(); // Prevent navigation when switching tabs
-              if (newType !== null) {
-                setCommissionType(newType);
-                // Load the database value for the new tab (or empty if none exists)
-                if (newType === 'percentage') {
-                  // Database stores as percentage (e.g., 2.5 = 2.5%, 0.75 = 0.75%)
-                  // Display it directly without conversion
-                  const percentValue = commissionPercentage !== null && commissionPercentage !== undefined
-                    ? commissionPercentage.toString()
-                    : '';
-                  setEditValue(percentValue);
-                } else {
-                  setEditValue(value !== null && value !== undefined ? value.toString() : '');
-                }
+      {/* Commission Type Toggle */}
+      <Box sx={{ mb: 3 }}>
+        <ToggleButtonGroup
+          value={commissionType}
+          exclusive
+          onChange={(e, newType) => {
+            e.stopPropagation(); // Prevent navigation when switching tabs
+            if (newType !== null) {
+              setCommissionType(newType);
+              // Load the database value for the new tab (or empty if none exists)
+              if (newType === 'percentage') {
+                // Database stores as percentage (e.g., 2.5 = 2.5%, 0.75 = 0.75%)
+                // Display it directly without conversion
+                const percentValue = commissionPercentage !== null && commissionPercentage !== undefined
+                  ? commissionPercentage.toString()
+                  : '';
+                setEditValue(percentValue);
+              } else {
+                setEditValue(value !== null && value !== undefined ? value.toString() : '');
               }
-            }}
-            fullWidth
-            sx={{
-              backgroundColor: 'rgba(255,255,255,0.1)',
-              '& .MuiToggleButton-root': {
-                color: 'rgba(255,255,255,0.7)',
-                borderColor: 'rgba(255,255,255,0.3)',
-                fontWeight: 600,
-                '&.Mui-selected': {
-                  backgroundColor: 'rgba(255,255,255,0.25)',
-                  color: 'white',
-                  borderColor: 'rgba(255,255,255,0.5)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.35)',
-                  },
-                },
+            }
+          }}
+          fullWidth
+          sx={{
+            backgroundColor: 'rgba(255,255,255,0.1)',
+            '& .MuiToggleButton-root': {
+              color: 'rgba(255,255,255,0.7)',
+              borderColor: 'rgba(255,255,255,0.3)',
+              fontWeight: 600,
+              '&.Mui-selected': {
+                backgroundColor: 'rgba(255,255,255,0.25)',
+                color: 'white',
+                borderColor: 'rgba(255,255,255,0.5)',
                 '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  backgroundColor: 'rgba(255,255,255,0.35)',
                 },
               },
-            }}
-          >
-            <ToggleButton value="percentage">
-              <Percent sx={{ mr: 1, fontSize: 18 }} />
-              Percentage
-            </ToggleButton>
-            <ToggleButton value="flat">
-              <AttachMoney sx={{ mr: 1, fontSize: 18 }} />
-              Flat Amount
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.15)',
+              },
+            },
+          }}
+        >
+          <ToggleButton value="percentage">
+            <Percent sx={{ mr: 1, fontSize: 18 }} />
+            Percentage
+          </ToggleButton>
+          <ToggleButton value="flat">
+            <AttachMoney sx={{ mr: 1, fontSize: 18 }} />
+            Flat Amount
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
 
-        {/* Edit Input */}
-        {commissionType === 'percentage' ? (
-          <PercentageInput
-            value={editValue}
-            onChange={setEditValue}
-            onKeyDown={handleKeyPress}
-            disabled={saving}
-            placeholder="3"
-          />
-        ) : (
-          <CurrencyInput
-            value={editValue}
-            onChange={setEditValue}
-            onKeyDown={handleKeyPress}
-            disabled={saving}
-            placeholder="2000"
-          />
-        )}
+      {/* Edit Input */}
+      {commissionType === 'percentage' ? (
+        <PercentageInput
+          value={editValue}
+          onChange={setEditValue}
+          onKeyDown={handleKeyPress}
+          disabled={saving}
+          placeholder="3"
+        />
+      ) : (
+        <CurrencyInput
+          value={editValue}
+          onChange={setEditValue}
+          onKeyDown={handleKeyPress}
+          disabled={saving}
+          placeholder="2000"
+        />
+      )}
 
-        {/* Action Buttons */}
+      {/* Action Buttons - Only show in standalone mode */}
+      {!inline && (
         <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
           <IconButton
             onClick={(e) => {
@@ -315,7 +317,19 @@ export const EditCommission = ({
             <Check />
           </IconButton>
         </Box>
-      </Box>
+      )}
+    </Box>
+  );
+
+  // Inline mode: Return content directly without modal wrapper
+  if (inline) {
+    return content;
+  }
+
+  // Standalone mode: Wrap in ModalDialog
+  return (
+    <ModalDialog open={open} onClose={onClose} color={color}>
+      {content}
     </ModalDialog>
   );
 };
