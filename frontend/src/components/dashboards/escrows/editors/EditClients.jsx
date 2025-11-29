@@ -752,12 +752,13 @@ export const EditClients = ({
   );
 
   // Render with or without modal wrapper based on mode
-  if (inline && !showRepresentationType) {
-    // Inline role-specific mode: Return content directly
+  if (inline) {
+    // Inline mode (used in NewEscrowModal flow): Return content directly without modal wrapper
+    // This applies to BOTH role-specific mode AND combined representation type mode
     return content;
   }
 
-  // All other modes: Wrap in ModalDialog
+  // Standalone mode: Wrap in ModalDialog
   const modalColor = showRepresentationType ? '#3b82f6' : color;
   const modalWidth = showRepresentationType ? 600 : 500;
 
@@ -767,7 +768,6 @@ export const EditClients = ({
       onClose={onClose}
       color={modalColor}
       maxWidth={modalWidth}
-      hideBackdrop={inline || showRepresentationType}
     >
       {content}
     </ModalDialog>
