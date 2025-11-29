@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, ToggleButtonGroup, ToggleButton, Divider } from '@mui/material';
 import { Person, Home, Group } from '@mui/icons-material';
+import { ModalDialog } from '../../../common/editors/shared/ModalDialog';
 import { EditClients } from './EditClients';
 
 /**
@@ -43,150 +44,152 @@ export const EditRepresentationAndClients = ({
   };
 
   return (
-    <Box>
-      {/* Representation Type Selection */}
-      <Box sx={{ mb: 3 }}>
-        <Typography
-          variant="caption"
-          sx={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.9)',
-            mb: 1,
-            display: 'block',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-          }}
-        >
-          Representation Type
-        </Typography>
+    <ModalDialog open={true} onClose={() => {}} color="#3b82f6" maxWidth={600} hideBackdrop={true}>
+      <Box onClick={(e) => e.stopPropagation()}>
+        {/* Representation Type Selection */}
+        <Box sx={{ mb: 3 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: 'rgba(255,255,255,0.9)',
+              mb: 1,
+              display: 'block',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+            }}
+          >
+            Representation Type
+          </Typography>
 
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 900,
-            color: 'white',
-            mb: 2,
-            letterSpacing: '-1px',
-          }}
-        >
-          Who do you represent?
-        </Typography>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 900,
+              color: 'white',
+              mb: 2,
+              letterSpacing: '-1px',
+            }}
+          >
+            Who do you represent?
+          </Typography>
 
-        <ToggleButtonGroup
-          value={selectedType}
-          exclusive
-          onChange={handleTypeChange}
-          fullWidth
-          sx={{
-            gap: 1.5,
-            '& .MuiToggleButtonGroup-grouped': {
-              border: 'none',
-              '&:not(:first-of-type)': {
-                marginLeft: 0,
-                borderRadius: 2,
-              },
-              '&:first-of-type': {
-                borderRadius: 2,
-              },
-            },
-            '& .MuiToggleButton-root': {
-              color: 'rgba(255,255,255,0.7)',
-              backgroundColor: 'rgba(255,255,255,0.1)',
-              borderColor: 'rgba(255,255,255,0.2)',
-              fontWeight: 600,
-              py: 2.5,
-              px: 2,
-              fontSize: '0.95rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1,
-              textTransform: 'none',
-              borderRadius: 2,
-              transition: 'all 0.2s',
-              '&.Mui-selected': {
-                backgroundColor: 'rgba(255,255,255,0.25)',
-                color: 'white',
-                borderColor: 'rgba(255,255,255,0.5)',
-                '&:hover': {
-                  backgroundColor: 'rgba(255,255,255,0.35)',
+          <ToggleButtonGroup
+            value={selectedType}
+            exclusive
+            onChange={handleTypeChange}
+            fullWidth
+            sx={{
+              gap: 1.5,
+              '& .MuiToggleButtonGroup-grouped': {
+                border: 'none',
+                '&:not(:first-of-type)': {
+                  marginLeft: 0,
+                  borderRadius: 2,
+                },
+                '&:first-of-type': {
+                  borderRadius: 2,
                 },
               },
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.15)',
+              '& .MuiToggleButton-root': {
+                color: 'rgba(255,255,255,0.7)',
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                borderColor: 'rgba(255,255,255,0.2)',
+                fontWeight: 600,
+                py: 2.5,
+                px: 2,
+                fontSize: '0.95rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+                textTransform: 'none',
+                borderRadius: 2,
+                transition: 'all 0.2s',
+                '&.Mui-selected': {
+                  backgroundColor: 'rgba(255,255,255,0.25)',
+                  color: 'white',
+                  borderColor: 'rgba(255,255,255,0.5)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.35)',
+                  },
+                },
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                },
               },
-            },
-          }}
-        >
-          <ToggleButton value="buyer">
-            <Person sx={{ fontSize: 28 }} />
-            <Typography variant="body2" fontWeight={600}>
-              Buyer
-            </Typography>
-          </ToggleButton>
+            }}
+          >
+            <ToggleButton value="buyer">
+              <Person sx={{ fontSize: 28 }} />
+              <Typography variant="body2" fontWeight={600}>
+                Buyer
+              </Typography>
+            </ToggleButton>
 
-          <ToggleButton value="seller">
-            <Home sx={{ fontSize: 28 }} />
-            <Typography variant="body2" fontWeight={600}>
-              Seller
-            </Typography>
-          </ToggleButton>
+            <ToggleButton value="seller">
+              <Home sx={{ fontSize: 28 }} />
+              <Typography variant="body2" fontWeight={600}>
+                Seller
+              </Typography>
+            </ToggleButton>
 
-          <ToggleButton value="dual">
-            <Group sx={{ fontSize: 28 }} />
-            <Typography variant="body2" fontWeight={600}>
-              Dual
-            </Typography>
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
+            <ToggleButton value="dual">
+              <Group sx={{ fontSize: 28 }} />
+              <Typography variant="body2" fontWeight={600}>
+                Dual
+              </Typography>
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
 
-      {/* Divider */}
-      <Divider sx={{ my: 3, borderColor: 'rgba(255,255,255,0.2)' }} />
+        {/* Divider */}
+        <Divider sx={{ my: 3, borderColor: 'rgba(255,255,255,0.2)' }} />
 
-      {/* Client Selection(s) - Dynamic based on representation type */}
-      {selectedType === 'dual' ? (
-        // Dual Agency: Two client selectors stacked
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Buyer Clients */}
+        {/* Client Selection(s) - Dynamic based on representation type */}
+        {selectedType === 'dual' ? (
+          // Dual Agency: Two client selectors stacked
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Buyer Clients */}
+            <EditClients
+              open={true}
+              onClose={() => {}}
+              onSave={onBuyerClientsChange}
+              value={buyerClients}
+              representationType="dual"
+              role="buyer"
+              color="#10b981"
+              inline={true}
+            />
+
+            <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+
+            {/* Seller Clients */}
+            <EditClients
+              open={true}
+              onClose={() => {}}
+              onSave={onSellerClientsChange}
+              value={sellerClients}
+              representationType="dual"
+              role="seller"
+              color="#f59e0b"
+              inline={true}
+            />
+          </Box>
+        ) : (
+          // Single Representation: One client selector
           <EditClients
             open={true}
             onClose={() => {}}
-            onSave={onBuyerClientsChange}
-            value={buyerClients}
-            representationType="dual"
-            role="buyer"
+            onSave={selectedType === 'buyer' ? onBuyerClientsChange : onSellerClientsChange}
+            value={selectedType === 'buyer' ? buyerClients : sellerClients}
+            representationType={selectedType}
+            role={selectedType}
             color="#10b981"
             inline={true}
           />
-
-          <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-
-          {/* Seller Clients */}
-          <EditClients
-            open={true}
-            onClose={() => {}}
-            onSave={onSellerClientsChange}
-            value={sellerClients}
-            representationType="dual"
-            role="seller"
-            color="#f59e0b"
-            inline={true}
-          />
-        </Box>
-      ) : (
-        // Single Representation: One client selector
-        <EditClients
-          open={true}
-          onClose={() => {}}
-          onSave={selectedType === 'buyer' ? onBuyerClientsChange : onSellerClientsChange}
-          value={selectedType === 'buyer' ? buyerClients : sellerClients}
-          representationType={selectedType}
-          role={selectedType}
-          color="#10b981"
-          inline={true}
-        />
-      )}
-    </Box>
+        )}
+      </Box>
+    </ModalDialog>
   );
 };
