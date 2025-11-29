@@ -254,7 +254,7 @@ export const EditAddress = ({
                   }}
                 >
                   <LocationOn sx={{ color: 'white', mt: 0.25, fontSize: 20 }} />
-                  <Box sx={{ flex: 1 }}>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography
                       variant="body1"
                       sx={{
@@ -262,6 +262,8 @@ export const EditAddress = ({
                         color: 'white',
                         fontSize: '0.9rem',
                         lineHeight: 1.3,
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word',
                       }}
                     >
                       {inline && selectedAddress
