@@ -10,6 +10,7 @@ import { EditAddress } from '../../../common/editors/specialized/EditAddress';
  * @param {function} onSave - Save handler (addressData) => void - receives full address object
  * @param {string} value - Current property display address (shows in UI, editable)
  * @param {Object} data - Full escrow object (contains property_address, city, state, zip_code, etc.)
+ * @param {boolean} inline - If true, hides action buttons (used in flow contexts)
  */
 export const EditPropertyAddress = ({
   open,
@@ -17,6 +18,7 @@ export const EditPropertyAddress = ({
   onSave,
   value, // property_address_display (what user sees)
   data, // Full escrow object from CardTemplate/ListItemTemplate
+  inline = false,
 }) => {
   // Build full address object from escrow data
   const addressObject = data ? {
@@ -38,6 +40,7 @@ export const EditPropertyAddress = ({
       label="Property Address"
       value={addressObject} // Pass full address object with city/state/zip
       color="#10b981" // Green theme for property
+      inline={inline}
     />
   );
 };
