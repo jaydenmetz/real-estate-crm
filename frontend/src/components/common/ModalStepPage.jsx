@@ -53,7 +53,7 @@ export const ModalStepPage = ({
         px: 3,
         pb: 10, // Bottom padding for navigation (30px + arrows/dots height)
         width: 700, // Fixed width
-        height: 600, // Fixed height
+        height: 700, // Increased height to fit calendar without scrolling
         display: 'flex',
         flexDirection: 'column',
       }}

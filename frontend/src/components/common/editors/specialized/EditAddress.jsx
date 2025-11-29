@@ -215,9 +215,7 @@ export const EditAddress = ({
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center', // Vertical center
-        alignItems: 'center', // Horizontal center
-        minHeight: '100%',
+        alignItems: 'center', // Horizontal center only
         width: '100%',
       }}
     >
