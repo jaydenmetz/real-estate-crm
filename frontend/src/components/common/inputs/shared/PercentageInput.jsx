@@ -152,7 +152,7 @@ export const PercentageInput = ({
   const adaptiveFontSize = '1.8rem';
 
   return (
-    <Box sx={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
+    <Box sx={{ position: 'relative', width: '100%' }}>
       <TextField
         ref={inputRef}
         fullWidth
