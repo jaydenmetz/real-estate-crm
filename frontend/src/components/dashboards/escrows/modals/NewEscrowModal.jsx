@@ -501,7 +501,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           </Box>
 
           {/* Step Content - Middle (flex-grow to push navigation to bottom) */}
-          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
@@ -509,7 +509,6 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
-                style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
               >
                 {renderStep()}
               </motion.div>
