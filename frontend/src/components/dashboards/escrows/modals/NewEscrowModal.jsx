@@ -57,6 +57,9 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     sellerCommissionPercentage: null,
     sellerCommissionType: 'percentage',
 
+    // Visibility
+    showCommission: true, // Default to visible for preview
+
     // Dates
     acceptanceDate: new Date().toISOString().split('T')[0],
     closeOfEscrowDate: calculateDefaultCOE(),
@@ -173,6 +176,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         sellerCommission: 0,
         sellerCommissionPercentage: null,
         sellerCommissionType: 'percentage',
+        showCommission: true, // Default to visible
         acceptanceDate: new Date().toISOString().split('T')[0],
         closeOfEscrowDate: calculateDefaultCOE(),
       });
@@ -298,6 +302,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         my_commission: totalCommission,
         commission_percentage: formData.buyerCommissionPercentage || formData.sellerCommissionPercentage,
         commission_type: formData.buyerCommissionType || formData.sellerCommissionType,
+        show_commission: formData.showCommission,
         acceptance_date: formData.acceptanceDate,
         closing_date: formData.closeOfEscrowDate,
         escrow_status: 'active',
@@ -459,6 +464,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           my_commission: totalCommission,
           commission_percentage: formData.buyerCommissionPercentage || formData.sellerCommissionPercentage,
           commission_type: formData.buyerCommissionType || formData.sellerCommissionType,
+          show_commission: formData.showCommission,
           acceptance_date: formData.acceptanceDate,
           closing_date: formData.closeOfEscrowDate,
           escrow_status: 'active',
@@ -482,14 +488,24 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             </Typography>
             <Box sx={{
               '& > *': {
-                pointerEvents: 'none', // Disable interactions on preview card
+                pointerEvents: 'none', // Disable most interactions on preview card
                 userSelect: 'none',
-              }
+              },
+              // Re-enable clicks on commission toggle button
+              '& button[aria-label*="commission"]': {
+                pointerEvents: 'auto',
+                cursor: 'pointer',
+              },
             }}>
               <EscrowCard
                 escrow={previewEscrow}
-                onClick={() => {}}
-                onUpdate={() => {}}
+                onClick={() => {}} // Disable card click
+                onUpdate={(updatedEscrow) => {
+                  // Allow commission visibility toggle to update formData
+                  if (updatedEscrow.show_commission !== undefined) {
+                    setFormData({ ...formData, showCommission: updatedEscrow.show_commission });
+                  }
+                }}
               />
             </Box>
           </Box>
