@@ -77,12 +77,11 @@ export const SetCurrency = ({
       onClick={(e) => e.stopPropagation()}
       sx={{
         display: 'flex',
+        justifyContent: 'center',
         width: '100%',
       }}
     >
-      {/* Horizontal centering: Spacer - Component - Spacer */}
-      <Box sx={{ flex: 1 }} /> {/* Left spacer */}
-      <Box sx={{ flex: 0, minWidth: 0 }}>
+      <Box sx={{ width: '100%', maxWidth: 500 }}>
       {/* Label */}
       <Typography
         variant="caption"
@@ -172,7 +171,6 @@ export const SetCurrency = ({
         </Box>
       )}
       </Box>
-      <Box sx={{ flex: 1 }} /> {/* Right spacer */}
     </Box>
   );
 
