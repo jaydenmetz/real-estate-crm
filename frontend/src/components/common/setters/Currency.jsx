@@ -24,6 +24,7 @@ import { Box, Typography, TextField } from '@mui/material';
  * @param {boolean} disabled - Disable input
  * @param {string} placeholder - Placeholder text
  * @param {boolean} autoFocus - Auto focus on mount
+ * @param {string|number} maxWidth - Maximum width of input field (default: '300px')
  */
 export const Currency = ({
   label,
@@ -35,6 +36,7 @@ export const Currency = ({
   disabled = false,
   placeholder = 'Enter amount',
   autoFocus = true,
+  maxWidth = '300px',
 }) => {
   const inputRef = useRef(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -187,7 +189,7 @@ export const Currency = ({
       )}
 
       {/* Currency Input */}
-      <Box sx={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
+      <Box sx={{ position: 'relative', width: '100%', maxWidth }}>
         <TextField
           ref={inputRef}
           fullWidth
