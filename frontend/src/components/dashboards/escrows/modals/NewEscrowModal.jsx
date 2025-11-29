@@ -491,7 +491,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               display: 'flex',
               alignItems: 'flex-start',
               justifyContent: 'flex-end',
-              p: 2,
+              pt: '15px',
+              pr: '15px',
               '&:hover .close-button': {
                 opacity: 1,
               },
