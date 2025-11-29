@@ -14,8 +14,7 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EditPropertyAddress } from '../editors/EditPropertyAddress';
-import { EditRepresentationType } from '../editors/EditRepresentationType';
-import { EditClients } from '../editors/EditClients';
+import { EditRepresentationAndClients } from '../editors/EditRepresentationAndClients';
 import { EditPurchasePrice } from '../editors/EditPurchasePrice';
 import { EditCommission } from '../../../../templates/Dashboard/lib/editors/EditCommission';
 import { EditAcceptanceDate } from '../editors/EditAcceptanceDate';
@@ -96,45 +95,18 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         maxWidth: 500,
       },
       {
-        id: 'representation',
-        label: 'Representation',
+        id: 'representation-and-clients',
+        label: 'Representation & Clients',
         color: '#3b82f6',
+        maxWidth: 600,
+      },
+      {
+        id: 'purchase-price',
+        label: 'Purchase Price',
+        color: '#10b981',
         maxWidth: 400,
       },
     ];
-
-    // Add client steps based on representation type
-    if (formData.representationType === 'dual') {
-      baseSteps.push(
-        {
-          id: 'buyer-clients',
-          label: 'Buyer Client(s)',
-          color: '#10b981',
-          maxWidth: 500,
-        },
-        {
-          id: 'seller-clients',
-          label: 'Seller Client(s)',
-          color: '#f59e0b',
-          maxWidth: 500,
-        }
-      );
-    } else {
-      baseSteps.push({
-        id: 'clients',
-        label: formData.representationType === 'buyer' ? 'Buyer' : 'Seller',
-        color: '#10b981',
-        maxWidth: 500,
-      });
-    }
-
-    // Add financial steps
-    baseSteps.push({
-      id: 'purchase-price',
-      label: 'Purchase Price',
-      color: '#10b981',
-      maxWidth: 400,
-    });
 
     // Add commission steps (dual agency gets two)
     if (formData.representationType === 'dual') {
@@ -245,29 +217,16 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     handleNext();
   };
 
-  const handleRepresentationTypeSave = (type) => {
+  const handleRepresentationTypeChange = (type) => {
     setFormData({ ...formData, representationType: type });
-    handleNext();
   };
 
-  const handleClientsSave = (clientIds) => {
-    if (formData.representationType === 'dual') {
-      // Determine which clients we're saving
-      const stepId = steps[currentStep].id;
-      if (stepId === 'buyer-clients') {
-        setFormData({ ...formData, buyerClients: clientIds });
-      } else if (stepId === 'seller-clients') {
-        setFormData({ ...formData, sellerClients: clientIds });
-      }
-    } else {
-      // Single representation type
-      if (formData.representationType === 'buyer') {
-        setFormData({ ...formData, buyerClients: clientIds });
-      } else {
-        setFormData({ ...formData, sellerClients: clientIds });
-      }
-    }
-    handleNext();
+  const handleBuyerClientsChange = (clientIds) => {
+    setFormData({ ...formData, buyerClients: clientIds });
+  };
+
+  const handleSellerClientsChange = (clientIds) => {
+    setFormData({ ...formData, sellerClients: clientIds });
   };
 
   const handlePurchasePriceSave = (price) => {
@@ -407,48 +366,18 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           />
         );
 
-      case 'representation':
+      case 'representation-and-clients':
         return (
-          <EditRepresentationType
-            open={true}
-            onClose={() => {}}
-            onSave={handleRepresentationTypeSave}
-            value={formData.representationType}
-            color={currentStepConfig.color}
-            inline={true}
-          />
-        );
-
-      case 'clients':
-      case 'buyer-clients':
-      case 'seller-clients':
-        const clientValue = stepId === 'buyer-clients'
-          ? formData.buyerClients
-          : stepId === 'seller-clients'
-            ? formData.sellerClients
-            : formData.representationType === 'buyer'
-              ? formData.buyerClients
-              : formData.sellerClients;
-
-        const clientRole = stepId === 'buyer-clients'
-          ? 'buyer'
-          : stepId === 'seller-clients'
-            ? 'seller'
-            : formData.representationType === 'buyer'
-              ? 'buyer'
-              : 'seller';
-
-        return (
-          <EditClients
-            open={true}
-            onClose={() => {}}
-            onSave={handleClientsSave}
-            value={clientValue}
-            representationType={formData.representationType}
-            role={clientRole}
-            color={currentStepConfig.color}
-            inline={true}
-          />
+          <Box onClick={(e) => e.stopPropagation()}>
+            <EditRepresentationAndClients
+              representationType={formData.representationType}
+              onRepresentationTypeChange={handleRepresentationTypeChange}
+              buyerClients={formData.buyerClients}
+              sellerClients={formData.sellerClients}
+              onBuyerClientsChange={handleBuyerClientsChange}
+              onSellerClientsChange={handleSellerClientsChange}
+            />
+          </Box>
         );
 
       case 'purchase-price':
