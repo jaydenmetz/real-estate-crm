@@ -176,9 +176,9 @@ export const EditClients = ({
     }
   };
 
-  return (
-    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={500} hideBackdrop={inline}>
-      <Box onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyPress}>
+  // Render content
+  const content = (
+    <Box onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyPress}>
         {/* Label */}
         <Typography
           variant="caption"
@@ -195,21 +195,23 @@ export const EditClients = ({
           {label}
         </Typography>
 
-        {/* Title */}
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 900,
-            color: 'white',
-            mb: 3,
-            letterSpacing: '-1px',
-          }}
-        >
-          {selectedClients.length === 0
-            ? `Add ${label}`
-            : `${selectedClients.length} Selected`
-          }
-        </Typography>
+        {/* Title - Hide in inline mode */}
+        {!inline && (
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 900,
+              color: 'white',
+              mb: 3,
+              letterSpacing: '-1px',
+            }}
+          >
+            {selectedClients.length === 0
+              ? `Add ${label}`
+              : `${selectedClients.length} Selected`
+            }
+          </Typography>
+        )}
 
         {/* Selected Clients List */}
         {selectedClients.length > 0 && (
@@ -372,7 +374,17 @@ export const EditClients = ({
             </IconButton>
           </Box>
         )}
-      </Box>
+    </Box>
+  );
+
+  // Render with or without modal wrapper based on inline prop
+  if (inline) {
+    return content;
+  }
+
+  return (
+    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={500} hideBackdrop={false}>
+      {content}
     </ModalDialog>
   );
 };

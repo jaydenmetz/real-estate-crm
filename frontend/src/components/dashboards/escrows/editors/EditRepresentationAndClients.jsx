@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, ToggleButtonGroup, ToggleButton, Divider } from '@mui/material';
 import { Person, Home, Group } from '@mui/icons-material';
-import { ClientSelector } from './ClientSelector';
+import { EditClients } from './EditClients';
 
 /**
  * Combined Representation Type + Clients Editor
@@ -146,79 +146,46 @@ export const EditRepresentationAndClients = ({
 
       {/* Client Selection(s) - Dynamic based on representation type */}
       {selectedType === 'dual' ? (
-        // Dual Agency: Two client selectors stacked (without modal wrappers)
+        // Dual Agency: Two client selectors stacked
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Buyer Clients - Embedded inline content */}
-          <Box>
-            <Typography
-              variant="caption"
-              sx={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: 'rgba(255,255,255,0.9)',
-                mb: 1,
-                display: 'block',
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-              }}
-            >
-              Buyer(s)
-            </Typography>
-            <ClientSelector
-              value={buyerClients}
-              onChange={onBuyerClientsChange}
-              label="Buyer(s)"
-            />
-          </Box>
+          {/* Buyer Clients */}
+          <EditClients
+            open={true}
+            onClose={() => {}}
+            onSave={onBuyerClientsChange}
+            value={buyerClients}
+            representationType="dual"
+            role="buyer"
+            color="#10b981"
+            inline={true}
+          />
 
           <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
 
-          {/* Seller Clients - Embedded inline content */}
-          <Box>
-            <Typography
-              variant="caption"
-              sx={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: 'rgba(255,255,255,0.9)',
-                mb: 1,
-                display: 'block',
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-              }}
-            >
-              Seller(s)
-            </Typography>
-            <ClientSelector
-              value={sellerClients}
-              onChange={onSellerClientsChange}
-              label="Seller(s)"
-            />
-          </Box>
-        </Box>
-      ) : (
-        // Single Representation: One client selector (without modal wrapper)
-        <Box>
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: 'rgba(255,255,255,0.9)',
-              mb: 1,
-              display: 'block',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-            }}
-          >
-            {selectedType === 'buyer' ? 'Buyer' : 'Seller'}
-          </Typography>
-          <ClientSelector
-            value={selectedType === 'buyer' ? buyerClients : sellerClients}
-            onChange={selectedType === 'buyer' ? onBuyerClientsChange : onSellerClientsChange}
-            label={selectedType === 'buyer' ? 'Buyer' : 'Seller'}
+          {/* Seller Clients */}
+          <EditClients
+            open={true}
+            onClose={() => {}}
+            onSave={onSellerClientsChange}
+            value={sellerClients}
+            representationType="dual"
+            role="seller"
+            color="#f59e0b"
+            inline={true}
           />
         </Box>
+      ) : (
+        // Single Representation: One client selector
+        <EditClients
+          open={true}
+          onClose={() => {}}
+          onSave={selectedType === 'buyer' ? onBuyerClientsChange : onSellerClientsChange}
+          value={selectedType === 'buyer' ? buyerClients : sellerClients}
+          representationType={selectedType}
+          role={selectedType}
+          color="#10b981"
+          inline={true}
+        />
       )}
     </Box>
   );
