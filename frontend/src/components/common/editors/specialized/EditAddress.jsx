@@ -3,7 +3,7 @@ import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText
 import { alpha } from '@mui/material/styles';
 import { Check, Close, LocationOn, ContentCopy, Apple, Map, Tag } from '@mui/icons-material';
 import { ModalContainer } from '../../modals/ModalContainer';
-import { AddressInput } from '../shared/AddressInput';
+import { AddressInput } from '../inputs/AddressInput';
 import { decodeHTML, cleanTextForStorage } from '../../../../utils/htmlEntities';
 
 /**

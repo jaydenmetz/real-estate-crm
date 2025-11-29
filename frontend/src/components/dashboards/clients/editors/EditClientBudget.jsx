@@ -1,25 +1,13 @@
-import React from 'react';
-import { SetCurrency } from '../../../common/editors/fields/SetCurrency';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Currency } from '../../../common/setters/Currency';
 
-/**
- * Client-specific Budget Editor
- * Wraps SetCurrency with client-specific context and styling
- *
- * @param {boolean} open - Dialog open state
- * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void
- * @param {number} value - Current budget/max budget
- */
 export const EditClientBudget = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value);
+
   return (
-    <SetCurrency
-      open={open}
-      onClose={onClose}
-      onSave={onSave}
-      label="Budget"
-      value={value}
-      color="#8b5cf6" // Purple theme for clients
-      prefix="$"
-    />
+    <EditorModal open={open} onClose={onClose} onSave={() => onSave(parseFloat(editValue))} color="#10b981">
+      <Currency label="Budget" value={editValue} onChange={setEditValue} color="#10b981" />
+    </EditorModal>
   );
 };

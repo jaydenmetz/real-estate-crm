@@ -1,27 +1,13 @@
-import React from 'react';
-import { SetCurrency } from '../../../common/editors/fields/SetCurrency';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Currency } from '../../../common/setters/Currency';
 
-/**
- * Escrow-specific Purchase Price Editor
- * Wraps SetCurrency with escrow-specific context and styling
- *
- * @param {boolean} open - Dialog open state
- * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void
- * @param {number} value - Current purchase price
- * @param {boolean} inline - If true, renders without ModalDialog wrapper
- */
-export const EditPurchasePrice = ({ open, onClose, onSave, value, inline = false }) => {
+export const EditPurchasePrice = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value);
+
   return (
-    <SetCurrency
-      open={open}
-      onClose={onClose}
-      onSave={onSave}
-      label="Purchase Price"
-      value={value}
-      color="#10b981" // Green theme for purchase price
-      prefix="$"
-      inline={inline}
-    />
+    <EditorModal open={open} onClose={onClose} onSave={() => onSave(parseFloat(editValue))} color="#10b981">
+      <Currency label="Purchase Price" value={editValue} onChange={setEditValue} color="#10b981" />
+    </EditorModal>
   );
 };

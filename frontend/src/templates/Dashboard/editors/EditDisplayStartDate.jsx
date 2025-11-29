@@ -1,37 +1,22 @@
-import React from 'react';
-import { SetDate } from '../../../components/common/editors/fields/SetDate';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../components/common/modals/EditorModal';
+import { Date } from '../../../components/common/setters/Date';
 
-/**
- * Dashboard-specific Display Start Date Editor
- * Wraps SetDate with dashboard-specific context and styling
- *
- * @param {boolean} open - Dialog open state
- * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newDateValue) => void
- * @param {string|Date} value - Current display start date
- * @param {string} color - Theme color from hero (default: blue)
- * @param {Date|string} maxDate - Maximum selectable date (end date for validation)
- * @param {function} onSaveSuccess - Callback after successful save (for auto-progression)
- */
-export const EditDisplayStartDate = ({
-  open,
-  onClose,
-  onSave,
-  value,
-  color = '#3b82f6',
-  maxDate,
-  onSaveSuccess
-}) => {
+export const EditDisplayStartDate = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value);
+
+  const handleSave = async () => {
+    if (editValue) {
+      const year = editValue.getFullYear();
+      const month = String(editValue.getMonth() + 1).padStart(2, '0');
+      const day = String(editValue.getDate()).padStart(2, '0');
+      await onSave(`${year}-${month}-${day}`);
+    }
+  };
+
   return (
-    <SetDate
-      open={open}
-      onClose={onClose}
-      onSave={onSave}
-      label="Display Start Date"
-      value={value}
-      color={color}
-      maxDate={maxDate}
-      onSaveSuccess={onSaveSuccess}
-    />
+    <EditorModal open={open} onClose={onClose} onSave={handleSave} color="#3b82f6">
+      <Date label="Display Start Date" value={editValue} onChange={setEditValue} color="#3b82f6" />
+    </EditorModal>
   );
 };

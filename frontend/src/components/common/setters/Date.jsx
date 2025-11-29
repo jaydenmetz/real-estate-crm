@@ -2,8 +2,8 @@ import React from 'react';
 import { Box, Typography, TextField, Alert } from '@mui/material';
 import { Event } from '@mui/icons-material';
 import { format, isValid, isBefore, isAfter } from 'date-fns';
-import { parseLocalDate } from '../../../../utils/safeDateUtils';
-import { CustomCalendar } from '../editors/shared/CustomCalendar';
+import { parseLocalDate } from '../../../utils/safeDateUtils';
+import { CustomCalendar } from '../inputs/CustomCalendar';
 
 /**
  * Date Setter - Pure date input component

@@ -1,34 +1,22 @@
-import React from 'react';
-import { SetDate } from '../../../components/common/editors/fields/SetDate';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../components/common/modals/EditorModal';
+import { Date } from '../../../components/common/setters/Date';
 
-/**
- * Dashboard-specific Display End Date Editor
- * Wraps SetDate with dashboard-specific context and styling
- *
- * @param {boolean} open - Dialog open state
- * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newDateValue) => void
- * @param {string|Date} value - Current display end date
- * @param {string} color - Theme color from hero (default: blue)
- * @param {Date|string} minDate - Minimum selectable date (start date for validation)
- */
-export const EditDisplayEndDate = ({
-  open,
-  onClose,
-  onSave,
-  value,
-  color = '#3b82f6',
-  minDate
-}) => {
+export const EditDisplayEndDate = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value);
+
+  const handleSave = async () => {
+    if (editValue) {
+      const year = editValue.getFullYear();
+      const month = String(editValue.getMonth() + 1).padStart(2, '0');
+      const day = String(editValue.getDate()).padStart(2, '0');
+      await onSave(`${year}-${month}-${day}`);
+    }
+  };
+
   return (
-    <SetDate
-      open={open}
-      onClose={onClose}
-      onSave={onSave}
-      label="Display End Date"
-      value={value}
-      color={color}
-      minDate={minDate}
-    />
+    <EditorModal open={open} onClose={onClose} onSave={handleSave} color="#ef4444">
+      <Date label="Display End Date" value={editValue} onChange={setEditValue} color="#ef4444" />
+    </EditorModal>
   );
 };

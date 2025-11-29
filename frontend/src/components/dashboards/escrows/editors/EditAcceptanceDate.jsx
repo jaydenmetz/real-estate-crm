@@ -1,26 +1,43 @@
-import React from 'react';
-import { SetDate } from '../../../common/editors/fields/SetDate';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Date } from '../../../common/setters/Date';
 
 /**
  * Escrow-specific Acceptance Date Editor
- * Wraps SetDate with escrow-specific context and styling
+ * Uses EditorModal + Date setter pattern
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
  * @param {function} onSave - Save handler (newDateValue) => void
  * @param {string|Date} value - Current acceptance date
- * @param {boolean} inline - If true, hides action buttons (used in flow contexts)
  */
-export const EditAcceptanceDate = ({ open, onClose, onSave, value, inline = false }) => {
+export const EditAcceptanceDate = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value);
+
+  const handleSave = async () => {
+    // Format date to YYYY-MM-DD string
+    if (editValue) {
+      const year = editValue.getFullYear();
+      const month = String(editValue.getMonth() + 1).padStart(2, '0');
+      const day = String(editValue.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      await onSave(dateString);
+    }
+  };
+
   return (
-    <SetDate
+    <EditorModal
       open={open}
       onClose={onClose}
-      onSave={onSave}
-      label="Acceptance Date"
-      value={value}
-      color="#3b82f6" // Blue theme for acceptance date
-      inline={inline}
-    />
+      onSave={handleSave}
+      color="#3b82f6"
+    >
+      <Date
+        label="Acceptance Date"
+        value={editValue}
+        onChange={setEditValue}
+        color="#3b82f6"
+      />
+    </EditorModal>
   );
 };

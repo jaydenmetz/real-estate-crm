@@ -1,25 +1,13 @@
-import React from 'react';
-import { SetCurrency } from '../../../common/editors/fields/SetCurrency';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Currency } from '../../../common/setters/Currency';
 
-/**
- * Listing-specific Listed Price Editor
- * Wraps SetCurrency with listing-specific context and styling
- *
- * @param {boolean} open - Dialog open state
- * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void
- * @param {number} value - Current listed price
- */
 export const EditListedPrice = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value);
+
   return (
-    <SetCurrency
-      open={open}
-      onClose={onClose}
-      onSave={onSave}
-      label="Listed Price"
-      value={value}
-      color="#10b981" // Green theme for listed price
-      prefix="$"
-    />
+    <EditorModal open={open} onClose={onClose} onSave={() => onSave(parseFloat(editValue))} color="#10b981">
+      <Currency label="Listed Price" value={editValue} onChange={setEditValue} color="#10b981" />
+    </EditorModal>
   );
 };

@@ -1,25 +1,14 @@
-import React from 'react';
-import { SetEmail } from '../../../common/editors/fields/SetEmail';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Email } from '../../../common/setters/Email';
+import { parseEmailForStorage } from '../../../../utils/validators';
 
-/**
- * Client-specific Email Editor
- * Wraps SetEmail with client-specific context and styling
- * Includes email validation
- *
- * @param {boolean} open - Dialog open state
- * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void
- * @param {string} value - Current email address
- */
 export const EditClientEmail = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value);
+
   return (
-    <SetEmail
-      open={open}
-      onClose={onClose}
-      onSave={onSave}
-      label="Email Address"
-      value={value}
-      color="#8b5cf6" // Purple theme for clients
-    />
+    <EditorModal open={open} onClose={onClose} onSave={() => onSave(parseEmailForStorage(editValue))} color="#8b5cf6">
+      <Email label="Email Address" value={editValue} onChange={setEditValue} color="#8b5cf6" />
+    </EditorModal>
   );
 };

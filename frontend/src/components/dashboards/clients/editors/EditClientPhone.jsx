@@ -1,25 +1,13 @@
-import React from 'react';
-import { SetPhone } from '../../../common/editors/fields/SetPhone';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Phone } from '../../../common/setters/Phone';
 
-/**
- * Client-specific Phone Editor
- * Wraps SetPhone with client-specific context and styling
- * Includes phone number formatting and validation
- *
- * @param {boolean} open - Dialog open state
- * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void
- * @param {string} value - Current phone number
- */
 export const EditClientPhone = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value);
+
   return (
-    <SetPhone
-      open={open}
-      onClose={onClose}
-      onSave={onSave}
-      label="Phone Number"
-      value={value}
-      color="#8b5cf6" // Purple theme for clients
-    />
+    <EditorModal open={open} onClose={onClose} onSave={() => onSave(editValue)} color="#10b981">
+      <Phone label="Phone Number" value={editValue} onChange={setEditValue} color="#10b981" />
+    </EditorModal>
   );
 };

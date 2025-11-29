@@ -1,26 +1,22 @@
-import React from 'react';
-import { SetDate } from '../../../common/editors/fields/SetDate';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Date } from '../../../common/setters/Date';
 
-/**
- * Escrow-specific Closing Date Editor
- * Wraps SetDate with escrow-specific context and styling
- *
- * @param {boolean} open - Dialog open state
- * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newDateValue) => void
- * @param {string|Date} value - Current closing date
- * @param {boolean} inline - If true, hides action buttons (used in flow contexts)
- */
-export const EditClosingDate = ({ open, onClose, onSave, value, inline = false }) => {
+export const EditClosingDate = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value);
+
+  const handleSave = async () => {
+    if (editValue) {
+      const year = editValue.getFullYear();
+      const month = String(editValue.getMonth() + 1).padStart(2, '0');
+      const day = String(editValue.getDate()).padStart(2, '0');
+      await onSave(`${year}-${month}-${day}`);
+    }
+  };
+
   return (
-    <SetDate
-      open={open}
-      onClose={onClose}
-      onSave={onSave}
-      label="Closing Date"
-      value={value}
-      color="#8b5cf6" // Purple theme for closing date
-      inline={inline}
-    />
+    <EditorModal open={open} onClose={onClose} onSave={handleSave} color="#10b981">
+      <Date label="Closing Date" value={editValue} onChange={setEditValue} color="#10b981" />
+    </EditorModal>
   );
 };
