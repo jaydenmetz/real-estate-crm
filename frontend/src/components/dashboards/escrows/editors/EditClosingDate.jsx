@@ -24,11 +24,24 @@ export const EditClosingDate = ({ open, onClose, onSave, value, inline = false }
     }
   };
 
+  // Handler that updates local state AND calls onSave in inline mode
+  const handleChange = (newDate) => {
+    setEditValue(newDate);
+    // In inline mode, immediately notify parent of changes
+    if (inline && onSave && newDate) {
+      const year = newDate.getFullYear();
+      const month = String(newDate.getMonth() + 1).padStart(2, '0');
+      const day = String(newDate.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      onSave(dateString);
+    }
+  };
+
   const content = (
     <DateSetter
       label="Closing Date"
       value={editValue}
-      onChange={setEditValue}
+      onChange={handleChange}
       color="#10b981"
       showCurrentValue={!inline}
     />

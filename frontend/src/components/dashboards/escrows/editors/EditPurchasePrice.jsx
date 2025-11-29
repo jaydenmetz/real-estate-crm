@@ -15,11 +15,20 @@ import { Currency } from '../../../common/setters/Currency';
 export const EditPurchasePrice = ({ open, onClose, onSave, value, inline = false }) => {
   const [editValue, setEditValue] = useState(value);
 
+  // Handler that updates local state AND calls onSave in inline mode
+  const handleChange = (newValue) => {
+    setEditValue(newValue);
+    // In inline mode, immediately notify parent of changes
+    if (inline && onSave) {
+      onSave(parseFloat(newValue) || 0);
+    }
+  };
+
   const content = (
     <Currency
       label="Purchase Price"
       value={editValue}
-      onChange={setEditValue}
+      onChange={handleChange}
       color="#10b981"
       showCurrentValue={!inline}
       maxWidth="100%"

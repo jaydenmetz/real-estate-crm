@@ -26,11 +26,24 @@ export const EditAcceptanceDate = ({ open, onClose, onSave, value, inline = fals
     }
   };
 
+  // Handler that updates local state AND calls onSave in inline mode
+  const handleChange = (newDate) => {
+    setEditValue(newDate);
+    // In inline mode, immediately notify parent of changes
+    if (inline && onSave && newDate) {
+      const year = newDate.getFullYear();
+      const month = String(newDate.getMonth() + 1).padStart(2, '0');
+      const day = String(newDate.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      onSave(dateString);
+    }
+  };
+
   const content = (
     <DateSetter
       label="Acceptance Date"
       value={editValue}
-      onChange={setEditValue}
+      onChange={handleChange}
       color="#3b82f6"
       showCurrentValue={!inline}
     />
