@@ -242,9 +242,17 @@ export const EditAddress = ({
                     borderRadius: 2,
                     p: 1,
                     mx: -1,
-                    transition: 'background-color 0.2s',
+                    ...(inline && selectedAddress ? {
+                      // In inline mode with selected address: Show bordered box like "Current Property Address"
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      backgroundColor: 'rgba(255,255,255,0.08)',
+                    } : {}),
+                    transition: 'all 0.2s',
                     '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      backgroundColor: inline && selectedAddress ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.1)',
+                      ...(inline && selectedAddress ? {
+                        borderColor: 'rgba(255,255,255,0.4)',
+                      } : {}),
                     },
                   }}
                 >
