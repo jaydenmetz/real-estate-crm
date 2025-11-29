@@ -460,44 +460,48 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           transition: 'max-width 0.3s ease',
         },
       }}
+      sx={{
+        '&:hover .close-button': {
+          opacity: 1,
+        },
+      }}
     >
+      {/* Close Button - Shows on hover (at Dialog level) */}
+      {!showSuccess && (
+        <IconButton
+          className="close-button"
+          onClick={handleClose}
+          disabled={saving}
+          sx={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            zIndex: 1500,
+            width: 40,
+            height: 40,
+            opacity: 0,
+            transition: 'opacity 0.2s ease',
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(10px)',
+            color: 'white',
+            '&:hover': {
+              backgroundColor: 'rgba(0,0,0,0.6)',
+            },
+            '&:disabled': {
+              opacity: 0.3,
+            },
+          }}
+        >
+          <Close fontSize="small" />
+        </IconButton>
+      )}
+
       {!showSuccess ? (
         <Box
           sx={{
             position: 'relative',
-            '&:hover .close-button': {
-              opacity: 1,
-            },
           }}
         >
-          {/* Close Button - Shows on hover */}
-          <IconButton
-            className="close-button"
-            onClick={handleClose}
-            disabled={saving}
-            sx={{
-              position: 'absolute',
-              top: 16,
-              right: 16,
-              zIndex: 1000,
-              width: 40,
-              height: 40,
-              opacity: 0,
-              transition: 'opacity 0.2s ease',
-              backgroundColor: 'rgba(0,0,0,0.4)',
-              backdropFilter: 'blur(10px)',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(0,0,0,0.6)',
-              },
-              '&:disabled': {
-                opacity: 0.3,
-              },
-            }}
-          >
-            <Close fontSize="small" />
-          </IconButton>
-
           {/* Render current step editor */}
           <AnimatePresence mode="wait">
             <motion.div
