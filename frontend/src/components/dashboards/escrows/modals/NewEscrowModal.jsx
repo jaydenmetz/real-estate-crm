@@ -367,13 +367,17 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
       case 'purchase-price':
         return (
-          <EditPurchasePrice
-            open={true}
-            onClose={() => {}}
-            onSave={handlePurchasePriceSave}
-            value={formData.purchasePrice}
-            inline={true}
-          />
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 500 }}>
+              <EditPurchasePrice
+                open={true}
+                onClose={() => {}}
+                onSave={handlePurchasePriceSave}
+                value={formData.purchasePrice}
+                inline={true}
+              />
+            </Box>
+          </Box>
         );
 
       case 'commission':
@@ -381,40 +385,52 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       case 'seller-commission':
         const isBuyerCommission = stepId === 'buyer-commission' || stepId === 'commission';
         return (
-          <EditCommission
-            open={true}
-            onClose={() => {}}
-            onSave={handleCommissionSave}
-            label={stepId === 'buyer-commission' ? "BUYER'S COMMISSION" : stepId === 'seller-commission' ? 'LISTING COMMISSION' : 'Commission'}
-            value={isBuyerCommission ? formData.buyerCommission : formData.sellerCommission}
-            commissionPercentage={isBuyerCommission ? formData.buyerCommissionPercentage : formData.sellerCommissionPercentage}
-            commissionType={isBuyerCommission ? formData.buyerCommissionType : formData.sellerCommissionType}
-            purchasePrice={formData.purchasePrice}
-            color="#3b82f6" // Consistent blue color
-            inline={true}
-          />
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 500 }}>
+              <EditCommission
+                open={true}
+                onClose={() => {}}
+                onSave={handleCommissionSave}
+                label={stepId === 'buyer-commission' ? "BUYER'S COMMISSION" : stepId === 'seller-commission' ? 'LISTING COMMISSION' : 'Commission'}
+                value={isBuyerCommission ? formData.buyerCommission : formData.sellerCommission}
+                commissionPercentage={isBuyerCommission ? formData.buyerCommissionPercentage : formData.sellerCommissionPercentage}
+                commissionType={isBuyerCommission ? formData.buyerCommissionType : formData.sellerCommissionType}
+                purchasePrice={formData.purchasePrice}
+                color="#3b82f6" // Consistent blue color
+                inline={true}
+              />
+            </Box>
+          </Box>
         );
 
       case 'acceptance-date':
         return (
-          <EditAcceptanceDate
-            open={true}
-            onClose={() => {}}
-            onSave={handleAcceptanceDateSave}
-            value={formData.acceptanceDate}
-            inline={true}
-          />
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 500 }}>
+              <EditAcceptanceDate
+                open={true}
+                onClose={() => {}}
+                onSave={handleAcceptanceDateSave}
+                value={formData.acceptanceDate}
+                inline={true}
+              />
+            </Box>
+          </Box>
         );
 
       case 'closing-date':
         return (
-          <EditClosingDate
-            open={true}
-            onClose={() => {}}
-            onSave={handleClosingDateSave}
-            value={formData.closeOfEscrowDate}
-            inline={true}
-          />
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 500 }}>
+              <EditClosingDate
+                open={true}
+                onClose={() => {}}
+                onSave={handleClosingDateSave}
+                value={formData.closeOfEscrowDate}
+                inline={true}
+              />
+            </Box>
+          </Box>
         );
 
       case 'preview':
