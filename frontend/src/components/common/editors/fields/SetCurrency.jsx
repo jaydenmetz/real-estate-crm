@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import { Check, Close } from '@mui/icons-material';
-import { ModalDialog } from '../shared/ModalDialog';
+import { ModalContainer } from '../../modals/ModalContainer';
 import { CurrencyInput } from '../shared/CurrencyInput';
 
 /**
@@ -179,10 +179,10 @@ export const SetCurrency = ({
     return content;
   }
 
-  // Standalone mode: Wrap in ModalDialog
+  // Standalone mode: Wrap in ModalContainer
   return (
-    <ModalDialog open={open} onClose={onClose} color={color}>
+    <ModalContainer open={open} onClose={onClose} color={color}>
       {content}
-    </ModalDialog>
+    </ModalContainer>
   );
 };

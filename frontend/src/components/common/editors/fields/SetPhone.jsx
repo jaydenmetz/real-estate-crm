@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import { Check, Close } from '@mui/icons-material';
-import { ModalDialog } from '../shared/ModalDialog';
+import { ModalContainer } from '../../modals/ModalContainer';
 import { PhoneInput } from '../shared/PhoneInput';
 import { validatePhone, formatPhoneDisplay, parsePhoneForStorage } from '../../../../utils/validators';
 
@@ -76,7 +76,7 @@ export const SetPhone = ({
   };
 
   return (
-    <ModalDialog open={open} onClose={onClose} color={color}>
+    <ModalContainer open={open} onClose={onClose} color={color}>
       <Box onClick={(e) => e.stopPropagation()}>
         {/* Label */}
         <Typography
@@ -167,6 +167,6 @@ export const SetPhone = ({
           </IconButton>
         </Box>
       </Box>
-    </ModalDialog>
+    </ModalContainer>
   );
 };

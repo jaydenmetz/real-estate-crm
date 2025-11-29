@@ -3,7 +3,7 @@ import { Box, Typography, IconButton, TextField, Alert } from '@mui/material';
 import { Check, Close, Event } from '@mui/icons-material';
 import { format, isValid, isBefore, isAfter } from 'date-fns';
 import { parseLocalDate } from '../../../../utils/safeDateUtils';
-import { ModalDialog } from '../shared/ModalDialog';
+import { ModalContainer } from '../../modals/ModalContainer';
 import { CustomCalendar } from '../shared/CustomCalendar';
 
 /**
@@ -373,10 +373,10 @@ export const SetDate = ({
     return content;
   }
 
-  // Standalone mode: Wrap in ModalDialog
+  // Standalone mode: Wrap in ModalContainer
   return (
-    <ModalDialog open={open} onClose={onClose} color={color}>
+    <ModalContainer open={open} onClose={onClose} color={color}>
       {content}
-    </ModalDialog>
+    </ModalContainer>
   );
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, TextField, InputAdornment } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import { Check, Close, LocationOn, ContentCopy, Apple, Map, Tag } from '@mui/icons-material';
-import { ModalDialog } from '../shared/ModalDialog';
+import { ModalContainer } from '../../modals/ModalContainer';
 import { AddressInput } from '../shared/AddressInput';
 import { decodeHTML, cleanTextForStorage } from '../../../../utils/htmlEntities';
 
@@ -610,10 +610,10 @@ export const EditAddress = ({
     return content;
   }
 
-  // Standalone mode: Wrap in ModalDialog
+  // Standalone mode: Wrap in ModalContainer
   return (
-    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520}>
+    <ModalContainer open={open} onClose={onClose} color={color} maxWidth={520}>
       {content}
-    </ModalDialog>
+    </ModalContainer>
   );
 };

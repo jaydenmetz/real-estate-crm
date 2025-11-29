@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import { Check, Close } from '@mui/icons-material';
-import { ModalDialog } from '../shared/ModalDialog';
+import { ModalContainer } from '../../modals/ModalContainer';
 import { EmailInput } from '../shared/EmailInput';
 import { validateEmail, parseEmailForStorage } from '../../../../utils/validators';
 
@@ -74,7 +74,7 @@ export const SetEmail = ({
   };
 
   return (
-    <ModalDialog open={open} onClose={onClose} color={color}>
+    <ModalContainer open={open} onClose={onClose} color={color}>
       <Box onClick={(e) => e.stopPropagation()}>
         {/* Label */}
         <Typography
@@ -166,6 +166,6 @@ export const SetEmail = ({
           </IconButton>
         </Box>
       </Box>
-    </ModalDialog>
+    </ModalContainer>
   );
 };
