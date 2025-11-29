@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, ToggleButtonGroup, ToggleButton } from '@mui/material';
-import { Person, Home, Group } from '@mui/icons-material';
+import { Box, Typography, ToggleButtonGroup, ToggleButton, IconButton } from '@mui/material';
+import { Person, Home, Group, Close, Check } from '@mui/icons-material';
 import { ModalDialog } from '../../../common/editors/shared/ModalDialog';
 
 /**
@@ -150,6 +150,44 @@ export const EditRepresentationType = ({
             </Typography>
           </ToggleButton>
         </ToggleButtonGroup>
+
+        {/* Action Buttons */}
+        <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            sx={{
+              width: 48,
+              height: 48,
+              backgroundColor: 'rgba(255,255,255,0.15)',
+              color: 'white',
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.25)',
+              },
+            }}
+          >
+            <Close />
+          </IconButton>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSave();
+            }}
+            sx={{
+              width: 48,
+              height: 48,
+              backgroundColor: 'white',
+              color: color,
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.9)',
+              },
+            }}
+          >
+            <Check />
+          </IconButton>
+        </Box>
       </Box>
     </ModalDialog>
   );
