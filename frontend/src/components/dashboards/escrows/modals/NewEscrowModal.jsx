@@ -247,7 +247,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
   const handleRepresentationTypeSave = (type) => {
     setFormData({ ...formData, representationType: type });
-    // Don't auto-advance, let the EditRepresentationType component handle it
+    handleNext();
   };
 
   const handleClientsSave = (clientIds) => {
@@ -422,14 +422,30 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       case 'clients':
       case 'buyer-clients':
       case 'seller-clients':
+        const clientValue = stepId === 'buyer-clients'
+          ? formData.buyerClients
+          : stepId === 'seller-clients'
+            ? formData.sellerClients
+            : formData.representationType === 'buyer'
+              ? formData.buyerClients
+              : formData.sellerClients;
+
+        const clientRole = stepId === 'buyer-clients'
+          ? 'buyer'
+          : stepId === 'seller-clients'
+            ? 'seller'
+            : formData.representationType === 'buyer'
+              ? 'buyer'
+              : 'seller';
+
         return (
           <EditClients
             open={true}
             onClose={() => {}}
             onSave={handleClientsSave}
-            value={stepId === 'buyer-clients' ? formData.buyerClients : formData.sellerClients}
+            value={clientValue}
             representationType={formData.representationType}
-            role={stepId === 'buyer-clients' ? 'buyer' : 'seller'}
+            role={clientRole}
             color={currentStepConfig.color}
             inline={true}
           />
