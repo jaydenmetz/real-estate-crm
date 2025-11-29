@@ -116,8 +116,16 @@ export const ModalStepPage = ({
         </IconButton>
       </Box>
 
-      {/* Step Content - Flexible scrollable area */}
-      <Box sx={{ flex: 1, overflowY: 'auto', pr: 1, minHeight: 0 }}>
+      {/* Step Content - Centered with flex spacers */}
+      <Box sx={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center', // Vertical center
+        overflowY: 'auto',
+        pr: 1,
+        minHeight: 0,
+      }}>
         {children}
       </Box>
 
