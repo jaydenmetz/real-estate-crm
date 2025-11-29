@@ -242,7 +242,7 @@ export const EditAddress = ({
                     cursor: 'pointer',
                     borderRadius: 1.5,
                     p: 0.75,
-                    mx: -1,
+                    mx: inline ? 0 : -1, // No negative margin in inline mode (prevents clipping in NewEscrowModal)
                     // Always show border when address section is visible (both inline and standalone modes)
                     border: '2px solid rgba(255,255,255,0.3)',
                     backgroundColor: 'rgba(255,255,255,0.08)',
