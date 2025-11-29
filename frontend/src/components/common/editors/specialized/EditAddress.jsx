@@ -207,9 +207,9 @@ export const EditAddress = ({
     handleAddressMenuClose();
   };
 
-  return (
-    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520} hideBackdrop={inline}>
-      <Box onClick={(e) => e.stopPropagation()}>
+  // Render content
+  const content = (
+    <Box onClick={(e) => e.stopPropagation()}>
         {/* Address Display Section */}
         {/* In inline mode (NewEscrowModal): ONLY show "Selected Address" when user selects new address via autocomplete */}
         {/* In standalone edit mode: Show "Current Property Address" when database has existing address */}
@@ -588,6 +588,18 @@ export const EditAddress = ({
           </Box>
         )}
       </Box>
+  );
+
+  // Render with or without modal wrapper based on mode
+  if (inline) {
+    // Inline mode: Return content directly
+    return content;
+  }
+
+  // Standalone mode: Wrap in ModalDialog
+  return (
+    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520}>
+      {content}
     </ModalDialog>
   );
 };
