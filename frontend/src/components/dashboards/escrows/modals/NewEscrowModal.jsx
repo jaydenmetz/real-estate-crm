@@ -471,16 +471,34 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             backdropFilter: 'blur(20px)',
             border: `2px solid ${alpha(currentStepConfig?.color || '#10b981', 0.3)}`,
             boxShadow: `0 20px 60px ${alpha(currentStepConfig?.color || '#10b981', 0.4)}`,
-            p: 2.5,
-            pb: 12, // Bottom padding for navigation (60px arrows + 30px dots + spacing)
+            pt: '30px', // Top buffer
+            px: 2.5,
+            pb: 10, // Bottom padding for navigation (30px + arrows/dots height)
             maxHeight: '85vh',
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          {/* Close Button - Top-right corner */}
-          <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1500 }}>
+          {/* Close Button Hover Area - Top-right corner */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: 80,
+              height: 80,
+              zIndex: 1500,
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'flex-end',
+              p: 2,
+              '&:hover .close-button': {
+                opacity: 1,
+              },
+            }}
+          >
             <IconButton
+              className="close-button"
               onClick={handleClose}
               disabled={saving}
               sx={{
@@ -489,6 +507,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                 backgroundColor: 'rgba(0,0,0,0.4)',
                 backdropFilter: 'blur(10px)',
                 color: 'white',
+                opacity: 0,
+                transition: 'opacity 0.2s ease',
                 '&:hover': {
                   backgroundColor: 'rgba(0,0,0,0.6)',
                 },
@@ -516,46 +536,18 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             </AnimatePresence>
           </Box>
 
-          {/* Progress Dots - Fixed at 30px from bottom */}
+          {/* Navigation Container - Fixed at 30px from bottom */}
           <Box
             sx={{
               position: 'absolute',
               bottom: 30,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              gap: 1,
-              zIndex: 10,
-            }}
-          >
-            {steps.map((step, index) => (
-              <Box
-                key={step.id}
-                sx={{
-                  width: currentStep === index ? 24 : 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: currentStep === index
-                    ? 'rgba(255,255,255,0.9)'
-                    : 'rgba(255,255,255,0.4)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  cursor: 'pointer',
-                }}
-                onClick={() => setCurrentStep(index)}
-              />
-            ))}
-          </Box>
-
-          {/* Navigation Arrows - Fixed above progress dots */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 60, // 30px + 8px dot height + ~22px spacing
               left: 0,
               right: 0,
               display: 'flex',
+              alignItems: 'center',
               justifyContent: 'space-between',
               px: 2.5,
+              zIndex: 10,
             }}
           >
             {/* Back Arrow - Bottom-left (only show if not first step) */}
@@ -579,6 +571,31 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             ) : (
               <Box sx={{ width: 48, height: 48 }} /> // Spacer for alignment
             )}
+
+            {/* Progress Dots - Centered */}
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 1,
+              }}
+            >
+              {steps.map((step, index) => (
+                <Box
+                  key={step.id}
+                  sx={{
+                    width: currentStep === index ? 24 : 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: currentStep === index
+                      ? 'rgba(255,255,255,0.9)'
+                      : 'rgba(255,255,255,0.4)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setCurrentStep(index)}
+                />
+              ))}
+            </Box>
 
             {/* Forward/Submit Arrow - Bottom-right */}
             <IconButton
