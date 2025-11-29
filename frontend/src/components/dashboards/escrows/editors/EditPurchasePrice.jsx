@@ -20,7 +20,8 @@ export const EditPurchasePrice = ({ open, onClose, onSave, value, inline = false
     setEditValue(newValue);
     // In inline mode, immediately notify parent of changes
     if (inline && onSave) {
-      onSave(parseFloat(newValue) || 0);
+      // Keep it as a string - Currency expects string values
+      onSave(newValue);
     }
   };
 

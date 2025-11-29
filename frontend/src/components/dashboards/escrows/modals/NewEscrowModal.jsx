@@ -46,7 +46,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     sellerClients: [],
 
     // Financial
-    purchasePrice: 0,
+    purchasePrice: '', // String to match Currency component expectations
 
     // Commission (dual fields for dual agency)
     buyerCommission: 0,
@@ -143,7 +143,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         representationType: 'buyer',
         buyerClients: [],
         sellerClients: [],
-        purchasePrice: 0,
+        purchasePrice: '', // String to match Currency component
         buyerCommission: 0,
         buyerCommissionPercentage: null,
         buyerCommissionType: 'percentage',
@@ -284,7 +284,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         county: formData.county,
         latitude: formData.latitude,
         longitude: formData.longitude,
-        purchase_price: formData.purchasePrice,
+        purchase_price: parseFloat(formData.purchasePrice) || 0,
         my_commission: totalCommission,
         commission_percentage: formData.buyerCommissionPercentage || formData.sellerCommissionPercentage,
         commission_type: formData.buyerCommissionType || formData.sellerCommissionType,
@@ -447,7 +447,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           county: formData.county,
           latitude: formData.latitude,
           longitude: formData.longitude,
-          purchase_price: formData.purchasePrice,
+          purchase_price: parseFloat(formData.purchasePrice) || 0,
           my_commission: totalCommission,
           commission_percentage: formData.buyerCommissionPercentage || formData.sellerCommissionPercentage,
           commission_type: formData.buyerCommissionType || formData.sellerCommissionType,
