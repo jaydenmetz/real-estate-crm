@@ -22,7 +22,7 @@ export const EditPurchasePrice = ({ open, onClose, onSave, value, inline = false
       onChange={setEditValue}
       color="#10b981"
       showCurrentValue={!inline}
-      maxWidth="500px"
+      maxWidth="100%"
     />
   );
 
