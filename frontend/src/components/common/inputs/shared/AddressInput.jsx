@@ -66,6 +66,20 @@ export const AddressInput = ({
         return;
       }
 
+      // Suppress Google Maps deprecation warnings (we know about them, will migrate later)
+      const originalWarn = console.warn;
+      const originalError = console.error;
+      console.warn = (...args) => {
+        const msg = args[0]?.toString() || '';
+        if (msg.includes('AutocompleteService') || msg.includes('PlacesService')) return;
+        originalWarn.apply(console, args);
+      };
+      console.error = (...args) => {
+        const msg = args[0]?.toString() || '';
+        if (msg.includes('AutocompleteService') || msg.includes('PlacesService')) return;
+        originalError.apply(console, args);
+      };
+
       if (window.google?.maps?.places) {
         setGoogleMapsLoaded(true);
         autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
@@ -74,6 +88,10 @@ export const AddressInput = ({
         // Create a dummy div for PlacesService
         const dummyDiv = document.createElement('div');
         placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
+
+        // Restore console
+        console.warn = originalWarn;
+        console.error = originalError;
         return;
       }
 
@@ -88,6 +106,9 @@ export const AddressInput = ({
           const dummyDiv = document.createElement('div');
           placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
         }
+        // Restore console
+        console.warn = originalWarn;
+        console.error = originalError;
         return;
       }
 
@@ -100,6 +121,10 @@ export const AddressInput = ({
             sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
             const dummyDiv = document.createElement('div');
             placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
+
+            // Restore console after initialization
+            console.warn = originalWarn;
+            console.error = originalError;
           }
         };
 
@@ -521,7 +546,7 @@ export const AddressInput = ({
               endAdornment: (
                 <>
                   {loadingAddress ? <CircularProgress sx={{ color: 'white' }} size={20} /> : null}
-                  {params.InputProps.endAdornment}
+                  {params.InputProps?.endAdornment}
                 </>
               ),
             }}
