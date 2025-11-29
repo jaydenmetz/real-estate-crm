@@ -419,9 +419,11 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
       case 'preview':
         // Build preview escrow object from formData
+        console.log('📋 Preview Step - Current Form Data:', formData);
         const totalCommission = formData.representationType === 'dual'
           ? formData.buyerCommission + formData.sellerCommission
           : (formData.buyerCommission || formData.sellerCommission);
+        console.log('💵 Total Commission Calculated:', totalCommission);
 
         const previewEscrow = {
           id: 'preview',
@@ -444,6 +446,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           // Preview status
           is_preview: true,
         };
+
+        console.log('🎴 Preview Escrow Object:', previewEscrow);
 
         return (
           <Box>
