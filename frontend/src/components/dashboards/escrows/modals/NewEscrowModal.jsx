@@ -14,6 +14,7 @@ import { EditPurchasePrice } from '../editors/EditPurchasePrice';
 import { EditCommission } from '../../../../templates/Dashboard/lib/editors/EditCommission';
 import { EditAcceptanceDate } from '../editors/EditAcceptanceDate';
 import { EditClosingDate } from '../editors/EditClosingDate';
+import EscrowCard from '../view-modes/card/EscrowCard';
 import { escrowsAPI } from '../../../../services/api.service';
 
 /**
@@ -141,6 +142,12 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         label: 'Closing Date',
         color: '#8b5cf6',
         maxWidth: 400,
+      },
+      {
+        id: 'preview',
+        label: 'Preview & Confirm',
+        color: '#10b981',
+        maxWidth: 600,
       }
     );
 
@@ -435,6 +442,62 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             value={formData.closeOfEscrowDate}
             inline={true}
           />
+        );
+
+      case 'preview':
+        // Build preview escrow object from formData
+        const totalCommission = formData.representationType === 'dual'
+          ? formData.buyerCommission + formData.sellerCommission
+          : (formData.buyerCommission || formData.sellerCommission);
+
+        const previewEscrow = {
+          id: 'preview',
+          property_address: formData.propertyAddress,
+          display_address: formData.displayAddress || formData.propertyAddress,
+          city: formData.city,
+          state: formData.state,
+          zip_code: formData.zipCode,
+          county: formData.county,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          purchase_price: formData.purchasePrice,
+          my_commission: totalCommission,
+          commission_percentage: formData.buyerCommissionPercentage || formData.sellerCommissionPercentage,
+          commission_type: formData.buyerCommissionType || formData.sellerCommissionType,
+          acceptance_date: formData.acceptanceDate,
+          closing_date: formData.closeOfEscrowDate,
+          escrow_status: 'active',
+          representation_type: formData.representationType,
+          // Preview status
+          is_preview: true,
+        };
+
+        return (
+          <Box>
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'white',
+                mb: 2,
+                fontWeight: 600,
+                textAlign: 'center',
+              }}
+            >
+              Preview Your Escrow
+            </Typography>
+            <Box sx={{
+              '& > *': {
+                pointerEvents: 'none', // Disable interactions on preview card
+                userSelect: 'none',
+              }
+            }}>
+              <EscrowCard
+                escrow={previewEscrow}
+                onClick={() => {}}
+                onUpdate={() => {}}
+              />
+            </Box>
+          </Box>
         );
 
       default:
