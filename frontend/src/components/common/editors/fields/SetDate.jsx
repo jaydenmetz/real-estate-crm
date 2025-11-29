@@ -187,9 +187,8 @@ export const SetDate = ({
     }
   };
 
-  return (
-    <ModalDialog open={open} onClose={onClose} color={color} hideBackdrop={inline}>
-      <Box onClick={(e) => e.stopPropagation()}>
+  const content = (
+    <Box onClick={(e) => e.stopPropagation()}>
         {/* Label */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <Event sx={{ color: 'rgba(255,255,255,0.9)', fontSize: 20 }} />
@@ -357,7 +356,18 @@ export const SetDate = ({
             </IconButton>
           </Box>
         )}
-      </Box>
+    </Box>
+  );
+
+  // Inline mode: Return content directly without modal wrapper
+  if (inline) {
+    return content;
+  }
+
+  // Standalone mode: Wrap in ModalDialog
+  return (
+    <ModalDialog open={open} onClose={onClose} color={color}>
+      {content}
     </ModalDialog>
   );
 };
