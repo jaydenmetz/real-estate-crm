@@ -115,6 +115,29 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
   // Navigation handlers
   const handleNext = () => {
+    // Log current step data when advancing (for debugging)
+    const stepId = steps[currentStep]?.id;
+
+    if (stepId === 'property') {
+      console.log('🏠 Property Address Step - Data to save:', {
+        propertyAddress: formData.propertyAddress,
+        displayAddress: formData.displayAddress,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        county: formData.county,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+      });
+      console.log('📋 This data will appear in preview as:', {
+        display_address: formData.displayAddress || formData.propertyAddress,
+        property_address: formData.propertyAddress,
+        city: formData.city,
+        state: formData.state,
+        zip_code: formData.zipCode,
+      });
+    }
+
     if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -187,10 +210,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   };
 
   const handlePurchasePriceSave = (price) => {
-    const updatedData = { ...formData, purchasePrice: price };
-    console.log('💰 Purchase Price saved:', price);
-    console.log('📊 Form data after purchase price:', updatedData);
-    setFormData(updatedData);
+    setFormData({ ...formData, purchasePrice: price });
     // Don't auto-advance - let user click forward arrow when ready
   };
 
@@ -205,7 +225,6 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         buyerCommissionPercentage: updates.commission_percentage,
         buyerCommissionType: updates.commission_type,
       };
-      console.log('💵 Buyer Commission saved:', updates);
     } else if (stepId === 'seller-commission') {
       updatedData = {
         ...formData,
@@ -213,7 +232,6 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         sellerCommissionPercentage: updates.commission_percentage,
         sellerCommissionType: updates.commission_type,
       };
-      console.log('💵 Seller Commission saved:', updates);
     } else {
       // Single commission
       if (formData.representationType === 'buyer') {
@@ -231,31 +249,23 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           sellerCommissionType: updates.commission_type,
         };
       }
-      console.log('💵 Commission saved:', updates);
     }
 
-    console.log('📊 Form data after commission:', updatedData);
     setFormData(updatedData);
     handleNext();
   };
 
   const handleAcceptanceDateSave = (date) => {
-    const updatedData = {
+    setFormData({
       ...formData,
       acceptanceDate: date,
       closeOfEscrowDate: calculateDefaultCOE(new Date(date)),
-    };
-    console.log('📅 Acceptance Date saved:', date);
-    console.log('📊 Form data after acceptance date:', updatedData);
-    setFormData(updatedData);
+    });
     // Don't auto-advance - let user click forward arrow when ready
   };
 
   const handleClosingDateSave = (date) => {
-    const updatedData = { ...formData, closeOfEscrowDate: date };
-    console.log('📅 Closing Date saved:', date);
-    console.log('📊 Form data after closing date:', updatedData);
-    setFormData(updatedData);
+    setFormData({ ...formData, closeOfEscrowDate: date });
     // Don't auto-advance - let user click forward arrow when ready
   };
 
@@ -431,11 +441,9 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
       case 'preview':
         // Build preview escrow object from formData
-        console.log('📋 Preview Step - Current Form Data:', formData);
         const totalCommission = formData.representationType === 'dual'
           ? formData.buyerCommission + formData.sellerCommission
           : (formData.buyerCommission || formData.sellerCommission);
-        console.log('💵 Total Commission Calculated:', totalCommission);
 
         const previewEscrow = {
           id: 'preview',
@@ -458,8 +466,6 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           // Preview status
           is_preview: true,
         };
-
-        console.log('🎴 Preview Escrow Object:', previewEscrow);
 
         return (
           <Box>
