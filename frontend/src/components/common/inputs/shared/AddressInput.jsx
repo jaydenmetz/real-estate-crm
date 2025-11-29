@@ -498,6 +498,7 @@ export const AddressInput = ({
         freeSolo
         options={addressSuggestions}
         loading={loadingAddress}
+        loadingText={<span style={{ color: 'white' }}>Loading...</span>}
         inputValue={addressSearchText}
         onInputChange={handleInputChange}
         onChange={handleAddressSelect}
@@ -519,7 +520,7 @@ export const AddressInput = ({
               ),
               endAdornment: (
                 <>
-                  {loadingAddress ? <CircularProgress color="inherit" size={20} /> : null}
+                  {loadingAddress ? <CircularProgress sx={{ color: 'white' }} size={20} /> : null}
                   {params.InputProps.endAdornment}
                 </>
               ),
