@@ -462,27 +462,40 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       }}
     >
       {!showSuccess ? (
-        <Box sx={{ position: 'relative' }}>
-          {/* Close Button */}
+        <Box
+          sx={{
+            position: 'relative',
+            '&:hover .close-button': {
+              opacity: 1,
+            },
+          }}
+        >
+          {/* Close Button - Shows on hover */}
           <IconButton
+            className="close-button"
             onClick={handleClose}
             disabled={saving}
             sx={{
               position: 'absolute',
-              top: -60,
-              right: 0,
+              top: 16,
+              right: 16,
               zIndex: 1000,
-              width: 48,
-              height: 48,
-              backgroundColor: 'rgba(0,0,0,0.3)',
+              width: 40,
+              height: 40,
+              opacity: 0,
+              transition: 'opacity 0.2s ease',
+              backgroundColor: 'rgba(0,0,0,0.4)',
               backdropFilter: 'blur(10px)',
               color: 'white',
               '&:hover': {
-                backgroundColor: 'rgba(0,0,0,0.5)',
+                backgroundColor: 'rgba(0,0,0,0.6)',
+              },
+              '&:disabled': {
+                opacity: 0.3,
               },
             }}
           >
-            <Close />
+            <Close fontSize="small" />
           </IconButton>
 
           {/* Render current step editor */}
