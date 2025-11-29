@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import { CheckCircle } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ModalStepPage } from './ModalStepPage';
+import { ModalStepPage } from '../../../common/ModalStepPage';
 import { EditPropertyAddress } from '../editors/EditPropertyAddress';
 import { EditClients } from '../editors/EditClients';
 import { EditPurchasePrice } from '../editors/EditPurchasePrice';
