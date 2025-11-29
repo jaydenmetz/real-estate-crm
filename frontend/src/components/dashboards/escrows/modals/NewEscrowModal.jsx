@@ -187,64 +187,81 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   };
 
   const handlePurchasePriceSave = (price) => {
-    setFormData({ ...formData, purchasePrice: price });
+    const updatedData = { ...formData, purchasePrice: price };
+    console.log('💰 Purchase Price saved:', price);
+    console.log('📊 Form data after purchase price:', updatedData);
+    setFormData(updatedData);
     handleNext();
   };
 
   const handleCommissionSave = (updates) => {
     const stepId = steps[currentStep].id;
+    let updatedData;
 
     if (stepId === 'buyer-commission') {
-      setFormData({
+      updatedData = {
         ...formData,
         buyerCommission: updates.my_commission,
         buyerCommissionPercentage: updates.commission_percentage,
         buyerCommissionType: updates.commission_type,
-      });
+      };
+      console.log('💵 Buyer Commission saved:', updates);
     } else if (stepId === 'seller-commission') {
-      setFormData({
+      updatedData = {
         ...formData,
         sellerCommission: updates.my_commission,
         sellerCommissionPercentage: updates.commission_percentage,
         sellerCommissionType: updates.commission_type,
-      });
+      };
+      console.log('💵 Seller Commission saved:', updates);
     } else {
       // Single commission
       if (formData.representationType === 'buyer') {
-        setFormData({
+        updatedData = {
           ...formData,
           buyerCommission: updates.my_commission,
           buyerCommissionPercentage: updates.commission_percentage,
           buyerCommissionType: updates.commission_type,
-        });
+        };
       } else {
-        setFormData({
+        updatedData = {
           ...formData,
           sellerCommission: updates.my_commission,
           sellerCommissionPercentage: updates.commission_percentage,
           sellerCommissionType: updates.commission_type,
-        });
+        };
       }
+      console.log('💵 Commission saved:', updates);
     }
+
+    console.log('📊 Form data after commission:', updatedData);
+    setFormData(updatedData);
     handleNext();
   };
 
   const handleAcceptanceDateSave = (date) => {
-    setFormData({
+    const updatedData = {
       ...formData,
       acceptanceDate: date,
       closeOfEscrowDate: calculateDefaultCOE(new Date(date)),
-    });
+    };
+    console.log('📅 Acceptance Date saved:', date);
+    console.log('📊 Form data after acceptance date:', updatedData);
+    setFormData(updatedData);
     handleNext();
   };
 
   const handleClosingDateSave = (date) => {
-    setFormData({ ...formData, closeOfEscrowDate: date });
+    const updatedData = { ...formData, closeOfEscrowDate: date };
+    console.log('📅 Closing Date saved:', date);
+    console.log('📊 Form data after closing date:', updatedData);
+    setFormData(updatedData);
     handleNext();
   };
 
   // Final submission
   const handleSubmit = async () => {
+    console.log('🚀 Submitting escrow with form data:', formData);
     setSaving(true);
 
     try {

@@ -10,8 +10,9 @@ import { Date } from '../../../common/setters/Date';
  * @param {function} onClose - Close handler
  * @param {function} onSave - Save handler (newDateValue) => void
  * @param {string|Date} value - Current acceptance date
+ * @param {boolean} inline - If true, renders without EditorModal wrapper
  */
-export const EditAcceptanceDate = ({ open, onClose, onSave, value }) => {
+export const EditAcceptanceDate = ({ open, onClose, onSave, value, inline = false }) => {
   const [editValue, setEditValue] = useState(value);
 
   const handleSave = async () => {
@@ -25,6 +26,20 @@ export const EditAcceptanceDate = ({ open, onClose, onSave, value }) => {
     }
   };
 
+  const content = (
+    <Date
+      label="Acceptance Date"
+      value={editValue}
+      onChange={setEditValue}
+      color="#3b82f6"
+      showCurrentValue={!inline}
+    />
+  );
+
+  if (inline) {
+    return content;
+  }
+
   return (
     <EditorModal
       open={open}
@@ -32,12 +47,7 @@ export const EditAcceptanceDate = ({ open, onClose, onSave, value }) => {
       onSave={handleSave}
       color="#3b82f6"
     >
-      <Date
-        label="Acceptance Date"
-        value={editValue}
-        onChange={setEditValue}
-        color="#3b82f6"
-      />
+      {content}
     </EditorModal>
   );
 };
