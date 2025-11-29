@@ -264,7 +264,7 @@ export const EditAddress = ({
                       }}
                     >
                       {inline && selectedAddress
-                        ? selectedAddress.formatted_address
+                        ? selectedAddress.property_address
                         : canonicalAddress}
                     </Typography>
                     {((inline && selectedAddress) || locationSubtitle) && (
