@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { EditorModal } from '../../../common/modals/EditorModal';
-import { Date } from '../../../common/setters/Date';
+import { DateSetter } from '../../../common/setters/Date';
 
 /**
  * Closing Date Editor
@@ -25,7 +25,7 @@ export const EditClosingDate = ({ open, onClose, onSave, value, inline = false }
   };
 
   const content = (
-    <Date
+    <DateSetter
       label="Closing Date"
       value={editValue}
       onChange={setEditValue}

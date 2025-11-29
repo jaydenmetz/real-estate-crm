@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { EditorModal } from '../../../common/modals/EditorModal';
-import { Date } from '../../../common/setters/Date';
+import { DateSetter } from '../../../common/setters/Date';
 
 /**
  * Escrow-specific Acceptance Date Editor
@@ -27,7 +27,7 @@ export const EditAcceptanceDate = ({ open, onClose, onSave, value, inline = fals
   };
 
   const content = (
-    <Date
+    <DateSetter
       label="Acceptance Date"
       value={editValue}
       onChange={setEditValue}

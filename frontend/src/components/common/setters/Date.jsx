@@ -11,12 +11,12 @@ import { CustomCalendar } from '../inputs/shared/CustomCalendar';
  *
  * Usage in EditorModal (editing existing value):
  * <EditorModal>
- *   <Date label="Acceptance Date" value={date} onChange={setDate} />
+ *   <DateSetter label="Acceptance Date" value={date} onChange={setDate} />
  * </EditorModal>
  *
  * Usage in ModalStepPage (creation flow):
  * <ModalStepPage>
- *   <Date label="Acceptance Date" value={date} onChange={setDate} showCurrentValue={false} />
+ *   <DateSetter label="Acceptance Date" value={date} onChange={setDate} showCurrentValue={false} />
  * </ModalStepPage>
  *
  * @param {string} label - Field label (e.g., "Acceptance Date", "Listed Date")
@@ -28,7 +28,7 @@ import { CustomCalendar } from '../inputs/shared/CustomCalendar';
  * @param {boolean} showCurrentValue - Show current value display (default: true, hide in creation flows)
  * @param {boolean} disabled - Disable input
  */
-export const Date = ({
+export const DateSetter = ({
   label,
   value,
   onChange,
