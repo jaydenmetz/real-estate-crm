@@ -503,8 +503,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               onClick={handleClose}
               disabled={saving}
               sx={{
-                width: 20,
-                height: 20,
+                width: 30,
+                height: 30,
                 backgroundColor: 'rgba(0,0,0,0.4)',
                 backdropFilter: 'blur(10px)',
                 color: 'white',
@@ -518,7 +518,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                 },
               }}
             >
-              <Close sx={{ fontSize: 14 }} />
+              <Close fontSize="small" />
             </IconButton>
           </Box>
 
