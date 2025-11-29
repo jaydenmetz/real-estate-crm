@@ -51,116 +51,106 @@ export const EditRepresentationType = ({
     }
   };
 
-  const content = (
-    <Box onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyPress} tabIndex={0}>
-      {/* Label */}
-      <Typography
-        variant="caption"
-        sx={{
-          fontSize: 12,
-          fontWeight: 700,
-          color: 'rgba(255,255,255,0.9)',
-          mb: 1,
-          display: 'block',
-          textTransform: 'uppercase',
-          letterSpacing: '1px',
-        }}
-      >
-        Representation Type
-      </Typography>
+  return (
+    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={500} hideBackdrop={inline}>
+      <Box onClick={(e) => e.stopPropagation()} onKeyDown={handleKeyPress} tabIndex={0}>
+        {/* Label */}
+        <Typography
+          variant="caption"
+          sx={{
+            fontSize: 12,
+            fontWeight: 700,
+            color: 'rgba(255,255,255,0.9)',
+            mb: 1,
+            display: 'block',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
+          }}
+        >
+          Representation Type
+        </Typography>
 
-      {/* Title */}
-      <Typography
-        variant="h4"
-        sx={{
-          fontWeight: 900,
-          color: 'white',
-          mb: 3,
-          letterSpacing: '-1px',
-        }}
-      >
-        Who do you represent?
-      </Typography>
+        {/* Title */}
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: 900,
+            color: 'white',
+            mb: 3,
+            letterSpacing: '-1px',
+          }}
+        >
+          Who do you represent?
+        </Typography>
 
-      {/* Representation Type Toggle - Horizontal */}
-      <ToggleButtonGroup
-        value={selectedType}
-        exclusive
-        onChange={handleChange}
-        fullWidth
-        sx={{
-          gap: 1.5,
-          '& .MuiToggleButtonGroup-grouped': {
-            border: 'none',
-            '&:not(:first-of-type)': {
-              marginLeft: 0,
-              borderRadius: 2,
-            },
-            '&:first-of-type': {
-              borderRadius: 2,
-            },
-          },
-          '& .MuiToggleButton-root': {
-            color: 'rgba(255,255,255,0.7)',
-            backgroundColor: 'rgba(255,255,255,0.1)',
-            borderColor: 'rgba(255,255,255,0.2)',
-            fontWeight: 600,
-            py: 2.5,
-            px: 2,
-            fontSize: '0.95rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 1,
-            textTransform: 'none',
-            borderRadius: 2,
-            transition: 'all 0.2s',
-            '&.Mui-selected': {
-              backgroundColor: 'rgba(255,255,255,0.25)',
-              color: 'white',
-              borderColor: 'rgba(255,255,255,0.5)',
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.35)',
+        {/* Representation Type Toggle - Horizontal */}
+        <ToggleButtonGroup
+          value={selectedType}
+          exclusive
+          onChange={handleChange}
+          fullWidth
+          sx={{
+            gap: 1.5,
+            '& .MuiToggleButtonGroup-grouped': {
+              border: 'none',
+              '&:not(:first-of-type)': {
+                marginLeft: 0,
+                borderRadius: 2,
+              },
+              '&:first-of-type': {
+                borderRadius: 2,
               },
             },
-            '&:hover': {
-              backgroundColor: 'rgba(255,255,255,0.15)',
+            '& .MuiToggleButton-root': {
+              color: 'rgba(255,255,255,0.7)',
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              borderColor: 'rgba(255,255,255,0.2)',
+              fontWeight: 600,
+              py: 2.5,
+              px: 2,
+              fontSize: '0.95rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+              textTransform: 'none',
+              borderRadius: 2,
+              transition: 'all 0.2s',
+              '&.Mui-selected': {
+                backgroundColor: 'rgba(255,255,255,0.25)',
+                color: 'white',
+                borderColor: 'rgba(255,255,255,0.5)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.35)',
+                },
+              },
+              '&:hover': {
+                backgroundColor: 'rgba(255,255,255,0.15)',
+              },
             },
-          },
-        }}
-      >
-        <ToggleButton value="buyer">
-          <Person sx={{ fontSize: 28 }} />
-          <Typography variant="body2" fontWeight={600}>
-            Buyer
-          </Typography>
-        </ToggleButton>
+          }}
+        >
+          <ToggleButton value="buyer">
+            <Person sx={{ fontSize: 28 }} />
+            <Typography variant="body2" fontWeight={600}>
+              Buyer
+            </Typography>
+          </ToggleButton>
 
-        <ToggleButton value="seller">
-          <Home sx={{ fontSize: 28 }} />
-          <Typography variant="body2" fontWeight={600}>
-            Seller
-          </Typography>
-        </ToggleButton>
+          <ToggleButton value="seller">
+            <Home sx={{ fontSize: 28 }} />
+            <Typography variant="body2" fontWeight={600}>
+              Seller
+            </Typography>
+          </ToggleButton>
 
-        <ToggleButton value="dual">
-          <Group sx={{ fontSize: 28 }} />
-          <Typography variant="body2" fontWeight={600}>
-            Dual
-          </Typography>
-        </ToggleButton>
-      </ToggleButtonGroup>
-    </Box>
-  );
-
-  // If inline mode, return content without wrapper
-  if (inline) {
-    return content;
-  }
-
-  // Otherwise wrap in ModalDialog
-  return (
-    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={500}>
-      {content}
+          <ToggleButton value="dual">
+            <Group sx={{ fontSize: 28 }} />
+            <Typography variant="body2" fontWeight={600}>
+              Dual
+            </Typography>
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
     </ModalDialog>
   );
 };

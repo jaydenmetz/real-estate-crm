@@ -10,9 +10,10 @@ import { alpha } from '@mui/material/styles';
  * @param {function} onClose - Close handler
  * @param {string} color - Theme color for gradient background
  * @param {number} maxWidth - Maximum width in pixels (default: 400)
+ * @param {boolean} hideBackdrop - If true, renders without backdrop (for nested modals)
  * @param {node} children - Modal content
  */
-export const ModalDialog = ({ open, onClose, color = '#6366f1', maxWidth = 400, children }) => {
+export const ModalDialog = ({ open, onClose, color = '#6366f1', maxWidth = 400, hideBackdrop = false, children }) => {
   const handleClose = (event, reason) => {
     // Stop propagation to prevent navigation when clicking backdrop or close button
     if (event) {
@@ -30,6 +31,7 @@ export const ModalDialog = ({ open, onClose, color = '#6366f1', maxWidth = 400, 
         timeout: 300,
       }}
       onClick={(e) => e.stopPropagation()}
+      hideBackdrop={hideBackdrop}
       PaperProps={{
         sx: {
           borderRadius: 3,
