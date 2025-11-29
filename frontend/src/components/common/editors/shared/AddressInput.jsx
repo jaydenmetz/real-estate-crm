@@ -472,7 +472,7 @@ export const AddressInput = ({
   };
 
   return (
-    <Box sx={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+    <Box sx={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
       {/* Display Name Label - shows after autocomplete selection (unless hideLabel is true) */}
       {!hideLabel && selectedPlaceData && (
         <Typography
