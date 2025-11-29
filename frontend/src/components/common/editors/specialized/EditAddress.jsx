@@ -215,14 +215,14 @@ export const EditAddress = ({
         {/* In inline mode (NewEscrowModal): ONLY show "Selected Address" when user selects new address via autocomplete */}
         {/* In standalone edit mode: Show "Current Property Address" when database has existing address */}
         {(inline ? selectedAddress : canonicalAddress) && (
-          <Box sx={{ mb: 3 }}>
+          <Box sx={{ mb: 2 }}>
             {(!hasSelectedNewAddress || inline) ? (
               /* Show single address box (current in standalone, selected in inline) */
               <>
                 <Typography
                   variant="caption"
                   sx={{
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: 600,
                     color: 'rgba(255,255,255,0.7)',
                     mb: 0.5,
@@ -238,10 +238,10 @@ export const EditAddress = ({
                   sx={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: 1,
+                    gap: 0.75,
                     cursor: 'pointer',
-                    borderRadius: 2,
-                    p: 1,
+                    borderRadius: 1.5,
+                    p: 0.75,
                     mx: -1,
                     // Always show border when address section is visible (both inline and standalone modes)
                     border: '2px solid rgba(255,255,255,0.3)',
@@ -253,15 +253,15 @@ export const EditAddress = ({
                     },
                   }}
                 >
-                  <LocationOn sx={{ color: 'white', mt: 0.5, fontSize: 24 }} />
+                  <LocationOn sx={{ color: 'white', mt: 0.25, fontSize: 20 }} />
                   <Box sx={{ flex: 1 }}>
                     <Typography
-                      variant="h6"
+                      variant="body1"
                       sx={{
                         fontWeight: 700,
                         color: 'white',
-                        fontSize: '1rem',
-                        lineHeight: 1.4,
+                        fontSize: '0.9rem',
+                        lineHeight: 1.3,
                       }}
                     >
                       {inline && selectedAddress
@@ -274,7 +274,8 @@ export const EditAddress = ({
                         sx={{
                           color: 'rgba(255,255,255,0.7)',
                           display: 'block',
-                          mt: 0.5,
+                          mt: 0.25,
+                          fontSize: '0.75rem',
                         }}
                       >
                         {inline && selectedAddress
@@ -454,14 +455,14 @@ export const EditAddress = ({
           </Menu>
 
         {/* Display Name Input (Editable) */}
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ mb: 1.5 }}>
           <Typography
             variant="caption"
             sx={{
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: 600,
               color: 'rgba(255,255,255,0.7)',
-              mb: 1,
+              mb: 0.75,
               display: 'block',
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
@@ -469,7 +470,7 @@ export const EditAddress = ({
           >
             {selectedAddress || canonicalAddress ? 'Display Name' : 'Street Address'}
           </Typography>
-          <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
             <Box sx={{ flex: 1 }}>
               <AddressInput
                 value={displayAddress.replace(/#\d+$/, '').trim()} // Remove unit number from display

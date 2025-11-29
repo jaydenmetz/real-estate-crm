@@ -471,10 +471,10 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             backdropFilter: 'blur(20px)',
             border: `2px solid ${alpha(currentStepConfig?.color || '#10b981', 0.3)}`,
             boxShadow: `0 20px 60px ${alpha(currentStepConfig?.color || '#10b981', 0.4)}`,
-            p: 3,
+            p: 2.5,
             display: 'flex',
             flexDirection: 'column',
-            minHeight: 400,
+            minHeight: 300,
           }}
         >
           {/* Close Button - Top-right corner */}
@@ -517,14 +517,14 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           </Box>
 
           {/* Navigation Controls - Bottom */}
-          <Box sx={{ mt: 3, position: 'relative' }}>
+          <Box sx={{ mt: 2, position: 'relative' }}>
             {/* Progress Dots - Bottom center */}
             <Box
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
                 gap: 1,
-                mb: 2,
+                mb: 1.5,
               }}
             >
               {steps.map((step, index) => (
