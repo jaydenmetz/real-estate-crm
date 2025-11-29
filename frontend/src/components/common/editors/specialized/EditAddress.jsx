@@ -215,8 +215,8 @@ export const EditAddress = ({
         {/* In standalone edit mode: Show "Current Property Address" when database has existing address */}
         {(inline ? selectedAddress : canonicalAddress) && (
           <Box sx={{ mb: 3 }}>
-            {!hasSelectedNewAddress ? (
-              /* Show current database address (no editing mode yet) */
+            {(!hasSelectedNewAddress || inline) ? (
+              /* Show single address box (current in standalone, selected in inline) */
               <>
                 <Typography
                   variant="caption"
