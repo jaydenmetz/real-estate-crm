@@ -250,6 +250,9 @@ const useEscrowCardConfig = (statuses) => {
               const clients = escrow.clients || { buyers: [], sellers: [] };
               const representationType = escrow.representation_type || 'buyer';
 
+              console.log('[EscrowCard.editorProps] escrow.clients:', clients);
+              console.log('[EscrowCard.editorProps] representationType:', representationType);
+
               // EditClients expects either:
               // - value: array of client objects (for role-specific mode)
               // - values: {buyerClients, sellerClients, representationType} (for combined mode with showRepresentationType)
@@ -263,7 +266,7 @@ const useEscrowCardConfig = (statuses) => {
                 clientList = clients.sellers || [];
               } else if (representationType === 'dual') {
                 // For dual, we need to pass both - use combined mode instead
-                return {
+                const props = {
                   values: {
                     buyerClients: clients.buyers || [],
                     sellerClients: clients.sellers || [],
@@ -272,12 +275,16 @@ const useEscrowCardConfig = (statuses) => {
                   showRepresentationType: false, // Don't show toggle in card editing
                   representationType: representationType,
                 };
+                console.log('[EscrowCard.editorProps] Dual mode props:', props);
+                return props;
               }
 
-              return {
+              const props = {
                 value: clientList,
                 representationType: representationType,
               };
+              console.log('[EscrowCard.editorProps] Single role mode props:', props);
+              return props;
             },
             onSave: (escrow, clientsData) => {
               return { clients: clientsData };
