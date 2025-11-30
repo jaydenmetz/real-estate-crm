@@ -306,8 +306,16 @@ export const AddressInput = ({
 
       if (googleMapsLoaded && placesLibraryRef.current) {
         searchGooglePlaces(value, (suggestions) => {
-          setAddressSuggestions(suggestions);
-          setLoadingAddress(false);
+          // If Google Maps returns no results, fall back to Nominatim
+          if (suggestions.length === 0 && value.length >= 2) {
+            searchNominatim(value, (nominatimSuggestions) => {
+              setAddressSuggestions(nominatimSuggestions);
+              setLoadingAddress(false);
+            });
+          } else {
+            setAddressSuggestions(suggestions);
+            setLoadingAddress(false);
+          }
         });
       } else {
         searchNominatim(value, (suggestions) => {
