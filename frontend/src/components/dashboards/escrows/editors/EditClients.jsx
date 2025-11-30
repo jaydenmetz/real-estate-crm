@@ -616,39 +616,40 @@ export const EditClients = ({
       ) : (
         // Role-specific or standalone mode: Show single client selector
         <>
-          {/* Label */}
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: 'rgba(255,255,255,0.9)',
-              mb: 1,
-              display: 'block',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-            }}
-          >
-            {label}
-          </Typography>
-
-          {/* Title - Hide in inline mode */}
-          {!inline && (
+          {/* Representation Type Header - Make it prominent */}
+          <Box sx={{ mb: 2 }}>
             <Typography
-              variant="h4"
+              variant="h6"
               sx={{
-                fontWeight: 900,
-                color: 'white',
-                mb: 3,
-                letterSpacing: '-1px',
+                fontSize: 14,
+                fontWeight: 700,
+                color: representationType === 'buyer' ? '#10b981' : representationType === 'seller' ? '#f59e0b' : '#6366f1',
+                mb: 0.5,
+                display: 'block',
+                textTransform: 'uppercase',
+                letterSpacing: '2px',
               }}
             >
-              {selectedClients.length === 0
-                ? `Add ${label}`
-                : `${selectedClients.length} Selected`
-              }
+              {label}
             </Typography>
-          )}
+
+            {/* Title - Hide in inline mode */}
+            {!inline && (
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 900,
+                  color: 'white',
+                  letterSpacing: '-1px',
+                }}
+              >
+                {selectedClients.length === 0
+                  ? `Add ${label === 'Buyer' || label === 'Buyer(s)' ? 'Buyers' : label === 'Seller' || label === 'Seller(s)' ? 'Sellers' : 'Clients'}`
+                  : `${selectedClients.length} ${label === 'Buyer' || label === 'Buyer(s)' ? 'Buyer' : label === 'Seller' || label === 'Seller(s)' ? 'Seller' : 'Client'}${selectedClients.length !== 1 ? 's' : ''}`
+                }
+              </Typography>
+            )}
+          </Box>
 
         {/* Selected Clients List */}
         {selectedClients.length > 0 && (
