@@ -375,7 +375,8 @@ export const EditClients = ({
                   />
                   <ListItemSecondaryAction>
                     <IconButton
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (currentRole === 'buyer') {
                           setBuyerClients(buyerClients.filter(c => c.id !== client.id));
                         } else {
