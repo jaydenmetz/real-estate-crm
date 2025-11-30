@@ -95,7 +95,7 @@ export const AddressInput = ({
   // Debounced Google Places API (New) REST search
   const searchGooglePlaces = useMemo(
     () => debounce(async (input, callback) => {
-      if (!input || input.length < 3) {
+      if (!input || input.length < 1) {
         callback([]);
         return;
       }
