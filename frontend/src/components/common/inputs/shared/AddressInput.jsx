@@ -282,7 +282,7 @@ export const AddressInput = ({
         onInputChange(value);
       }
 
-      if (googleMapsLoaded && autocompleteServiceRef.current) {
+      if (googleMapsLoaded && placesLibraryRef.current) {
         searchGooglePlaces(value, (suggestions) => {
           setAddressSuggestions(suggestions);
           setLoadingAddress(false);
