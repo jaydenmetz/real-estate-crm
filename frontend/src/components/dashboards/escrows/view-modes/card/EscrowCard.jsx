@@ -18,7 +18,11 @@ import {
   EditAcceptanceDate,
   EditClosingDate,
   EditPropertyAddress,
+  EditClients,
 } from '../../editors';
+
+// Import ClientCircles component
+import { ClientCircles } from '../../../../common/ui/ClientCircles';
 
 // ============================================================================
 // COMMISSION MASKING (for privacy toggle)
@@ -217,33 +221,43 @@ const useEscrowCardConfig = (statuses) => {
             },
             width: '33.33%',
           },
-        ],
 
-        progress: {
-          formatter: (escrow) => {
-            // Calculate checklist progress if available
-            const totalTasks = escrow.checklist_total || 0;
-            const completedTasks = escrow.checklist_completed || 0;
+          // Clients (editable) - Shows client avatars/initials
+          {
+            label: (escrow) => {
+              const clients = escrow.clients || { buyers: [], sellers: [] };
+              const totalClients = (clients.buyers?.length || 0) + (clients.sellers?.length || 0);
+              return totalClients === 1 ? 'Client' : 'Clients';
+            },
+            field: 'clients',
+            customRenderer: (escrow, onEdit) => {
+              const clients = escrow.clients || { buyers: [], sellers: [] };
+              // Determine representation type based on escrow data
+              // This should come from escrow.representation_type once that field is added
+              // For now, default to 'buyer' - this will be updated in a future commit
+              const representationType = 'buyer';
 
-            if (totalTasks === 0) {
-              return {
-                label: 'Progress',
-                value: 0,
-                displayValue: '—',
-                showBar: false,
-              };
-            }
-
-            const percentage = Math.round((completedTasks / totalTasks) * 100);
-
-            return {
-              label: 'Progress',
-              value: percentage,
-              showBar: true,
-            };
+              return (
+                <ClientCircles
+                  clients={clients}
+                  representationType={representationType}
+                  onEdit={onEdit}
+                  maxVisible={5}
+                />
+              );
+            },
+            editable: true,
+            editor: EditClients,
+            editorProps: (escrow) => ({
+              value: escrow.clients || { buyers: [], sellers: [] },
+              representationType: 'buyer', // TODO: Use escrow.representation_type once field is added
+            }),
+            onSave: (escrow, clients) => {
+              return { clients };
+            },
+            width: '33.33%',
           },
-          width: '30%',
-        },
+        ],
       },
 
       // Quick Actions Configuration

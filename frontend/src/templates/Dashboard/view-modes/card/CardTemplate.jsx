@@ -652,9 +652,14 @@ const CardTemplate = React.memo(({
                     ? field.field(data)
                     : resolveField(data, field.field)?.raw;
 
-                  const formattedValue = field.formatter
-                    ? field.formatter(fieldValue, data)
-                    : fieldValue;
+                  // Support custom renderer for complex components (e.g., ClientCircles)
+                  const hasCustomRenderer = field.customRenderer && typeof field.customRenderer === 'function';
+
+                  const formattedValue = hasCustomRenderer
+                    ? null // Custom renderer will handle display
+                    : field.formatter
+                      ? field.formatter(fieldValue, data)
+                      : fieldValue;
 
                   // Resolve label (support function or string)
                   const fieldLabel = typeof field.label === 'function' ? field.label(data) : field.label;
@@ -664,7 +669,29 @@ const CardTemplate = React.memo(({
                       <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         {fieldLabel}
                       </Typography>
-                      {field.editable && onUpdate ? (
+                      {hasCustomRenderer ? (
+                        // Custom renderer with optional edit support
+                        <Box
+                          onClick={field.editable && onUpdate ? (e) => {
+                            e.stopPropagation();
+                            openEditor(`footer_${idx}`);
+                          } : undefined}
+                          sx={{
+                            cursor: field.editable && onUpdate ? 'pointer' : 'default',
+                            transition: 'all 0.2s',
+                            borderRadius: 1,
+                            px: 0.5,
+                            py: 0.25,
+                            ...(field.editable && onUpdate ? {
+                              '&:hover': {
+                                backgroundColor: 'action.hover',
+                              },
+                            } : {}),
+                          }}
+                        >
+                          {field.customRenderer(data, () => openEditor(`footer_${idx}`))}
+                        </Box>
+                      ) : field.editable && onUpdate ? (
                         <Box
                           onClick={(e) => {
                             e.stopPropagation();
