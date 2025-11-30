@@ -143,7 +143,10 @@ export const AddressInput = ({
         );
 
         if (!response.ok) {
+          const errorBody = await response.text();
           console.error('Places API (New) error:', response.status, response.statusText);
+          console.error('Error details:', errorBody);
+          console.error('Request body was:', requestBody);
           callback([]);
           return;
         }
