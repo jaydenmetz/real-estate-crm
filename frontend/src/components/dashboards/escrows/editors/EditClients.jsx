@@ -102,35 +102,60 @@ export const EditClients = ({
       if (showRepresentationType && values) {
         // Combined mode: Load buyer and seller clients
         try {
-          const buyerIds = values.buyerClients || [];
-          const sellerIds = values.sellerClients || [];
+          const buyerData = values.buyerClients || [];
+          const sellerData = values.sellerClients || [];
 
-          if (buyerIds.length > 0) {
-            const buyerPromises = buyerIds.map(id => clientsAPI.getById(id));
-            const buyerResults = await Promise.all(buyerPromises);
-            const buyerData = buyerResults
-              .filter(r => r.success && r.data)
-              .map(r => ({
-                id: r.data.client_id || r.data.id,
-                firstName: r.data.first_name,
-                lastName: r.data.last_name,
-                email: r.data.email,
-              }));
-            setBuyerClients(buyerData);
+          // Check if buyerData/sellerData are full client objects or just IDs
+          const isFullObject = (item) => item && typeof item === 'object' && (item.firstName || item.first_name);
+
+          if (buyerData.length > 0) {
+            if (isFullObject(buyerData[0])) {
+              // Already full objects - use directly
+              setBuyerClients(buyerData.map(c => ({
+                id: c.id || c.client_id,
+                firstName: c.firstName || c.first_name,
+                lastName: c.lastName || c.last_name,
+                email: c.email,
+              })));
+            } else {
+              // Just IDs - fetch from API
+              const buyerPromises = buyerData.map(id => clientsAPI.getById(id));
+              const buyerResults = await Promise.all(buyerPromises);
+              const buyers = buyerResults
+                .filter(r => r.success && r.data)
+                .map(r => ({
+                  id: r.data.client_id || r.data.id,
+                  firstName: r.data.first_name,
+                  lastName: r.data.last_name,
+                  email: r.data.email,
+                }));
+              setBuyerClients(buyers);
+            }
           }
 
-          if (sellerIds.length > 0) {
-            const sellerPromises = sellerIds.map(id => clientsAPI.getById(id));
-            const sellerResults = await Promise.all(sellerPromises);
-            const sellerData = sellerResults
-              .filter(r => r.success && r.data)
-              .map(r => ({
-                id: r.data.client_id || r.data.id,
-                firstName: r.data.first_name,
-                lastName: r.data.last_name,
-                email: r.data.email,
-              }));
-            setSellerClients(sellerData);
+          if (sellerData.length > 0) {
+            if (isFullObject(sellerData[0])) {
+              // Already full objects - use directly
+              setSellerClients(sellerData.map(c => ({
+                id: c.id || c.client_id,
+                firstName: c.firstName || c.first_name,
+                lastName: c.lastName || c.last_name,
+                email: c.email,
+              })));
+            } else {
+              // Just IDs - fetch from API
+              const sellerPromises = sellerData.map(id => clientsAPI.getById(id));
+              const sellerResults = await Promise.all(sellerPromises);
+              const sellers = sellerResults
+                .filter(r => r.success && r.data)
+                .map(r => ({
+                  id: r.data.client_id || r.data.id,
+                  firstName: r.data.first_name,
+                  lastName: r.data.last_name,
+                  email: r.data.email,
+                }));
+              setSellerClients(sellers);
+            }
           }
         } catch (error) {
           console.error('Error loading clients:', error);
@@ -140,17 +165,31 @@ export const EditClients = ({
       } else if (value && value.length > 0) {
         // Role-specific or standalone mode: Load single client list
         try {
-          const clientPromises = value.map(id => clientsAPI.getById(id));
-          const results = await Promise.all(clientPromises);
-          const clients = results
-            .filter(r => r.success && r.data)
-            .map(r => ({
-              id: r.data.client_id || r.data.id,
-              firstName: r.data.first_name,
-              lastName: r.data.last_name,
-              email: r.data.email,
-            }));
-          setSelectedClients(clients);
+          // Check if value contains full objects or just IDs
+          const isFullObject = (item) => item && typeof item === 'object' && (item.firstName || item.first_name);
+
+          if (isFullObject(value[0])) {
+            // Already full objects - use directly
+            setSelectedClients(value.map(c => ({
+              id: c.id || c.client_id,
+              firstName: c.firstName || c.first_name,
+              lastName: c.lastName || c.last_name,
+              email: c.email,
+            })));
+          } else {
+            // Just IDs - fetch from API
+            const clientPromises = value.map(id => clientsAPI.getById(id));
+            const results = await Promise.all(clientPromises);
+            const clients = results
+              .filter(r => r.success && r.data)
+              .map(r => ({
+                id: r.data.client_id || r.data.id,
+                firstName: r.data.first_name,
+                lastName: r.data.last_name,
+                email: r.data.email,
+              }));
+            setSelectedClients(clients);
+          }
         } catch (error) {
           console.error('Error loading clients:', error);
           setSelectedClients([]);
@@ -253,8 +292,20 @@ export const EditClients = ({
           representationType: selectedType,
         });
       } else {
-        // Role-specific or standalone mode: Save full client objects
-        await onSave(selectedClients);
+        // Role-specific or standalone mode: Return proper structure based on representation type
+        // CardTemplate expects { buyers: [...], sellers: [...] } structure
+        const clientsData = {
+          buyers: representationType === 'buyer' || representationType === 'dual' ? selectedClients : [],
+          sellers: representationType === 'seller' || representationType === 'dual' ? selectedClients : [],
+        };
+
+        // If dual representation is passed via editorProps, use buyerClients/sellerClients
+        if (representationType === 'dual' && (buyerClients.length > 0 || sellerClients.length > 0)) {
+          clientsData.buyers = buyerClients;
+          clientsData.sellers = sellerClients;
+        }
+
+        await onSave(clientsData);
       }
       onClose();
     } catch (error) {

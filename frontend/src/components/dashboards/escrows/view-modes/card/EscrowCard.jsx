@@ -246,12 +246,41 @@ const useEscrowCardConfig = (statuses) => {
             },
             editable: true,
             editor: EditClients,
-            editorProps: (escrow) => ({
-              value: escrow.clients || { buyers: [], sellers: [] },
-              representationType: escrow.representation_type || 'buyer',
-            }),
-            onSave: (escrow, clients) => {
-              return { clients };
+            editorProps: (escrow) => {
+              const clients = escrow.clients || { buyers: [], sellers: [] };
+              const representationType = escrow.representation_type || 'buyer';
+
+              // EditClients expects either:
+              // - value: array of client objects (for role-specific mode)
+              // - values: {buyerClients, sellerClients, representationType} (for combined mode with showRepresentationType)
+
+              // For card editing, we want role-specific mode (no representation type toggle)
+              // Pass the appropriate client list based on representation type
+              let clientList = [];
+              if (representationType === 'buyer') {
+                clientList = clients.buyers || [];
+              } else if (representationType === 'seller') {
+                clientList = clients.sellers || [];
+              } else if (representationType === 'dual') {
+                // For dual, we need to pass both - use combined mode instead
+                return {
+                  values: {
+                    buyerClients: clients.buyers || [],
+                    sellerClients: clients.sellers || [],
+                    representationType: representationType,
+                  },
+                  showRepresentationType: false, // Don't show toggle in card editing
+                  representationType: representationType,
+                };
+              }
+
+              return {
+                value: clientList,
+                representationType: representationType,
+              };
+            },
+            onSave: (escrow, clientsData) => {
+              return { clients: clientsData };
             },
             width: '33.33%',
           },
