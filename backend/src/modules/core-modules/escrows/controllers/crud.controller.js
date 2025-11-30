@@ -128,7 +128,8 @@ async function getAllEscrows(req, res) {
         ${acceptanceDateField} as acceptance_date,
         e.created_at as created_at,
         e.is_archived,
-        e.archived_at
+        e.archived_at,
+        e.clients
       FROM escrows e
     `;
 
@@ -373,6 +374,32 @@ async function createEscrow(req, res) {
     const placeholders = ['$1', '$2', '$3', '$4'];
     let paramIndex = 5;
 
+    // Validate clients structure if provided
+    if (escrowData.clients) {
+      const { buyers = [], sellers = [] } = escrowData.clients;
+
+      // Validate max 6 per role
+      if (buyers.length > 6) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Maximum 6 buyers allowed per escrow',
+          },
+        });
+      }
+
+      if (sellers.length > 6) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Maximum 6 sellers allowed per escrow',
+          },
+        });
+      }
+    }
+
     // Add optional fields if provided (check both camelCase and snake_case)
     const optionalFields = {
       display_address: escrowData.displayAddress || escrowData.display_address || escrowData.propertyAddressDisplay || escrowData.property_address_display,
@@ -394,13 +421,19 @@ async function createEscrow(req, res) {
       loan_officer_phone: escrowData.loan_officer_phone,
       title_company: escrowData.title_company,
       lead_source: escrowData.lead_source,
+      clients: escrowData.clients,
     };
 
     // Add fields that are actually provided
     for (const [field, value] of Object.entries(optionalFields)) {
       if (value !== undefined && value !== null) {
         fields.push(field);
-        values.push(value);
+        // Stringify JSONB fields
+        if (field === 'clients') {
+          values.push(JSON.stringify(value));
+        } else {
+          values.push(value);
+        }
         placeholders.push(`$${paramIndex}`);
         paramIndex++;
       }
@@ -522,6 +555,32 @@ async function updateEscrow(req, res) {
       keys: Object.keys(updates),
     });
 
+    // Validate clients structure if provided
+    if (updates.clients) {
+      const { buyers = [], sellers = [] } = updates.clients;
+
+      // Validate max 6 per role
+      if (buyers.length > 6) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Maximum 6 buyers allowed per escrow',
+          },
+        });
+      }
+
+      if (sellers.length > 6) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Maximum 6 sellers allowed per escrow',
+          },
+        });
+      }
+    }
+
     // Map camelCase fields to snake_case for database
     const fieldMapping = {
       propertyAddress: 'property_address',
@@ -560,7 +619,7 @@ async function updateEscrow(req, res) {
         // Handle JSONB fields and prevent object stringification
         let value = updates[key];
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          if (['people', 'checklists', 'timeline'].includes(dbFieldName)) {
+          if (['people', 'checklists', 'timeline', 'clients'].includes(dbFieldName)) {
             // JSONB fields - stringify the object
             value = JSON.stringify(value);
           } else {
