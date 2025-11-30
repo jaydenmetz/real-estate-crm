@@ -116,7 +116,8 @@ export const AddressInput = ({
         const requestBody = {
           input,
           includedRegionCodes: ['us'],
-          includedPrimaryTypes: ['street_address', 'premise'],
+          // Don't use includedPrimaryTypes for address search - let Google return all address types
+          // includedPrimaryTypes: ['street_address', 'premise'], // These are Table B types - not valid for filtering
         };
 
         // Only add location bias for short/partial searches
