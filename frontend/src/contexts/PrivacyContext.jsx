@@ -42,7 +42,10 @@ export const PrivacyProvider = ({ children, entityType = 'unknown' }) => {
         const commissionPrivacyDefault = response.data.data?.commission_privacy_default ?? true;
         setMasterHidden(commissionPrivacyDefault);
       } catch (error) {
-        console.error('Failed to fetch privacy preference:', error);
+        // Silently handle 404 (endpoint not implemented yet) - defaults to true (hidden)
+        if (error.message !== 'Endpoint not found') {
+          console.error('Failed to fetch privacy preference:', error);
+        }
         // Keep default as true (hidden) on error
       } finally {
         setIsLoading(false);

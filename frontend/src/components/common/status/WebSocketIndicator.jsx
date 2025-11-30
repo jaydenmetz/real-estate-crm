@@ -16,7 +16,9 @@ const pulse = keyframes`
   }
 `;
 
-const PulsingDot = styled(Box)(({ theme, connected }) => ({
+const PulsingDot = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'connected',
+})(({ theme, connected }) => ({
   width: 12,
   height: 12,
   borderRadius: '50%',

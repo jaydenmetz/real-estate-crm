@@ -360,6 +360,7 @@ export const EditClients = ({
           getOptionLabel={(option) =>
             `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}`
           }
+          isOptionEqualToValue={(option, value) => option.id === value.id}
           onChange={(event, client) => {
             if (!client) return;
             if (roleClients.some(c => c.id === client.id)) return;
@@ -372,20 +373,23 @@ export const EditClients = ({
             setClientSearch('');
           }}
           filterOptions={(x) => x}
-          renderOption={(props, option) => (
-            <Box component="li" {...props}>
-              <Box>
-                <Typography variant="body2" fontWeight={600}>
-                  {option.firstName} {option.lastName}
-                </Typography>
-                {option.email && (
-                  <Typography variant="caption" color="text.secondary">
-                    {option.email}
+          renderOption={(props, option) => {
+            const { key, ...otherProps } = props;
+            return (
+              <Box component="li" key={key} {...otherProps}>
+                <Box>
+                  <Typography variant="body2" fontWeight={600}>
+                    {option.firstName} {option.lastName}
                   </Typography>
-                )}
+                  {option.email && (
+                    <Typography variant="caption" color="text.secondary">
+                      {option.email}
+                    </Typography>
+                  )}
+                </Box>
               </Box>
-            </Box>
-          )}
+            );
+          }}
           renderInput={(params) => (
             <TextField
               {...params}
