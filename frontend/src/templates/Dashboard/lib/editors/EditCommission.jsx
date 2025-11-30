@@ -103,6 +103,68 @@ export const EditCommission = ({
     }
   };
 
+  // Auto-save handler for inline mode - called whenever values change
+  const handleInlineChange = (newEditValue) => {
+    setEditValue(newEditValue);
+
+    // In inline mode, immediately notify parent of changes
+    if (inline && onSave && newEditValue && !isNaN(parseFloat(newEditValue))) {
+      const newValue = parseFloat(newEditValue);
+      const updates = {
+        commission_type: commissionType,
+      };
+
+      if (commissionType === 'percentage') {
+        updates.commission_percentage = newValue;
+        updates.my_commission = purchasePrice ? (purchasePrice * newValue) / 100 : 0;
+      } else {
+        updates.my_commission = newValue;
+        updates.commission_percentage = null;
+      }
+
+      onSave(updates);
+    }
+  };
+
+  // Handle commission type toggle (percentage vs flat)
+  const handleCommissionTypeChange = (e, newType) => {
+    e.stopPropagation(); // Prevent navigation when switching tabs
+    if (newType !== null) {
+      setCommissionType(newType);
+
+      // Load the database value for the new tab (or empty if none exists)
+      let newEditValue = '';
+      if (newType === 'percentage') {
+        // Database stores as percentage (e.g., 2.5 = 2.5%, 0.75 = 0.75%)
+        // Display it directly without conversion
+        newEditValue = commissionPercentage !== null && commissionPercentage !== undefined
+          ? commissionPercentage.toString()
+          : '';
+      } else {
+        newEditValue = value !== null && value !== undefined ? value.toString() : '';
+      }
+      setEditValue(newEditValue);
+
+      // In inline mode, auto-save the type change
+      if (inline && onSave && newEditValue && !isNaN(parseFloat(newEditValue))) {
+        const newValue = parseFloat(newEditValue);
+        const updates = {
+          commission_type: newType,
+        };
+
+        if (newType === 'percentage') {
+          updates.commission_percentage = newValue;
+          updates.my_commission = purchasePrice ? (purchasePrice * newValue) / 100 : 0;
+        } else {
+          updates.my_commission = newValue;
+          updates.commission_percentage = null;
+        }
+
+        onSave(updates);
+      }
+    }
+  };
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSave();
@@ -209,23 +271,7 @@ export const EditCommission = ({
         <ToggleButtonGroup
           value={commissionType}
           exclusive
-          onChange={(e, newType) => {
-            e.stopPropagation(); // Prevent navigation when switching tabs
-            if (newType !== null) {
-              setCommissionType(newType);
-              // Load the database value for the new tab (or empty if none exists)
-              if (newType === 'percentage') {
-                // Database stores as percentage (e.g., 2.5 = 2.5%, 0.75 = 0.75%)
-                // Display it directly without conversion
-                const percentValue = commissionPercentage !== null && commissionPercentage !== undefined
-                  ? commissionPercentage.toString()
-                  : '';
-                setEditValue(percentValue);
-              } else {
-                setEditValue(value !== null && value !== undefined ? value.toString() : '');
-              }
-            }
-          }}
+          onChange={handleCommissionTypeChange}
           fullWidth
           sx={{
             backgroundColor: 'rgba(255,255,255,0.1)',
@@ -262,7 +308,7 @@ export const EditCommission = ({
       {commissionType === 'percentage' ? (
         <PercentageInput
           value={editValue}
-          onChange={setEditValue}
+          onChange={handleInlineChange}
           onKeyDown={handleKeyPress}
           disabled={saving}
           placeholder="3"
@@ -270,7 +316,7 @@ export const EditCommission = ({
       ) : (
         <CurrencyInput
           value={editValue}
-          onChange={setEditValue}
+          onChange={handleInlineChange}
           onKeyDown={handleKeyPress}
           disabled={saving}
           placeholder="2000"
