@@ -92,6 +92,8 @@ export const EditClients = ({
   // Load selected clients when dialog opens
   useEffect(() => {
     const loadClients = async () => {
+      console.log('[EditClients] useEffect triggered - open:', open, 'value:', value, 'values:', values);
+
       if (!open) {
         setSelectedClients([]);
         setBuyerClients([]);
@@ -170,12 +172,14 @@ export const EditClients = ({
 
           if (isFullObject(value[0])) {
             // Already full objects - use directly
-            setSelectedClients(value.map(c => ({
+            const mappedClients = value.map(c => ({
               id: c.id || c.client_id,
               firstName: c.firstName || c.first_name,
               lastName: c.lastName || c.last_name,
               email: c.email,
-            })));
+            }));
+            console.log('[EditClients] Setting selectedClients from full objects:', mappedClients);
+            setSelectedClients(mappedClients);
           } else {
             // Just IDs - fetch from API
             const clientPromises = value.map(id => clientsAPI.getById(id));
