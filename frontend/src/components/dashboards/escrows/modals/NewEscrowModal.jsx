@@ -486,24 +486,26 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             >
               Preview Your Escrow
             </Typography>
-            <Box sx={{
-              '& > *': {
-                pointerEvents: 'none', // Disable most interactions on preview card
-                userSelect: 'none',
-              },
-              // Re-enable clicks on commission toggle button
-              '& button[aria-label*="commission"]': {
-                pointerEvents: 'auto',
-                cursor: 'pointer',
-              },
-            }}>
+            <Box>
               <EscrowCard
                 escrow={previewEscrow}
-                onClick={() => {}} // Disable card click
+                onClick={() => {}} // Disable card click navigation
                 onUpdate={(updatedEscrow) => {
-                  // Allow commission visibility toggle to update formData
+                  // Sync all updates back to formData
                   if (updatedEscrow.show_commission !== undefined) {
                     setFormData({ ...formData, showCommission: updatedEscrow.show_commission });
+                  }
+                  if (updatedEscrow.purchase_price !== undefined) {
+                    setFormData({ ...formData, purchasePrice: updatedEscrow.purchase_price.toString() });
+                  }
+                  if (updatedEscrow.my_commission !== undefined) {
+                    setFormData({ ...formData, buyerCommission: updatedEscrow.my_commission });
+                  }
+                  if (updatedEscrow.acceptance_date !== undefined) {
+                    setFormData({ ...formData, acceptanceDate: updatedEscrow.acceptance_date });
+                  }
+                  if (updatedEscrow.closing_date !== undefined) {
+                    setFormData({ ...formData, closeOfEscrowDate: updatedEscrow.closing_date });
                   }
                 }}
               />
