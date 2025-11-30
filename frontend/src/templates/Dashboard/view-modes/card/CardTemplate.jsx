@@ -812,8 +812,17 @@ const CardTemplate = React.memo(({
         );
       })}
 
-      {config.footer?.fields?.map((field, idx) =>
-        field.editor ? (
+      {config.footer?.fields?.map((field, idx) => {
+        if (!field.editor) return null;
+
+        // Use custom editorProps if provided, otherwise default props
+        const editorProps = field.editorProps
+          ? field.editorProps(data)
+          : {
+              value: typeof field.field === 'function' ? field.field(data) : resolveField(data, field.field)?.raw,
+            };
+
+        return (
           <field.editor
             key={`footer_${idx}`}
             open={openEditors[`footer_${idx}`] || false}
@@ -825,11 +834,11 @@ const CardTemplate = React.memo(({
               }
               closeEditor(`footer_${idx}`);
             }}
-            value={typeof field.field === 'function' ? field.field(data) : resolveField(data, field.field)?.raw}
             data={data}
+            {...editorProps}
           />
-        ) : null
-      )}
+        );
+      })}
 
       {/* Status Change Menu */}
       {config.status?.editable && config.status?.options && (
