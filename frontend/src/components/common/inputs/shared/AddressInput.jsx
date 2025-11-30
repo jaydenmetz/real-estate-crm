@@ -138,12 +138,11 @@ export const AddressInput = ({
         };
 
         // Only add location bias for short/partial searches
+        // Note: Places API (New) uses different locationBias structure
         if (shouldBias) {
           request.locationBias = {
-            circle: {
-              center: { lat: userLat, lng: userLng },
-              radius: searchRadius * 1609.34, // Convert miles to meters
-            },
+            center: { lat: userLat, lng: userLng },
+            radius: searchRadius * 1609.34, // Convert miles to meters
           };
         }
 
