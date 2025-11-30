@@ -115,7 +115,9 @@ export const AddressInput = ({
 
         const requestBody = {
           input,
-          includedRegionCodes: ['us'],
+          languageCode: 'en', // Preferred language for results
+          regionCode: 'us', // Format responses for US and bias suggestions
+          includedRegionCodes: ['us'], // Restrict results to US only
           // Don't use includedPrimaryTypes for address search - let Google return all address types
           // includedPrimaryTypes: ['street_address', 'premise'], // These are Table B types - not valid for filtering
         };
