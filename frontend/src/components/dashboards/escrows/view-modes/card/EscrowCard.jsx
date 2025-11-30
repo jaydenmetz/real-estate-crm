@@ -232,10 +232,8 @@ const useEscrowCardConfig = (statuses) => {
             field: 'clients',
             customRenderer: (escrow, onEdit) => {
               const clients = escrow.clients || { buyers: [], sellers: [] };
-              // Determine representation type based on escrow data
-              // This should come from escrow.representation_type once that field is added
-              // For now, default to 'buyer' - this will be updated in a future commit
-              const representationType = 'buyer';
+              // Use representation_type from escrow data (defaults to 'buyer' if not set)
+              const representationType = escrow.representation_type || 'buyer';
 
               return (
                 <ClientCircles
@@ -250,7 +248,7 @@ const useEscrowCardConfig = (statuses) => {
             editor: EditClients,
             editorProps: (escrow) => ({
               value: escrow.clients || { buyers: [], sellers: [] },
-              representationType: 'buyer', // TODO: Use escrow.representation_type once field is added
+              representationType: escrow.representation_type || 'buyer',
             }),
             onSave: (escrow, clients) => {
               return { clients };

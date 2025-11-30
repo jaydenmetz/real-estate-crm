@@ -129,7 +129,8 @@ async function getAllEscrows(req, res) {
         e.created_at as created_at,
         e.is_archived,
         e.archived_at,
-        e.clients
+        e.clients,
+        e.representation_type
       FROM escrows e
     `;
 
