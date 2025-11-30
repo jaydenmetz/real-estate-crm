@@ -253,7 +253,7 @@ export const EditCommission = ({
           </ToggleButton>
           <ToggleButton value="flat">
             <AttachMoney sx={{ mr: 1, fontSize: 18 }} />
-            Flat Amount
+            Flat
           </ToggleButton>
         </ToggleButtonGroup>
       </Box>
