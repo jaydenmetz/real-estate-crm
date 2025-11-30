@@ -254,11 +254,20 @@ export const DashboardContent = ({
 
     if (viewMode === 'card') {
       // Responsive grid with fixed 320px cards
-      // auto-fill creates as many columns as possible, filling the full width
+      // Justification changes based on how many cards fit:
+      // - 1 card: center
+      // - 2-3 cards: space-evenly (adds space on edges)
+      // - 4+ cards: space-between (flush with edges)
       return {
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, 320px)', // Fill width with 320px cards
-        justifyContent: 'space-between', // Distribute cards evenly, aligning edges with container
+        justifyContent: {
+          xs: 'center', // 1 card: center it
+          sm: 'center', // 1 card: center it
+          md: 'space-evenly', // 2-3 cards: space evenly with margins
+          lg: 'space-evenly', // 2-3 cards: space evenly with margins
+          xl: 'space-between', // 4+ cards: flush with edges
+        },
         gap: {
           xs: 2, // 16px on mobile
           sm: 2, // 16px on small
