@@ -256,7 +256,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     }
 
     setFormData(updatedData);
-    handleNext();
+    // Don't auto-advance - let user click forward arrow when ready
   };
 
   const handleAcceptanceDateSave = (date) => {
