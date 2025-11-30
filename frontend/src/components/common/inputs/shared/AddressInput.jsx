@@ -9,10 +9,10 @@ import { Loader } from '@googlemaps/js-api-loader';
 
 /**
  * Beautiful Address Autocomplete Input Component
- * Live Google Places autocomplete with Nominatim fallback
+ * Uses Google Places API (New) with Nominatim fallback
  *
  * Features:
- * - Google Places Autocomplete (primary)
+ * - Google Places API (New) - modern autocomplete
  * - OpenStreetMap Nominatim (fallback)
  * - Location bias based on user's home location
  * - Returns structured address data
@@ -46,10 +46,11 @@ export const AddressInput = ({
   const [addressSearchText, setAddressSearchText] = useState(decodeHTML(value) || '');
   const [selectedPlaceData, setSelectedPlaceData] = useState(null); // Store Google Places data after selection
   const abortControllerRef = useRef(null);
-  const autocompleteServiceRef = useRef(null);
-  const sessionTokenRef = useRef(null);
-  const placesServiceRef = useRef(null);
   const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
+
+  // New Places API (New) refs
+  const placesLibraryRef = useRef(null);
+  const sessionTokenRef = useRef(null);
 
   // Get user's location preferences with fallback to Bakersfield
   const userCity = user?.home_city || 'Bakersfield';
@@ -58,7 +59,7 @@ export const AddressInput = ({
   const userLng = user?.home_lng || -119.0187;
   const searchRadius = user?.search_radius_miles || 50;
 
-  // Load Google Maps script using modern Loader
+  // Load Google Maps Places API (New) using modern Loader
   useEffect(() => {
     const loadGoogleMaps = async () => {
       const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
@@ -67,35 +68,22 @@ export const AddressInput = ({
         return;
       }
 
-      // Check if already loaded
-      if (window.google?.maps?.places) {
-        setGoogleMapsLoaded(true);
-        autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-        sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
-        const dummyDiv = document.createElement('div');
-        placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
-        return;
-      }
-
       try {
-        // Use modern Loader from @googlemaps/js-api-loader
         const loader = new Loader({
           apiKey,
           version: 'weekly',
-          libraries: ['places'],
         });
 
-        await loader.load();
+        // Load the new Places library (async, returns the library object)
+        const placesLibrary = await loader.importLibrary('places');
+        placesLibraryRef.current = placesLibrary;
 
-        if (window.google?.maps?.places) {
-          setGoogleMapsLoaded(true);
-          autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-          sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
-          const dummyDiv = document.createElement('div');
-          placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
-        }
+        // Create session token for billing optimization
+        sessionTokenRef.current = new placesLibrary.AutocompleteSessionToken();
+
+        setGoogleMapsLoaded(true);
       } catch (error) {
-        console.error('Failed to load Google Maps:', error);
+        console.error('Failed to load Google Maps Places API (New):', error);
       }
     };
 
@@ -126,48 +114,53 @@ export const AddressInput = ({
     }
   }, [value]);
 
-  // Debounced Google Places search
+  // Debounced Google Places API (New) search
   const searchGooglePlaces = useMemo(
     () => debounce(async (input, callback) => {
-      if (!autocompleteServiceRef.current || !input || input.length < 3) {
+      if (!placesLibraryRef.current || !input || input.length < 3) {
         callback([]);
         return;
       }
 
-      // Detect if user included a city name (has comma or multiple words that might be city)
-      // If they're typing full address, don't bias - search broadly
-      const hasComma = input.includes(',');
-      const hasMultipleWords = input.trim().split(/\s+/).length > 3;
-      const shouldBias = !hasComma && !hasMultipleWords;
+      try {
+        // Detect if user included a city name (has comma or multiple words that might be city)
+        // If they're typing full address, don't bias - search broadly
+        const hasComma = input.includes(',');
+        const hasMultipleWords = input.trim().split(/\s+/).length > 3;
+        const shouldBias = !hasComma && !hasMultipleWords;
 
-      const request = {
-        input,
-        sessionToken: sessionTokenRef.current,
-        componentRestrictions: { country: 'us' },
-        types: ['address']
-      };
+        const request = {
+          input,
+          sessionToken: sessionTokenRef.current,
+          includedRegionCodes: ['us'],
+          includedPrimaryTypes: ['street_address', 'premise'],
+        };
 
-      // Only add location bias for short/partial searches
-      if (shouldBias) {
-        request.locationBias = new window.google.maps.Circle({
-          center: { lat: userLat, lng: userLng },
-          radius: searchRadius * 1609.34
-        });
-      }
-
-      autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-          const suggestions = predictions.map(prediction => ({
-            label: prediction.description,
-            value: prediction,
-            placeId: prediction.place_id
-          }));
-          callback(suggestions);
-        } else {
-          callback([]);
+        // Only add location bias for short/partial searches
+        if (shouldBias) {
+          request.locationBias = {
+            circle: {
+              center: { lat: userLat, lng: userLng },
+              radius: searchRadius * 1609.34, // Convert miles to meters
+            },
+          };
         }
-      });
-    }, 500), // Increased from 300ms to 500ms to reduce API calls
+
+        // Use new AutocompleteSuggestion.fetchAutocompleteSuggestions
+        const { suggestions } = await placesLibraryRef.current.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+
+        const formattedSuggestions = suggestions.map(suggestion => ({
+          label: suggestion.placePrediction.text.text,
+          value: suggestion,
+          placeId: suggestion.placePrediction.placeId,
+        }));
+
+        callback(formattedSuggestions);
+      } catch (error) {
+        console.error('Places API (New) autocomplete error:', error);
+        callback([]);
+      }
+    }, 500),
     [userLat, userLng, searchRadius]
   );
 
@@ -363,17 +356,22 @@ export const AddressInput = ({
       return;
     }
 
-    // Google Places result - Store the verified data and use for both canonical and display initially
-    if (value.placeId && placesServiceRef.current) {
-      const request = {
-        placeId: value.placeId,
-        fields: ['address_components', 'formatted_address', 'geometry'],
-        sessionToken: sessionTokenRef.current,
-      };
+    // Google Places API (New) result - Fetch place details
+    if (value.placeId && placesLibraryRef.current) {
+      (async () => {
+        try {
+          // Create Place object using new API
+          const place = new placesLibraryRef.current.Place({
+            id: value.placeId,
+            requestedLanguage: 'en',
+          });
 
-      placesServiceRef.current.getDetails(request, (place, status) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-          // Parse address components
+          // Fetch place details with specific fields
+          await place.fetchFields({
+            fields: ['addressComponents', 'formattedAddress', 'location'],
+          });
+
+          // Parse address components using new API structure
           let streetNumber = '';
           let route = '';
           let city = '';
@@ -381,35 +379,37 @@ export const AddressInput = ({
           let zipCode = '';
           let county = '';
 
-          place.address_components.forEach(component => {
-            const types = component.types;
-            if (types.includes('street_number')) streetNumber = component.long_name;
-            if (types.includes('route')) route = component.long_name;
-            // Try multiple city field types (locality, sublocality, postal_town)
-            if (types.includes('locality')) city = component.long_name;
-            else if (!city && types.includes('sublocality')) city = component.long_name;
-            else if (!city && types.includes('postal_town')) city = component.long_name;
-            else if (!city && types.includes('administrative_area_level_3')) city = component.long_name; // Small towns
-            if (types.includes('administrative_area_level_1')) state = component.short_name;
-            if (types.includes('postal_code')) zipCode = component.long_name;
-            if (types.includes('administrative_area_level_2')) county = component.long_name.replace(' County', '');
-          });
+          if (place.addressComponents) {
+            place.addressComponents.forEach(component => {
+              const types = component.types;
+              if (types.includes('street_number')) streetNumber = component.longText;
+              if (types.includes('route')) route = component.longText;
+              // Try multiple city field types
+              if (types.includes('locality')) city = component.longText;
+              else if (!city && types.includes('sublocality')) city = component.longText;
+              else if (!city && types.includes('postal_town')) city = component.longText;
+              else if (!city && types.includes('administrative_area_level_3')) city = component.longText;
+              if (types.includes('administrative_area_level_1')) state = component.shortText;
+              if (types.includes('postal_code')) zipCode = component.longText;
+              if (types.includes('administrative_area_level_2')) county = component.longText.replace(' County', '');
+            });
+          }
 
           const streetAddress = `${streetNumber} ${route}`.trim();
 
-          // Store the Google Places data so we can preserve it if user edits display address
+          // Store the Google Places data
           const placeData = {
             canonicalAddress: streetAddress,
             city,
             state,
             zipCode,
             county,
-            latitude: place.geometry?.location?.lat(),
-            longitude: place.geometry?.location?.lng(),
+            latitude: place.location?.lat(),
+            longitude: place.location?.lng(),
           };
           setSelectedPlaceData(placeData);
 
-          // Pre-fill the input with the street address so user can edit it
+          // Pre-fill the input with the street address
           setAddressSearchText(streetAddress);
 
           // Initially, both display and canonical are the same
@@ -420,14 +420,16 @@ export const AddressInput = ({
             state,
             zip_code: zipCode,
             county,
-            latitude: place.geometry?.location?.lat(),
-            longitude: place.geometry?.location?.lng(),
+            latitude: place.location?.lat(),
+            longitude: place.location?.lng(),
           });
 
-          // Reset session token
-          sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
+          // Reset session token for billing optimization
+          sessionTokenRef.current = new placesLibraryRef.current.AutocompleteSessionToken();
+        } catch (error) {
+          console.error('Places API (New) place details error:', error);
         }
-      });
+      })();
     } else if (value.value) {
       // Nominatim result
       const addressData = value.value;
