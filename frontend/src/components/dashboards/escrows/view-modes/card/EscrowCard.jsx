@@ -250,37 +250,26 @@ const useEscrowCardConfig = (statuses) => {
               const clients = escrow.clients || { buyers: [], sellers: [] };
               const representationType = escrow.representation_type || 'buyer';
 
-              // EditClients expects either:
-              // - value: array of client objects (for role-specific mode)
-              // - values: {buyerClients, sellerClients, representationType} (for combined mode with showRepresentationType)
-
-              // For card editing, we want role-specific mode (no representation type toggle)
-              // Pass the appropriate client list based on representation type
-              let clientList = [];
-              if (representationType === 'buyer') {
-                clientList = clients.buyers || [];
-              } else if (representationType === 'seller') {
-                clientList = clients.sellers || [];
-              } else if (representationType === 'dual') {
-                // For dual, we need to pass both - use combined mode instead
-                return {
-                  values: {
-                    buyerClients: clients.buyers || [],
-                    sellerClients: clients.sellers || [],
-                    representationType: representationType,
-                  },
-                  showRepresentationType: false, // Don't show toggle in card editing
-                  representationType: representationType,
-                };
-              }
-
+              // Always use combined mode (show representation type selector + clients)
+              // This matches the New Escrow Modal experience
               return {
-                value: clientList,
-                representationType: representationType,
+                values: {
+                  buyerClients: clients.buyers || [],
+                  sellerClients: clients.sellers || [],
+                  representationType: representationType,
+                },
+                showRepresentationType: true, // Always show representation type selector
               };
             },
             onSave: (escrow, clientsData) => {
-              return { clients: clientsData };
+              // clientsData from combined mode: { buyerClients, sellerClients, representationType }
+              return {
+                clients: {
+                  buyers: clientsData.buyerClients || [],
+                  sellers: clientsData.sellerClients || [],
+                },
+                representation_type: clientsData.representationType,
+              };
             },
             width: '33.33%',
           },
