@@ -159,11 +159,22 @@ export const AddressInput = ({
         const data = await response.json();
 
         if (data.suggestions) {
-          const formattedSuggestions = data.suggestions.map(suggestion => ({
-            label: suggestion.placePrediction.text.text,
-            value: suggestion,
-            placeId: suggestion.placePrediction.placeId,
-          }));
+          const formattedSuggestions = data.suggestions.map(suggestion => {
+            // Try to use structuredFormat for more detailed display with zip code
+            const mainText = suggestion.placePrediction.structuredFormat?.mainText?.text || '';
+            const secondaryText = suggestion.placePrediction.structuredFormat?.secondaryText?.text || '';
+
+            // If we have structured format, combine them; otherwise use the full text
+            const displayLabel = mainText && secondaryText
+              ? `${mainText}, ${secondaryText}`
+              : suggestion.placePrediction.text.text;
+
+            return {
+              label: displayLabel,
+              value: suggestion,
+              placeId: suggestion.placePrediction.placeId,
+            };
+          });
           callback(formattedSuggestions);
         } else {
           callback([]);
