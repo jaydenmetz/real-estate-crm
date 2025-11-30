@@ -503,7 +503,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             >
               Preview Your Escrow
             </Typography>
-            <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
               <EscrowCard
                 escrow={previewEscrow}
                 onClick={() => {}} // Disable card click navigation
