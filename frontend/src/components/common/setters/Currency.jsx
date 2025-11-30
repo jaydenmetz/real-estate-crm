@@ -156,7 +156,7 @@ export const Currency = ({
   const adaptiveFontSize = '1.8rem';
 
   return (
-    <Box>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
       {/* Label */}
       <Typography
         variant="caption"
