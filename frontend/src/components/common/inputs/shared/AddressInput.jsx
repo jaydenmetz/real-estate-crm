@@ -5,7 +5,7 @@ import { LocationOn, Close } from '@mui/icons-material';
 import debounce from 'lodash/debounce';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { decodeHTML } from '../../../../utils/htmlEntities';
-import { Loader } from '@googlemaps/js-api-loader';
+import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 
 /**
  * Beautiful Address Autocomplete Input Component
@@ -59,7 +59,7 @@ export const AddressInput = ({
   const userLng = user?.home_lng || -119.0187;
   const searchRadius = user?.search_radius_miles || 50;
 
-  // Load Google Maps Places API (New) using modern Loader
+  // Load Google Maps Places API (New) using functional API
   useEffect(() => {
     const loadGoogleMaps = async () => {
       const apiKey = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
@@ -69,13 +69,14 @@ export const AddressInput = ({
       }
 
       try {
-        const loader = new Loader({
+        // Set API key using new functional API
+        setOptions({
           apiKey,
           version: 'weekly',
         });
 
-        // Load the new Places library (async, returns the library object)
-        const placesLibrary = await loader.importLibrary('places');
+        // Import Places library using functional API
+        const placesLibrary = await importLibrary('places');
         placesLibraryRef.current = placesLibrary;
 
         // Create session token for billing optimization
