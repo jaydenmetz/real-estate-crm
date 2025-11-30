@@ -285,7 +285,7 @@ export const AddressInput = ({
         onInputChange(value);
       }
 
-      if (googleMapsLoaded && placesLibraryRef.current) {
+      if (googleMapsLoaded) {
         searchGooglePlaces(value, (suggestions) => {
           // If Google Maps returns no results, fall back to Nominatim
           if (suggestions.length === 0 && value.length >= 2) {
