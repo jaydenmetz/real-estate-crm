@@ -507,6 +507,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               <EscrowCard
                 escrow={previewEscrow}
                 onClick={() => {}} // Disable card click navigation
+                disableMasterPrivacy={true} // Disable global privacy toggle in preview mode
                 onUpdate={(updatedEscrow) => {
                   // Sync all updates back to formData
                   const newFormData = { ...formData };

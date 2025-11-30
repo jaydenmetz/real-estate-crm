@@ -285,6 +285,8 @@ const EscrowCard = React.memo(({
   isSelectable,
   isSelected,
   onSelect,
+  // Privacy control
+  disableMasterPrivacy = false, // Set to true in preview mode
 }) => {
   // Get statuses from context
   const { statuses } = useStatus();
@@ -311,6 +313,7 @@ const EscrowCard = React.memo(({
       isSelectable={isSelectable}
       isSelected={isSelected}
       onSelect={onSelect}
+      disableMasterPrivacy={disableMasterPrivacy}
     />
   );
 });

@@ -120,17 +120,21 @@ const CardTemplate = React.memo(({
   isSelectable = false,
   isSelected = false,
   onSelect,
+  // Privacy toggle control
+  disableMasterPrivacy = false, // Set to true in preview mode to disable global privacy toggle
 }) => {
   const theme = useTheme();
 
   // Privacy context for master toggle
   let masterHidden = false;
-  try {
-    const privacy = usePrivacy();
-    masterHidden = privacy?.masterHidden || false;
-  } catch (e) {
-    // Context not available (not wrapped in PrivacyProvider)
-    // This is fine - just means no master toggle control
+  if (!disableMasterPrivacy) {
+    try {
+      const privacy = usePrivacy();
+      masterHidden = privacy?.masterHidden || false;
+    } catch (e) {
+      // Context not available (not wrapped in PrivacyProvider)
+      // This is fine - just means no master toggle control
+    }
   }
 
   // Modal states - one state per potential editor
