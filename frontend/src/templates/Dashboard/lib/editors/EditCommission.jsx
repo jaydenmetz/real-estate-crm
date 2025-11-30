@@ -174,7 +174,7 @@ export const EditCommission = ({
         width: '100%',
       }}
     >
-      <Box sx={{ width: '100%', maxWidth: 500 }}>
+      <Box sx={{ width: '100%', maxWidth: 300 }}>
       {/* Label */}
       <Typography
         variant="caption"
