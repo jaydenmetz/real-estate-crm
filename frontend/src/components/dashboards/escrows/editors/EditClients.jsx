@@ -613,21 +613,21 @@ export const EditClients = ({
       ) : (
         // Role-specific or standalone mode: Show single client selector
         <>
-          {/* Representation Type Header - Make it prominent */}
-          <Box sx={{ mb: 2 }}>
+          {/* Representation Type Header - Match combined mode style */}
+          <Box sx={{ mb: 3 }}>
             <Typography
-              variant="h6"
+              variant="caption"
               sx={{
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: 700,
-                color: representationType === 'buyer' ? '#10b981' : representationType === 'seller' ? '#f59e0b' : '#6366f1',
-                mb: 0.5,
+                color: 'rgba(255,255,255,0.9)',
+                mb: 1,
                 display: 'block',
                 textTransform: 'uppercase',
-                letterSpacing: '2px',
+                letterSpacing: '1px',
               }}
             >
-              {label}
+              {label.toUpperCase()}
             </Typography>
 
             {/* Title - Hide in inline mode */}
@@ -637,6 +637,7 @@ export const EditClients = ({
                 sx={{
                   fontWeight: 900,
                   color: 'white',
+                  mb: 0,
                   letterSpacing: '-1px',
                 }}
               >
