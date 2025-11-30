@@ -327,6 +327,11 @@ export const AddressInput = ({
   }, [googleMapsLoaded, searchGooglePlaces, searchNominatim, onChange, onInputChange]);
 
   const handleAddressSelect = async (event, value) => {
+    // Clear suggestions immediately when an address is selected
+    if (value && typeof value !== 'string') {
+      setAddressSuggestions([]);
+    }
+
     // If user typed custom text (not from suggestions), preserve it
     if (!value || typeof value === 'string') {
       // User pressed Enter or is still editing after autocomplete selection
