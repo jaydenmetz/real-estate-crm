@@ -122,10 +122,12 @@ export const AddressInput = ({
 
         // Only add location bias for short/partial searches
         if (shouldBias) {
+          // Convert miles to meters, but cap at 50,000 meters (Google's max)
+          const radiusInMeters = Math.min(searchRadius * 1609.34, 50000);
           requestBody.locationBias = {
             circle: {
               center: { latitude: userLat, longitude: userLng },
-              radius: searchRadius * 1609.34, // Convert miles to meters
+              radius: radiusInMeters,
             },
           };
         }
