@@ -254,11 +254,11 @@ export const DashboardContent = ({
 
     if (viewMode === 'card') {
       // Responsive grid with fixed 320px cards
-      // Center single-column layouts, left-align multi-column
+      // auto-fill creates as many columns as possible, filling the full width
       return {
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, 320px)', // All cards fixed at 320px
-        justifyContent: { xs: 'center', sm: 'center', md: 'start' }, // Center on xs/sm (1 column), left on md+ (2+ columns)
+        gridTemplateColumns: 'repeat(auto-fill, 320px)', // Fill width with 320px cards
+        justifyContent: 'space-between', // Distribute cards evenly, aligning edges with container
         gap: {
           xs: 2, // 16px on mobile
           sm: 2, // 16px on small
