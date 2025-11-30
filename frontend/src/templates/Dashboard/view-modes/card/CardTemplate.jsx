@@ -200,10 +200,21 @@ const CardTemplate = React.memo(({
   }, []);
 
   // Toggle handler (for show/hide features like commission)
-  const handleToggle = useCallback((toggleKey, e) => {
+  const handleToggle = useCallback((toggleKey, e, metricIndex) => {
     e?.stopPropagation();
-    setToggleStates(prev => ({ ...prev, [toggleKey]: !prev[toggleKey] }));
-  }, []);
+    const newToggleState = !toggleStates[toggleKey];
+    setToggleStates(prev => ({ ...prev, [toggleKey]: newToggleState }));
+
+    // If this is a commission toggle and we have an onUpdate callback, sync to parent
+    if (onUpdate && metricIndex !== undefined && config.metrics?.[metricIndex]) {
+      const metric = config.metrics[metricIndex];
+      // Check if this metric has an onToggle handler
+      if (metric.toggle?.onToggle) {
+        const updates = metric.toggle.onToggle(data, newToggleState);
+        onUpdate(updates);
+      }
+    }
+  }, [toggleStates, onUpdate, config.metrics, data]);
 
   // Status menu handlers
   const handleStatusClick = useCallback((e) => {
@@ -583,7 +594,7 @@ const CardTemplate = React.memo(({
                             onClick={(e) => {
                               // Only allow toggle when master is NOT hidden
                               if (!masterHidden) {
-                                handleToggle(`metric_${idx}`, e);
+                                handleToggle(`metric_${idx}`, e, idx);
                               }
                             }}
                             sx={{
