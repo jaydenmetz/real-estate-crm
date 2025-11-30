@@ -246,18 +246,15 @@ export const EditClients = ({
     setSaving(true);
     try {
       if (showRepresentationType) {
-        // Combined mode: Save all data together
-        const buyerClientIds = buyerClients.map(c => c.id);
-        const sellerClientIds = sellerClients.map(c => c.id);
+        // Combined mode: Save all data together with full client objects
         await onSave({
-          buyerClients: buyerClientIds,
-          sellerClients: sellerClientIds,
+          buyerClients: buyerClients, // Send full client objects, not just IDs
+          sellerClients: sellerClients, // Send full client objects, not just IDs
           representationType: selectedType,
         });
       } else {
-        // Role-specific or standalone mode: Save client IDs only
-        const clientIds = selectedClients.map(c => c.id);
-        await onSave(clientIds);
+        // Role-specific or standalone mode: Save full client objects
+        await onSave(selectedClients);
       }
       onClose();
     } catch (error) {

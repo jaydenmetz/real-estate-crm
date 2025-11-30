@@ -284,10 +284,12 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         ? formData.buyerCommission + formData.sellerCommission
         : (formData.buyerCommission || formData.sellerCommission);
 
-      // Prepare client IDs
-      const clientIds = formData.representationType === 'dual'
-        ? [...formData.buyerClients, ...formData.sellerClients]
-        : [...formData.buyerClients, ...formData.sellerClients];
+      // Prepare clients structure: { buyers: [...], sellers: [...] }
+      // formData stores full client objects from EditClients
+      const clients = {
+        buyers: formData.buyerClients || [],
+        sellers: formData.sellerClients || [],
+      };
 
       const escrowData = {
         property_address: formData.propertyAddress,
@@ -307,8 +309,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         closing_date: formData.closeOfEscrowDate,
         escrow_status: 'active',
         representation_type: formData.representationType,
-        // Add client IDs (will need backend support for multiple clients)
-        client_id: clientIds[0] || null, // For now, use first client
+        // Add clients with new structure
+        clients: clients,
       };
 
       const response = await escrowsAPI.create(escrowData);
