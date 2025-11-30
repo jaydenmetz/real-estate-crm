@@ -12,3 +12,4 @@ export { EditPurchasePrice } from './EditPurchasePrice';
 export { EditClosingDate } from './EditClosingDate';
 export { EditAcceptanceDate } from './EditAcceptanceDate';
 export { EditCommissionAmount } from './EditCommissionAmount';
+export { EditClients } from './EditClients';
