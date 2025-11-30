@@ -408,7 +408,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             value={isBuyerCommission ? formData.buyerCommission : formData.sellerCommission}
             commissionPercentage={isBuyerCommission ? formData.buyerCommissionPercentage : formData.sellerCommissionPercentage}
             commissionType={isBuyerCommission ? formData.buyerCommissionType : formData.sellerCommissionType}
-            purchasePrice={formData.purchasePrice}
+            purchasePrice={parseFloat(formData.purchasePrice) || 0}
             color="#3b82f6" // Consistent blue color
             inline={true}
           />
