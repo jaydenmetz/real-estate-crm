@@ -159,6 +159,11 @@ export const AddressInput = ({
         const data = await response.json();
 
         if (data.suggestions) {
+          // Log first suggestion to see structure
+          if (data.suggestions.length > 0) {
+            console.log('📍 Places API suggestion structure:', JSON.stringify(data.suggestions[0], null, 2));
+          }
+
           const formattedSuggestions = data.suggestions.map(suggestion => {
             // Try to use structuredFormat for more detailed display with zip code
             const mainText = suggestion.placePrediction.structuredFormat?.mainText?.text || '';
@@ -168,6 +173,8 @@ export const AddressInput = ({
             const displayLabel = mainText && secondaryText
               ? `${mainText}, ${secondaryText}`
               : suggestion.placePrediction.text.text;
+
+            console.log('📋 Formatted label:', displayLabel);
 
             return {
               label: displayLabel,
