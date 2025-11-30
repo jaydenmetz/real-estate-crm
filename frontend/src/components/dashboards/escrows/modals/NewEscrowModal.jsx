@@ -492,21 +492,51 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                 onClick={() => {}} // Disable card click navigation
                 onUpdate={(updatedEscrow) => {
                   // Sync all updates back to formData
+                  const newFormData = { ...formData };
+
                   if (updatedEscrow.show_commission !== undefined) {
-                    setFormData({ ...formData, showCommission: updatedEscrow.show_commission });
+                    newFormData.showCommission = updatedEscrow.show_commission;
                   }
+
                   if (updatedEscrow.purchase_price !== undefined) {
-                    setFormData({ ...formData, purchasePrice: updatedEscrow.purchase_price.toString() });
+                    newFormData.purchasePrice = updatedEscrow.purchase_price.toString();
                   }
+
+                  // Handle commission updates (from EditCommissionAmount)
                   if (updatedEscrow.my_commission !== undefined) {
-                    setFormData({ ...formData, buyerCommission: updatedEscrow.my_commission });
+                    // For buyer or seller representation
+                    if (formData.representationType === 'buyer') {
+                      newFormData.buyerCommission = updatedEscrow.my_commission;
+                    } else if (formData.representationType === 'seller') {
+                      newFormData.sellerCommission = updatedEscrow.my_commission;
+                    }
                   }
+
+                  if (updatedEscrow.commission_percentage !== undefined) {
+                    if (formData.representationType === 'buyer') {
+                      newFormData.buyerCommissionPercentage = updatedEscrow.commission_percentage;
+                    } else if (formData.representationType === 'seller') {
+                      newFormData.sellerCommissionPercentage = updatedEscrow.commission_percentage;
+                    }
+                  }
+
+                  if (updatedEscrow.commission_type !== undefined) {
+                    if (formData.representationType === 'buyer') {
+                      newFormData.buyerCommissionType = updatedEscrow.commission_type;
+                    } else if (formData.representationType === 'seller') {
+                      newFormData.sellerCommissionType = updatedEscrow.commission_type;
+                    }
+                  }
+
                   if (updatedEscrow.acceptance_date !== undefined) {
-                    setFormData({ ...formData, acceptanceDate: updatedEscrow.acceptance_date });
+                    newFormData.acceptanceDate = updatedEscrow.acceptance_date;
                   }
+
                   if (updatedEscrow.closing_date !== undefined) {
-                    setFormData({ ...formData, closeOfEscrowDate: updatedEscrow.closing_date });
+                    newFormData.closeOfEscrowDate = updatedEscrow.closing_date;
                   }
+
+                  setFormData(newFormData);
                 }}
               />
             </Box>
