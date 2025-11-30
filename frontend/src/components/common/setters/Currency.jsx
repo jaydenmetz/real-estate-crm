@@ -157,39 +157,41 @@ export const Currency = ({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-      {/* Label */}
-      <Typography
-        variant="caption"
-        sx={{
-          fontSize: 12,
-          fontWeight: 700,
-          color: 'rgba(255,255,255,0.9)',
-          mb: 1,
-          display: 'block',
-          textTransform: 'uppercase',
-          letterSpacing: '1px',
-        }}
-      >
-        {label}
-      </Typography>
-
-      {/* Current Value Display - Only show if enabled (hide in creation flows) */}
-      {showCurrentValue && (
+      {/* Currency Input Container - centered with max width */}
+      <Box sx={{ width: '100%', maxWidth }}>
+        {/* Label - left aligned within the input container */}
         <Typography
-          variant="h4"
+          variant="caption"
           sx={{
-            fontWeight: 900,
-            color: 'white',
-            mb: 3,
-            letterSpacing: '-1px',
+            fontSize: 12,
+            fontWeight: 700,
+            color: 'rgba(255,255,255,0.9)',
+            mb: 1,
+            display: 'block',
+            textTransform: 'uppercase',
+            letterSpacing: '1px',
           }}
         >
-          {formatDisplayValue(value)}
+          {label}
         </Typography>
-      )}
 
-      {/* Currency Input */}
-      <Box sx={{ position: 'relative', width: '100%', maxWidth }}>
+        {/* Current Value Display - Only show if enabled (hide in creation flows) */}
+        {showCurrentValue && (
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 900,
+              color: 'white',
+              mb: 3,
+              letterSpacing: '-1px',
+            }}
+          >
+            {formatDisplayValue(value)}
+          </Typography>
+        )}
+
+        {/* Currency Input */}
+        <Box sx={{ position: 'relative', width: '100%' }}>
         <TextField
           ref={inputRef}
           fullWidth
@@ -275,6 +277,7 @@ export const Currency = ({
             ),
           }}
         />
+        </Box>
       </Box>
     </Box>
   );
