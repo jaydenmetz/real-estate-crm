@@ -258,7 +258,7 @@ export const Currency = ({
                 {prefix}
               </Typography>
             ),
-            endAdornment: displayValue ? (
+            endAdornment: (
               <Typography
                 sx={{
                   fontSize: adaptiveFontSize,
@@ -272,7 +272,7 @@ export const Currency = ({
               >
                 .00
               </Typography>
-            ) : null,
+            ),
           }}
         />
       </Box>
