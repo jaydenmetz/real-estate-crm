@@ -400,18 +400,22 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       case 'seller-commission':
         const isBuyerCommission = stepId === 'buyer-commission' || stepId === 'commission';
         return (
-          <EditCommission
-            open={true}
-            onClose={() => {}}
-            onSave={handleCommissionSave}
-            label={stepId === 'buyer-commission' ? "BUYER'S COMMISSION" : stepId === 'seller-commission' ? 'LISTING COMMISSION' : 'Commission'}
-            value={isBuyerCommission ? formData.buyerCommission : formData.sellerCommission}
-            commissionPercentage={isBuyerCommission ? formData.buyerCommissionPercentage : formData.sellerCommissionPercentage}
-            commissionType={isBuyerCommission ? formData.buyerCommissionType : formData.sellerCommissionType}
-            purchasePrice={parseFloat(formData.purchasePrice) || 0}
-            color="#3b82f6" // Consistent blue color
-            inline={true}
-          />
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 500 }}>
+              <EditCommission
+                open={true}
+                onClose={() => {}}
+                onSave={handleCommissionSave}
+                label={stepId === 'buyer-commission' ? "BUYER'S COMMISSION" : stepId === 'seller-commission' ? 'LISTING COMMISSION' : 'Commission'}
+                value={isBuyerCommission ? formData.buyerCommission : formData.sellerCommission}
+                commissionPercentage={isBuyerCommission ? formData.buyerCommissionPercentage : formData.sellerCommissionPercentage}
+                commissionType={isBuyerCommission ? formData.buyerCommissionType : formData.sellerCommissionType}
+                purchasePrice={parseFloat(formData.purchasePrice) || 0}
+                color="#3b82f6" // Consistent blue color
+                inline={true}
+              />
+            </Box>
+          </Box>
         );
 
       case 'acceptance-date':
