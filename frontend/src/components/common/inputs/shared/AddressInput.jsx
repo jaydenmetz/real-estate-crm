@@ -159,22 +159,11 @@ export const AddressInput = ({
         const data = await response.json();
 
         if (data.suggestions) {
-          // Log first suggestion to see structure
-          if (data.suggestions.length > 0) {
-            console.log('📍 Places API suggestion structure:', JSON.stringify(data.suggestions[0], null, 2));
-          }
-
           const formattedSuggestions = data.suggestions.map(suggestion => {
-            // Try to use structuredFormat for more detailed display with zip code
-            const mainText = suggestion.placePrediction.structuredFormat?.mainText?.text || '';
-            const secondaryText = suggestion.placePrediction.structuredFormat?.secondaryText?.text || '';
-
-            // If we have structured format, combine them; otherwise use the full text
-            const displayLabel = mainText && secondaryText
-              ? `${mainText}, ${secondaryText}`
-              : suggestion.placePrediction.text.text;
-
-            console.log('📋 Formatted label:', displayLabel);
+            // Note: Google Places API autocomplete does NOT include zip codes in suggestions
+            // Zip codes are only available after fetching full place details (which happens on selection)
+            // This is a limitation of Google's autocomplete API
+            const displayLabel = suggestion.placePrediction.text.text;
 
             return {
               label: displayLabel,
