@@ -116,10 +116,9 @@ export const ClientCircles = ({
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: 0.75,
       }}
     >
-      {/* Display client circles */}
+      {/* Display client circles - stacked/overlapping */}
       {displayClients.map((client, index) => {
         const avatarUrl = client.avatar_url || client.avatarUrl;
         const initials = getInitials(client, index);
@@ -130,7 +129,12 @@ export const ClientCircles = ({
             key={client.id || index}
             onMouseEnter={(e) => handleMouseEnter(e, client)}
             onMouseLeave={handleMouseLeave}
-            sx={{ position: 'relative' }}
+            sx={{
+              position: 'relative',
+              marginLeft: index === 0 ? 0 : '-10px', // Overlap by 10px
+              zIndex: isHovered ? 20 : displayClients.length - index, // Hovered on top, otherwise first on top
+              transition: 'all 0.2s ease',
+            }}
           >
             <Avatar
               src={avatarUrl}
@@ -143,13 +147,15 @@ export const ClientCircles = ({
                 cursor: 'pointer',
                 bgcolor: avatarUrl ? 'transparent' : '#3b82f6',
                 color: 'white',
+                border: '2px solid white',
+                boxShadow: isHovered
+                  ? '0 4px 12px rgba(59, 130, 246, 0.5)'
+                  : '0 2px 4px rgba(0,0,0,0.1)',
                 transition: 'all 0.2s ease',
-                boxShadow: isHovered ? '0 4px 12px rgba(59, 130, 246, 0.4)' : 'none',
-                transform: isHovered ? 'scale(1.15)' : 'scale(1)',
-                zIndex: isHovered ? 10 : 1,
+                transform: isHovered ? 'scale(1.15) translateY(-2px)' : 'scale(1)',
                 '&:hover': {
-                  transform: 'scale(1.15)',
-                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
+                  transform: 'scale(1.15) translateY(-2px)',
+                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.5)',
                 },
               }}
               onClick={(e) => {
@@ -163,31 +169,40 @@ export const ClientCircles = ({
         );
       })}
 
-      {/* Overflow indicator (+N more) */}
+      {/* Overflow indicator (+N more) - also stacked */}
       {overflowCount > 0 && (
-        <Avatar
+        <Box
           sx={{
-            width: 36,
-            height: 36,
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            bgcolor: '#64748b',
-            color: 'white',
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              transform: 'scale(1.15)',
-              bgcolor: '#475569',
-              boxShadow: '0 4px 12px rgba(100, 116, 139, 0.4)',
-            },
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit?.();
+            marginLeft: '-10px',
+            zIndex: 0,
           }}
         >
-          +{overflowCount}
-        </Avatar>
+          <Avatar
+            sx={{
+              width: 36,
+              height: 36,
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              bgcolor: '#64748b',
+              color: 'white',
+              border: '2px solid white',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                transform: 'scale(1.15) translateY(-2px)',
+                bgcolor: '#475569',
+                boxShadow: '0 4px 12px rgba(100, 116, 139, 0.4)',
+              },
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit?.();
+            }}
+          >
+            +{overflowCount}
+          </Avatar>
+        </Box>
       )}
 
       {/* Contact Card Popper */}
