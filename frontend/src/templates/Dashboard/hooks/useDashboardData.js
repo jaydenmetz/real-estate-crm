@@ -14,8 +14,10 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
   const [selectedStatus, setSelectedStatus] = useState(() => {
     const saved = localStorage.getItem(`${config.entity.namePlural}Status`);
     // Validate that saved status exists in current config
+    // Handle both formats: "Active" and "Active:status1,status2" (extract tab name before colon)
     const validStatuses = config.dashboard?.statusTabs?.map(tab => tab.value) || [];
-    const isValidStatus = saved && validStatuses.includes(saved);
+    const savedTabName = saved?.includes(':') ? saved.split(':')[0] : saved;
+    const isValidStatus = saved && validStatuses.includes(savedTabName);
 
     // If saved status is invalid, clear it from localStorage and use default
     if (saved && !isValidStatus) {
@@ -71,9 +73,10 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
   );
   const [sortBy, setSortBy] = useState(config.dashboard?.sortOptions?.[0]?.value || 'created_at');
   const [sortOrder, setSortOrder] = useState(() => {
-    // Load saved sort order from localStorage (per entity type AND per status tab)
-    // This allows different tabs to have different sort orders (e.g., Active asc, Closed desc)
-    const saved = localStorage.getItem(`${config.entity.namePlural}SortOrder_${selectedStatus}`);
+    // Load saved sort order from localStorage (per entity type AND per tab)
+    // Extract tab name: "Active:status1,status2" -> "Active"
+    const initialTab = selectedStatus?.includes(':') ? selectedStatus.split(':')[0] : selectedStatus;
+    const saved = localStorage.getItem(`${config.entity.namePlural}SortOrder_${initialTab}`);
     return saved || 'desc'; // Default to descending if not saved
   });
 
@@ -352,18 +355,21 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
     localStorage.setItem(`${config.entity.namePlural}ViewMode`, viewMode);
   }, [viewMode, config.entity.namePlural]);
 
-  // Persist sortOrder to localStorage (per status tab for consistency across devices/sessions)
-  useEffect(() => {
-    localStorage.setItem(`${config.entity.namePlural}SortOrder_${selectedStatus}`, sortOrder);
-  }, [sortOrder, selectedStatus, config.entity.namePlural]);
+  // Persist sortOrder to localStorage (per tab only, not per status combination)
+  // Extract tab name from "Active:status1,status2" -> "Active"
+  const currentTab = selectedStatus?.includes(':') ? selectedStatus.split(':')[0] : selectedStatus;
 
-  // Load saved sortOrder when switching status tabs
   useEffect(() => {
-    const saved = localStorage.getItem(`${config.entity.namePlural}SortOrder_${selectedStatus}`);
+    localStorage.setItem(`${config.entity.namePlural}SortOrder_${currentTab}`, sortOrder);
+  }, [sortOrder, currentTab, config.entity.namePlural]);
+
+  // Load saved sortOrder when switching tabs
+  useEffect(() => {
+    const saved = localStorage.getItem(`${config.entity.namePlural}SortOrder_${currentTab}`);
     if (saved && saved !== sortOrder) {
       setSortOrder(saved);
     }
-  }, [selectedStatus, config.entity.namePlural]);
+  }, [currentTab, config.entity.namePlural]);
 
   // Persist selectedScope to localStorage
   useEffect(() => {
