@@ -9,7 +9,7 @@
  * - Custom view mode icons (4 vertical bars for grid, single rect for list, stacked bars for table)
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Box,
   Paper,
@@ -77,14 +77,34 @@ export const DashboardNavigation = ({
     return acc;
   }, {});
 
-  // Auto-upgrade selectedStatus to include status keys on initial load
-  // This ensures checkbox is checked when page loads with "Active" instead of "Active:Active"
+  // Track the previous tab to detect tab switches
+  const prevTabRef = useRef(null);
+
+  // Auto-upgrade selectedStatus to include status keys ONLY on:
+  // 1. Initial load (no colon in status)
+  // 2. Tab switch (different tab than before)
+  // This allows users to deselect checkboxes within a tab without auto-reselecting
   useEffect(() => {
-    // Only process if selectedStatus doesn't already have status keys (no colon)
-    if (selectedStatus && !selectedStatus.includes(':')) {
+    // Parse current tab from selectedStatus
+    const currentTab = selectedStatus?.includes(':')
+      ? selectedStatus.split(':')[0]
+      : selectedStatus;
+
+    // Check if this is a tab switch (different from previous)
+    const isTabSwitch = prevTabRef.current !== null && prevTabRef.current !== currentTab;
+
+    // Update the previous tab ref
+    prevTabRef.current = currentTab;
+
+    // Only auto-upgrade if:
+    // 1. No colon (initial load or fresh tab name like "Active")
+    // 2. OR it's a tab switch (reset to defaults when switching tabs)
+    const shouldAutoUpgrade = selectedStatus && !selectedStatus.includes(':');
+
+    if (shouldAutoUpgrade) {
       // Find the matching tab with statuses
       const matchingTab = statusTabs.find(tab =>
-        tab.value === selectedStatus &&
+        tab.value === currentTab &&
         tab.statuses &&
         tab.statuses.length > 0
       );
@@ -98,7 +118,7 @@ export const DashboardNavigation = ({
         );
         if (allStatusKeysInTab.length > 0) {
           // Upgrade "Active" to "Active:Active" (or "Active:status1,status2,..." for multi-status tabs)
-          onStatusChange(`${selectedStatus}:${allStatusKeysInTab.join(',')}`);
+          onStatusChange(`${currentTab}:${allStatusKeysInTab.join(',')}`);
         }
       }
     }
@@ -208,15 +228,11 @@ export const DashboardNavigation = ({
                       entity={entityName}
                       isSelected={isTabSelected}
                       selectedStatuses={selectedStatuses}
-                      onCategoryClick={(categoryId, allStatusKeys) => {
-                        // Switch to category - select all statuses in category by default
-                        // allStatusKeys passed from StatusTabWithDropdown (from database)
-                        if (allStatusKeys && allStatusKeys.length > 0) {
-                          onStatusChange(`${tab.value}:${allStatusKeys.join(',')}`);
-                        } else {
-                          // Fallback: no specific statuses (show all)
-                          onStatusChange(tab.value);
-                        }
+                      onCategoryClick={(categoryId) => {
+                        // Switch to category - just pass the tab value (no status keys)
+                        // The useEffect will auto-upgrade to include all statuses as defaults
+                        // This ensures consistent behavior and resets selections on tab switch
+                        onStatusChange(tab.value);
                       }}
                       onStatusToggle={(statusKey) => {
                         // Toggle a status in the multi-select
