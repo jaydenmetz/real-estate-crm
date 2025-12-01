@@ -14,7 +14,7 @@
  * - Configuration status
  */
 
-const { pool } = require('../../../../config/database');
+const { pool } = require('../../../../config/infrastructure/database');
 
 /**
  * Get AI Manager dashboard data
