@@ -149,6 +149,46 @@ export const DashboardContent = ({
     const formattedStatus = formatStatusText(selectedStatus);
     const dateRangeText = formatDateRange();
 
+    // Check if no statuses are selected (format: "TabName:" with empty status list or just tab name with no statuses)
+    const isNoStatusSelected = (() => {
+      if (!selectedStatus) return false;
+      // If it contains a colon, check if there are any statuses after it
+      if (selectedStatus.includes(':')) {
+        const statusList = selectedStatus.split(':')[1];
+        return !statusList || statusList.trim() === '';
+      }
+      return false;
+    })();
+
+    // Show special message when no status is selected
+    if (isNoStatusSelected) {
+      return (
+        <Paper
+          sx={{
+            p: 6,
+            height: 240,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            background: theme => alpha(theme.palette.warning.main, 0.05),
+            border: theme => `2px dashed ${alpha(theme.palette.warning.main, 0.3)}`,
+          }}
+        >
+          <Typography variant="h6" color="warning.dark" gutterBottom>
+            No {config.entity.label} Status Selected
+          </Typography>
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 1.5 }}>
+            Click on the status tab dropdown and select at least one status to view {config.entity.namePlural}
+          </Typography>
+          <Typography variant="caption" color="text.disabled" sx={{ fontStyle: 'italic' }}>
+            Use the checkboxes in the dropdown to filter by specific statuses
+          </Typography>
+        </Paper>
+      );
+    }
+
     return (
       <Paper
         sx={{

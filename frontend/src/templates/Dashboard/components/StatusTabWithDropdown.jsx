@@ -28,9 +28,23 @@ import {
   Typography,
   alpha,
   Checkbox,
+  keyframes,
 } from '@mui/material';
 import { KeyboardArrowDown } from '@mui/icons-material';
 import { useStatus } from '../../../contexts/StatusContext';
+
+// Pulsing animation for when no statuses are selected
+const pulseAnimation = keyframes`
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(255, 152, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+  }
+`;
 
 const StatusTabWithDropdown = ({
   category,
@@ -175,13 +189,22 @@ const StatusTabWithDropdown = ({
     );
   }
 
+  // Check if no statuses are selected (tab is selected but empty selection)
+  const hasNoStatusesSelected = isSelected && selectedStatuses.length === 0;
+
   return (
     <>
       <Tab
         ref={tabRef}
         label={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Typography variant="body2" sx={{ fontWeight: isSelected ? 600 : 400 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: isSelected ? 600 : 400,
+                color: hasNoStatusesSelected ? 'warning.main' : 'inherit',
+              }}
+            >
               {getDisplayLabel()}
             </Typography>
             {isSelected && (
@@ -190,6 +213,7 @@ const StatusTabWithDropdown = ({
                   fontSize: 18,
                   transition: 'transform 0.2s',
                   transform: anchorEl ? 'rotate(180deg)' : 'rotate(0deg)',
+                  color: hasNoStatusesSelected ? 'warning.main' : 'inherit',
                 }}
               />
             )}
@@ -201,8 +225,17 @@ const StatusTabWithDropdown = ({
           minHeight: 48,
           px: 2,
           cursor: 'pointer',
+          borderRadius: 1,
+          // Pulsing animation when no statuses selected
+          ...(hasNoStatusesSelected && {
+            animation: `${pulseAnimation} 1.5s ease-in-out infinite`,
+            backgroundColor: (theme) => alpha(theme.palette.warning.main, 0.08),
+            border: (theme) => `1px solid ${alpha(theme.palette.warning.main, 0.3)}`,
+          }),
           '&:hover': {
-            backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.04),
+            backgroundColor: (theme) => hasNoStatusesSelected
+              ? alpha(theme.palette.warning.main, 0.12)
+              : alpha(theme.palette.primary.main, 0.04),
           },
         }}
         {...tabProps}
