@@ -44,22 +44,26 @@ const EscrowsHeroCarousel = ({
   allData,
 }) => {
   const [currentPage, setCurrentPage] = useState(0);
+  const [direction, setDirection] = useState(1); // 1 = forward (right to left), -1 = backward (left to right)
   const [modalOpen, setModalOpen] = useState(false);
 
   const totalPages = 2; // For now: Standard hero + AI Manager page
 
   // Navigation handlers
   const goToNext = useCallback(() => {
+    setDirection(1);
     setCurrentPage((prev) => (prev + 1) % totalPages);
   }, [totalPages]);
 
   const goToPrevious = useCallback(() => {
+    setDirection(-1);
     setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
   }, [totalPages]);
 
   const goToPage = useCallback((index) => {
+    setDirection(index > currentPage ? 1 : -1);
     setCurrentPage(index);
-  }, []);
+  }, [currentPage]);
 
   // Swipe handlers
   const swipeHandlers = useSwipeable({
@@ -169,13 +173,14 @@ const EscrowsHeroCarousel = ({
         {...swipeHandlers}
         sx={{ position: 'relative', overflow: 'hidden' }}
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" custom={direction}>
           {currentPage === 0 && (
             <motion.div
               key="page-1"
-              initial={{ opacity: 0, x: 300 }}
+              custom={direction}
+              initial={{ opacity: 0, x: direction * 300 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -300 }}
+              exit={{ opacity: 0, x: direction * -300 }}
               transition={{ duration: 0.3 }}
             >
               <DashboardHero
@@ -203,9 +208,10 @@ const EscrowsHeroCarousel = ({
           {currentPage === 1 && (
             <motion.div
               key="page-2"
-              initial={{ opacity: 0, x: 300 }}
+              custom={direction}
+              initial={{ opacity: 0, x: direction * 300 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -300 }}
+              exit={{ opacity: 0, x: direction * -300 }}
               transition={{ duration: 0.3 }}
             >
               {/* Page 2: AI Manager focused view */}
