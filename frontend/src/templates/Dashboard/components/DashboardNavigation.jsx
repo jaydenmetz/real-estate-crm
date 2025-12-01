@@ -213,8 +213,13 @@ export const DashboardNavigation = ({
 
                   // Parse selected statuses for this tab
                   // If no statusList provided (just "Active"), default to ALL statuses in that tab
+                  // If statusList is empty string (from "Active:"), return empty array
                   const selectedStatuses = isTabSelected
-                    ? (statusList ? statusList.split(',') : allStatusKeysInTab)
+                    ? (statusList === null || statusList === undefined
+                        ? allStatusKeysInTab  // No colon at all -> default to all
+                        : statusList === ''
+                          ? []  // Empty after colon ("Active:") -> explicit empty selection
+                          : statusList.split(',').filter(s => s))  // Filter out empty strings
                     : [];
 
                   // For MUI Tabs value matching
