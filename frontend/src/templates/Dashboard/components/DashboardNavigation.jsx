@@ -9,7 +9,7 @@
  * - Custom view mode icons (4 vertical bars for grid, single rect for list, stacked bars for table)
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Box,
   Paper,
@@ -76,6 +76,28 @@ export const DashboardNavigation = ({
     acc[opt.value] = opt.label;
     return acc;
   }, {});
+
+  // Auto-upgrade selectedStatus to include status keys on initial load
+  // This ensures checkbox is checked when page loads with "Active" instead of "Active:Active"
+  useEffect(() => {
+    // Only process if selectedStatus doesn't already have status keys (no colon)
+    if (selectedStatus && !selectedStatus.includes(':')) {
+      // Find the matching tab with statuses
+      const matchingTab = statusTabs.find(tab =>
+        tab.value === selectedStatus &&
+        tab.statuses &&
+        tab.statuses.length > 0
+      );
+
+      if (matchingTab) {
+        const allStatusKeysInTab = matchingTab.statuses.map(s => s.status_key);
+        if (allStatusKeysInTab.length > 0) {
+          // Upgrade "Active" to "Active:Active" (or "Active:status1,status2,..." for multi-status tabs)
+          onStatusChange(`${selectedStatus}:${allStatusKeysInTab.join(',')}`);
+        }
+      }
+    }
+  }, [selectedStatus, statusTabs, onStatusChange]);
 
   return (
     <Box sx={{ mb: 4 }}>
