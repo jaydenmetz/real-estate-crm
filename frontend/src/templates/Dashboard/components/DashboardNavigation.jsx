@@ -247,12 +247,11 @@ export const DashboardNavigation = ({
                           currentStatuses.push(statusKey);
                         }
 
-                        // Update selection (empty = show all)
-                        if (currentStatuses.length === 0) {
-                          onStatusChange(tab.value); // No filter
-                        } else {
-                          onStatusChange(`${tab.value}:${currentStatuses.join(',')}`);
-                        }
+                        // Update selection
+                        // Use colon format even when empty to distinguish from tab switch
+                        // 'Active:' = user explicitly deselected all (show empty state)
+                        // 'Active' = tab switch, should auto-upgrade to defaults
+                        onStatusChange(`${tab.value}:${currentStatuses.join(',')}`)
                       }}
                       value={tabValue}
                     />
