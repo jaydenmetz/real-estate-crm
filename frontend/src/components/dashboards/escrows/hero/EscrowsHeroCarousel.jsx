@@ -65,6 +65,22 @@ const EscrowsHeroCarousel = ({
     setCurrentPage(index);
   }, [currentPage]);
 
+  // Animation variants - use custom prop for dynamic direction
+  const slideVariants = {
+    enter: (dir) => ({
+      x: dir > 0 ? 300 : -300,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (dir) => ({
+      x: dir > 0 ? -300 : 300,
+      opacity: 0,
+    }),
+  };
+
   // Swipe handlers
   const swipeHandlers = useSwipeable({
     onSwipedLeft: goToNext,
@@ -173,15 +189,16 @@ const EscrowsHeroCarousel = ({
         {...swipeHandlers}
         sx={{ position: 'relative', overflow: 'hidden' }}
       >
-        <AnimatePresence mode="wait" custom={direction}>
+        <AnimatePresence initial={false} mode="wait" custom={direction}>
           {currentPage === 0 && (
             <motion.div
               key="page-1"
               custom={direction}
-              initial={{ opacity: 0, x: direction * 300 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: direction * -300 }}
-              transition={{ duration: 0.3 }}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
             >
               <DashboardHero
                 config={configWithClickableWidget}
@@ -209,14 +226,15 @@ const EscrowsHeroCarousel = ({
             <motion.div
               key="page-2"
               custom={direction}
-              initial={{ opacity: 0, x: direction * 300 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: direction * -300 }}
-              transition={{ duration: 0.3 }}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
             >
               {/* Page 2: AI Manager focused view */}
               <AIManagerPage
-                escrowsData={allData}
+                isVisible={currentPage === 1}
                 onConfigureAI={() => setModalOpen(true)}
                 onViewActivity={() => {
                   // TODO: Navigate to activity view or open activity modal

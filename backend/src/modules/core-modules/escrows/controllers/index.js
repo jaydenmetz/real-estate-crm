@@ -16,6 +16,7 @@ const checklistsController = require('./sub-resources/checklists.controller');
 const financialsController = require('./sub-resources/financials.controller');
 const peopleController = require('./sub-resources/people.controller');
 const timelineController = require('./sub-resources/timeline.controller');
+const managerController = require('./manager.controller');
 
 // Export all methods (33 total)
 module.exports = {
@@ -67,4 +68,7 @@ module.exports = {
   updateEscrowTimeline: timelineController.updateEscrowTimeline,
   getEscrowNotes: timelineController.getEscrowNotes,
   addEscrowNote: timelineController.addEscrowNote,
+
+  // Manager dashboard (1 method)
+  getManagerDashboard: managerController.getManagerDashboard,
 };

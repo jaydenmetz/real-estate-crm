@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { Box, Typography, Button, Chip, Grid, alpha } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Button, Chip, Grid, Skeleton } from '@mui/material';
 import {
   Settings as SettingsIcon,
   TrendingUp as TrendingUpIcon,
   AutoAwesome as AutoAwesomeIcon,
 } from '@mui/icons-material';
+import { useQuery } from '@tanstack/react-query';
+import apiInstance from '../../../../../../services/api.service';
 import AIManagerStatCard from './AIManagerStatCard';
 
 /**
@@ -12,42 +14,69 @@ import AIManagerStatCard from './AIManagerStatCard';
  *
  * Page 2 of the escrows hero carousel.
  * Shows AI monitoring stats, quick action items, and configuration options.
+ *
+ * Data is lazily loaded from /v1/escrows/manager when the page becomes visible.
  */
-const AIManagerPage = ({ escrowsData = [], onConfigureAI, onViewActivity }) => {
+const AIManagerPage = ({ isVisible = true, onConfigureAI, onViewActivity }) => {
   const [dateFilter, setDateFilter] = useState('1_month');
 
-  // Calculate stats from escrow data (or use demo data)
-  const stats = {
-    aiManaged: escrowsData.length || 8,
-    dueIn48h: 2,
-    docsPending: 4,
-    compliance: 97,
+  // Lazy load data only when visible
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['escrows', 'manager', dateFilter],
+    queryFn: async () => {
+      const response = await apiInstance.get(`/escrows/manager?period=${dateFilter}`);
+      return response.data;
+    },
+    enabled: isVisible, // Only fetch when page is visible
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchOnWindowFocus: false,
+  });
+
+  // Extract data from response
+  const stats = data?.data?.stats || {
+    managed_count: 0,
+    due_in_48h: 0,
+    docs_pending: 0,
+    compliance_rate: 100,
   };
 
-  // Quick info items
+  const quickItemsData = data?.data?.quick_items || {
+    deadlines_48h: 0,
+    docs_awaiting_signature: 0,
+    follow_ups_needed: 0,
+    reminders_sent_today: 0,
+  };
+
+  const aiStatus = data?.data?.ai_status || {
+    is_active: true,
+    monitoring_all: true,
+    next_summary: '5 PM',
+  };
+
+  // Quick info items built from API data
   const quickItems = [
     {
       icon: '⏰',
       text: 'deadlines in 48h',
-      value: 2,
+      value: quickItemsData.deadlines_48h,
       type: 'urgent',
     },
     {
       icon: '📄',
       text: 'docs awaiting signature',
-      value: 4,
+      value: quickItemsData.docs_awaiting_signature,
       type: 'pending',
     },
     {
       icon: '📞',
       text: 'follow-up needed',
-      value: 1,
+      value: quickItemsData.follow_ups_needed,
       type: 'info',
     },
     {
       icon: '✉️',
       text: 'reminders sent today',
-      value: 4,
+      value: quickItemsData.reminders_sent_today,
       type: 'success',
     },
   ];
@@ -73,6 +102,37 @@ const AIManagerPage = ({ escrowsData = [], onConfigureAI, onViewActivity }) => {
     { value: '1_year', label: '1 YEAR' },
     { value: 'ytd', label: 'YTD' },
   ];
+
+  // Skeleton loader for stat cards
+  const StatCardSkeleton = () => (
+    <Box
+      sx={{
+        background: 'rgba(255,255,255,0.1)',
+        borderRadius: 3,
+        p: 2.5,
+        height: 140,
+      }}
+    >
+      <Skeleton
+        variant="rounded"
+        width={80}
+        height={24}
+        sx={{ bgcolor: 'rgba(255,255,255,0.2)', mb: 2 }}
+      />
+      <Skeleton
+        variant="text"
+        width={60}
+        height={50}
+        sx={{ bgcolor: 'rgba(255,255,255,0.2)' }}
+      />
+      <Skeleton
+        variant="text"
+        width={80}
+        height={20}
+        sx={{ bgcolor: 'rgba(255,255,255,0.2)' }}
+      />
+    </Box>
+  );
 
   return (
     <Box
@@ -141,38 +201,54 @@ const AIManagerPage = ({ escrowsData = [], onConfigureAI, onViewActivity }) => {
       {/* Stats Row */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={6} sm={3}>
-          <AIManagerStatCard
-            label="AI-MANAGED"
-            value={stats.aiManaged}
-            subtext="Escrows"
-            icon="📋"
-          />
+          {isLoading ? (
+            <StatCardSkeleton />
+          ) : (
+            <AIManagerStatCard
+              label="AI-MANAGED"
+              value={stats.managed_count}
+              subtext="Escrows"
+              icon="📋"
+            />
+          )}
         </Grid>
         <Grid item xs={6} sm={3}>
-          <AIManagerStatCard
-            label="DUE IN 48H"
-            value={stats.dueIn48h}
-            subtext="Deadlines"
-            icon="⏰"
-            highlight={true}
-            valueColor="#ffd54f"
-          />
+          {isLoading ? (
+            <StatCardSkeleton />
+          ) : (
+            <AIManagerStatCard
+              label="DUE IN 48H"
+              value={stats.due_in_48h}
+              subtext="Deadlines"
+              icon="⏰"
+              highlight={stats.due_in_48h > 0}
+              valueColor={stats.due_in_48h > 0 ? '#ffd54f' : undefined}
+            />
+          )}
         </Grid>
         <Grid item xs={6} sm={3}>
-          <AIManagerStatCard
-            label="DOCS PENDING"
-            value={stats.docsPending}
-            subtext="Signatures"
-            icon="📄"
-          />
+          {isLoading ? (
+            <StatCardSkeleton />
+          ) : (
+            <AIManagerStatCard
+              label="DOCS PENDING"
+              value={stats.docs_pending}
+              subtext="Signatures"
+              icon="📄"
+            />
+          )}
         </Grid>
         <Grid item xs={6} sm={3}>
-          <AIManagerStatCard
-            label="COMPLIANCE"
-            value={`${stats.compliance}%`}
-            subtext="On-Time"
-            icon="✅"
-          />
+          {isLoading ? (
+            <StatCardSkeleton />
+          ) : (
+            <AIManagerStatCard
+              label="COMPLIANCE"
+              value={`${stats.compliance_rate}%`}
+              subtext="On-Time"
+              icon="✅"
+            />
+          )}
         </Grid>
       </Grid>
 
@@ -185,37 +261,50 @@ const AIManagerPage = ({ escrowsData = [], onConfigureAI, onViewActivity }) => {
           mb: 3,
         }}
       >
-        {quickItems.map((item, index) => {
-          const colors = getQuickItemColor(item.type);
-          return (
-            <Chip
-              key={index}
-              icon={<span style={{ fontSize: '1rem', marginLeft: 8 }}>{item.icon}</span>}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Typography
-                    component="span"
-                    sx={{ fontWeight: 700, fontSize: '0.85rem' }}
-                  >
-                    {item.value}
-                  </Typography>
-                  <Typography component="span" sx={{ fontSize: '0.85rem' }}>
-                    {item.text}
-                  </Typography>
-                </Box>
-              }
-              sx={{
-                background: colors.bg,
-                border: `1px solid ${colors.border}`,
-                color: '#fff',
-                height: 36,
-                '& .MuiChip-icon': {
-                  color: '#fff',
-                },
-              }}
+        {isLoading ? (
+          // Loading skeletons for chips
+          [...Array(4)].map((_, i) => (
+            <Skeleton
+              key={i}
+              variant="rounded"
+              width={160}
+              height={36}
+              sx={{ bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 4 }}
             />
-          );
-        })}
+          ))
+        ) : (
+          quickItems.map((item, index) => {
+            const colors = getQuickItemColor(item.type);
+            return (
+              <Chip
+                key={index}
+                icon={<span style={{ fontSize: '1rem', marginLeft: 8 }}>{item.icon}</span>}
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Typography
+                      component="span"
+                      sx={{ fontWeight: 700, fontSize: '0.85rem' }}
+                    >
+                      {item.value}
+                    </Typography>
+                    <Typography component="span" sx={{ fontSize: '0.85rem' }}>
+                      {item.text}
+                    </Typography>
+                  </Box>
+                }
+                sx={{
+                  background: colors.bg,
+                  border: `1px solid ${colors.border}`,
+                  color: '#fff',
+                  height: 36,
+                  '& .MuiChip-icon': {
+                    color: '#fff',
+                  },
+                }}
+              />
+            );
+          })
+        )}
       </Box>
 
       {/* Action Strip */}
@@ -234,11 +323,13 @@ const AIManagerPage = ({ escrowsData = [], onConfigureAI, onViewActivity }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <AutoAwesomeIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.8)' }} />
           <Typography sx={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.9rem' }}>
-            Currently monitoring all escrows
+            {aiStatus.monitoring_all
+              ? 'Currently monitoring all escrows'
+              : 'AI monitoring paused'}
           </Typography>
         </Box>
         <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem' }}>
-          Next: <strong>Daily summary at 5 PM</strong>
+          Next: <strong>Daily summary at {aiStatus.next_summary}</strong>
         </Typography>
       </Box>
 

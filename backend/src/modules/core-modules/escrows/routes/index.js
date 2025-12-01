@@ -20,6 +20,123 @@ const {
 router.use(authenticate);
 
 // ============================================================================
+// AI MANAGER DASHBOARD - Aggregated stats for AI Manager hero
+// ============================================================================
+
+/**
+ * @openapi
+ * /escrows/manager:
+ *   get:
+ *     operationId: getEscrowManagerDashboard
+ *     summary: Get AI Manager dashboard data
+ *     description: |
+ *       Returns aggregated statistics for the AI Manager dashboard including:
+ *       - Total managed escrows count
+ *       - Escrows with deadlines in next 48 hours
+ *       - Documents awaiting signature
+ *       - Compliance rate (on-time closings percentage)
+ *       - Quick action items (deadlines, follow-ups, reminders)
+ *       - Recent AI activity log
+ *
+ *       This endpoint is optimized for the AI Manager hero card, providing
+ *       all necessary data in a single request to avoid multiple API calls.
+ *     tags:
+ *       - Escrows
+ *       - AI Manager
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKey: []
+ *     x-openai-isConsequential: false
+ *     parameters:
+ *       - name: period
+ *         in: query
+ *         description: Time period for stats calculation
+ *         schema:
+ *           type: string
+ *           enum: [1_day, 1_month, 1_year, ytd]
+ *           default: 1_month
+ *     responses:
+ *       200:
+ *         description: AI Manager dashboard data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     stats:
+ *                       type: object
+ *                       properties:
+ *                         managed_count:
+ *                           type: integer
+ *                           description: Total active/pending escrows
+ *                         due_in_48h:
+ *                           type: integer
+ *                           description: Escrows closing within 48 hours
+ *                         docs_pending:
+ *                           type: integer
+ *                           description: Documents awaiting signature
+ *                         compliance_rate:
+ *                           type: integer
+ *                           description: Percentage of on-time closings
+ *                     quick_items:
+ *                       type: object
+ *                       properties:
+ *                         deadlines_48h:
+ *                           type: integer
+ *                         docs_awaiting_signature:
+ *                           type: integer
+ *                         follow_ups_needed:
+ *                           type: integer
+ *                         reminders_sent_today:
+ *                           type: integer
+ *                     ai_status:
+ *                       type: object
+ *                       properties:
+ *                         is_active:
+ *                           type: boolean
+ *                         monitoring_all:
+ *                           type: boolean
+ *                         next_summary:
+ *                           type: string
+ *             example:
+ *               success: true
+ *               data:
+ *                 stats:
+ *                   managed_count: 8
+ *                   due_in_48h: 2
+ *                   docs_pending: 4
+ *                   compliance_rate: 97
+ *                 quick_items:
+ *                   deadlines_48h: 2
+ *                   docs_awaiting_signature: 4
+ *                   follow_ups_needed: 1
+ *                   reminders_sent_today: 4
+ *                 ai_status:
+ *                   is_active: true
+ *                   monitoring_all: true
+ *                   next_summary: "5 PM"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get(
+  '/manager',
+  [
+    query('period').optional().isIn(['1_day', '1_month', '1_year', 'ytd'])
+      .withMessage('Period must be one of: 1_day, 1_month, 1_year, ytd'),
+  ],
+  validate,
+  canAccessScope,
+  escrowsController.getManagerDashboard,
+);
+
+// ============================================================================
 // DASHBOARD ROUTES - Core CRUD operations
 // ============================================================================
 
