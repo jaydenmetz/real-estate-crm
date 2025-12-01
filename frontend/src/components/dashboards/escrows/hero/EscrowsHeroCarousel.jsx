@@ -8,7 +8,7 @@ import { useSwipeable } from 'react-swipeable';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardHero } from '../../../../templates/Dashboard/components/DashboardHero';
 import AIManagerModal from './AIManagerModal';
-import LockedStatCard from './pages/AIManagerPage/LockedStatCard';
+import AIManagerPage from './pages/AIManagerPage';
 
 /**
  * EscrowsHeroCarousel - Wraps the entire hero section in a carousel
@@ -208,56 +208,13 @@ const EscrowsHeroCarousel = ({
               exit={{ opacity: 0, x: -300 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Page 2: AI Manager focused view with locked stats */}
-              <DashboardHero
-                config={{
-                  ...config,
-                  title: 'AI Escrow Manager',
-                  subtitle: 'Automate your escrow workflows',
-                  showAIAssistant: false, // Hide the widget on this page
+              {/* Page 2: AI Manager focused view */}
+              <AIManagerPage
+                escrowsData={allData}
+                onConfigureAI={() => setModalOpen(true)}
+                onViewActivity={() => {
+                  // TODO: Navigate to activity view or open activity modal
                 }}
-                stats={stats}
-                statsConfig={[
-                  // Override with AI Manager specific stats (locked/demo)
-                  {
-                    id: 'ai_managed',
-                    label: 'AI-MANAGED ESCROWS',
-                    icon: 'AutoAwesome',
-                    color: '#FFD700',
-                  },
-                  {
-                    id: 'ai_due_48h',
-                    label: 'DUE IN 48H',
-                    icon: 'AccessTime',
-                    color: '#ff9800',
-                  },
-                  {
-                    id: 'ai_docs_pending',
-                    label: 'DOCS PENDING',
-                    icon: 'Description',
-                    color: '#f44336',
-                  },
-                  {
-                    id: 'ai_compliance',
-                    label: 'COMPLIANCE SCORE',
-                    icon: 'VerifiedUser',
-                    color: '#4caf50',
-                  },
-                ]}
-                selectedStatus={selectedStatus}
-                onNewItem={null} // No buttons on this page
-                dateRangeFilter={dateRangeFilter}
-                setDateRangeFilter={setDateRangeFilter}
-                customStartDate={customStartDate}
-                setCustomStartDate={setCustomStartDate}
-                customEndDate={customEndDate}
-                setCustomEndDate={setCustomEndDate}
-                dateRange={dateRange}
-                detectPresetRange={detectPresetRange}
-                selectedYear={selectedYear}
-                setSelectedYear={setSelectedYear}
-                StatCardComponent={LockedStatCard} // Use locked stat cards for AI Manager page
-                allData={[]} // Empty data for demo stats
               />
             </motion.div>
           )}
