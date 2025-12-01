@@ -90,7 +90,12 @@ export const DashboardNavigation = ({
       );
 
       if (matchingTab) {
-        const allStatusKeysInTab = matchingTab.statuses.map(s => s.status_key);
+        // Handle both formats:
+        // 1. Static config: statuses = ['active', 'pending'] (array of strings)
+        // 2. Database-driven: statuses = [{status_key: 'Active', ...}] (array of objects)
+        const allStatusKeysInTab = matchingTab.statuses.map(s =>
+          typeof s === 'string' ? s : s.status_key
+        );
         if (allStatusKeysInTab.length > 0) {
           // Upgrade "Active" to "Active:Active" (or "Active:status1,status2,..." for multi-status tabs)
           onStatusChange(`${selectedStatus}:${allStatusKeysInTab.join(',')}`);
@@ -181,7 +186,10 @@ export const DashboardNavigation = ({
                   const isTabSelected = sourceTab === tab.value;
 
                   // Get all status keys available in this tab/category
-                  const allStatusKeysInTab = (tab.statuses || []).map(s => s.status_key);
+                  // Handle both formats: array of strings or array of objects with status_key
+                  const allStatusKeysInTab = (tab.statuses || []).map(s =>
+                    typeof s === 'string' ? s : s.status_key
+                  );
 
                   // Parse selected statuses for this tab
                   // If no statusList provided (just "Active"), default to ALL statuses in that tab
