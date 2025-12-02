@@ -195,13 +195,13 @@ const useEscrowCardConfig = (statuses) => {
           {
             label: 'Acceptance',
             field: 'acceptance_date',
-            formatter: (value) => value ? formatDate(value, 'MMM d') : 'TBD',
+            formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
             editable: true,
             editor: EditAcceptanceDate,
             onSave: (escrow, newDate) => {
               return { acceptance_date: newDate };
             },
-            width: '24%',
+            width: '33.33%',
           },
 
           // Close Date (editable) - Dynamic label based on status
@@ -213,17 +213,16 @@ const useEscrowCardConfig = (statuses) => {
               return 'Closes'; // Active and default
             },
             field: 'closing_date',
-            formatter: (value) => value ? formatDate(value, 'MMM d') : 'TBD',
+            formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
             editable: true,
             editor: EditClosingDate,
             onSave: (escrow, newDate) => {
               return { closing_date: newDate };
             },
-            width: '24%',
+            width: '33.33%',
           },
 
           // Clients (editable) - Shows client avatars/initials
-          // Wider (52%) to accommodate dual representation
           {
             label: (escrow) => {
               const clients = escrow.clients || { buyers: [], sellers: [] };
@@ -272,7 +271,7 @@ const useEscrowCardConfig = (statuses) => {
                 representation_type: clientsData.representationType,
               };
             },
-            width: '52%',
+            width: '33.33%',
           },
         ],
       },
