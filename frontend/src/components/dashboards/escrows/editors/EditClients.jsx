@@ -682,7 +682,7 @@ export const EditClients = ({
                   e.stopPropagation();
                   handleSave();
                 }}
-                disabled={saving || (selectedType === 'dual' ? (buyerClients.length === 0 && sellerClients.length === 0) : (selectedType === 'buyer' ? buyerClients.length === 0 : sellerClients.length === 0))}
+                disabled={saving}
                 sx={{
                   width: 48,
                   height: 48,
@@ -891,7 +891,7 @@ export const EditClients = ({
                   e.stopPropagation();
                   handleSave();
                 }}
-                disabled={saving || selectedClients.length === 0}
+                disabled={saving}
                 sx={{
                   width: 48,
                   height: 48,
