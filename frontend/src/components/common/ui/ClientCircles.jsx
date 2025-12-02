@@ -122,14 +122,14 @@ export const ClientCircles = ({
               ? `0 4px 12px ${roleConfig.border}60`
               : `0 1px 3px rgba(0,0,0,0.12)`,
             transition: 'all 0.2s ease',
-            // 3D perspective tilt - like a plate lifted on one edge
-            // rotateX tilts forward/back, perspective gives depth
+            // 3D perspective tilt - like a plate with left edge lifted
+            // rotateY tilts left/right, perspective gives depth
             transform: isHovered
-              ? 'perspective(50px) rotateX(0deg) scale(1.15) translateY(-2px)'
-              : 'perspective(50px) rotateX(45deg)',
+              ? 'perspective(50px) rotateY(0deg) scale(1.15) translateY(-2px)'
+              : 'perspective(50px) rotateY(-35deg)',
             cursor: 'pointer',
             '&:hover': {
-              transform: 'perspective(100px) rotateX(0deg) scale(1.15) translateY(-2px)',
+              transform: 'perspective(50px) rotateY(0deg) scale(1.15) translateY(-2px)',
               boxShadow: `0 4px 12px ${roleConfig.border}60`,
               zIndex: 25,
             },
