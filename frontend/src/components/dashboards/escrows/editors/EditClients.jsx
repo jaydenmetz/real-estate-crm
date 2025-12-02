@@ -94,22 +94,27 @@ export const EditClients = ({
     }
   };
 
-  // Load selected clients when dialog opens
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!open) {
+      // Reset state when modal closes
+      setSelectedClients([]);
+      setBuyerClients([]);
+      setSellerClients([]);
+      hasLoadedInitialData.current = false;
+    }
+  }, [open]);
+
+  // Load selected clients when dialog opens (separate effect to avoid infinite loop)
   useEffect(() => {
     const loadClients = async () => {
-      // When modal closes, reset everything including the ref
-      if (!open) {
-        setSelectedClients([]);
-        setBuyerClients([]);
-        setSellerClients([]);
-        hasLoadedInitialData.current = false;
+      // Only run when modal is open and we haven't loaded yet
+      if (!open || hasLoadedInitialData.current) {
         return;
       }
 
-      // Skip if we've already loaded initial data (prevents resetting user's changes)
-      if (hasLoadedInitialData.current) {
-        return;
-      }
+      // Mark as loaded immediately to prevent re-runs
+      hasLoadedInitialData.current = true;
 
       if (showRepresentationType && values) {
         // Combined mode: Load buyer and seller clients
@@ -169,13 +174,10 @@ export const EditClients = ({
               setSellerClients(sellers);
             }
           }
-          // Mark as loaded so subsequent re-renders don't reset state
-          hasLoadedInitialData.current = true;
         } catch (error) {
           console.error('Error loading clients:', error);
           setBuyerClients([]);
           setSellerClients([]);
-          hasLoadedInitialData.current = true; // Still mark as loaded to prevent retry loops
         }
       } else if (value && value.length > 0) {
         // Role-specific or standalone mode: Load single client list
@@ -206,21 +208,16 @@ export const EditClients = ({
               }));
             setSelectedClients(clients);
           }
-          // Mark as loaded so subsequent re-renders don't reset state
-          hasLoadedInitialData.current = true;
         } catch (error) {
           console.error('Error loading clients:', error);
           setSelectedClients([]);
-          hasLoadedInitialData.current = true; // Still mark as loaded to prevent retry loops
         }
-      } else {
-        // No values to load, but still mark as loaded to prevent repeated calls
-        hasLoadedInitialData.current = true;
       }
     };
 
     loadClients();
-  }, [open, value, showRepresentationType, values]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]); // Only depend on 'open' - values/value are captured at time of opening
 
   // Debounced client search
   const searchClientsDebounced = useCallback(
