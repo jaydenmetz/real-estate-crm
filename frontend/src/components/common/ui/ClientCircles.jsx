@@ -173,7 +173,7 @@ export const ClientCircles = ({
           fontSize: '0.7rem',
           fontWeight: 700,
           color: 'text.secondary',
-          ml: 0.5,
+          ml: 0.25,
           cursor: 'pointer',
           flexShrink: 0, // Prevent text from being cut off
           whiteSpace: 'nowrap',
