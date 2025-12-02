@@ -231,15 +231,16 @@ export const EditClients = ({
     loadClients();
   }, [open, showRepresentationType]); // values/value are captured via refs
 
-  // Debounced client search
+  // Debounced client search - like Google Address autocomplete
+  // Searches on first character, returns up to 50 results
   const searchClientsDebounced = useCallback(
     debounce(async (searchText) => {
-      if (!searchText || searchText.length < 2) {
-        // Load recent clients
+      if (!searchText || searchText.length < 1) {
+        // No search text - load recent clients (up to 50)
         setLoadingClients(true);
         try {
           const response = await clientsAPI.getAll({
-            limit: 5,
+            limit: 50,
             sortBy: 'created_at',
             sortOrder: 'desc'
           });
@@ -265,11 +266,12 @@ export const EditClients = ({
         return;
       }
 
+      // Search starts on first character (like Google autocomplete)
       setLoadingClients(true);
       try {
         const response = await clientsAPI.getAll({
           search: searchText,
-          limit: 10
+          limit: 50
         });
 
         const results = response.success && response.data
@@ -290,7 +292,7 @@ export const EditClients = ({
       } finally {
         setLoadingClients(false);
       }
-    }, 300),
+    }, 150), // Faster debounce for responsive autocomplete
     []
   );
 
@@ -516,7 +518,7 @@ export const EditClients = ({
             />
           )}
           noOptionsText={
-            loadingClients ? 'Loading...' : clientSearch.length < 2 ? 'Type to search clients' : 'No clients found'
+            loadingClients ? 'Loading...' : 'No clients found'
           }
         />
       </Box>
@@ -857,7 +859,7 @@ export const EditClients = ({
             />
           )}
           noOptionsText={
-            loadingClients ? 'Loading...' : clientSearch.length < 2 ? 'Type to search clients' : 'No clients found'
+            loadingClients ? 'Loading...' : 'No clients found'
           }
         />
 
