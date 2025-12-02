@@ -40,6 +40,9 @@ export const EditClients = ({
   // State for combined mode (representation type + clients)
   const [selectedType, setSelectedType] = useState(representationType);
 
+  // State for which client type is currently being searched (null = not searching, 'buyer' or 'seller' = active search)
+  const [activeSearchRole, setActiveSearchRole] = useState(null);
+
   // State for client selection
   const [buyerClients, setBuyerClients] = useState([]);
   const [sellerClients, setSellerClients] = useState([]);
@@ -60,11 +63,14 @@ export const EditClients = ({
   useEffect(() => {
     if (open) {
       if (showRepresentationType && values) {
-        setSelectedType(values.representationType || 'buyer');
+        const repType = values.representationType || 'buyer';
+        setSelectedType(repType);
         // Note: buyerClients/sellerClients are loaded in the loadClients useEffect below
       } else {
         setSelectedType(representationType);
       }
+      // Reset active search when modal opens
+      setActiveSearchRole(null);
     }
   }, [open]); // Only depend on 'open' to prevent resetting on parent re-renders
 
@@ -91,6 +97,9 @@ export const EditClients = ({
   const handleTypeChange = (event, newType) => {
     if (newType !== null) {
       setSelectedType(newType);
+      // Reset active search when representation type changes
+      setActiveSearchRole(null);
+      setClientSearch('');
       if (onRepresentationTypeChange) {
         onRepresentationTypeChange(newType);
       }
@@ -356,175 +365,6 @@ export const EditClients = ({
     }
   };
 
-  // Render client selector for a specific role
-  const renderClientSelector = (currentRole) => {
-    const roleLabel = currentRole === 'buyer' ? 'Buyer(s)' : 'Seller(s)';
-    const roleClients = currentRole === 'buyer' ? buyerClients : sellerClients;
-    const roleColor = currentRole === 'buyer' ? '#10b981' : '#f59e0b';
-
-    return (
-      <Box key={currentRole}>
-        {/* Label */}
-        <Typography
-          variant="caption"
-          sx={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: 'rgba(255,255,255,0.9)',
-            mb: 1,
-            display: 'block',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-          }}
-        >
-          {roleLabel}
-        </Typography>
-
-        {/* Selected Clients List */}
-        {roleClients.length > 0 && (
-          <Box sx={{ mb: 2 }}>
-            <List sx={{ bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, py: 0 }}>
-              {roleClients.map((client, index) => (
-                <ListItem
-                  key={client.id}
-                  sx={{
-                    borderBottom: index < roleClients.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none',
-                  }}
-                >
-                  <ListItemText
-                    primary={
-                      <Typography variant="body1" fontWeight={600} color="white">
-                        {client.firstName} {client.lastName}
-                      </Typography>
-                    }
-                    secondary={
-                      client.email && (
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                          {client.email}
-                        </Typography>
-                      )
-                    }
-                  />
-                  <IconButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      const clientIdToRemove = client.id;
-                      if (currentRole === 'buyer') {
-                        setBuyerClients(prev => prev.filter(c => c.id !== clientIdToRemove));
-                      } else {
-                        setSellerClients(prev => prev.filter(c => c.id !== clientIdToRemove));
-                      }
-                    }}
-                    size="small"
-                    sx={{
-                      color: 'rgba(255,255,255,0.7)',
-                      '&:hover': {
-                        color: 'white',
-                        bgcolor: 'rgba(255,255,255,0.1)',
-                      },
-                    }}
-                  >
-                    <Delete fontSize="small" />
-                  </IconButton>
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        )}
-
-        {/* Client Search/Add */}
-        <Autocomplete
-          options={clientOptions.filter(opt => !roleClients.some(c => c.id === opt.id))}
-          loading={loadingClients}
-          value={null}
-          inputValue={clientSearch}
-          onInputChange={(e, value, reason) => {
-            // Only update search on user input, not on selection/reset
-            if (reason === 'input') {
-              setClientSearch(value);
-            }
-          }}
-          getOptionLabel={(option) =>
-            option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
-          }
-          isOptionEqualToValue={(option, value) => option?.id === value?.id}
-          onChange={(event, client) => {
-            if (!client) return;
-            if (roleClients.some(c => c.id === client.id)) return;
-
-            if (currentRole === 'buyer') {
-              setBuyerClients([...buyerClients, client]);
-            } else {
-              setSellerClients([...sellerClients, client]);
-            }
-            // Clear search after adding
-            setClientSearch('');
-          }}
-          clearOnBlur={false}
-          blurOnSelect={true}
-          filterOptions={(x) => x}
-          renderOption={(props, option) => {
-            const { key, ...otherProps } = props;
-            return (
-              <Box component="li" key={key} {...otherProps}>
-                <Box>
-                  <Typography variant="body2" fontWeight={600}>
-                    {option.firstName} {option.lastName}
-                  </Typography>
-                  {option.email && (
-                    <Typography variant="caption" color="text.secondary">
-                      {option.email}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-            );
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              placeholder={`Search or add ${roleLabel.toLowerCase()}...`}
-              variant="outlined"
-              autoFocus={!showRepresentationType}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  color: 'white',
-                  '& fieldset': {
-                    borderColor: 'rgba(255,255,255,0.3)',
-                  },
-                  '&:hover fieldset': {
-                    borderColor: 'rgba(255,255,255,0.5)',
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: 'white',
-                  },
-                },
-                '& .MuiInputBase-input::placeholder': {
-                  color: 'rgba(255,255,255,0.5)',
-                  opacity: 1,
-                },
-              }}
-              InputProps={{
-                ...params.InputProps,
-                startAdornment: <PersonAdd sx={{ mr: 1, color: 'rgba(255,255,255,0.7)' }} />,
-                endAdornment: (
-                  <>
-                    {loadingClients ? <CircularProgress color="inherit" size={20} /> : null}
-                    {params.InputProps.endAdornment}
-                  </>
-                ),
-              }}
-            />
-          )}
-          noOptionsText={
-            loadingClients ? 'Loading...' : 'No clients found'
-          }
-        />
-      </Box>
-    );
-  };
-
   // Render content
   const content = (
     <Box
@@ -642,16 +482,534 @@ export const EditClients = ({
 
       {/* Client Selectors - Dynamic based on mode */}
       {showRepresentationType ? (
-        // Combined mode: Show client selectors based on selectedType
+        // Combined mode: Inline "Add" placeholders that transform into search inputs
         <>
+          {/* Render client list with inline add for each role based on selectedType */}
           {selectedType === 'dual' ? (
+            // Dual mode: Show both buyer and seller sections
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {renderClientSelector('buyer')}
+              {/* Buyers Section */}
+              <Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: 'rgba(255,255,255,0.7)',
+                    mb: 1,
+                    display: 'block',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  Buyer{buyerClients.length !== 1 ? 's' : ''}
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {/* Existing buyers */}
+                  {buyerClients.map((client) => (
+                    <Box
+                      key={client.id}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        bgcolor: 'rgba(255,255,255,0.1)',
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1.5,
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="body2" fontWeight={600} color="white">
+                          {client.firstName} {client.lastName}
+                        </Typography>
+                        {client.email && (
+                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                            {client.email}
+                          </Typography>
+                        )}
+                      </Box>
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setBuyerClients(prev => prev.filter(c => c.id !== client.id));
+                        }}
+                        size="small"
+                        sx={{
+                          color: 'rgba(255,255,255,0.5)',
+                          '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' },
+                        }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ))}
+
+                  {/* Add Buyer - Dotted placeholder or search input */}
+                  {activeSearchRole === 'buyer' ? (
+                    <Autocomplete
+                      open
+                      options={clientOptions.filter(opt => !buyerClients.some(c => c.id === opt.id))}
+                      loading={loadingClients}
+                      value={null}
+                      inputValue={clientSearch}
+                      onInputChange={(e, value, reason) => {
+                        if (reason === 'input') setClientSearch(value);
+                      }}
+                      getOptionLabel={(option) =>
+                        option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
+                      }
+                      isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                      onChange={(event, client) => {
+                        if (!client) return;
+                        if (!buyerClients.some(c => c.id === client.id)) {
+                          setBuyerClients([...buyerClients, client]);
+                        }
+                        setClientSearch('');
+                        setActiveSearchRole(null);
+                      }}
+                      onBlur={() => {
+                        setTimeout(() => {
+                          setActiveSearchRole(null);
+                          setClientSearch('');
+                        }, 200);
+                      }}
+                      clearOnBlur={false}
+                      blurOnSelect={true}
+                      filterOptions={(x) => x}
+                      renderOption={(props, option) => {
+                        const { key, ...otherProps } = props;
+                        return (
+                          <Box component="li" key={key} {...otherProps}>
+                            <Box>
+                              <Typography variant="body2" fontWeight={600}>
+                                {option.firstName} {option.lastName}
+                              </Typography>
+                              {option.email && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {option.email}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                        );
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          placeholder="Search clients..."
+                          variant="outlined"
+                          size="small"
+                          autoFocus
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              color: 'white',
+                              bgcolor: 'rgba(255,255,255,0.1)',
+                              borderRadius: 2,
+                              '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                              '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                              '&.Mui-focused fieldset': { borderColor: 'white' },
+                            },
+                            '& .MuiInputBase-input::placeholder': {
+                              color: 'rgba(255,255,255,0.5)',
+                              opacity: 1,
+                            },
+                          }}
+                          InputProps={{
+                            ...params.InputProps,
+                            startAdornment: <PersonAdd sx={{ mr: 1, color: 'rgba(255,255,255,0.7)' }} />,
+                            endAdornment: (
+                              <>
+                                {loadingClients ? <CircularProgress color="inherit" size={20} /> : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
+                        />
+                      )}
+                      noOptionsText={loadingClients ? 'Loading...' : 'No clients found'}
+                    />
+                  ) : (
+                    <Box
+                      onClick={() => setActiveSearchRole('buyer')}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 1,
+                        border: '2px dashed rgba(255,255,255,0.3)',
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1.5,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                          bgcolor: 'rgba(255,255,255,0.05)',
+                        },
+                      }}
+                    >
+                      <PersonAdd sx={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }} />
+                      <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+                        Add Buyer
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+
               <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-              {renderClientSelector('seller')}
+
+              {/* Sellers Section */}
+              <Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: 'rgba(255,255,255,0.7)',
+                    mb: 1,
+                    display: 'block',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  Seller{sellerClients.length !== 1 ? 's' : ''}
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {/* Existing sellers */}
+                  {sellerClients.map((client) => (
+                    <Box
+                      key={client.id}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        bgcolor: 'rgba(255,255,255,0.1)',
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1.5,
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="body2" fontWeight={600} color="white">
+                          {client.firstName} {client.lastName}
+                        </Typography>
+                        {client.email && (
+                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                            {client.email}
+                          </Typography>
+                        )}
+                      </Box>
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSellerClients(prev => prev.filter(c => c.id !== client.id));
+                        }}
+                        size="small"
+                        sx={{
+                          color: 'rgba(255,255,255,0.5)',
+                          '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' },
+                        }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ))}
+
+                  {/* Add Seller - Dotted placeholder or search input */}
+                  {activeSearchRole === 'seller' ? (
+                    <Autocomplete
+                      open
+                      options={clientOptions.filter(opt => !sellerClients.some(c => c.id === opt.id))}
+                      loading={loadingClients}
+                      value={null}
+                      inputValue={clientSearch}
+                      onInputChange={(e, value, reason) => {
+                        if (reason === 'input') setClientSearch(value);
+                      }}
+                      getOptionLabel={(option) =>
+                        option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
+                      }
+                      isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                      onChange={(event, client) => {
+                        if (!client) return;
+                        if (!sellerClients.some(c => c.id === client.id)) {
+                          setSellerClients([...sellerClients, client]);
+                        }
+                        setClientSearch('');
+                        setActiveSearchRole(null);
+                      }}
+                      onBlur={() => {
+                        setTimeout(() => {
+                          setActiveSearchRole(null);
+                          setClientSearch('');
+                        }, 200);
+                      }}
+                      clearOnBlur={false}
+                      blurOnSelect={true}
+                      filterOptions={(x) => x}
+                      renderOption={(props, option) => {
+                        const { key, ...otherProps } = props;
+                        return (
+                          <Box component="li" key={key} {...otherProps}>
+                            <Box>
+                              <Typography variant="body2" fontWeight={600}>
+                                {option.firstName} {option.lastName}
+                              </Typography>
+                              {option.email && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {option.email}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                        );
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          placeholder="Search clients..."
+                          variant="outlined"
+                          size="small"
+                          autoFocus
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              color: 'white',
+                              bgcolor: 'rgba(255,255,255,0.1)',
+                              borderRadius: 2,
+                              '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                              '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                              '&.Mui-focused fieldset': { borderColor: 'white' },
+                            },
+                            '& .MuiInputBase-input::placeholder': {
+                              color: 'rgba(255,255,255,0.5)',
+                              opacity: 1,
+                            },
+                          }}
+                          InputProps={{
+                            ...params.InputProps,
+                            startAdornment: <PersonAdd sx={{ mr: 1, color: 'rgba(255,255,255,0.7)' }} />,
+                            endAdornment: (
+                              <>
+                                {loadingClients ? <CircularProgress color="inherit" size={20} /> : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
+                        />
+                      )}
+                      noOptionsText={loadingClients ? 'Loading...' : 'No clients found'}
+                    />
+                  ) : (
+                    <Box
+                      onClick={() => setActiveSearchRole('seller')}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 1,
+                        border: '2px dashed rgba(255,255,255,0.3)',
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1.5,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          borderColor: 'rgba(255,255,255,0.5)',
+                          bgcolor: 'rgba(255,255,255,0.05)',
+                        },
+                      }}
+                    >
+                      <PersonAdd sx={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }} />
+                      <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+                        Add Seller
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              </Box>
             </Box>
           ) : (
-            renderClientSelector(selectedType)
+            // Single mode (buyer or seller): Show single section with inline add
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.7)',
+                  mb: 1,
+                  display: 'block',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                {selectedType === 'buyer' ? 'Buyer' : 'Seller'}{(selectedType === 'buyer' ? buyerClients : sellerClients).length !== 1 ? 's' : ''}
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {/* Existing clients */}
+                {(selectedType === 'buyer' ? buyerClients : sellerClients).map((client) => (
+                  <Box
+                    key={client.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      bgcolor: 'rgba(255,255,255,0.1)',
+                      borderRadius: 2,
+                      px: 2,
+                      py: 1.5,
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="body2" fontWeight={600} color="white">
+                        {client.firstName} {client.lastName}
+                      </Typography>
+                      {client.email && (
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                          {client.email}
+                        </Typography>
+                      )}
+                    </Box>
+                    <IconButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedType === 'buyer') {
+                          setBuyerClients(prev => prev.filter(c => c.id !== client.id));
+                        } else {
+                          setSellerClients(prev => prev.filter(c => c.id !== client.id));
+                        }
+                      }}
+                      size="small"
+                      sx={{
+                        color: 'rgba(255,255,255,0.5)',
+                        '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' },
+                      }}
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  </Box>
+                ))}
+
+                {/* Add Client - Dotted placeholder or search input */}
+                {activeSearchRole === selectedType ? (
+                  <Autocomplete
+                    open
+                    options={clientOptions.filter(opt => !(selectedType === 'buyer' ? buyerClients : sellerClients).some(c => c.id === opt.id))}
+                    loading={loadingClients}
+                    value={null}
+                    inputValue={clientSearch}
+                    onInputChange={(e, value, reason) => {
+                      if (reason === 'input') setClientSearch(value);
+                    }}
+                    getOptionLabel={(option) =>
+                      option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
+                    }
+                    isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                    onChange={(event, client) => {
+                      if (!client) return;
+                      if (selectedType === 'buyer') {
+                        if (!buyerClients.some(c => c.id === client.id)) {
+                          setBuyerClients([...buyerClients, client]);
+                        }
+                      } else {
+                        if (!sellerClients.some(c => c.id === client.id)) {
+                          setSellerClients([...sellerClients, client]);
+                        }
+                      }
+                      setClientSearch('');
+                      setActiveSearchRole(null);
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => {
+                        setActiveSearchRole(null);
+                        setClientSearch('');
+                      }, 200);
+                    }}
+                    clearOnBlur={false}
+                    blurOnSelect={true}
+                    filterOptions={(x) => x}
+                    renderOption={(props, option) => {
+                      const { key, ...otherProps } = props;
+                      return (
+                        <Box component="li" key={key} {...otherProps}>
+                          <Box>
+                            <Typography variant="body2" fontWeight={600}>
+                              {option.firstName} {option.lastName}
+                            </Typography>
+                            {option.email && (
+                              <Typography variant="caption" color="text.secondary">
+                                {option.email}
+                              </Typography>
+                            )}
+                          </Box>
+                        </Box>
+                      );
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder="Search clients..."
+                        variant="outlined"
+                        size="small"
+                        autoFocus
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            color: 'white',
+                            bgcolor: 'rgba(255,255,255,0.1)',
+                            borderRadius: 2,
+                            '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                            '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                            '&.Mui-focused fieldset': { borderColor: 'white' },
+                          },
+                          '& .MuiInputBase-input::placeholder': {
+                            color: 'rgba(255,255,255,0.5)',
+                            opacity: 1,
+                          },
+                        }}
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: <PersonAdd sx={{ mr: 1, color: 'rgba(255,255,255,0.7)' }} />,
+                          endAdornment: (
+                            <>
+                              {loadingClients ? <CircularProgress color="inherit" size={20} /> : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                      />
+                    )}
+                    noOptionsText={loadingClients ? 'Loading...' : 'No clients found'}
+                  />
+                ) : (
+                  <Box
+                    onClick={() => setActiveSearchRole(selectedType)}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 1,
+                      border: '2px dashed rgba(255,255,255,0.3)',
+                      borderRadius: 2,
+                      px: 2,
+                      py: 1.5,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        borderColor: 'rgba(255,255,255,0.5)',
+                        bgcolor: 'rgba(255,255,255,0.05)',
+                      },
+                    }}
+                  >
+                    <PersonAdd sx={{ fontSize: 18, color: 'rgba(255,255,255,0.5)' }} />
+                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
+                      Add {selectedType === 'buyer' ? 'Buyer' : 'Seller'}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </Box>
           )}
 
           {/* Action Buttons for Combined Mode */}
