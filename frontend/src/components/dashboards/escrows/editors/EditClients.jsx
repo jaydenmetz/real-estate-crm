@@ -51,6 +51,9 @@ export const EditClients = ({
 
   // Ref to track if we've already loaded initial data (prevents resetting on parent re-renders)
   const hasLoadedInitialData = useRef(false);
+  // Refs to capture values/value at the time modal opens (prevents stale closure issues)
+  const valuesRef = useRef(null);
+  const valueRef = useRef(null);
 
   // Initialize from props - only when modal opens (not on every values change)
   // This prevents the local state from being reset when parent re-renders
@@ -105,6 +108,12 @@ export const EditClients = ({
     }
   }, [open]);
 
+  // Capture values/value in refs when they change (so the load effect can access them)
+  useEffect(() => {
+    valuesRef.current = values;
+    valueRef.current = value;
+  }, [values, value]);
+
   // Load selected clients when dialog opens (separate effect to avoid infinite loop)
   useEffect(() => {
     const loadClients = async () => {
@@ -116,11 +125,15 @@ export const EditClients = ({
       // Mark as loaded immediately to prevent re-runs
       hasLoadedInitialData.current = true;
 
-      if (showRepresentationType && values) {
+      // Use refs to get the current values (captured above)
+      const currentValues = valuesRef.current;
+      const currentValue = valueRef.current;
+
+      if (showRepresentationType && currentValues) {
         // Combined mode: Load buyer and seller clients
         try {
-          const buyerData = values.buyerClients || [];
-          const sellerData = values.sellerClients || [];
+          const buyerData = currentValues.buyerClients || [];
+          const sellerData = currentValues.sellerClients || [];
 
           // Check if buyerData/sellerData are full client objects or just IDs
           const isFullObject = (item) => item && typeof item === 'object' && (item.firstName || item.first_name);
@@ -179,15 +192,15 @@ export const EditClients = ({
           setBuyerClients([]);
           setSellerClients([]);
         }
-      } else if (value && value.length > 0) {
+      } else if (currentValue && currentValue.length > 0) {
         // Role-specific or standalone mode: Load single client list
         try {
           // Check if value contains full objects or just IDs
           const isFullObject = (item) => item && typeof item === 'object' && (item.firstName || item.first_name);
 
-          if (isFullObject(value[0])) {
+          if (isFullObject(currentValue[0])) {
             // Already full objects - use directly
-            const mappedClients = value.map(c => ({
+            const mappedClients = currentValue.map(c => ({
               id: c.id || c.client_id,
               firstName: c.firstName || c.first_name,
               lastName: c.lastName || c.last_name,
@@ -196,7 +209,7 @@ export const EditClients = ({
             setSelectedClients(mappedClients);
           } else {
             // Just IDs - fetch from API
-            const clientPromises = value.map(id => clientsAPI.getById(id));
+            const clientPromises = currentValue.map(id => clientsAPI.getById(id));
             const results = await Promise.all(clientPromises);
             const clients = results
               .filter(r => r.success && r.data)
@@ -216,8 +229,7 @@ export const EditClients = ({
     };
 
     loadClients();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]); // Only depend on 'open' - values/value are captured at time of opening
+  }, [open, showRepresentationType]); // values/value are captured via refs
 
   // Debounced client search
   const searchClientsDebounced = useCallback(
