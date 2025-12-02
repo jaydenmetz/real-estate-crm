@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Avatar, Typography, Paper, Fade, Popper, Chip } from '@mui/material';
-import { Person, Email, Phone } from '@mui/icons-material';
+import { Add, Email, Phone } from '@mui/icons-material';
 
 /**
  * Role color configuration
@@ -334,22 +334,22 @@ export const ClientCircles = ({
       ? buyers.length
       : sellers.length;
 
-  // Empty state - no clients
+  // Empty state - no clients (grey circle with + icon)
   if (totalCount === 0) {
     return (
-      <Avatar
+      <Box
         sx={{
           width: 26,
           height: 26,
-          fontSize: '0.7rem',
-          bgcolor: 'action.disabledBackground',
-          color: 'text.disabled',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #9ca3af, #9ca3afdd)',
+          padding: '2px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           '&:hover': {
-            bgcolor: 'primary.main',
-            color: 'white',
-            transform: 'scale(1.1)',
+            transform: 'scale(1.15) translateY(-2px)',
+            boxShadow: '0 4px 12px rgba(156, 163, 175, 0.5)',
           },
         }}
         onClick={(e) => {
@@ -357,8 +357,20 @@ export const ClientCircles = ({
           onEdit?.();
         }}
       >
-        <Person sx={{ fontSize: 14 }} />
-      </Avatar>
+        <Avatar
+          sx={{
+            width: '100%',
+            height: '100%',
+            fontSize: '0.7rem',
+            fontWeight: 700,
+            bgcolor: '#9ca3af',
+            color: 'white',
+            border: '1.5px solid white',
+          }}
+        >
+          <Add sx={{ fontSize: 14 }} />
+        </Avatar>
+      </Box>
     );
   }
 
