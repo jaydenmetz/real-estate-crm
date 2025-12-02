@@ -122,10 +122,13 @@ export const ClientCircles = ({
               ? `0 4px 12px ${roleConfig.border}60`
               : `0 1px 3px rgba(0,0,0,0.12)`,
             transition: 'all 0.2s ease',
-            transform: isHovered ? 'scale(1.15) translateY(-2px)' : 'none',
+            // Subtle Z-axis tilt: alternating left/right rotation based on index
+            transform: isHovered
+              ? 'scale(1.15) translateY(-2px) rotateZ(0deg)'
+              : `rotateZ(${index % 2 === 0 ? -3 : 3}deg)`,
             cursor: 'pointer',
             '&:hover': {
-              transform: 'scale(1.15) translateY(-2px)',
+              transform: 'scale(1.15) translateY(-2px) rotateZ(0deg)',
               boxShadow: `0 4px 12px ${roleConfig.border}60`,
               zIndex: 25,
             },
