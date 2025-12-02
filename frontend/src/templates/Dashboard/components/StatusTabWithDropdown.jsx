@@ -122,6 +122,8 @@ const StatusTabWithDropdown = ({
   };
 
   const handleStatusToggle = (statusKey) => {
+    console.log('StatusTabWithDropdown.handleStatusToggle called with:', statusKey);
+    console.log('Current selectedStatuses:', selectedStatuses);
     onStatusToggle(statusKey);
     // Keep dropdown open for multi-select
   };
@@ -475,7 +477,7 @@ const StatusTabWithDropdown = ({
                         checked={isChecked}
                         size="small"
                         sx={{ p: 0 }}
-                        onClick={(e) => e.stopPropagation()}
+                        readOnly
                       />
                       <Typography
                         variant="body2"
