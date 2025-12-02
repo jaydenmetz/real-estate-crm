@@ -17,7 +17,7 @@ export const ClientCircles = ({
   clients = { buyers: [], sellers: [] },
   representationType = 'buyer',
   onEdit,
-  maxVisible = 5,
+  maxVisible = 6, // Show all 6 clients by default
 }) => {
   const [hoveredClient, setHoveredClient] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -118,11 +118,13 @@ export const ClientCircles = ({
         alignItems: 'center',
       }}
     >
-      {/* Display client circles - stacked/overlapping */}
+      {/* Display client circles - tightly stacked with 3D depth effect */}
       {displayClients.map((client, index) => {
         const avatarUrl = client.avatar_url || client.avatarUrl;
         const initials = getInitials(client, index);
         const isHovered = hoveredClient?.id === client.id || hoveredClient === client;
+        // Calculate depth effect - later circles appear slightly lower and more shadowed
+        const depthOffset = index * 0.5; // Subtle vertical offset for 3D effect
 
         return (
           <Box
@@ -131,7 +133,7 @@ export const ClientCircles = ({
             onMouseLeave={handleMouseLeave}
             sx={{
               position: 'relative',
-              marginLeft: index === 0 ? 0 : '-10px', // Overlap by 10px
+              marginLeft: index === 0 ? 0 : '-18px', // Tighter overlap (was -10px)
               zIndex: isHovered ? 20 : displayClients.length - index, // Hovered on top, otherwise first on top
               transition: 'all 0.2s ease',
             }}
@@ -140,22 +142,26 @@ export const ClientCircles = ({
               src={avatarUrl}
               alt={getFullName(client)}
               sx={{
-                width: 36,
-                height: 36,
-                fontSize: '0.8rem',
+                width: 32, // Slightly smaller (was 36px)
+                height: 32,
+                fontSize: '0.7rem',
                 fontWeight: 700,
                 cursor: 'pointer',
                 bgcolor: avatarUrl ? 'transparent' : '#3b82f6',
                 color: 'white',
                 border: '2px solid white',
+                // 3D depth effect with progressive shadow
                 boxShadow: isHovered
                   ? '0 4px 12px rgba(59, 130, 246, 0.5)'
-                  : '0 2px 4px rgba(0,0,0,0.1)',
+                  : `${index * 0.5}px ${1 + depthOffset}px ${3 + index}px rgba(0,0,0,${0.1 + index * 0.03})`,
                 transition: 'all 0.2s ease',
-                transform: isHovered ? 'scale(1.15) translateY(-2px)' : 'scale(1)',
+                transform: isHovered
+                  ? 'scale(1.2) translateY(-3px)'
+                  : `translateY(${depthOffset}px)`, // Subtle stagger for 3D effect
                 '&:hover': {
-                  transform: 'scale(1.15) translateY(-2px)',
+                  transform: 'scale(1.2) translateY(-3px)',
                   boxShadow: '0 4px 12px rgba(59, 130, 246, 0.5)',
+                  zIndex: 25,
                 },
               }}
               onClick={(e) => {
@@ -173,24 +179,24 @@ export const ClientCircles = ({
       {overflowCount > 0 && (
         <Box
           sx={{
-            marginLeft: '-10px',
+            marginLeft: '-18px', // Match tighter overlap
             zIndex: 0,
           }}
         >
           <Avatar
             sx={{
-              width: 36,
-              height: 36,
-              fontSize: '0.75rem',
+              width: 32, // Match smaller size
+              height: 32,
+              fontSize: '0.65rem',
               fontWeight: 700,
               cursor: 'pointer',
               bgcolor: '#64748b',
               color: 'white',
               border: '2px solid white',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              boxShadow: '1px 2px 6px rgba(0,0,0,0.15)',
               transition: 'all 0.2s ease',
               '&:hover': {
-                transform: 'scale(1.15) translateY(-2px)',
+                transform: 'scale(1.2) translateY(-3px)',
                 bgcolor: '#475569',
                 boxShadow: '0 4px 12px rgba(100, 116, 139, 0.4)',
               },
