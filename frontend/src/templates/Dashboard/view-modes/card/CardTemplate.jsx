@@ -644,7 +644,7 @@ const CardTemplate = React.memo(({
                   pt: 1,
                   px: 1,
                   borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                  gap: 1,
+                  gap: 0.5,
                 }}
               >
                 {config.footer.fields?.map((field, idx) => {
@@ -680,8 +680,6 @@ const CardTemplate = React.memo(({
                             cursor: field.editable && onUpdate ? 'pointer' : 'default',
                             transition: 'all 0.2s',
                             borderRadius: 1,
-                            ml: -0.25, // Slight negative margin to align with label
-                            px: 0.25,
                             py: 0.25,
                             ...(field.editable && onUpdate ? {
                               '&:hover': {
@@ -702,8 +700,6 @@ const CardTemplate = React.memo(({
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             borderRadius: 1,
-                            ml: -0.25, // Slight negative margin to align with label
-                            px: 0.25,
                             py: 0.25,
                             '&:hover': {
                               backgroundColor: 'action.hover',

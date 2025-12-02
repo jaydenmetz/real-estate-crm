@@ -201,7 +201,7 @@ const useEscrowCardConfig = (statuses) => {
             onSave: (escrow, newDate) => {
               return { acceptance_date: newDate };
             },
-            width: '26%',
+            width: '27%',
           },
 
           // Close Date (editable) - Dynamic label based on status
@@ -219,11 +219,11 @@ const useEscrowCardConfig = (statuses) => {
             onSave: (escrow, newDate) => {
               return { closing_date: newDate };
             },
-            width: '26%',
+            width: '25%',
           },
 
           // Clients (editable) - Shows client avatars/initials
-          // Wider (48%) to accommodate dual representation with B/S groups
+          // Wider (48%) to accommodate dual representation
           {
             label: (escrow) => {
               const clients = escrow.clients || { buyers: [], sellers: [] };

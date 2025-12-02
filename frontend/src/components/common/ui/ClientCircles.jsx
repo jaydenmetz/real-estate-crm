@@ -106,7 +106,7 @@ export const ClientCircles = ({
         onMouseLeave={handleMouseLeave}
         sx={{
           position: 'relative',
-          marginLeft: index === 0 ? 0 : '-12px',
+          marginLeft: index === 0 ? 0 : '-16px', // Tighter overlap
           zIndex: isHovered ? 20 : totalInGroup - index,
           transition: 'all 0.2s ease',
         }}
@@ -114,8 +114,8 @@ export const ClientCircles = ({
         {/* Colored ring around avatar for role indication */}
         <Box
           sx={{
-            width: 32,
-            height: 32,
+            width: 26,
+            height: 26,
             borderRadius: '50%',
             background: `linear-gradient(135deg, ${roleConfig.border}, ${roleConfig.border}dd)`,
             padding: '2px',
@@ -144,11 +144,11 @@ export const ClientCircles = ({
             sx={{
               width: '100%',
               height: '100%',
-              fontSize: '0.6rem',
+              fontSize: '0.55rem',
               fontWeight: 700,
               bgcolor: avatarUrl ? 'white' : roleConfig.bg,
               color: 'white',
-              border: '2px solid white',
+              border: '1.5px solid white',
             }}
           >
             {!avatarUrl && initials}
@@ -165,14 +165,14 @@ export const ClientCircles = ({
     return (
       <Box
         sx={{
-          marginLeft: '-12px',
+          marginLeft: '-16px', // Match tighter overlap
           zIndex: 0,
         }}
       >
         <Box
           sx={{
-            width: 32,
-            height: 32,
+            width: 26,
+            height: 26,
             borderRadius: '50%',
             background: `linear-gradient(135deg, ${roleConfig.border}80, ${roleConfig.border}60)`,
             padding: '2px',
@@ -193,11 +193,11 @@ export const ClientCircles = ({
             sx={{
               width: '100%',
               height: '100%',
-              fontSize: '0.55rem',
+              fontSize: '0.5rem',
               fontWeight: 700,
               bgcolor: '#64748b',
               color: 'white',
-              border: '2px solid white',
+              border: '1.5px solid white',
             }}
           >
             +{count}
@@ -339,9 +339,9 @@ export const ClientCircles = ({
     return (
       <Avatar
         sx={{
-          width: 32,
-          height: 32,
-          fontSize: '0.75rem',
+          width: 26,
+          height: 26,
+          fontSize: '0.7rem',
           bgcolor: 'action.disabledBackground',
           color: 'text.disabled',
           cursor: 'pointer',
@@ -357,7 +357,7 @@ export const ClientCircles = ({
           onEdit?.();
         }}
       >
-        <Person fontSize="small" />
+        <Person sx={{ fontSize: 14 }} />
       </Avatar>
     );
   }
@@ -404,13 +404,13 @@ export const ClientCircles = ({
     }
 
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
         {/* Buyers group (blue rings) */}
         {buyers.length > 0 && renderClientGroup(buyers, maxBuyers, 'buyer')}
 
-        {/* Visual separator if both exist */}
+        {/* Visual separator if both exist - thin line */}
         {hasBoth && (
-          <Box sx={{ width: '1px', height: 24, bgcolor: 'divider', mx: 0.25 }} />
+          <Box sx={{ width: '1px', height: 18, bgcolor: 'divider', mx: 0.125 }} />
         )}
 
         {/* Sellers group (orange rings) */}
