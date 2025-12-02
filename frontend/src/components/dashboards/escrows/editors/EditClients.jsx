@@ -281,7 +281,7 @@ export const EditClients = ({
   };
 
   const handleRemoveClient = (clientId) => {
-    setSelectedClients(selectedClients.filter(c => c.id !== clientId));
+    setSelectedClients(prev => prev.filter(c => c.id !== clientId));
   };
 
   const handleSave = async () => {
@@ -379,10 +379,12 @@ export const EditClients = ({
                     <IconButton
                       onClick={(e) => {
                         e.stopPropagation();
+                        e.preventDefault();
+                        const clientIdToRemove = client.id;
                         if (currentRole === 'buyer') {
-                          setBuyerClients(buyerClients.filter(c => c.id !== client.id));
+                          setBuyerClients(prev => prev.filter(c => c.id !== clientIdToRemove));
                         } else {
-                          setSellerClients(sellerClients.filter(c => c.id !== client.id));
+                          setSellerClients(prev => prev.filter(c => c.id !== clientIdToRemove));
                         }
                       }}
                       size="small"
