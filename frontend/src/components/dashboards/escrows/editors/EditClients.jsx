@@ -545,8 +545,8 @@ export const EditClients = ({
                     </Box>
                   ))}
 
-                  {/* Add Buyer - Dotted placeholder or search input */}
-                  {activeSearchRole === 'buyer' ? (
+                  {/* Add Buyer - Dotted placeholder or search input (max 6 buyers) */}
+                  {buyerClients.length < 6 && (activeSearchRole === 'buyer' ? (
                     <Autocomplete
                       open
                       options={clientOptions.filter(opt => !buyerClients.some(c => c.id === opt.id))}
@@ -654,7 +654,7 @@ export const EditClients = ({
                         Add Buyer
                       </Typography>
                     </Box>
-                  )}
+                  ))}
                 </Box>
               </Box>
 
@@ -717,8 +717,8 @@ export const EditClients = ({
                     </Box>
                   ))}
 
-                  {/* Add Seller - Dotted placeholder or search input */}
-                  {activeSearchRole === 'seller' ? (
+                  {/* Add Seller - Dotted placeholder or search input (max 6 sellers) */}
+                  {sellerClients.length < 6 && (activeSearchRole === 'seller' ? (
                     <Autocomplete
                       open
                       options={clientOptions.filter(opt => !sellerClients.some(c => c.id === opt.id))}
@@ -826,7 +826,7 @@ export const EditClients = ({
                         Add Seller
                       </Typography>
                     </Box>
-                  )}
+                  ))}
                 </Box>
               </Box>
             </Box>
@@ -892,8 +892,8 @@ export const EditClients = ({
                   </Box>
                 ))}
 
-                {/* Add Client - Dotted placeholder or search input */}
-                {activeSearchRole === selectedType ? (
+                {/* Add Client - Dotted placeholder or search input (max 6 clients) */}
+                {(selectedType === 'buyer' ? buyerClients : sellerClients).length < 6 && (activeSearchRole === selectedType ? (
                   <Autocomplete
                     open
                     options={clientOptions.filter(opt => !(selectedType === 'buyer' ? buyerClients : sellerClients).some(c => c.id === opt.id))}
@@ -1007,7 +1007,7 @@ export const EditClients = ({
                       Add {selectedType === 'buyer' ? 'Buyer' : 'Seller'}
                     </Typography>
                   </Box>
-                )}
+                ))}
               </Box>
             </Box>
           )}
