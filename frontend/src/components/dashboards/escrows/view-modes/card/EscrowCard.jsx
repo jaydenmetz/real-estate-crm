@@ -191,7 +191,7 @@ const useEscrowCardConfig = (statuses) => {
       // Footer Configuration (Acceptance + Close dates + Progress)
       footer: {
         fields: [
-          // Acceptance Date (editable)
+          // Acceptance Date (editable) - auto width based on content
           {
             label: 'Acceptance',
             field: 'acceptance_date',
@@ -201,10 +201,10 @@ const useEscrowCardConfig = (statuses) => {
             onSave: (escrow, newDate) => {
               return { acceptance_date: newDate };
             },
-            width: '33.33%',
+            // No width - let flexbox auto-size based on content
           },
 
-          // Close Date (editable) - Dynamic label based on status
+          // Close Date (editable) - Dynamic label based on status, auto width
           {
             label: (escrow) => {
               const status = escrow?.status?.toLowerCase(); // Use 'status' field
@@ -219,7 +219,7 @@ const useEscrowCardConfig = (statuses) => {
             onSave: (escrow, newDate) => {
               return { closing_date: newDate };
             },
-            width: '33.33%',
+            // No width - let flexbox auto-size based on content
           },
 
           // Clients (editable) - Shows client avatars/initials
@@ -271,7 +271,7 @@ const useEscrowCardConfig = (statuses) => {
                 representation_type: clientsData.representationType,
               };
             },
-            width: '33.33%',
+            // No width - takes remaining space after date columns
           },
         ],
       },
