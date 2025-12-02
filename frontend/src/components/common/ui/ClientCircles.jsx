@@ -1,6 +1,27 @@
 import React, { useState } from 'react';
-import { Box, Avatar, Typography, Paper, Fade, Popper } from '@mui/material';
+import { Box, Avatar, Typography, Paper, Fade, Popper, Chip } from '@mui/material';
 import { Person, Email, Phone } from '@mui/icons-material';
+
+/**
+ * Role color configuration
+ * Blue = Buyer, Orange = Seller
+ * Extensible for future roles (realtors, vendors, etc.)
+ */
+const ROLE_COLORS = {
+  buyer: {
+    border: '#3b82f6',    // Blue
+    bg: '#3b82f6',
+    label: 'Buyer',
+  },
+  seller: {
+    border: '#f97316',    // Orange
+    bg: '#f97316',
+    label: 'Seller',
+  },
+  // Future roles can be added here:
+  // realtor: { border: '#8b5cf6', bg: '#8b5cf6', label: 'Realtor' },
+  // vendor: { border: '#06b6d4', bg: '#06b6d4', label: 'Vendor' },
+};
 
 /**
  * ClientCircles Component
@@ -8,8 +29,11 @@ import { Person, Email, Phone } from '@mui/icons-material';
  * Shows up to maxVisible circles, then "+N" indicator for overflow
  * Hover reveals contact card with full details
  *
- * For dual representation: Shows "B" indicator + buyer circles, then "S" + seller circles
- * This allows 6 buyers + 6 sellers to be displayed compactly
+ * Visual differentiation:
+ * - Buyers: Blue border/ring
+ * - Sellers: Orange border/ring
+ * - Profile images show colored ring around avatar
+ * - Initials show colored background
  *
  * @param {Object} clients - { buyers: [{Client}...], sellers: [{Client}...] }
  * @param {string} representationType - 'buyer' | 'seller' | 'dual'
@@ -23,6 +47,7 @@ export const ClientCircles = ({
   maxVisible = 6,
 }) => {
   const [hoveredClient, setHoveredClient] = useState(null);
+  const [hoveredRole, setHoveredRole] = useState(null); // Track which role the hovered client belongs to
   const [anchorEl, setAnchorEl] = useState(null);
 
   const { buyers = [], sellers = [] } = clients || {};
@@ -54,57 +79,57 @@ export const ClientCircles = ({
   };
 
   // Handle hover events
-  const handleMouseEnter = (event, client) => {
+  const handleMouseEnter = (event, client, role) => {
     setAnchorEl(event.currentTarget);
     setHoveredClient(client);
+    setHoveredRole(role);
   };
 
   const handleMouseLeave = () => {
     setHoveredClient(null);
+    setHoveredRole(null);
     setAnchorEl(null);
   };
 
-  // Render a single client avatar
-  const renderClientAvatar = (client, index, totalInGroup, color = '#3b82f6') => {
+  // Render a single client avatar with role-based coloring
+  const renderClientAvatar = (client, index, totalInGroup, role = 'buyer') => {
     const avatarUrl = client.avatar_url || client.avatarUrl;
     const initials = getInitials(client, index);
     const isHovered = hoveredClient?.id === client.id || hoveredClient === client;
     const depthOffset = index * 0.5;
+    const roleConfig = ROLE_COLORS[role] || ROLE_COLORS.buyer;
 
     return (
       <Box
         key={client.id || `client-${index}`}
-        onMouseEnter={(e) => handleMouseEnter(e, client)}
+        onMouseEnter={(e) => handleMouseEnter(e, client, role)}
         onMouseLeave={handleMouseLeave}
         sx={{
           position: 'relative',
-          marginLeft: index === 0 ? 0 : '-14px',
+          marginLeft: index === 0 ? 0 : '-12px',
           zIndex: isHovered ? 20 : totalInGroup - index,
           transition: 'all 0.2s ease',
         }}
       >
-        <Avatar
-          src={avatarUrl}
-          alt={getFullName(client)}
+        {/* Colored ring around avatar for role indication */}
+        <Box
           sx={{
-            width: 28,
-            height: 28,
-            fontSize: '0.65rem',
-            fontWeight: 700,
-            cursor: 'pointer',
-            bgcolor: avatarUrl ? 'transparent' : color,
-            color: 'white',
-            border: '2px solid white',
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: `linear-gradient(135deg, ${roleConfig.border}, ${roleConfig.border}dd)`,
+            padding: '2px',
             boxShadow: isHovered
-              ? `0 4px 12px ${color}80`
+              ? `0 4px 12px ${roleConfig.border}60`
               : `${index * 0.5}px ${1 + depthOffset}px ${3 + index}px rgba(0,0,0,${0.1 + index * 0.03})`,
             transition: 'all 0.2s ease',
             transform: isHovered
               ? 'scale(1.15) translateY(-2px)'
               : `translateY(${depthOffset}px)`,
+            cursor: 'pointer',
             '&:hover': {
               transform: 'scale(1.15) translateY(-2px)',
-              boxShadow: `0 4px 12px ${color}80`,
+              boxShadow: `0 4px 12px ${roleConfig.border}60`,
               zIndex: 25,
             },
           }}
@@ -113,60 +138,77 @@ export const ClientCircles = ({
             onEdit?.();
           }}
         >
-          {!avatarUrl && initials}
-        </Avatar>
+          <Avatar
+            src={avatarUrl}
+            alt={getFullName(client)}
+            sx={{
+              width: '100%',
+              height: '100%',
+              fontSize: '0.6rem',
+              fontWeight: 700,
+              bgcolor: avatarUrl ? 'white' : roleConfig.bg,
+              color: 'white',
+              border: '2px solid white',
+            }}
+          >
+            {!avatarUrl && initials}
+          </Avatar>
+        </Box>
       </Box>
     );
   };
 
   // Render overflow indicator
-  const renderOverflow = (count, color = '#64748b') => (
-    <Box sx={{ marginLeft: '-14px', zIndex: 0 }}>
-      <Avatar
+  const renderOverflow = (count, role = 'buyer') => {
+    const roleConfig = ROLE_COLORS[role] || ROLE_COLORS.buyer;
+
+    return (
+      <Box
         sx={{
-          width: 28,
-          height: 28,
-          fontSize: '0.6rem',
-          fontWeight: 700,
-          cursor: 'pointer',
-          bgcolor: color,
-          color: 'white',
-          border: '2px solid white',
-          boxShadow: '1px 2px 6px rgba(0,0,0,0.15)',
-          transition: 'all 0.2s ease',
-          '&:hover': {
-            transform: 'scale(1.15) translateY(-2px)',
-            bgcolor: color,
-            boxShadow: `0 4px 12px ${color}60`,
-          },
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onEdit?.();
+          marginLeft: '-12px',
+          zIndex: 0,
         }}
       >
-        +{count}
-      </Avatar>
-    </Box>
-  );
+        <Box
+          sx={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: `linear-gradient(135deg, ${roleConfig.border}80, ${roleConfig.border}60)`,
+            padding: '2px',
+            boxShadow: '1px 2px 6px rgba(0,0,0,0.15)',
+            transition: 'all 0.2s ease',
+            cursor: 'pointer',
+            '&:hover': {
+              transform: 'scale(1.15) translateY(-2px)',
+              boxShadow: `0 4px 12px ${roleConfig.border}40`,
+            },
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit?.();
+          }}
+        >
+          <Avatar
+            sx={{
+              width: '100%',
+              height: '100%',
+              fontSize: '0.55rem',
+              fontWeight: 700,
+              bgcolor: '#64748b',
+              color: 'white',
+              border: '2px solid white',
+            }}
+          >
+            +{count}
+          </Avatar>
+        </Box>
+      </Box>
+    );
+  };
 
-  // Render role indicator (B or S)
-  const renderRoleIndicator = (label, color) => (
-    <Typography
-      sx={{
-        fontSize: '0.6rem',
-        fontWeight: 800,
-        color: color,
-        mr: 0.25,
-        lineHeight: 1,
-      }}
-    >
-      {label}
-    </Typography>
-  );
-
-  // Render a group of clients (buyers or sellers)
-  const renderClientGroup = (clientList, maxShow, color, roleLabel) => {
+  // Render a group of clients
+  const renderClientGroup = (clientList, maxShow, role) => {
     if (clientList.length === 0) return null;
 
     const displayClients = clientList.slice(0, maxShow);
@@ -174,12 +216,116 @@ export const ClientCircles = ({
 
     return (
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        {roleLabel && renderRoleIndicator(roleLabel, color)}
-        {displayClients.map((client, idx) => renderClientAvatar(client, idx, displayClients.length, color))}
-        {overflow > 0 && renderOverflow(overflow, '#64748b')}
+        {displayClients.map((client, idx) => renderClientAvatar(client, idx, displayClients.length, role))}
+        {overflow > 0 && renderOverflow(overflow, role)}
       </Box>
     );
   };
+
+  // Render the contact card popper (shared between all modes)
+  const renderContactCard = () => (
+    <Popper
+      open={Boolean(hoveredClient && anchorEl)}
+      anchorEl={anchorEl}
+      placement="top"
+      transition
+      modifiers={[{ name: 'offset', options: { offset: [0, 8] } }]}
+      sx={{ zIndex: 1300 }}
+    >
+      {({ TransitionProps }) => (
+        <Fade {...TransitionProps} timeout={200}>
+          <Paper
+            elevation={8}
+            sx={{
+              p: 2,
+              minWidth: 200,
+              maxWidth: 280,
+              borderRadius: 2,
+              bgcolor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+            }}
+            onMouseEnter={() => setHoveredClient(hoveredClient)}
+            onMouseLeave={handleMouseLeave}
+          >
+            {hoveredClient && (
+              <Box>
+                {/* Role badge */}
+                {hoveredRole && ROLE_COLORS[hoveredRole] && (
+                  <Chip
+                    label={ROLE_COLORS[hoveredRole].label}
+                    size="small"
+                    sx={{
+                      mb: 1,
+                      bgcolor: ROLE_COLORS[hoveredRole].bg,
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '0.7rem',
+                      height: 20,
+                    }}
+                  />
+                )}
+
+                {/* Client Name */}
+                <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
+                  {getFullName(hoveredClient)}
+                </Typography>
+
+                {/* Email */}
+                {(hoveredClient.email || hoveredClient.client_email) && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Email sx={{ fontSize: 16, color: 'text.secondary' }} />
+                    <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+                      {hoveredClient.email || hoveredClient.client_email}
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* Phone */}
+                {(hoveredClient.phone || hoveredClient.client_phone) && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Phone sx={{ fontSize: 16, color: 'text.secondary' }} />
+                    <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+                      {hoveredClient.phone || hoveredClient.client_phone}
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* No contact info */}
+                {!(hoveredClient.email || hoveredClient.client_email) &&
+                  !(hoveredClient.phone || hoveredClient.client_phone) && (
+                    <Typography variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic', fontSize: '0.85rem' }}>
+                      No contact info available
+                    </Typography>
+                  )}
+
+                {/* Edit hint */}
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: 'block',
+                    mt: 1.5,
+                    pt: 1,
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    color: 'primary.main',
+                    cursor: 'pointer',
+                    '&:hover': { textDecoration: 'underline' },
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit?.();
+                  }}
+                >
+                  Click to edit clients
+                </Typography>
+              </Box>
+            )}
+          </Paper>
+        </Fade>
+      )}
+    </Popper>
+  );
 
   // Calculate total for empty state check
   const totalCount = representationType === 'dual'
@@ -216,195 +362,42 @@ export const ClientCircles = ({
     );
   }
 
-  // DUAL REPRESENTATION: Show both buyer and seller groups with labels
+  // DUAL REPRESENTATION: Show both buyer and seller groups
+  // Blue-bordered avatars for buyers, Orange-bordered for sellers
   if (representationType === 'dual') {
     const hasBoth = buyers.length > 0 && sellers.length > 0;
     // If both groups exist, show max 4 per group to fit better
-    // If only one group, show full maxVisible
     const maxPerGroup = hasBoth ? Math.min(4, maxVisible) : maxVisible;
 
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-        {/* Buyers group */}
-        {buyers.length > 0 && renderClientGroup(buyers, maxPerGroup, '#3b82f6', hasBoth ? 'B' : null)}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        {/* Buyers group (blue rings) */}
+        {buyers.length > 0 && renderClientGroup(buyers, maxPerGroup, 'buyer')}
 
-        {/* Separator if both exist */}
+        {/* Visual separator if both exist */}
         {hasBoth && (
-          <Box sx={{ width: '1px', height: 20, bgcolor: 'divider', mx: 0.25 }} />
+          <Box sx={{ width: '1px', height: 24, bgcolor: 'divider', mx: 0.25 }} />
         )}
 
-        {/* Sellers group */}
-        {sellers.length > 0 && renderClientGroup(sellers, maxPerGroup, '#10b981', hasBoth ? 'S' : null)}
+        {/* Sellers group (orange rings) */}
+        {sellers.length > 0 && renderClientGroup(sellers, maxPerGroup, 'seller')}
 
-        {/* Contact Card Popper */}
-        <Popper
-          open={Boolean(hoveredClient && anchorEl)}
-          anchorEl={anchorEl}
-          placement="top"
-          transition
-          modifiers={[{ name: 'offset', options: { offset: [0, 8] } }]}
-          sx={{ zIndex: 1300 }}
-        >
-          {({ TransitionProps }) => (
-            <Fade {...TransitionProps} timeout={200}>
-              <Paper
-                elevation={8}
-                sx={{
-                  p: 2,
-                  minWidth: 200,
-                  maxWidth: 280,
-                  borderRadius: 2,
-                  bgcolor: 'background.paper',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                }}
-                onMouseEnter={() => setHoveredClient(hoveredClient)}
-                onMouseLeave={handleMouseLeave}
-              >
-                {hoveredClient && (
-                  <Box>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
-                      {getFullName(hoveredClient)}
-                    </Typography>
-                    {(hoveredClient.email || hoveredClient.client_email) && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                        <Email sx={{ fontSize: 16, color: 'text.secondary' }} />
-                        <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-                          {hoveredClient.email || hoveredClient.client_email}
-                        </Typography>
-                      </Box>
-                    )}
-                    {(hoveredClient.phone || hoveredClient.client_phone) && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Phone sx={{ fontSize: 16, color: 'text.secondary' }} />
-                        <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-                          {hoveredClient.phone || hoveredClient.client_phone}
-                        </Typography>
-                      </Box>
-                    )}
-                    {!(hoveredClient.email || hoveredClient.client_email) &&
-                      !(hoveredClient.phone || hoveredClient.client_phone) && (
-                        <Typography variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic', fontSize: '0.85rem' }}>
-                          No contact info available
-                        </Typography>
-                      )}
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        display: 'block',
-                        mt: 1.5,
-                        pt: 1,
-                        borderTop: '1px solid',
-                        borderColor: 'divider',
-                        color: 'primary.main',
-                        cursor: 'pointer',
-                        '&:hover': { textDecoration: 'underline' },
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit?.();
-                      }}
-                    >
-                      Click to edit clients
-                    </Typography>
-                  </Box>
-                )}
-              </Paper>
-            </Fade>
-          )}
-        </Popper>
+        {renderContactCard()}
       </Box>
     );
   }
 
   // SINGLE REPRESENTATION (buyer or seller only)
   const clientList = representationType === 'buyer' ? buyers : sellers;
-  const color = representationType === 'buyer' ? '#3b82f6' : '#10b981';
+  const role = representationType === 'buyer' ? 'buyer' : 'seller';
   const displayClients = clientList.slice(0, maxVisible);
   const overflowCount = clientList.length - maxVisible;
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      {displayClients.map((client, index) => renderClientAvatar(client, index, displayClients.length, color))}
-      {overflowCount > 0 && renderOverflow(overflowCount)}
-
-      {/* Contact Card Popper */}
-      <Popper
-        open={Boolean(hoveredClient && anchorEl)}
-        anchorEl={anchorEl}
-        placement="top"
-        transition
-        modifiers={[{ name: 'offset', options: { offset: [0, 8] } }]}
-        sx={{ zIndex: 1300 }}
-      >
-        {({ TransitionProps }) => (
-          <Fade {...TransitionProps} timeout={200}>
-            <Paper
-              elevation={8}
-              sx={{
-                p: 2,
-                minWidth: 200,
-                maxWidth: 280,
-                borderRadius: 2,
-                bgcolor: 'background.paper',
-                border: '1px solid',
-                borderColor: 'divider',
-              }}
-              onMouseEnter={() => setHoveredClient(hoveredClient)}
-              onMouseLeave={handleMouseLeave}
-            >
-              {hoveredClient && (
-                <Box>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
-                    {getFullName(hoveredClient)}
-                  </Typography>
-                  {(hoveredClient.email || hoveredClient.client_email) && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                      <Email sx={{ fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-                        {hoveredClient.email || hoveredClient.client_email}
-                      </Typography>
-                    </Box>
-                  )}
-                  {(hoveredClient.phone || hoveredClient.client_phone) && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Phone sx={{ fontSize: 16, color: 'text.secondary' }} />
-                      <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-                        {hoveredClient.phone || hoveredClient.client_phone}
-                      </Typography>
-                    </Box>
-                  )}
-                  {!(hoveredClient.email || hoveredClient.client_email) &&
-                    !(hoveredClient.phone || hoveredClient.client_phone) && (
-                      <Typography variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic', fontSize: '0.85rem' }}>
-                        No contact info available
-                      </Typography>
-                    )}
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      display: 'block',
-                      mt: 1.5,
-                      pt: 1,
-                      borderTop: '1px solid',
-                      borderColor: 'divider',
-                      color: 'primary.main',
-                      cursor: 'pointer',
-                      '&:hover': { textDecoration: 'underline' },
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit?.();
-                    }}
-                  >
-                    Click to edit clients
-                  </Typography>
-                </Box>
-              )}
-            </Paper>
-          </Fade>
-        )}
-      </Popper>
+      {displayClients.map((client, index) => renderClientAvatar(client, index, displayClients.length, role))}
+      {overflowCount > 0 && renderOverflow(overflowCount, role)}
+      {renderContactCard()}
     </Box>
   );
 };
