@@ -602,15 +602,67 @@ export const EditClients = ({
       {/* Client Selectors - Dynamic based on mode */}
       {showRepresentationType ? (
         // Combined mode: Show client selectors based on selectedType
-        selectedType === 'dual' ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {renderClientSelector('buyer')}
-            <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-            {renderClientSelector('seller')}
-          </Box>
-        ) : (
-          renderClientSelector(selectedType)
-        )
+        <>
+          {selectedType === 'dual' ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {renderClientSelector('buyer')}
+              <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
+              {renderClientSelector('seller')}
+            </Box>
+          ) : (
+            renderClientSelector(selectedType)
+          )}
+
+          {/* Action Buttons for Combined Mode */}
+          {!inline && (
+            <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose();
+                }}
+                disabled={saving}
+                sx={{
+                  width: 48,
+                  height: 48,
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.25)',
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    color: 'rgba(255,255,255,0.3)',
+                  },
+                }}
+              >
+                <Close />
+              </IconButton>
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSave();
+                }}
+                disabled={saving || (selectedType === 'dual' ? (buyerClients.length === 0 && sellerClients.length === 0) : (selectedType === 'buyer' ? buyerClients.length === 0 : sellerClients.length === 0))}
+                sx={{
+                  width: 48,
+                  height: 48,
+                  backgroundColor: 'white',
+                  color: color,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.9)',
+                  },
+                  '&:disabled': {
+                    backgroundColor: 'rgba(255,255,255,0.3)',
+                    color: 'rgba(0,0,0,0.2)',
+                  },
+                }}
+              >
+                <Check />
+              </IconButton>
+            </Box>
+          )}
+        </>
       ) : (
         // Role-specific or standalone mode: Show single client selector
         <>
