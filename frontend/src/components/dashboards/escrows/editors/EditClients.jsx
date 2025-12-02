@@ -435,12 +435,18 @@ export const EditClients = ({
         <Autocomplete
           options={clientOptions.filter(opt => !roleClients.some(c => c.id === opt.id))}
           loading={loadingClients}
+          value={null}
           inputValue={clientSearch}
-          onInputChange={(e, value) => setClientSearch(value)}
+          onInputChange={(e, value, reason) => {
+            // Only update search on user input, not on selection/reset
+            if (reason === 'input') {
+              setClientSearch(value);
+            }
+          }}
           getOptionLabel={(option) =>
-            `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}`
+            option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
           }
-          isOptionEqualToValue={(option, value) => option.id === value.id}
+          isOptionEqualToValue={(option, value) => option?.id === value?.id}
           onChange={(event, client) => {
             if (!client) return;
             if (roleClients.some(c => c.id === client.id)) return;
@@ -450,8 +456,11 @@ export const EditClients = ({
             } else {
               setSellerClients([...sellerClients, client]);
             }
+            // Clear search after adding
             setClientSearch('');
           }}
+          clearOnBlur={false}
+          blurOnSelect={true}
           filterOptions={(x) => x}
           renderOption={(props, option) => {
             const { key, ...otherProps } = props;
@@ -782,12 +791,20 @@ export const EditClients = ({
         <Autocomplete
           options={clientOptions.filter(opt => !selectedClients.some(c => c.id === opt.id))}
           loading={loadingClients}
+          value={null}
           inputValue={clientSearch}
-          onInputChange={(e, value) => setClientSearch(value)}
+          onInputChange={(e, value, reason) => {
+            // Only update search on user input, not on selection/reset
+            if (reason === 'input') {
+              setClientSearch(value);
+            }
+          }}
           getOptionLabel={(option) =>
-            `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}`
+            option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
           }
           onChange={handleAddClient}
+          clearOnBlur={false}
+          blurOnSelect={true}
           filterOptions={(x) => x} // No local filtering - backend handles it
           renderOption={(props, option) => (
             <Box component="li" {...props}>
