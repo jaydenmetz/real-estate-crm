@@ -375,30 +375,42 @@ export const EditClients = ({
                       )
                     }
                   />
-                  <ListItemSecondaryAction>
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        const clientIdToRemove = client.id;
-                        if (currentRole === 'buyer') {
-                          setBuyerClients(prev => prev.filter(c => c.id !== clientIdToRemove));
-                        } else {
-                          setSellerClients(prev => prev.filter(c => c.id !== clientIdToRemove));
-                        }
-                      }}
-                      size="small"
-                      sx={{
-                        color: 'rgba(255,255,255,0.7)',
-                        '&:hover': {
-                          color: 'white',
-                          bgcolor: 'rgba(255,255,255,0.1)',
-                        },
-                      }}
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </ListItemSecondaryAction>
+                  <IconButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      console.log('[EditClients] Delete clicked for client:', client.id, client.firstName, currentRole);
+                      console.log('[EditClients] Current buyerClients:', buyerClients.length, 'sellerClients:', sellerClients.length);
+                      const clientIdToRemove = client.id;
+                      if (currentRole === 'buyer') {
+                        console.log('[EditClients] Removing from buyerClients');
+                        setBuyerClients(prev => {
+                          console.log('[EditClients] prev buyerClients:', prev.length);
+                          const filtered = prev.filter(c => c.id !== clientIdToRemove);
+                          console.log('[EditClients] after filter:', filtered.length);
+                          return filtered;
+                        });
+                      } else {
+                        console.log('[EditClients] Removing from sellerClients');
+                        setSellerClients(prev => {
+                          console.log('[EditClients] prev sellerClients:', prev.length);
+                          const filtered = prev.filter(c => c.id !== clientIdToRemove);
+                          console.log('[EditClients] after filter:', filtered.length);
+                          return filtered;
+                        });
+                      }
+                    }}
+                    size="small"
+                    sx={{
+                      color: 'rgba(255,255,255,0.7)',
+                      '&:hover': {
+                        color: 'white',
+                        bgcolor: 'rgba(255,255,255,0.1)',
+                      },
+                    }}
+                  >
+                    <Delete fontSize="small" />
+                  </IconButton>
                 </ListItem>
               ))}
             </List>
