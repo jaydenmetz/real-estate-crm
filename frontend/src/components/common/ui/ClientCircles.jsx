@@ -175,6 +175,8 @@ export const ClientCircles = ({
           color: 'text.secondary',
           ml: 0.5,
           cursor: 'pointer',
+          flexShrink: 0, // Prevent text from being cut off
+          whiteSpace: 'nowrap',
           '&:hover': {
             color: 'text.primary',
           },
@@ -396,24 +398,22 @@ export const ClientCircles = ({
     const totalOverflow = (buyers.length - maxBuyers) + (sellers.length - maxSellers);
 
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-          {/* Buyers group (blue rings) */}
-          {buyers.length > 0 && renderClientGroup(buyers, maxBuyers, 'buyer')}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+        {/* Buyers group (blue rings) */}
+        {buyers.length > 0 && renderClientGroup(buyers, maxBuyers, 'buyer')}
 
-          {/* Visual separator if both exist - thin line */}
-          {hasBoth && (
-            <Box sx={{ width: '1px', height: 18, bgcolor: 'divider', mx: 0.125 }} />
-          )}
+        {/* Visual separator if both exist - thin line */}
+        {hasBoth && (
+          <Box sx={{ width: '1px', height: 18, bgcolor: 'divider', mx: 0.125, flexShrink: 0 }} />
+        )}
 
-          {/* Sellers group (orange rings) */}
-          {sellers.length > 0 && renderClientGroup(sellers, maxSellers, 'seller')}
+        {/* Sellers group (orange rings) */}
+        {sellers.length > 0 && renderClientGroup(sellers, maxSellers, 'seller')}
 
-          {/* Combined overflow text at the end */}
-          {renderOverflowText(totalOverflow)}
+        {/* Combined overflow text at the end */}
+        {renderOverflowText(totalOverflow)}
 
-          {renderContactCard()}
-        </Box>
+        {renderContactCard()}
       </Box>
     );
   }
@@ -425,12 +425,10 @@ export const ClientCircles = ({
   const overflowCount = clientList.length - maxVisible;
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        {displayClients.map((client, index) => renderClientAvatar(client, index, displayClients.length, role))}
-        {renderOverflowText(overflowCount)}
-        {renderContactCard()}
-      </Box>
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      {displayClients.map((client, index) => renderClientAvatar(client, index, displayClients.length, role))}
+      {renderOverflowText(overflowCount)}
+      {renderContactCard()}
     </Box>
   );
 };
