@@ -404,19 +404,21 @@ export const ClientCircles = ({
     }
 
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-        {/* Buyers group (blue rings) */}
-        {buyers.length > 0 && renderClientGroup(buyers, maxBuyers, 'buyer')}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+          {/* Buyers group (blue rings) */}
+          {buyers.length > 0 && renderClientGroup(buyers, maxBuyers, 'buyer')}
 
-        {/* Visual separator if both exist - thin line */}
-        {hasBoth && (
-          <Box sx={{ width: '1px', height: 18, bgcolor: 'divider', mx: 0.125 }} />
-        )}
+          {/* Visual separator if both exist - thin line */}
+          {hasBoth && (
+            <Box sx={{ width: '1px', height: 18, bgcolor: 'divider', mx: 0.125 }} />
+          )}
 
-        {/* Sellers group (orange rings) */}
-        {sellers.length > 0 && renderClientGroup(sellers, maxSellers, 'seller')}
+          {/* Sellers group (orange rings) */}
+          {sellers.length > 0 && renderClientGroup(sellers, maxSellers, 'seller')}
 
-        {renderContactCard()}
+          {renderContactCard()}
+        </Box>
       </Box>
     );
   }
@@ -428,10 +430,12 @@ export const ClientCircles = ({
   const overflowCount = clientList.length - maxVisible;
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      {displayClients.map((client, index) => renderClientAvatar(client, index, displayClients.length, role))}
-      {overflowCount > 0 && renderOverflow(overflowCount, role)}
-      {renderContactCard()}
+    <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        {displayClients.map((client, index) => renderClientAvatar(client, index, displayClients.length, role))}
+        {overflowCount > 0 && renderOverflow(overflowCount, role)}
+        {renderContactCard()}
+      </Box>
     </Box>
   );
 };
