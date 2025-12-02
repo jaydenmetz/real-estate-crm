@@ -125,8 +125,8 @@ export const ClientCircles = ({
             // 3D perspective tilt - like a plate lifted on one edge
             // rotateX tilts forward/back, perspective gives depth
             transform: isHovered
-              ? 'perspective(100px) rotateX(0deg) scale(1.15) translateY(-2px)'
-              : 'perspective(100px) rotateX(15deg)',
+              ? 'perspective(50px) rotateX(0deg) scale(1.15) translateY(-2px)'
+              : 'perspective(50px) rotateX(45deg)',
             cursor: 'pointer',
             '&:hover': {
               transform: 'perspective(100px) rotateX(0deg) scale(1.15) translateY(-2px)',
