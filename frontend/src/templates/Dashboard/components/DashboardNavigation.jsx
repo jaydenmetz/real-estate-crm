@@ -241,9 +241,6 @@ export const DashboardNavigation = ({
                       }}
                       onStatusToggle={(statusKey) => {
                         // Toggle a status in the multi-select
-                        console.log('DashboardNavigation.onStatusToggle called with:', statusKey);
-                        console.log('selectedStatuses from render:', selectedStatuses);
-                        console.log('selectedStatus prop:', selectedStatus);
                         const currentStatuses = selectedStatuses.slice();
                         const index = currentStatuses.indexOf(statusKey);
 
@@ -259,9 +256,7 @@ export const DashboardNavigation = ({
                         // Use colon format even when empty to distinguish from tab switch
                         // 'Active:' = user explicitly deselected all (show empty state)
                         // 'Active' = tab switch, should auto-upgrade to defaults
-                        const newStatus = `${tab.value}:${currentStatuses.join(',')}`;
-                        console.log('Calling onStatusChange with:', newStatus);
-                        onStatusChange(newStatus)
+                        onStatusChange(`${tab.value}:${currentStatuses.join(',')}`)
                       }}
                       value={tabValue}
                     />

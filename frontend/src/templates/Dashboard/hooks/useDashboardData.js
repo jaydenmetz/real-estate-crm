@@ -300,20 +300,31 @@ export const useDashboardData = (config, externalDateRange = null, showArchived 
         selectedStatus?.toLowerCase() !== 'archived') {
 
       // Parse multi-select format
+      // Format: "Active:status1,status2" or "Active:" (empty) or "Active" (legacy)
       const [sourceTab, statusList] = selectedStatus.includes(':')
         ? selectedStatus.split(':')
         : [selectedStatus, null];
 
-      if (statusList) {
+      // Check for explicit empty selection (colon present but nothing after)
+      // "Active:" means user deselected all checkboxes - show no items
+      if (statusList === '') {
+        // Empty selection - return no items (this shows "No Status Selected" message)
+        filtered = [];
+      } else if (statusList) {
         // Multi-select: filter by comma-separated status list
-        const selectedStatusKeys = statusList.split(',').map(s => s.toLowerCase());
+        const selectedStatusKeys = statusList.split(',').filter(s => s).map(s => s.toLowerCase());
 
-        filtered = filtered.filter(item => {
-          const statusField = item.escrow_status || item.listing_status || item.status || item.lead_status || item.appointment_status || item.client_status;
-          return selectedStatusKeys.includes(statusField?.toLowerCase());
-        });
+        if (selectedStatusKeys.length === 0) {
+          // Safety check: if all status keys were empty strings, show nothing
+          filtered = [];
+        } else {
+          filtered = filtered.filter(item => {
+            const statusField = item.escrow_status || item.listing_status || item.status || item.lead_status || item.appointment_status || item.client_status;
+            return selectedStatusKeys.includes(statusField?.toLowerCase());
+          });
+        }
       } else {
-        // Legacy single-select: filter by exact tab name
+        // Legacy single-select: filter by exact tab name (no colon in format)
         filtered = filtered.filter(item => {
           const statusField = item.escrow_status || item.listing_status || item.status || item.lead_status || item.appointment_status || item.client_status;
           return statusField?.toLowerCase() === sourceTab.toLowerCase();

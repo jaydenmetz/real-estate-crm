@@ -122,8 +122,6 @@ const StatusTabWithDropdown = ({
   };
 
   const handleStatusToggle = (statusKey) => {
-    console.log('StatusTabWithDropdown.handleStatusToggle called with:', statusKey);
-    console.log('Current selectedStatuses:', selectedStatuses);
     onStatusToggle(statusKey);
     // Keep dropdown open for multi-select
   };
