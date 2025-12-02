@@ -364,15 +364,49 @@ export const ClientCircles = ({
 
   // DUAL REPRESENTATION: Show both buyer and seller groups
   // Blue-bordered avatars for buyers, Orange-bordered for sellers
+  // Max 6 total displayed, dynamically allocated between groups
   if (representationType === 'dual') {
     const hasBoth = buyers.length > 0 && sellers.length > 0;
-    // If both groups exist, show max 4 per group to fit better
-    const maxPerGroup = hasBoth ? Math.min(4, maxVisible) : maxVisible;
+    const maxTotal = 6;
+
+    // Calculate how many to show from each group
+    // Logic: Fill up to 6 total, giving each group up to 3 if both have 3+
+    // If one group has fewer, give the extra slots to the other
+    let maxBuyers, maxSellers;
+
+    if (!hasBoth) {
+      // Only one group - show up to 6
+      maxBuyers = buyers.length > 0 ? maxTotal : 0;
+      maxSellers = sellers.length > 0 ? maxTotal : 0;
+    } else {
+      // Both groups exist - allocate 6 total slots dynamically
+      // Each group gets at least min(their count, 3), then remaining slots go to the larger group
+      const buyerCount = buyers.length;
+      const sellerCount = sellers.length;
+
+      if (buyerCount <= 3 && sellerCount <= 3) {
+        // Both fit within 3 each - show all
+        maxBuyers = buyerCount;
+        maxSellers = sellerCount;
+      } else if (buyerCount <= 3) {
+        // Buyers fit in 3 or less, sellers get remaining (up to 6 - buyerCount)
+        maxBuyers = buyerCount;
+        maxSellers = Math.min(sellerCount, maxTotal - buyerCount);
+      } else if (sellerCount <= 3) {
+        // Sellers fit in 3 or less, buyers get remaining (up to 6 - sellerCount)
+        maxSellers = sellerCount;
+        maxBuyers = Math.min(buyerCount, maxTotal - sellerCount);
+      } else {
+        // Both have 3+, split evenly at 3 each
+        maxBuyers = 3;
+        maxSellers = 3;
+      }
+    }
 
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
         {/* Buyers group (blue rings) */}
-        {buyers.length > 0 && renderClientGroup(buyers, maxPerGroup, 'buyer')}
+        {buyers.length > 0 && renderClientGroup(buyers, maxBuyers, 'buyer')}
 
         {/* Visual separator if both exist */}
         {hasBoth && (
@@ -380,7 +414,7 @@ export const ClientCircles = ({
         )}
 
         {/* Sellers group (orange rings) */}
-        {sellers.length > 0 && renderClientGroup(sellers, maxPerGroup, 'seller')}
+        {sellers.length > 0 && renderClientGroup(sellers, maxSellers, 'seller')}
 
         {renderContactCard()}
       </Box>
