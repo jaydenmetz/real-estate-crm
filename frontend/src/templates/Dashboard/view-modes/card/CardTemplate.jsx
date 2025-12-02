@@ -665,7 +665,7 @@ const CardTemplate = React.memo(({
                   const fieldLabel = typeof field.label === 'function' ? field.label(data) : field.label;
 
                   return (
-                    <Box key={idx} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.25, width: field.width || '33.33%' }}>
+                    <Box key={idx} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0.25, width: field.width || '33.33%', minWidth: 0, overflow: 'hidden' }}>
                       <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         {fieldLabel}
                       </Typography>
