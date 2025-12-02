@@ -19,7 +19,7 @@
  * - Listings (Active=3, Closed=1): Active tab shows nested, Closed shows flat
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Tab,
   Menu,
@@ -154,28 +154,9 @@ const StatusTabWithDropdown = ({
     });
   };
 
-  // Auto-initialize selectedStatuses from database when tab is selected but no statuses provided
-  // This fixes the checkbox not being checked on initial load
-  useEffect(() => {
-    // Only run when:
-    // 1. Tab is selected
-    // 2. No statuses are currently selected (empty array means not initialized yet)
-    // 3. Database categories are loaded
-    // 4. We have a current category
-    if (isSelected && selectedStatuses.length === 0 && !loading && currentCategory) {
-      const categoryStatuses = category.id === 'All'
-        ? allCategories?.flatMap(cat => cat.statuses) || []
-        : currentCategory?.statuses || [];
-
-      const allStatusKeys = categoryStatuses.map(s => s.status_key);
-
-      // Only initialize if we have status keys to set
-      if (allStatusKeys.length > 0) {
-        // Call onCategoryClick to initialize with all statuses selected
-        onCategoryClick(category.id, allStatusKeys);
-      }
-    }
-  }, [isSelected, selectedStatuses.length, loading, currentCategory, category.id, allCategories, onCategoryClick]);
+  // NOTE: Status initialization is handled by DashboardNavigation's useEffect
+  // which auto-upgrades "Active" to "Active:Active" on tab switch/initial load.
+  // DO NOT add auto-initialization here - it prevents users from deselecting all checkboxes.
 
   // Loading state
   if (loading) {
