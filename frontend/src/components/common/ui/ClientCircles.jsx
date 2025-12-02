@@ -158,66 +158,42 @@ export const ClientCircles = ({
     );
   };
 
-  // Render overflow indicator
-  const renderOverflow = (count, role = 'buyer') => {
-    const roleConfig = ROLE_COLORS[role] || ROLE_COLORS.buyer;
+  // Render simple text overflow indicator (e.g., "+3")
+  const renderOverflowText = (count) => {
+    if (count <= 0) return null;
 
     return (
-      <Box
+      <Typography
+        component="span"
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit?.();
+        }}
         sx={{
-          marginLeft: '-16px', // Match tighter overlap
-          zIndex: 0,
+          fontSize: '0.7rem',
+          fontWeight: 700,
+          color: 'text.secondary',
+          ml: 0.5,
+          cursor: 'pointer',
+          '&:hover': {
+            color: 'text.primary',
+          },
         }}
       >
-        <Box
-          sx={{
-            width: 26,
-            height: 26,
-            borderRadius: '50%',
-            background: `linear-gradient(135deg, ${roleConfig.border}80, ${roleConfig.border}60)`,
-            padding: '2px',
-            boxShadow: '1px 2px 6px rgba(0,0,0,0.15)',
-            transition: 'all 0.2s ease',
-            cursor: 'pointer',
-            '&:hover': {
-              transform: 'scale(1.15) translateY(-2px)',
-              boxShadow: `0 4px 12px ${roleConfig.border}40`,
-            },
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit?.();
-          }}
-        >
-          <Avatar
-            sx={{
-              width: '100%',
-              height: '100%',
-              fontSize: '0.5rem',
-              fontWeight: 700,
-              bgcolor: '#64748b',
-              color: 'white',
-              border: '1.5px solid white',
-            }}
-          >
-            +{count}
-          </Avatar>
-        </Box>
-      </Box>
+        +{count}
+      </Typography>
     );
   };
 
-  // Render a group of clients
+  // Render a group of clients (no overflow - that's handled separately)
   const renderClientGroup = (clientList, maxShow, role) => {
     if (clientList.length === 0) return null;
 
     const displayClients = clientList.slice(0, maxShow);
-    const overflow = clientList.length - maxShow;
 
     return (
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         {displayClients.map((client, idx) => renderClientAvatar(client, idx, displayClients.length, role))}
-        {overflow > 0 && renderOverflow(overflow, role)}
       </Box>
     );
   };
@@ -377,6 +353,7 @@ export const ClientCircles = ({
   // DUAL REPRESENTATION: Show both buyer and seller groups
   // Blue-bordered avatars for buyers, Orange-bordered for sellers
   // Max 6 total displayed, dynamically allocated between groups
+  // Overflow shown as simple "+N" text at the end
   if (representationType === 'dual') {
     const hasBoth = buyers.length > 0 && sellers.length > 0;
     const maxTotal = 6;
@@ -415,6 +392,9 @@ export const ClientCircles = ({
       }
     }
 
+    // Calculate total overflow (combined from both groups)
+    const totalOverflow = (buyers.length - maxBuyers) + (sellers.length - maxSellers);
+
     return (
       <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
@@ -428,6 +408,9 @@ export const ClientCircles = ({
 
           {/* Sellers group (orange rings) */}
           {sellers.length > 0 && renderClientGroup(sellers, maxSellers, 'seller')}
+
+          {/* Combined overflow text at the end */}
+          {renderOverflowText(totalOverflow)}
 
           {renderContactCard()}
         </Box>
@@ -445,7 +428,7 @@ export const ClientCircles = ({
     <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%' }}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         {displayClients.map((client, index) => renderClientAvatar(client, index, displayClients.length, role))}
-        {overflowCount > 0 && renderOverflow(overflowCount, role)}
+        {renderOverflowText(overflowCount)}
         {renderContactCard()}
       </Box>
     </Box>
