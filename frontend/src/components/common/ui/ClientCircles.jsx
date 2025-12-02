@@ -96,7 +96,6 @@ export const ClientCircles = ({
     const avatarUrl = client.avatar_url || client.avatarUrl;
     const initials = getInitials(client, index);
     const isHovered = hoveredClient?.id === client.id || hoveredClient === client;
-    const depthOffset = index * 0.5;
     const roleConfig = ROLE_COLORS[role] || ROLE_COLORS.buyer;
 
     return (
@@ -121,11 +120,9 @@ export const ClientCircles = ({
             padding: '2px',
             boxShadow: isHovered
               ? `0 4px 12px ${roleConfig.border}60`
-              : `${index * 0.5}px ${1 + depthOffset}px ${3 + index}px rgba(0,0,0,${0.1 + index * 0.03})`,
+              : `0 1px 3px rgba(0,0,0,0.12)`,
             transition: 'all 0.2s ease',
-            transform: isHovered
-              ? 'scale(1.15) translateY(-2px)'
-              : `translateY(${depthOffset}px)`,
+            transform: isHovered ? 'scale(1.15) translateY(-2px)' : 'none',
             cursor: 'pointer',
             '&:hover': {
               transform: 'scale(1.15) translateY(-2px)',
