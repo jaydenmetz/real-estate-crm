@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Typography, IconButton, List, ListItem, ListItemText, ListItemSecondaryAction, Chip, TextField, Autocomplete, CircularProgress, Button, ToggleButtonGroup, ToggleButton, Divider } from '@mui/material';
 import { Check, Close, PersonAdd, Delete, Person, Home, Group } from '@mui/icons-material';
 import { ModalContainer as ModalDialog } from '../../../common/modals/ModalContainer';
@@ -49,6 +49,9 @@ export const EditClients = ({
   const [loadingClients, setLoadingClients] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Ref to track if we've already loaded initial data (prevents resetting on parent re-renders)
+  const hasLoadedInitialData = useRef(false);
+
   // Initialize from props - only when modal opens (not on every values change)
   // This prevents the local state from being reset when parent re-renders
   useEffect(() => {
@@ -94,10 +97,17 @@ export const EditClients = ({
   // Load selected clients when dialog opens
   useEffect(() => {
     const loadClients = async () => {
+      // When modal closes, reset everything including the ref
       if (!open) {
         setSelectedClients([]);
         setBuyerClients([]);
         setSellerClients([]);
+        hasLoadedInitialData.current = false;
+        return;
+      }
+
+      // Skip if we've already loaded initial data (prevents resetting user's changes)
+      if (hasLoadedInitialData.current) {
         return;
       }
 
@@ -159,10 +169,13 @@ export const EditClients = ({
               setSellerClients(sellers);
             }
           }
+          // Mark as loaded so subsequent re-renders don't reset state
+          hasLoadedInitialData.current = true;
         } catch (error) {
           console.error('Error loading clients:', error);
           setBuyerClients([]);
           setSellerClients([]);
+          hasLoadedInitialData.current = true; // Still mark as loaded to prevent retry loops
         }
       } else if (value && value.length > 0) {
         // Role-specific or standalone mode: Load single client list
@@ -193,10 +206,16 @@ export const EditClients = ({
               }));
             setSelectedClients(clients);
           }
+          // Mark as loaded so subsequent re-renders don't reset state
+          hasLoadedInitialData.current = true;
         } catch (error) {
           console.error('Error loading clients:', error);
           setSelectedClients([]);
+          hasLoadedInitialData.current = true; // Still mark as loaded to prevent retry loops
         }
+      } else {
+        // No values to load, but still mark as loaded to prevent repeated calls
+        hasLoadedInitialData.current = true;
       }
     };
 
@@ -379,25 +398,11 @@ export const EditClients = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      console.log('[EditClients] Delete clicked for client:', client.id, client.firstName, currentRole);
-                      console.log('[EditClients] Current buyerClients:', buyerClients.length, 'sellerClients:', sellerClients.length);
                       const clientIdToRemove = client.id;
                       if (currentRole === 'buyer') {
-                        console.log('[EditClients] Removing from buyerClients');
-                        setBuyerClients(prev => {
-                          console.log('[EditClients] prev buyerClients:', prev.length);
-                          const filtered = prev.filter(c => c.id !== clientIdToRemove);
-                          console.log('[EditClients] after filter:', filtered.length);
-                          return filtered;
-                        });
+                        setBuyerClients(prev => prev.filter(c => c.id !== clientIdToRemove));
                       } else {
-                        console.log('[EditClients] Removing from sellerClients');
-                        setSellerClients(prev => {
-                          console.log('[EditClients] prev sellerClients:', prev.length);
-                          const filtered = prev.filter(c => c.id !== clientIdToRemove);
-                          console.log('[EditClients] after filter:', filtered.length);
-                          return filtered;
-                        });
+                        setSellerClients(prev => prev.filter(c => c.id !== clientIdToRemove));
                       }
                     }}
                     size="small"
