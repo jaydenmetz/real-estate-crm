@@ -49,16 +49,18 @@ export const EditClients = ({
   const [loadingClients, setLoadingClients] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Initialize from props
+  // Initialize from props - only when modal opens (not on every values change)
+  // This prevents the local state from being reset when parent re-renders
   useEffect(() => {
-    if (showRepresentationType && values) {
-      setSelectedType(values.representationType || 'buyer');
-      setBuyerClients(values.buyerClients || []);
-      setSellerClients(values.sellerClients || []);
-    } else {
-      setSelectedType(representationType);
+    if (open) {
+      if (showRepresentationType && values) {
+        setSelectedType(values.representationType || 'buyer');
+        // Note: buyerClients/sellerClients are loaded in the loadClients useEffect below
+      } else {
+        setSelectedType(representationType);
+      }
     }
-  }, [showRepresentationType, values, representationType]);
+  }, [open]); // Only depend on 'open' to prevent resetting on parent re-renders
 
   // Determine label based on mode
   const getLabel = () => {
