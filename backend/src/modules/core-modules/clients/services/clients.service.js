@@ -261,14 +261,19 @@ class ClientsService {
       const contactResult = await dbClient.query(contactQuery, contactValues);
       const contactId = contactResult.rows[0].id;
 
-      // Create client
+      // Create client with owner_id and team_id for proper ownership filtering
       const clientQuery = `
-        INSERT INTO clients (contact_id, client_type, status, created_at, updated_at)
-        VALUES ($1, $2, 'active', NOW(), NOW())
+        INSERT INTO clients (contact_id, client_type, status, owner_id, team_id, created_at, updated_at)
+        VALUES ($1, $2, 'active', $3, $4, NOW(), NOW())
         RETURNING id
       `;
 
-      const clientResult = await dbClient.query(clientQuery, [contactId, finalClientType.toLowerCase()]);
+      const clientResult = await dbClient.query(clientQuery, [
+        contactId,
+        finalClientType.toLowerCase(),
+        user?.id || null,
+        user?.teamId || user?.team_id || null
+      ]);
 
       await dbClient.query('COMMIT');
 
