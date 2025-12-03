@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Box, Avatar, Typography, Paper, Fade, Popper, Chip } from '@mui/material';
 import { Add, Email, Phone } from '@mui/icons-material';
 
@@ -49,6 +49,7 @@ export const ClientCircles = ({
   const [hoveredClient, setHoveredClient] = useState(null);
   const [hoveredRole, setHoveredRole] = useState(null); // Track which role the hovered client belongs to
   const [anchorEl, setAnchorEl] = useState(null);
+  const closeTimeoutRef = useRef(null); // Timeout ref for delayed close
 
   const { buyers = [], sellers = [] } = clients || {};
 
@@ -78,14 +79,37 @@ export const ClientCircles = ({
     return `${firstName} ${lastName}`.trim() || 'Unknown Client';
   };
 
-  // Handle hover events
+  // Handle hover events with delayed close to allow mouse to reach popup
   const handleMouseEnter = (event, client, role) => {
+    // Cancel any pending close timeout
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
     setAnchorEl(event.currentTarget);
     setHoveredClient(client);
     setHoveredRole(role);
   };
 
   const handleMouseLeave = () => {
+    // Delay closing to give user time to move to popup
+    closeTimeoutRef.current = setTimeout(() => {
+      setHoveredClient(null);
+      setHoveredRole(null);
+      setAnchorEl(null);
+    }, 150); // 150ms delay allows smooth transition to popup
+  };
+
+  // Keep popup open when mouse enters it
+  const handlePopupMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  };
+
+  // Close popup when mouse leaves it
+  const handlePopupMouseLeave = () => {
     setHoveredClient(null);
     setHoveredRole(null);
     setAnchorEl(null);
@@ -242,8 +266,8 @@ export const ClientCircles = ({
                 border: '1px solid rgba(255,255,255,0.2)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset',
               }}
-              onMouseEnter={() => setHoveredClient(hoveredClient)}
-              onMouseLeave={handleMouseLeave}
+              onMouseEnter={handlePopupMouseEnter}
+              onMouseLeave={handlePopupMouseLeave}
             >
               {hoveredClient && (
                 <Box sx={{ p: 2.5, textAlign: 'center' }}>
