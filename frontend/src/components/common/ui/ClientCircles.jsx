@@ -201,110 +201,240 @@ export const ClientCircles = ({
     );
   };
 
-  // Render the contact card popper (shared between all modes)
-  const renderContactCard = () => (
-    <Popper
-      open={Boolean(hoveredClient && anchorEl)}
-      anchorEl={anchorEl}
-      placement="top"
-      transition
-      modifiers={[{ name: 'offset', options: { offset: [0, 8] } }]}
-      sx={{ zIndex: 1300 }}
-    >
-      {({ TransitionProps }) => (
-        <Fade {...TransitionProps} timeout={200}>
-          <Paper
-            elevation={8}
-            sx={{
-              p: 2,
-              minWidth: 200,
-              maxWidth: 280,
-              borderRadius: 2,
-              bgcolor: 'background.paper',
-              border: '1px solid',
-              borderColor: 'divider',
-            }}
-            onMouseEnter={() => setHoveredClient(hoveredClient)}
-            onMouseLeave={handleMouseLeave}
-          >
-            {hoveredClient && (
-              <Box>
-                {/* Role badge */}
-                {hoveredRole && ROLE_COLORS[hoveredRole] && (
-                  <Chip
-                    label={ROLE_COLORS[hoveredRole].label}
-                    size="small"
+  // Get gradient colors based on role
+  const getGradientColors = (role) => {
+    if (role === 'buyer') {
+      return {
+        from: 'rgba(99, 102, 241, 0.9)',  // Indigo
+        to: 'rgba(139, 92, 246, 0.85)',    // Purple
+      };
+    }
+    return {
+      from: 'rgba(249, 115, 22, 0.9)',   // Orange
+      to: 'rgba(234, 88, 12, 0.85)',      // Darker orange
+    };
+  };
+
+  // Render the contact card popper (Apple-style glassmorphism)
+  const renderContactCard = () => {
+    const gradientColors = getGradientColors(hoveredRole);
+    const roleConfig = ROLE_COLORS[hoveredRole] || ROLE_COLORS.buyer;
+
+    return (
+      <Popper
+        open={Boolean(hoveredClient && anchorEl)}
+        anchorEl={anchorEl}
+        placement="top"
+        transition
+        modifiers={[{ name: 'offset', options: { offset: [0, 12] } }]}
+        sx={{ zIndex: 1300 }}
+      >
+        {({ TransitionProps }) => (
+          <Fade {...TransitionProps} timeout={250}>
+            <Paper
+              elevation={24}
+              sx={{
+                width: 240,
+                borderRadius: 4,
+                overflow: 'hidden',
+                background: `linear-gradient(160deg, ${gradientColors.from}, ${gradientColors.to})`,
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset',
+              }}
+              onMouseEnter={() => setHoveredClient(hoveredClient)}
+              onMouseLeave={handleMouseLeave}
+            >
+              {hoveredClient && (
+                <Box sx={{ p: 2.5, textAlign: 'center' }}>
+                  {/* Large Avatar with initials */}
+                  <Box
                     sx={{
-                      mb: 1,
-                      bgcolor: ROLE_COLORS[hoveredRole].bg,
-                      color: 'white',
-                      fontWeight: 600,
-                      fontSize: '0.7rem',
-                      height: 20,
+                      width: 72,
+                      height: 72,
+                      borderRadius: '50%',
+                      margin: '0 auto 16px',
+                      background: 'rgba(255,255,255,0.15)',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.1)',
                     }}
-                  />
-                )}
-
-                {/* Client Name */}
-                <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mb: 1 }}>
-                  {getFullName(hoveredClient)}
-                </Typography>
-
-                {/* Email */}
-                {(hoveredClient.email || hoveredClient.client_email) && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                    <Email sx={{ fontSize: 16, color: 'text.secondary' }} />
-                    <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-                      {hoveredClient.email || hoveredClient.client_email}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: '1.75rem',
+                        fontWeight: 500,
+                        color: 'white',
+                        letterSpacing: '1px',
+                      }}
+                    >
+                      {getInitials(hoveredClient, 0)}
                     </Typography>
                   </Box>
-                )}
 
-                {/* Phone */}
-                {(hoveredClient.phone || hoveredClient.client_phone) && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Phone sx={{ fontSize: 16, color: 'text.secondary' }} />
-                    <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-                      {hoveredClient.phone || hoveredClient.client_phone}
-                    </Typography>
-                  </Box>
-                )}
-
-                {/* No contact info */}
-                {!(hoveredClient.email || hoveredClient.client_email) &&
-                  !(hoveredClient.phone || hoveredClient.client_phone) && (
-                    <Typography variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic', fontSize: '0.85rem' }}>
-                      No contact info available
-                    </Typography>
+                  {/* Role badge - small pill */}
+                  {hoveredRole && ROLE_COLORS[hoveredRole] && (
+                    <Chip
+                      label={ROLE_COLORS[hoveredRole].label}
+                      size="small"
+                      sx={{
+                        mb: 1,
+                        bgcolor: 'rgba(255,255,255,0.2)',
+                        color: 'white',
+                        fontWeight: 600,
+                        fontSize: '0.65rem',
+                        height: 20,
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        '& .MuiChip-label': { px: 1.5 },
+                      }}
+                    />
                   )}
 
-                {/* Edit hint */}
-                <Typography
-                  variant="caption"
-                  sx={{
-                    display: 'block',
-                    mt: 1.5,
-                    pt: 1,
-                    borderTop: '1px solid',
-                    borderColor: 'divider',
-                    color: 'primary.main',
-                    cursor: 'pointer',
-                    '&:hover': { textDecoration: 'underline' },
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit?.();
-                  }}
-                >
-                  Click to edit clients
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </Fade>
-      )}
-    </Popper>
-  );
+                  {/* Client Name - Large and bold */}
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      color: 'white',
+                      mb: 2,
+                      fontSize: '1.25rem',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                    }}
+                  >
+                    {getFullName(hoveredClient)}
+                  </Typography>
+
+                  {/* Action buttons row - Apple style */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      gap: 1.5,
+                      mb: 2,
+                    }}
+                  >
+                    {/* Email button */}
+                    <Box
+                      component="a"
+                      href={(hoveredClient.email || hoveredClient.client_email) ? `mailto:${hoveredClient.email || hoveredClient.client_email}` : undefined}
+                      onClick={(e) => e.stopPropagation()}
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: '50%',
+                        bgcolor: 'rgba(255,255,255,0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: (hoveredClient.email || hoveredClient.client_email) ? 'pointer' : 'default',
+                        opacity: (hoveredClient.email || hoveredClient.client_email) ? 1 : 0.4,
+                        transition: 'all 0.2s',
+                        textDecoration: 'none',
+                        '&:hover': {
+                          bgcolor: (hoveredClient.email || hoveredClient.client_email) ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+                          transform: (hoveredClient.email || hoveredClient.client_email) ? 'scale(1.1)' : 'none',
+                        },
+                      }}
+                    >
+                      <Email sx={{ fontSize: 20, color: 'white' }} />
+                    </Box>
+
+                    {/* Phone button */}
+                    <Box
+                      component="a"
+                      href={(hoveredClient.phone || hoveredClient.client_phone) ? `tel:${hoveredClient.phone || hoveredClient.client_phone}` : undefined}
+                      onClick={(e) => e.stopPropagation()}
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: '50%',
+                        bgcolor: 'rgba(255,255,255,0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: (hoveredClient.phone || hoveredClient.client_phone) ? 'pointer' : 'default',
+                        opacity: (hoveredClient.phone || hoveredClient.client_phone) ? 1 : 0.4,
+                        transition: 'all 0.2s',
+                        textDecoration: 'none',
+                        '&:hover': {
+                          bgcolor: (hoveredClient.phone || hoveredClient.client_phone) ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+                          transform: (hoveredClient.phone || hoveredClient.client_phone) ? 'scale(1.1)' : 'none',
+                        },
+                      }}
+                    >
+                      <Phone sx={{ fontSize: 20, color: 'white' }} />
+                    </Box>
+                  </Box>
+
+                  {/* Contact details section */}
+                  <Box
+                    sx={{
+                      bgcolor: 'rgba(0,0,0,0.15)',
+                      borderRadius: 2,
+                      p: 1.5,
+                      textAlign: 'left',
+                    }}
+                  >
+                    {/* Phone number */}
+                    {(hoveredClient.phone || hoveredClient.client_phone) && (
+                      <Box sx={{ mb: 1 }}>
+                        <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px', mb: 0.25 }}>
+                          mobile
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.85rem', color: 'white', fontWeight: 500 }}>
+                          {hoveredClient.phone || hoveredClient.client_phone}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {/* Email */}
+                    {(hoveredClient.email || hoveredClient.client_email) && (
+                      <Box>
+                        <Typography sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px', mb: 0.25 }}>
+                          email
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.85rem', color: 'white', fontWeight: 500, wordBreak: 'break-all' }}>
+                          {hoveredClient.email || hoveredClient.client_email}
+                        </Typography>
+                      </Box>
+                    )}
+
+                    {/* No contact info */}
+                    {!(hoveredClient.email || hoveredClient.client_email) &&
+                      !(hoveredClient.phone || hoveredClient.client_phone) && (
+                        <Typography sx={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', textAlign: 'center' }}>
+                          No contact info
+                        </Typography>
+                      )}
+                  </Box>
+
+                  {/* Edit button */}
+                  <Typography
+                    sx={{
+                      mt: 1.5,
+                      fontSize: '0.75rem',
+                      color: 'rgba(255,255,255,0.7)',
+                      cursor: 'pointer',
+                      transition: 'color 0.2s',
+                      '&:hover': { color: 'white' },
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit?.();
+                    }}
+                  >
+                    Click to edit
+                  </Typography>
+                </Box>
+              )}
+            </Paper>
+          </Fade>
+        )}
+      </Popper>
+    );
+  };
 
   // Calculate total for empty state check
   const totalCount = representationType === 'dual'
