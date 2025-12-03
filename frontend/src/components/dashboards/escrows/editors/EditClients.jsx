@@ -566,8 +566,20 @@ export const EditClients = ({
                       onChange={(event, client) => {
                         if (!client) return;
                         if (client.isAddNew) {
-                          // TODO: Open create client modal
-                          console.log('Add new client clicked');
+                          // Parse name from search text: "FirstName LastName" or just "FirstName"
+                          const nameParts = (clientSearch?.trim() || '').split(/\s+/);
+                          const firstName = nameParts[0] || '';
+                          const lastName = nameParts.slice(1).join(' ') || '';
+                          // Create a temporary client object with the parsed name
+                          const newClient = {
+                            id: `temp-${Date.now()}`, // Temporary ID until saved to backend
+                            firstName,
+                            lastName,
+                            isNew: true, // Flag to indicate this needs to be saved
+                          };
+                          setBuyerClients([...buyerClients, newClient]);
+                          setClientSearch('');
+                          setActiveSearchRole(null);
                           return;
                         }
                         if (!buyerClients.some(c => c.id === client.id)) {
@@ -620,7 +632,7 @@ export const EditClients = ({
                             >
                               <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
                               <Typography variant="body2" fontWeight={600}>
-                                Add New Client
+                                {clientSearch?.trim() ? `Add "${clientSearch.trim()}" as New Client` : 'Add New Client'}
                               </Typography>
                             </Box>
                           );
@@ -784,8 +796,20 @@ export const EditClients = ({
                       onChange={(event, client) => {
                         if (!client) return;
                         if (client.isAddNew) {
-                          // TODO: Open create client modal
-                          console.log('Add new client clicked');
+                          // Parse name from search text: "FirstName LastName" or just "FirstName"
+                          const nameParts = (clientSearch?.trim() || '').split(/\s+/);
+                          const firstName = nameParts[0] || '';
+                          const lastName = nameParts.slice(1).join(' ') || '';
+                          // Create a temporary client object with the parsed name
+                          const newClient = {
+                            id: `temp-${Date.now()}`, // Temporary ID until saved to backend
+                            firstName,
+                            lastName,
+                            isNew: true, // Flag to indicate this needs to be saved
+                          };
+                          setSellerClients([...sellerClients, newClient]);
+                          setClientSearch('');
+                          setActiveSearchRole(null);
                           return;
                         }
                         if (!sellerClients.some(c => c.id === client.id)) {
@@ -837,7 +861,7 @@ export const EditClients = ({
                             >
                               <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
                               <Typography variant="body2" fontWeight={600}>
-                                Add New Client
+                                {clientSearch?.trim() ? `Add "${clientSearch.trim()}" as New Client` : 'Add New Client'}
                               </Typography>
                             </Box>
                           );
@@ -1004,8 +1028,24 @@ export const EditClients = ({
                     onChange={(event, client) => {
                       if (!client) return;
                       if (client.isAddNew) {
-                        // TODO: Open create client modal
-                        console.log('Add new client clicked');
+                        // Parse name from search text: "FirstName LastName" or just "FirstName"
+                        const nameParts = (clientSearch?.trim() || '').split(/\s+/);
+                        const firstName = nameParts[0] || '';
+                        const lastName = nameParts.slice(1).join(' ') || '';
+                        // Create a temporary client object with the parsed name
+                        const newClient = {
+                          id: `temp-${Date.now()}`, // Temporary ID until saved to backend
+                          firstName,
+                          lastName,
+                          isNew: true, // Flag to indicate this needs to be saved
+                        };
+                        if (selectedType === 'buyer') {
+                          setBuyerClients([...buyerClients, newClient]);
+                        } else {
+                          setSellerClients([...sellerClients, newClient]);
+                        }
+                        setClientSearch('');
+                        setActiveSearchRole(null);
                         return;
                       }
                       if (selectedType === 'buyer') {
@@ -1063,7 +1103,7 @@ export const EditClients = ({
                           >
                             <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
                             <Typography variant="body2" fontWeight={600}>
-                              Add New Client
+                              {clientSearch?.trim() ? `Add "${clientSearch.trim()}" as New Client` : 'Add New Client'}
                             </Typography>
                           </Box>
                         );
