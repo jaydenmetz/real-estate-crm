@@ -596,7 +596,7 @@ export const EditClients = ({
                           modifiers: [{ name: 'flip', enabled: false }],
                         },
                         listbox: {
-                          sx: { maxHeight: 240 }, // ~5 items at 48px each
+                          sx: { maxHeight: 320 }, // 5 clients + Add New (~52px each)
                         },
                       }}
                       renderOption={(props, option) => {
@@ -810,7 +810,7 @@ export const EditClients = ({
                           modifiers: [{ name: 'flip', enabled: false }],
                         },
                         listbox: {
-                          sx: { maxHeight: 240 },
+                          sx: { maxHeight: 320 }, // 5 clients + Add New (~52px each)
                         },
                       }}
                       renderOption={(props, option) => {
@@ -1033,7 +1033,7 @@ export const EditClients = ({
                         modifiers: [{ name: 'flip', enabled: false }],
                       },
                       listbox: {
-                        sx: { maxHeight: 240 },
+                        sx: { maxHeight: 320 }, // 5 clients + Add New (~52px each)
                       },
                     }}
                     renderOption={(props, option) => {
