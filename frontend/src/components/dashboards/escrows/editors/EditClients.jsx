@@ -549,7 +549,10 @@ export const EditClients = ({
                   {buyerClients.length < 6 && (activeSearchRole === 'buyer' ? (
                     <Autocomplete
                       open
-                      options={clientOptions.filter(opt => !buyerClients.some(c => c.id === opt.id))}
+                      options={[
+                        ...clientOptions.filter(opt => !buyerClients.some(c => c.id === opt.id)),
+                        { id: '__add_new__', isAddNew: true }
+                      ]}
                       loading={loadingClients}
                       value={null}
                       inputValue={clientSearch}
@@ -557,11 +560,16 @@ export const EditClients = ({
                         if (reason === 'input') setClientSearch(value);
                       }}
                       getOptionLabel={(option) =>
-                        option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
+                        option?.isAddNew ? '+ Add New Client' : option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
                       }
                       isOptionEqualToValue={(option, value) => option?.id === value?.id}
                       onChange={(event, client) => {
                         if (!client) return;
+                        if (client.isAddNew) {
+                          // TODO: Open create client modal
+                          console.log('Add new client clicked');
+                          return;
+                        }
                         if (!buyerClients.some(c => c.id === client.id)) {
                           setBuyerClients([...buyerClients, client]);
                         }
@@ -576,9 +584,44 @@ export const EditClients = ({
                       }}
                       clearOnBlur={false}
                       blurOnSelect={true}
-                      filterOptions={(x) => x}
+                      filterOptions={(options) => {
+                        // Keep all regular options, always keep "Add New" at the end
+                        const filtered = options.filter(opt => !opt.isAddNew);
+                        const addNew = options.find(opt => opt.isAddNew);
+                        return addNew ? [...filtered, addNew] : filtered;
+                      }}
+                      slotProps={{
+                        popper: {
+                          placement: 'bottom-start',
+                          modifiers: [{ name: 'flip', enabled: false }],
+                        },
+                        listbox: {
+                          sx: { maxHeight: 240 }, // ~5 items at 48px each
+                        },
+                      }}
                       renderOption={(props, option) => {
                         const { key, ...otherProps } = props;
+                        if (option.isAddNew) {
+                          return (
+                            <Box
+                              component="li"
+                              key={key}
+                              {...otherProps}
+                              sx={{
+                                borderTop: '1px solid',
+                                borderColor: 'divider',
+                                color: 'primary.main',
+                                fontWeight: 600,
+                                '&:hover': { bgcolor: 'action.hover' },
+                              }}
+                            >
+                              <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
+                              <Typography variant="body2" fontWeight={600}>
+                                Add New Client
+                              </Typography>
+                            </Box>
+                          );
+                        }
                         return (
                           <Box component="li" key={key} {...otherProps}>
                             <Box>
@@ -721,7 +764,10 @@ export const EditClients = ({
                   {sellerClients.length < 6 && (activeSearchRole === 'seller' ? (
                     <Autocomplete
                       open
-                      options={clientOptions.filter(opt => !sellerClients.some(c => c.id === opt.id))}
+                      options={[
+                        ...clientOptions.filter(opt => !sellerClients.some(c => c.id === opt.id)),
+                        { id: '__add_new__', isAddNew: true }
+                      ]}
                       loading={loadingClients}
                       value={null}
                       inputValue={clientSearch}
@@ -729,11 +775,16 @@ export const EditClients = ({
                         if (reason === 'input') setClientSearch(value);
                       }}
                       getOptionLabel={(option) =>
-                        option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
+                        option?.isAddNew ? '+ Add New Client' : option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
                       }
                       isOptionEqualToValue={(option, value) => option?.id === value?.id}
                       onChange={(event, client) => {
                         if (!client) return;
+                        if (client.isAddNew) {
+                          // TODO: Open create client modal
+                          console.log('Add new client clicked');
+                          return;
+                        }
                         if (!sellerClients.some(c => c.id === client.id)) {
                           setSellerClients([...sellerClients, client]);
                         }
@@ -748,9 +799,43 @@ export const EditClients = ({
                       }}
                       clearOnBlur={false}
                       blurOnSelect={true}
-                      filterOptions={(x) => x}
+                      filterOptions={(options) => {
+                        const filtered = options.filter(opt => !opt.isAddNew);
+                        const addNew = options.find(opt => opt.isAddNew);
+                        return addNew ? [...filtered, addNew] : filtered;
+                      }}
+                      slotProps={{
+                        popper: {
+                          placement: 'bottom-start',
+                          modifiers: [{ name: 'flip', enabled: false }],
+                        },
+                        listbox: {
+                          sx: { maxHeight: 240 },
+                        },
+                      }}
                       renderOption={(props, option) => {
                         const { key, ...otherProps } = props;
+                        if (option.isAddNew) {
+                          return (
+                            <Box
+                              component="li"
+                              key={key}
+                              {...otherProps}
+                              sx={{
+                                borderTop: '1px solid',
+                                borderColor: 'divider',
+                                color: 'primary.main',
+                                fontWeight: 600,
+                                '&:hover': { bgcolor: 'action.hover' },
+                              }}
+                            >
+                              <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
+                              <Typography variant="body2" fontWeight={600}>
+                                Add New Client
+                              </Typography>
+                            </Box>
+                          );
+                        }
                         return (
                           <Box component="li" key={key} {...otherProps}>
                             <Box>
@@ -896,7 +981,10 @@ export const EditClients = ({
                 {(selectedType === 'buyer' ? buyerClients : sellerClients).length < 6 && (activeSearchRole === selectedType ? (
                   <Autocomplete
                     open
-                    options={clientOptions.filter(opt => !(selectedType === 'buyer' ? buyerClients : sellerClients).some(c => c.id === opt.id))}
+                    options={[
+                      ...clientOptions.filter(opt => !(selectedType === 'buyer' ? buyerClients : sellerClients).some(c => c.id === opt.id)),
+                      { id: '__add_new__', isAddNew: true }
+                    ]}
                     loading={loadingClients}
                     value={null}
                     inputValue={clientSearch}
@@ -904,11 +992,16 @@ export const EditClients = ({
                       if (reason === 'input') setClientSearch(value);
                     }}
                     getOptionLabel={(option) =>
-                      option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
+                      option?.isAddNew ? '+ Add New Client' : option ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}` : ''
                     }
                     isOptionEqualToValue={(option, value) => option?.id === value?.id}
                     onChange={(event, client) => {
                       if (!client) return;
+                      if (client.isAddNew) {
+                        // TODO: Open create client modal
+                        console.log('Add new client clicked');
+                        return;
+                      }
                       if (selectedType === 'buyer') {
                         if (!buyerClients.some(c => c.id === client.id)) {
                           setBuyerClients([...buyerClients, client]);
@@ -929,9 +1022,43 @@ export const EditClients = ({
                     }}
                     clearOnBlur={false}
                     blurOnSelect={true}
-                    filterOptions={(x) => x}
+                    filterOptions={(options) => {
+                      const filtered = options.filter(opt => !opt.isAddNew);
+                      const addNew = options.find(opt => opt.isAddNew);
+                      return addNew ? [...filtered, addNew] : filtered;
+                    }}
+                    slotProps={{
+                      popper: {
+                        placement: 'bottom-start',
+                        modifiers: [{ name: 'flip', enabled: false }],
+                      },
+                      listbox: {
+                        sx: { maxHeight: 240 },
+                      },
+                    }}
                     renderOption={(props, option) => {
                       const { key, ...otherProps } = props;
+                      if (option.isAddNew) {
+                        return (
+                          <Box
+                            component="li"
+                            key={key}
+                            {...otherProps}
+                            sx={{
+                              borderTop: '1px solid',
+                              borderColor: 'divider',
+                              color: 'primary.main',
+                              fontWeight: 600,
+                              '&:hover': { bgcolor: 'action.hover' },
+                            }}
+                          >
+                            <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
+                            <Typography variant="body2" fontWeight={600}>
+                              Add New Client
+                            </Typography>
+                          </Box>
+                        );
+                      }
                       return (
                         <Box component="li" key={key} {...otherProps}>
                           <Box>
