@@ -190,13 +190,11 @@ const useClientCardConfig = (statuses) => {
             return budgetConfig.label;
           },
           formatter: (value) => value,
-          color: (client) => {
-            const budgetConfig = getBudgetConfig(client?.priceRangeMin, client?.priceRangeMax);
-            return {
-              primary: budgetConfig.color,
-              secondary: budgetConfig.color,
-              bg: budgetConfig.bg,
-            };
+          // Static color - CardTemplate doesn't support function colors
+          color: {
+            primary: '#10b981',
+            secondary: '#059669',
+            bg: alpha('#10b981', 0.08),
           },
           editable: true,
           editor: EditClientBudget,
