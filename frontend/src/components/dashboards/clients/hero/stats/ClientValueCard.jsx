@@ -2,9 +2,14 @@ import React from 'react';
 import DashboardStatCard from '../../../../../components/common/ui/DashboardStatCard';
 
 /**
- * ClientValueCard - Displays total client portfolio value (sum of budgets)
+ * ClientValueCard - Displays total lifetime value (commissions earned from clients)
  *
- * @param {Array} data - All client data
+ * Lifetime Value = sum of net_commission from all escrows where each client
+ * is buyer, seller, buyer agent, seller agent, or referral source.
+ *
+ * Includes both closed (realized) and active (pending) commissions.
+ *
+ * @param {Array} data - All client data (each client has lifetime_value field)
  * @param {number} delay - Animation delay index
  */
 const ClientValueCard = ({
@@ -12,16 +17,17 @@ const ClientValueCard = ({
   delay = 3,
   ...props
 }) => {
-  // Sum all client budgets
+  // Sum lifetime_value across all clients
+  // lifetime_value = closed_value + pending_value (calculated in backend)
   const totalValue = data.reduce((sum, item) => {
-    const budget = parseFloat(item.budget || item.max_budget || 0);
-    return sum + budget;
+    const value = parseFloat(item.lifetime_value || 0);
+    return sum + value;
   }, 0);
 
   return (
     <DashboardStatCard
       icon="AttachMoney"
-      title="TOTAL CLIENT VALUE"
+      title="LIFETIME VALUE"
       value={totalValue}
       format="currency"
       color="#06b6d4"

@@ -112,7 +112,8 @@ class ClientsService {
     const sortDirection = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
     const orderByClause = `ORDER BY ${sortField} ${sortDirection}`;
 
-    // Get clients with contact info
+    // Get clients with contact info and lifetime value
+    // Lifetime value = sum of net_commission from all escrows where this contact is buyer or seller
     queryParams.push(limit, offset);
     const dataQuery = `
       SELECT
@@ -131,9 +132,26 @@ class ClientsService {
         co.state,
         co.zip_code,
         co.notes,
-        co.tags
+        co.tags,
+        COALESCE(ltv.lifetime_value, 0) as lifetime_value,
+        COALESCE(ltv.closed_value, 0) as closed_value,
+        COALESCE(ltv.pending_value, 0) as pending_value,
+        COALESCE(ltv.escrow_count, 0) as escrow_count
       FROM clients cl
       JOIN contacts co ON cl.contact_id = co.id
+      LEFT JOIN LATERAL (
+        SELECT
+          SUM(COALESCE(e.net_commission, 0)) as lifetime_value,
+          SUM(CASE WHEN LOWER(e.escrow_status) = 'closed' THEN COALESCE(e.net_commission, 0) ELSE 0 END) as closed_value,
+          SUM(CASE WHEN LOWER(e.escrow_status) = 'active' THEN COALESCE(e.net_commission, 0) ELSE 0 END) as pending_value,
+          COUNT(e.id) as escrow_count
+        FROM escrows e
+        WHERE e.people->>'buyer' = co.id::text
+           OR e.people->>'seller' = co.id::text
+           OR e.people->>'buyerAgent' = co.id::text
+           OR e.people->>'sellerAgent' = co.id::text
+           OR e.people->>'referral' = co.id::text
+      ) ltv ON true
       ${whereClause}
       ${orderByClause}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
