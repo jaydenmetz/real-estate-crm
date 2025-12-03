@@ -10,6 +10,7 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  InputAdornment,
 } from '@mui/material';
 import {
   Check,
@@ -18,6 +19,7 @@ import {
   ContentCopy,
   Email,
   Phone,
+  Clear,
 } from '@mui/icons-material';
 import { ModalContainer } from '../../../common/modals/ModalContainer';
 import { leadsAPI } from '../../../../services/api.service';
@@ -25,13 +27,12 @@ import debounce from 'lodash/debounce';
 
 /**
  * Client Name Editor with Lead Search
- * Similar pattern to EditPropertyAddress with Google Maps autocomplete
+ * Matches EditPropertyAddress pattern exactly:
  *
- * Features:
- * - Search leads database with autocomplete
- * - Shows "Selected Lead" when lead is chosen (like "Selected Address")
- * - Asks for "Legal Name" (display name) after selection
- * - Shows lead contact info (phone, email) in subtitle
+ * - "Current Client" section at top (like "Current Property Address")
+ * - Single "Legal Name" input with lead autocomplete (like "Display Name" with address autocomplete)
+ * - When user selects a lead, it shows "Selected Lead" section
+ * - User can type custom name OR select from lead search
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
@@ -50,17 +51,16 @@ export const EditClientName = ({
   inline = false,
   color = '#8b5cf6', // Purple for clients
 }) => {
-  // State for lead selection
+  // State for lead selection (from autocomplete)
   const [selectedLead, setSelectedLead] = useState(null);
-  const [leadSearch, setLeadSearch] = useState('');
   const [leadOptions, setLeadOptions] = useState([]);
   const [loadingLeads, setLoadingLeads] = useState(false);
 
-  // State for legal name (editable display name)
-  const [legalName, setLegalName] = useState('');
+  // State for the input text (legal name / search query)
+  const [inputText, setInputText] = useState('');
 
   const [saving, setSaving] = useState(false);
-  const [leadMenuAnchor, setLeadMenuAnchor] = useState(null);
+  const [clientMenuAnchor, setClientMenuAnchor] = useState(null);
 
   // Extract current values from data object
   const getCurrentName = () => {
@@ -84,67 +84,35 @@ export const EditClientName = ({
   const currentPhone = getCurrentPhone();
   const currentEmail = getCurrentEmail();
 
-  // Check if user has selected a new lead
+  // Check if user has selected a NEW lead (different from current)
   const hasSelectedNewLead = selectedLead !== null;
+  const hasTextChanged = inputText.trim() !== currentName;
+  const hasUnsavedChanges = hasSelectedNewLead || hasTextChanged;
 
   // Reset state when modal opens/closes
   useEffect(() => {
-    if (open) {
+    if (!open) {
       setSelectedLead(null);
-      setLegalName(currentName);
-      setLeadSearch('');
+      setInputText('');
+      setLeadOptions([]);
+    } else {
+      setInputText(currentName);
     }
   }, [open]);
 
-  // Update legalName when currentName changes (but only if no lead selected)
-  useEffect(() => {
-    if (!selectedLead) {
-      setLegalName(currentName);
-    }
-  }, [currentName, selectedLead]);
-
-  // Debounced lead search - like Google Address autocomplete
+  // Debounced lead search - searches as user types in the Legal Name field
   const searchLeadsDebounced = useCallback(
     debounce(async (searchText) => {
-      if (!searchText || searchText.length < 1) {
-        // No search text - load recent leads
-        setLoadingLeads(true);
-        try {
-          const response = await leadsAPI.getAll({
-            limit: 30,
-            sortBy: 'created_at',
-            sortOrder: 'desc'
-          });
-
-          const results = response.success && response.data
-            ? (response.data.leads || response.data || [])
-            : [];
-
-          const transformedLeads = results.map(lead => ({
-            id: lead.lead_id || lead.id,
-            firstName: lead.first_name || lead.firstName || '',
-            lastName: lead.last_name || lead.lastName || '',
-            phone: lead.phone || lead.lead_phone || '',
-            email: lead.email || lead.lead_email || '',
-            temperature: lead.temperature || lead.status || 'new',
-          }));
-
-          setLeadOptions(transformedLeads);
-        } catch (error) {
-          console.error('Error loading recent leads:', error);
-          setLeadOptions([]);
-        } finally {
-          setLoadingLeads(false);
-        }
+      if (!searchText || searchText.length < 2) {
+        setLeadOptions([]);
         return;
       }
 
-      // Search starts on first character
       setLoadingLeads(true);
       try {
         const response = await leadsAPI.getAll({
           search: searchText,
-          limit: 30
+          limit: 10
         });
 
         const results = response.success && response.data
@@ -167,25 +135,29 @@ export const EditClientName = ({
       } finally {
         setLoadingLeads(false);
       }
-    }, 150),
+    }, 200),
     []
   );
 
+  // Search leads when input changes
   useEffect(() => {
-    if (open) {
-      searchLeadsDebounced(leadSearch);
+    if (open && inputText) {
+      searchLeadsDebounced(inputText);
     }
-  }, [leadSearch, searchLeadsDebounced, open]);
+  }, [inputText, searchLeadsDebounced, open]);
 
   // Handle lead selection from autocomplete
   const handleLeadSelect = (event, lead) => {
-    if (!lead) return;
+    if (!lead) {
+      // User cleared selection
+      setSelectedLead(null);
+      return;
+    }
 
     setSelectedLead(lead);
-    // Pre-fill legal name with lead's name
+    // Update input text to selected lead's name
     const fullName = `${lead.firstName} ${lead.lastName}`.trim();
-    setLegalName(fullName);
-    setLeadSearch('');
+    setInputText(fullName);
 
     // In inline mode, immediately notify parent
     if (inline && onSave) {
@@ -200,31 +172,47 @@ export const EditClientName = ({
     }
   };
 
+  // Handle text input change
+  const handleInputChange = (event, newValue) => {
+    setInputText(newValue);
+    // If user types something different from selected lead, clear selection
+    if (selectedLead) {
+      const selectedName = `${selectedLead.firstName} ${selectedLead.lastName}`.trim();
+      if (newValue !== selectedName) {
+        setSelectedLead(null);
+      }
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Parse legal name into first/last
-      const nameParts = legalName.trim().split(/\s+/);
+      // Parse input text into first/last name
+      const nameParts = inputText.trim().split(/\s+/);
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
 
       if (selectedLead) {
-        // Save with lead data
+        // Save with lead data (use selected lead's contact info)
         await onSave({
           lead_id: selectedLead.id,
           first_name: firstName,
           last_name: lastName,
           phone: selectedLead.phone,
           email: selectedLead.email,
-          display_name: legalName.trim(),
+          display_name: inputText.trim(),
         });
-      } else {
-        // Just update the name
+      } else if (hasTextChanged) {
+        // Just update the name (no lead selected)
         await onSave({
           first_name: firstName,
           last_name: lastName,
-          display_name: legalName.trim(),
+          display_name: inputText.trim(),
         });
+      } else {
+        // No changes
+        onClose();
+        return;
       }
       onClose();
     } catch (error) {
@@ -235,21 +223,21 @@ export const EditClientName = ({
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && (selectedLead || legalName !== currentName)) {
+    if (e.key === 'Enter' && hasUnsavedChanges) {
       handleSave();
     } else if (e.key === 'Escape') {
       onClose();
     }
   };
 
-  // Lead menu handlers
-  const handleLeadClick = (e) => {
+  // Client menu handlers
+  const handleClientClick = (e) => {
     e.stopPropagation();
-    setLeadMenuAnchor(e.currentTarget);
+    setClientMenuAnchor(e.currentTarget);
   };
 
-  const handleLeadMenuClose = () => {
-    setLeadMenuAnchor(null);
+  const handleClientMenuClose = () => {
+    setClientMenuAnchor(null);
   };
 
   const handleCopyName = () => {
@@ -257,19 +245,19 @@ export const EditClientName = ({
       ? `${selectedLead.firstName} ${selectedLead.lastName}`.trim()
       : currentName;
     navigator.clipboard.writeText(name);
-    handleLeadMenuClose();
+    handleClientMenuClose();
   };
 
   const handleCopyPhone = () => {
     const phone = selectedLead?.phone || currentPhone;
     if (phone) navigator.clipboard.writeText(phone);
-    handleLeadMenuClose();
+    handleClientMenuClose();
   };
 
   const handleCopyEmail = () => {
     const email = selectedLead?.email || currentEmail;
     if (email) navigator.clipboard.writeText(email);
-    handleLeadMenuClose();
+    handleClientMenuClose();
   };
 
   // Get temperature color for lead
@@ -283,11 +271,17 @@ export const EditClientName = ({
     return colors[temp?.toLowerCase()] || '#8b5cf6';
   };
 
+  // Clear the input and selection
+  const handleClear = () => {
+    setInputText('');
+    setSelectedLead(null);
+    setLeadOptions([]);
+  };
+
   // Render content
   const content = (
     <Box
       onClick={(e) => e.stopPropagation()}
-      onKeyDown={handleKeyPress}
       sx={{
         display: 'flex',
         justifyContent: 'center',
@@ -295,11 +289,13 @@ export const EditClientName = ({
       }}
     >
       <Box sx={{ width: '100%', maxWidth: 500 }}>
-        {/* Selected Lead Section */}
-        {(inline ? selectedLead : (currentName || selectedLead)) && (
+        {/* Client Display Section */}
+        {/* In inline mode (NewClientModal): ONLY show "Selected Lead" when user selects from autocomplete */}
+        {/* In standalone edit mode: Show "Current Client" when database has existing client */}
+        {(inline ? selectedLead : currentName) && (
           <Box sx={{ mb: 2 }}>
             {(!hasSelectedNewLead || inline) ? (
-              /* Show single lead box (current in standalone, selected in inline) */
+              /* Show single client box (current in standalone, selected in inline) */
               <>
                 <Typography
                   variant="caption"
@@ -316,7 +312,7 @@ export const EditClientName = ({
                   {inline ? 'Selected Lead' : 'Current Client'}
                 </Typography>
                 <Box
-                  onClick={handleLeadClick}
+                  onClick={handleClientClick}
                   sx={{
                     display: 'flex',
                     alignItems: 'flex-start',
@@ -372,67 +368,65 @@ export const EditClientName = ({
               /* Show side-by-side comparison when new lead selected */
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {/* Current Client */}
-                {currentName && (
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: 'rgba(255,255,255,0.5)',
-                        mb: 0.5,
-                        display: 'block',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                      }}
-                    >
-                      Current Client
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 1,
-                        borderRadius: 2,
-                        p: 1,
-                        mx: -1,
-                        backgroundColor: 'rgba(0,0,0,0.15)',
-                        opacity: 0.6,
-                      }}
-                    >
-                      <Person sx={{ color: 'white', mt: 0.5, fontSize: 20 }} />
-                      <Box sx={{ flex: 1 }}>
+                <Box>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: 'rgba(255,255,255,0.5)',
+                      mb: 0.5,
+                      display: 'block',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    Current Client
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 1,
+                      borderRadius: 2,
+                      p: 1,
+                      mx: -1,
+                      backgroundColor: 'rgba(0,0,0,0.15)',
+                      opacity: 0.6,
+                    }}
+                  >
+                    <Person sx={{ color: 'white', mt: 0.5, fontSize: 20 }} />
+                    <Box sx={{ flex: 1 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 600,
+                          color: 'white',
+                          fontSize: '0.875rem',
+                          lineHeight: 1.4,
+                          textDecoration: 'line-through',
+                        }}
+                      >
+                        {currentName}
+                      </Typography>
+                      {(currentPhone || currentEmail) && (
                         <Typography
-                          variant="body2"
+                          variant="caption"
                           sx={{
-                            fontWeight: 600,
-                            color: 'white',
-                            fontSize: '0.875rem',
-                            lineHeight: 1.4,
-                            textDecoration: 'line-through',
+                            color: 'rgba(255,255,255,0.5)',
+                            display: 'block',
+                            mt: 0.25,
+                            fontSize: '0.7rem',
                           }}
                         >
-                          {currentName}
+                          {[currentPhone, currentEmail].filter(Boolean).join(' • ')}
                         </Typography>
-                        {(currentPhone || currentEmail) && (
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              color: 'rgba(255,255,255,0.5)',
-                              display: 'block',
-                              mt: 0.25,
-                              fontSize: '0.7rem',
-                            }}
-                          >
-                            {[currentPhone, currentEmail].filter(Boolean).join(' • ')}
-                          </Typography>
-                        )}
-                      </Box>
+                      )}
                     </Box>
                   </Box>
-                )}
+                </Box>
 
-                {/* Selected Lead */}
+                {/* New Client (Selected Lead) */}
                 <Box>
                   <Typography
                     variant="caption"
@@ -446,10 +440,10 @@ export const EditClientName = ({
                       letterSpacing: '0.5px',
                     }}
                   >
-                    Selected Lead
+                    {inline ? 'Selected Lead' : 'New Client'}
                   </Typography>
                   <Box
-                    onClick={handleLeadClick}
+                    onClick={handleClientClick}
                     sx={{
                       display: 'flex',
                       alignItems: 'flex-start',
@@ -500,11 +494,11 @@ export const EditClientName = ({
           </Box>
         )}
 
-        {/* Lead Action Menu */}
+        {/* Client Action Menu */}
         <Menu
-          anchorEl={leadMenuAnchor}
-          open={Boolean(leadMenuAnchor)}
-          onClose={handleLeadMenuClose}
+          anchorEl={clientMenuAnchor}
+          open={Boolean(clientMenuAnchor)}
+          onClose={handleClientMenuClose}
           onClick={(e) => e.stopPropagation()}
           slotProps={{
             paper: {
@@ -542,7 +536,8 @@ export const EditClientName = ({
           )}
         </Menu>
 
-        {/* Lead Search Autocomplete */}
+        {/* Legal Name Input with Lead Autocomplete */}
+        {/* This is the ONLY input field - just like Display Name in EditAddress */}
         <Box sx={{ mb: 1.5 }}>
           <Typography
             variant="caption"
@@ -556,20 +551,24 @@ export const EditClientName = ({
               letterSpacing: '0.5px',
             }}
           >
-            Search Leads
+            Legal Name
           </Typography>
           <Autocomplete
+            freeSolo
             options={leadOptions}
-            getOptionLabel={(option) =>
-              `${option.firstName} ${option.lastName}`.trim() || 'Unknown'
-            }
+            getOptionLabel={(option) => {
+              // If option is a string (user typed), return it directly
+              if (typeof option === 'string') return option;
+              return `${option.firstName} ${option.lastName}`.trim() || 'Unknown';
+            }}
             filterOptions={(x) => x} // Disable client-side filtering (server handles it)
             loading={loadingLeads}
-            inputValue={leadSearch}
-            onInputChange={(event, newValue) => setLeadSearch(newValue)}
+            inputValue={inputText}
+            onInputChange={handleInputChange}
             onChange={handleLeadSelect}
-            isOptionEqualToValue={(option, value) => option.id === value?.id}
-            noOptionsText={leadSearch ? "No leads found" : "Start typing to search..."}
+            value={selectedLead}
+            isOptionEqualToValue={(option, value) => option?.id === value?.id}
+            noOptionsText={inputText?.length >= 2 ? "No leads found" : "Type to search leads..."}
             renderOption={(props, option) => {
               const { key, ...otherProps } = props;
               return (
@@ -628,14 +627,28 @@ export const EditClientName = ({
             renderInput={(params) => (
               <TextField
                 {...params}
-                placeholder="Search by name, phone, or email..."
+                placeholder="Start typing name..."
                 autoFocus
+                onKeyDown={handleKeyPress}
                 InputProps={{
                   ...params.InputProps,
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Person sx={{ color: 'white', fontSize: 20 }} />
+                    </InputAdornment>
+                  ),
                   endAdornment: (
                     <>
                       {loadingLeads ? <CircularProgress color="inherit" size={20} /> : null}
-                      {params.InputProps.endAdornment}
+                      {inputText && (
+                        <IconButton
+                          size="small"
+                          onClick={handleClear}
+                          sx={{ color: 'rgba(255,255,255,0.5)' }}
+                        >
+                          <Clear fontSize="small" />
+                        </IconButton>
+                      )}
                     </>
                   ),
                 }}
@@ -643,6 +656,7 @@ export const EditClientName = ({
                   '& .MuiOutlinedInput-root': {
                     backgroundColor: 'rgba(255,255,255,0.15)',
                     borderRadius: 2,
+                    minHeight: '60px',
                     '& fieldset': {
                       borderColor: 'rgba(255,255,255,0.3)',
                       borderWidth: 2,
@@ -664,10 +678,7 @@ export const EditClientName = ({
                     },
                   },
                   '& .MuiAutocomplete-popupIndicator': {
-                    color: 'rgba(255,255,255,0.5)',
-                  },
-                  '& .MuiAutocomplete-clearIndicator': {
-                    color: 'rgba(255,255,255,0.5)',
+                    display: 'none', // Hide dropdown arrow since it's freeSolo
                   },
                 }}
               />
@@ -694,63 +705,6 @@ export const EditClientName = ({
                   '& .MuiAutocomplete-loading': {
                     color: 'rgba(255,255,255,0.7)',
                   },
-                },
-              },
-            }}
-          />
-        </Box>
-
-        {/* Legal Name Input */}
-        <Box sx={{ mb: 1.5 }}>
-          <Typography
-            variant="caption"
-            sx={{
-              fontSize: 10,
-              fontWeight: 600,
-              color: 'rgba(255,255,255,0.7)',
-              mb: 0.75,
-              display: 'block',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-            }}
-          >
-            Legal Name
-          </Typography>
-          <TextField
-            fullWidth
-            value={legalName}
-            onChange={(e) => setLegalName(e.target.value)}
-            onKeyDown={handleKeyPress}
-            disabled={saving}
-            placeholder="Enter legal name..."
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                borderRadius: 2,
-                '& fieldset': {
-                  borderColor: 'rgba(255,255,255,0.3)',
-                  borderWidth: 2,
-                },
-                '&:hover fieldset': {
-                  borderColor: saving ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.5)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'white',
-                },
-                '&.Mui-disabled': {
-                  backgroundColor: 'rgba(255,255,255,0.05)',
-                  '& fieldset': {
-                    borderColor: 'rgba(255,255,255,0.1)',
-                  },
-                },
-              },
-              '& .MuiInputBase-input': {
-                color: 'white',
-                fontSize: '15px',
-                fontWeight: 500,
-                '&::placeholder': {
-                  color: 'rgba(255,255,255,0.5)',
-                  opacity: 1,
                 },
               },
             }}
@@ -787,7 +741,7 @@ export const EditClientName = ({
                 e.stopPropagation();
                 handleSave();
               }}
-              disabled={saving || (!selectedLead && legalName === currentName)}
+              disabled={saving || !hasUnsavedChanges}
               sx={{
                 width: 48,
                 height: 48,
