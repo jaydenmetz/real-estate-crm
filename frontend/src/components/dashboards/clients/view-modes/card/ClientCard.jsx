@@ -41,44 +41,6 @@ const getStatusConfig = (stage) => {
   return configs[stage] || configs['New'];
 };
 
-// ============================================================================
-// BUDGET CONFIGURATION
-// ============================================================================
-
-const getBudgetConfig = (priceMin, priceMax) => {
-  const midPrice = priceMax || priceMin || 0;
-
-  if (midPrice < 300000) {
-    return {
-      label: 'Budget-Friendly',
-      range: '<$300k',
-      color: '#10b981',
-      bg: alpha('#10b981', 0.08),
-    };
-  } else if (midPrice < 550000) {
-    return {
-      label: 'Classic',
-      range: '$300k-$550k',
-      color: '#3b82f6',
-      bg: alpha('#3b82f6', 0.08),
-    };
-  } else if (midPrice < 1000000) {
-    return {
-      label: 'Premium',
-      range: '$550k-$1M',
-      color: '#8b5cf6',
-      bg: alpha('#8b5cf6', 0.08),
-    };
-  } else {
-    return {
-      label: 'Luxury',
-      range: '$1M+',
-      color: '#f59e0b',
-      bg: alpha('#f59e0b', 0.08),
-    };
-  }
-};
-
 // Compact date formatter
 const formatCompactDate = (value) => {
   if (!value) return 'TBD';
@@ -180,17 +142,13 @@ const useClientCardConfig = (statuses) => {
         },
       },
 
-      // Metrics Configuration (2 columns - Budget and Doc Type)
+      // Metrics Configuration (2 columns - Budget and Lifetime Value)
       metrics: [
-        // Budget Range (editable)
+        // Budget (editable) - numeric currency field
         {
           label: 'Budget',
-          field: (client) => {
-            const budgetConfig = getBudgetConfig(client.priceRangeMin, client.priceRangeMax);
-            return budgetConfig.label;
-          },
-          formatter: (value) => value,
-          // Static color - CardTemplate doesn't support function colors
+          field: (client) => client.budget || 0,
+          formatter: (value) => formatCurrency(value),
           color: {
             primary: '#10b981',
             secondary: '#059669',
@@ -199,29 +157,24 @@ const useClientCardConfig = (statuses) => {
           editable: true,
           editor: EditClientBudget,
           editorProps: (client) => ({
-            value: client.priceRangeMax || client.priceRangeMin || 0,
-            priceMin: client.priceRangeMin || 0,
-            priceMax: client.priceRangeMax || 0,
+            value: client.budget || 0,
           }),
-          onSave: (client, updates) => {
-            return {
-              priceRangeMin: updates.priceMin || updates,
-              priceRangeMax: updates.priceMax || updates,
-            };
+          onSave: (client, newBudget) => {
+            return { budget: newBudget };
           },
         },
 
-        // Representation Doc Type
+        // Lifetime Value (calculated from escrows, not editable)
         {
-          label: 'Doc Type',
-          field: (client) => client.representationDocType || 'TBD',
-          formatter: (value) => value,
+          label: 'Lifetime Value',
+          field: (client) => client.lifetime_value || 0,
+          formatter: (value) => formatCurrency(value),
           color: {
-            primary: '#6366f1',
-            secondary: '#4f46e5',
-            bg: alpha('#6366f1', 0.08),
+            primary: '#06b6d4',
+            secondary: '#0891b2',
+            bg: alpha('#06b6d4', 0.08),
           },
-          editable: false, // Can be made editable with appropriate editor
+          editable: false, // Calculated field
         },
       ],
 
