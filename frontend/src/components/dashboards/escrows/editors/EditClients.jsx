@@ -593,7 +593,10 @@ export const EditClients = ({
                       slotProps={{
                         popper: {
                           placement: 'bottom-start',
-                          modifiers: [{ name: 'flip', enabled: false }],
+                          modifiers: [
+                            { name: 'flip', options: { fallbackPlacements: ['top-start'] } },
+                            { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
+                          ],
                         },
                         listbox: {
                           sx: { maxHeight: 220 }, // 3 clients + Add New (~52px each)
@@ -807,7 +810,10 @@ export const EditClients = ({
                       slotProps={{
                         popper: {
                           placement: 'bottom-start',
-                          modifiers: [{ name: 'flip', enabled: false }],
+                          modifiers: [
+                            { name: 'flip', options: { fallbackPlacements: ['top-start'] } },
+                            { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
+                          ],
                         },
                         listbox: {
                           sx: { maxHeight: 220 }, // 3 clients + Add New (~52px each)
@@ -1030,7 +1036,10 @@ export const EditClients = ({
                     slotProps={{
                       popper: {
                         placement: 'bottom-start',
-                        modifiers: [{ name: 'flip', enabled: false }],
+                        modifiers: [
+                          { name: 'flip', options: { fallbackPlacements: ['top-start'] } },
+                          { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
+                        ],
                       },
                       listbox: {
                         sx: { maxHeight: 220 }, // 3 clients + Add New (~52px each)
