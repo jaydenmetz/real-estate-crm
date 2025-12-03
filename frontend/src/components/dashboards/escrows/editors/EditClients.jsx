@@ -550,7 +550,7 @@ export const EditClients = ({
                     <Autocomplete
                       open
                       options={[
-                        ...clientOptions.filter(opt => !buyerClients.some(c => c.id === opt.id)),
+                        ...clientOptions.filter(opt => !buyerClients.some(c => c.id === opt.id)).slice(0, 5),
                         { id: '__add_new__', isAddNew: true }
                       ]}
                       loading={loadingClients}
@@ -765,7 +765,7 @@ export const EditClients = ({
                     <Autocomplete
                       open
                       options={[
-                        ...clientOptions.filter(opt => !sellerClients.some(c => c.id === opt.id)),
+                        ...clientOptions.filter(opt => !sellerClients.some(c => c.id === opt.id)).slice(0, 5),
                         { id: '__add_new__', isAddNew: true }
                       ]}
                       loading={loadingClients}
@@ -982,7 +982,7 @@ export const EditClients = ({
                   <Autocomplete
                     open
                     options={[
-                      ...clientOptions.filter(opt => !(selectedType === 'buyer' ? buyerClients : sellerClients).some(c => c.id === opt.id)),
+                      ...clientOptions.filter(opt => !(selectedType === 'buyer' ? buyerClients : sellerClients).some(c => c.id === opt.id)).slice(0, 5),
                       { id: '__add_new__', isAddNew: true }
                     ]}
                     loading={loadingClients}
