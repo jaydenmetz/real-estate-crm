@@ -11,6 +11,25 @@ import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
 import { useStatus } from '../../../../../contexts/StatusContext';
 
+// Compact date formatter - smaller separators for tighter spacing
+const formatCompactDate = (value) => {
+  if (!value) return 'TBD';
+  const date = new Date(value);
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const day = date.getDate();
+  const year = date.getFullYear();
+
+  return (
+    <span style={{ whiteSpace: 'nowrap' }}>
+      {month}
+      <span style={{ fontSize: '0.7em', letterSpacing: '-0.5px' }}> </span>
+      {day}
+      <span style={{ fontSize: '0.6em' }}>, </span>
+      {year}
+    </span>
+  );
+};
+
 // Import editor components
 import {
   EditPurchasePrice,
@@ -191,20 +210,19 @@ const useEscrowCardConfig = (statuses) => {
       // Footer Configuration (Acceptance + Close dates + Progress)
       footer: {
         fields: [
-          // Acceptance Date (editable) - auto width based on content
+          // Acceptance Date (editable) - compact date format
           {
             label: 'Acceptance',
             field: 'acceptance_date',
-            formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+            formatter: (value) => formatCompactDate(value),
             editable: true,
             editor: EditAcceptanceDate,
             onSave: (escrow, newDate) => {
               return { acceptance_date: newDate };
             },
-            // No width - let flexbox auto-size based on content
           },
 
-          // Close Date (editable) - Dynamic label based on status, auto width
+          // Close Date (editable) - Dynamic label based on status, compact date format
           {
             label: (escrow) => {
               const status = escrow?.status?.toLowerCase(); // Use 'status' field
@@ -213,13 +231,12 @@ const useEscrowCardConfig = (statuses) => {
               return 'Closes'; // Active and default
             },
             field: 'closing_date',
-            formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+            formatter: (value) => formatCompactDate(value),
             editable: true,
             editor: EditClosingDate,
             onSave: (escrow, newDate) => {
               return { closing_date: newDate };
             },
-            // No width - let flexbox auto-size based on content
           },
 
           // Clients (editable) - Shows client avatars/initials
