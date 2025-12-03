@@ -142,6 +142,7 @@ class LeadsService {
       phone,
       source,
       notes,
+      budget,
       leadStatus = 'New',
       leadScore = 0,
       leadTemperature = 'Cold',
@@ -157,10 +158,10 @@ class LeadsService {
     const query = `
       INSERT INTO leads (
         first_name, last_name, email, phone, lead_source,
-        notes, lead_status, lead_score, lead_temperature,
+        notes, budget, lead_status, lead_score, lead_temperature,
         assigned_agent_id, team_id, created_at, updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING *
     `;
 
@@ -171,6 +172,7 @@ class LeadsService {
       phone || null,
       source || null,
       notes || null,
+      budget || null,
       leadStatus,
       leadScore,
       leadTemperature,
@@ -204,7 +206,7 @@ class LeadsService {
     const allowedFields = [
       'first_name', 'last_name', 'email', 'phone', 'lead_source',
       'lead_status', 'lead_score', 'lead_temperature', 'notes',
-      'property_interest', 'budget_range', 'timeline', 'next_follow_up',
+      'property_interest', 'budget', 'budget_range', 'timeline', 'next_follow_up',
     ];
 
     for (const field of allowedFields) {

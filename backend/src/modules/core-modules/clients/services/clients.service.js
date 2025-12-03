@@ -121,6 +121,7 @@ class ClientsService {
         cl.client_type,
         cl.status,
         cl.owner_id,
+        cl.budget,
         cl.created_at,
         cl.updated_at,
         co.first_name,
@@ -181,6 +182,7 @@ class ClientsService {
         cl.id,
         cl.client_type,
         cl.status,
+        cl.budget,
         cl.created_at,
         cl.updated_at,
         co.first_name,
@@ -221,7 +223,7 @@ class ClientsService {
       const {
         firstName, lastName, email, phone, clientType,
         addressStreet, addressCity, addressState, addressZip,
-        notes, tags = [],
+        notes, tags = [], budget,
         // snake_case alternatives
         first_name, last_name, client_type,
         address_street, address_city, address_state, address_zip,
@@ -281,14 +283,15 @@ class ClientsService {
 
       // Create client with owner_id and team_id for proper ownership filtering
       const clientQuery = `
-        INSERT INTO clients (contact_id, client_type, status, owner_id, team_id, created_at, updated_at)
-        VALUES ($1, $2, 'active', $3, $4, NOW(), NOW())
+        INSERT INTO clients (contact_id, client_type, status, budget, owner_id, team_id, created_at, updated_at)
+        VALUES ($1, $2, 'active', $3, $4, $5, NOW(), NOW())
         RETURNING id
       `;
 
       const clientResult = await dbClient.query(clientQuery, [
         contactId,
         finalClientType.toLowerCase(),
+        budget || null,
         user?.id || null,
         user?.teamId || user?.team_id || null
       ]);
@@ -398,7 +401,7 @@ class ClientsService {
       }
 
       // Update client if needed
-      if (updates.clientType || updates.status) {
+      if (updates.clientType || updates.status || updates.budget !== undefined) {
         const clientUpdates = [];
         const clientValues = [];
         let paramIndex = 1;
@@ -410,6 +413,10 @@ class ClientsService {
         if (updates.status) {
           clientUpdates.push(`status = $${paramIndex++}`);
           clientValues.push(updates.status);
+        }
+        if (updates.budget !== undefined) {
+          clientUpdates.push(`budget = $${paramIndex++}`);
+          clientValues.push(updates.budget);
         }
 
         if (clientUpdates.length > 0) {
