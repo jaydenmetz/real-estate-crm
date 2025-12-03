@@ -4,6 +4,7 @@ import { clientsConfig } from '../../../config/entities/clients.config';
 import { ClientCard, ClientListItem, ClientTableRow } from './view-modes';
 import { NewClientModal } from './modals';
 import { StatusProvider } from '../../../contexts/StatusContext';
+import { ClientsHeroCarousel } from './hero';
 
 /**
  * ClientsDashboard - Config-driven dashboard using DashboardTemplate
@@ -15,6 +16,8 @@ import { StatusProvider } from '../../../contexts/StatusContext';
  * handled by the template system using the entity configuration.
  *
  * Custom Components:
+ * - Hero: ClientsHeroCarousel (carousel wrapper for hero section with AI Manager)
+ * - Stat Cards: Reusable stat card components in hero/stats/
  * - View Modes:
  *   - Card (grid): ClientCard component (now uses CardTemplate)
  *   - List: ClientListItem component (horizontal with image)
@@ -34,6 +37,7 @@ const ClientsDashboard = () => {
         ListComponent={ClientListItem}
         TableComponent={ClientTableRow}
         NewItemModal={NewClientModal}
+        HeroComponent={ClientsHeroCarousel}
       />
     </StatusProvider>
   );
