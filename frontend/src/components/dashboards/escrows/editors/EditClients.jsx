@@ -550,7 +550,7 @@ export const EditClients = ({
                     <Autocomplete
                       open
                       options={[
-                        ...clientOptions.filter(opt => !buyerClients.some(c => c.id === opt.id)).slice(0, 5),
+                        ...clientOptions.filter(opt => !buyerClients.some(c => c.id === opt.id)).slice(0, 3),
                         { id: '__add_new__', isAddNew: true }
                       ]}
                       loading={loadingClients}
@@ -596,7 +596,7 @@ export const EditClients = ({
                           modifiers: [{ name: 'flip', enabled: false }],
                         },
                         listbox: {
-                          sx: { maxHeight: 320 }, // 5 clients + Add New (~52px each)
+                          sx: { maxHeight: 220 }, // 3 clients + Add New (~52px each)
                         },
                       }}
                       renderOption={(props, option) => {
@@ -765,7 +765,7 @@ export const EditClients = ({
                     <Autocomplete
                       open
                       options={[
-                        ...clientOptions.filter(opt => !sellerClients.some(c => c.id === opt.id)).slice(0, 5),
+                        ...clientOptions.filter(opt => !sellerClients.some(c => c.id === opt.id)).slice(0, 3),
                         { id: '__add_new__', isAddNew: true }
                       ]}
                       loading={loadingClients}
@@ -810,7 +810,7 @@ export const EditClients = ({
                           modifiers: [{ name: 'flip', enabled: false }],
                         },
                         listbox: {
-                          sx: { maxHeight: 320 }, // 5 clients + Add New (~52px each)
+                          sx: { maxHeight: 220 }, // 3 clients + Add New (~52px each)
                         },
                       }}
                       renderOption={(props, option) => {
@@ -982,7 +982,7 @@ export const EditClients = ({
                   <Autocomplete
                     open
                     options={[
-                      ...clientOptions.filter(opt => !(selectedType === 'buyer' ? buyerClients : sellerClients).some(c => c.id === opt.id)).slice(0, 5),
+                      ...clientOptions.filter(opt => !(selectedType === 'buyer' ? buyerClients : sellerClients).some(c => c.id === opt.id)).slice(0, 3),
                       { id: '__add_new__', isAddNew: true }
                     ]}
                     loading={loadingClients}
@@ -1033,7 +1033,7 @@ export const EditClients = ({
                         modifiers: [{ name: 'flip', enabled: false }],
                       },
                       listbox: {
-                        sx: { maxHeight: 320 }, // 5 clients + Add New (~52px each)
+                        sx: { maxHeight: 220 }, // 3 clients + Add New (~52px each)
                       },
                     }}
                     renderOption={(props, option) => {
