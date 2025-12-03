@@ -1,17 +1,23 @@
 /**
  * ClientStatusTabs.jsx
  *
- * Status tab configuration for clients dashboard.
+ * Status tab configuration for clients dashboard navigation.
+ * NOW USING CENTRALIZED STATUS CONFIGURATION SYSTEM.
  *
- * Usage: Imported into clients.config.js as statusTabs array
+ * Tabs are automatically generated from:
+ * /frontend/src/config/statuses/statusCategories.js
+ *
+ * Each tab includes a dropdown showing all statuses in that category.
+ * Click tab when NOT selected: Switch to category
+ * Click tab when ALREADY selected: Show dropdown to filter by specific status
+ *
+ * Usage: Imported into clients.config.js
  */
 
-export const clientStatusTabs = [
-  { value: 'All', label: 'All Clients' },
-  { value: 'active', label: 'Active' },
-  { value: 'lead', label: 'Leads' },
-  { value: 'inactive', label: 'Inactive' },
-  { value: 'archived', label: 'Archived' }
-];
+import { getEntityTabs } from '../../../../../config/statuses';
 
-export const clientDefaultStatus = 'active';
+// Generate tabs from centralized status configuration
+export const clientStatusTabs = getEntityTabs('clients');
+
+// For backward compatibility (if needed elsewhere)
+export default clientStatusTabs;

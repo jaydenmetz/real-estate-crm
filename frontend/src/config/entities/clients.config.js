@@ -2,6 +2,25 @@ import { createEntityConfig } from '../../utils/config/createEntityConfig';
 import { clientsAPI } from '../../services/api.service';
 import { createSortFunction } from '../../utils/sortUtils';
 
+// Import dashboard stat components
+import {
+  TotalClientsCard,
+  ActiveClientsCard,
+  NewThisMonthCard,
+  ClientValueCard
+} from '../../components/dashboards/clients/hero/stats';
+
+// Import navigation configurations
+import {
+  clientStatusTabs,
+  clientSortOptions,
+  clientDefaultSort,
+  getClientScopeOptions,
+  clientDefaultScope,
+  clientViewModes,
+  clientDefaultViewMode
+} from '../../components/dashboards/clients/navigation';
+
 export const clientsConfig = createEntityConfig({
   // ========================================
   // ENTITY METADATA
@@ -62,181 +81,137 @@ export const clientsConfig = createEntityConfig({
       addButtonLabel: 'ADD NEW CLIENT'
     },
 
-    // Stats Configuration
+    // Stats Configuration (component-based for reusability)
+    // Stats calculate from data passed to them (like escrows)
     stats: [
+      // ========================================
+      // ACTIVE TAB STATS
+      // ========================================
       {
-        id: 'totalClients',
-        label: 'TOTAL ACTIVE CLIENTS',
-        field: 'totalClients',
-        format: 'number',
-        icon: 'People',
-        color: '#0891B2',
-        goal: 100,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['active', 'all']
+        id: 'total_active_clients',
+        component: TotalClientsCard,
+        props: { status: 'active' },
+        visibleWhen: ['Active']
       },
       {
-        id: 'newThisMonth',
-        label: 'NEW THIS MONTH',
-        field: 'newThisMonth',
-        format: 'number',
-        icon: 'PersonAdd',
-        color: '#10b981',
-        goal: 10,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['active', 'all']
+        id: 'active_clients_count',
+        component: ActiveClientsCard,
+        props: {},
+        visibleWhen: ['Active']
       },
       {
-        id: 'totalClientValue',
-        label: 'TOTAL CLIENT VALUE',
-        field: 'totalClientValue',
-        format: 'currency',
-        icon: 'TrendingUp',
-        color: '#0891B2',
-        goal: 5000000,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['active', 'all']
+        id: 'new_this_month_active',
+        component: NewThisMonthCard,
+        props: {},
+        visibleWhen: ['Active']
       },
       {
-        id: 'avgClientLifetime',
-        label: 'AVG CLIENT LIFETIME',
-        field: 'avgClientLifetime',
-        format: 'currency',
-        icon: 'Schedule',
-        color: '#06B6D4',
-        goal: 50000,
-        showGoal: true,
-        showTrend: true,
-        suffix: 'K',
-        showPrivacy: true,
-        visibleWhen: ['active', 'all']
+        id: 'total_client_value_active',
+        component: ClientValueCard,
+        props: {},
+        visibleWhen: ['Active']
       },
-      // Lead-specific stats
+
+      // ========================================
+      // PAST TAB STATS
+      // ========================================
       {
-        id: 'convertedLeads',
-        label: 'CONVERTED LEADS',
-        field: 'convertedLeads',
-        format: 'number',
-        icon: 'CheckCircle',
-        color: '#10b981',
-        goal: 25,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['lead']
+        id: 'total_past_clients',
+        component: TotalClientsCard,
+        props: { status: 'past_client' },
+        visibleWhen: ['Past']
       },
       {
-        id: 'conversionRate',
-        label: 'CONVERSION RATE',
-        field: 'conversionRate',
-        format: 'percentage',
-        icon: 'TrendingUp',
-        color: '#0891B2',
-        goal: 30,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['lead']
+        id: 'past_active_count',
+        component: ActiveClientsCard,
+        props: {},
+        visibleWhen: ['Past']
       },
       {
-        id: 'potentialValue',
-        label: 'POTENTIAL VALUE',
-        field: 'potentialValue',
-        format: 'currency',
-        icon: 'AttachMoney',
-        color: '#f59e0b',
-        goal: 2000000,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['lead']
-      },
-      // Inactive-specific stats
-      {
-        id: 'totalInactive',
-        label: 'TOTAL INACTIVE',
-        field: 'totalInactive',
-        format: 'number',
-        icon: 'TrendingDown',
-        color: '#ef4444',
-        showTrend: true,
-        visibleWhen: ['inactive']
+        id: 'new_this_month_past',
+        component: NewThisMonthCard,
+        props: {},
+        visibleWhen: ['Past']
       },
       {
-        id: 'lostValue',
-        label: 'LOST VALUE',
-        field: 'lostValue',
-        format: 'currency',
-        icon: 'Cancel',
-        color: '#ef4444',
-        showTrend: true,
-        visibleWhen: ['inactive']
+        id: 'total_client_value_past',
+        component: ClientValueCard,
+        props: {},
+        visibleWhen: ['Past']
+      },
+
+      // ========================================
+      // INACTIVE TAB STATS
+      // ========================================
+      {
+        id: 'total_inactive_clients',
+        component: TotalClientsCard,
+        props: { status: 'inactive' },
+        visibleWhen: ['Inactive']
+      },
+      {
+        id: 'inactive_active_count',
+        component: ActiveClientsCard,
+        props: {},
+        visibleWhen: ['Inactive']
+      },
+      {
+        id: 'new_this_month_inactive',
+        component: NewThisMonthCard,
+        props: {},
+        visibleWhen: ['Inactive']
+      },
+      {
+        id: 'total_client_value_inactive',
+        component: ClientValueCard,
+        props: {},
+        visibleWhen: ['Inactive']
+      },
+
+      // ========================================
+      // ALL CLIENTS TAB STATS
+      // ========================================
+      {
+        id: 'total_all_clients',
+        component: TotalClientsCard,
+        props: { status: 'all' },
+        visibleWhen: ['All']
+      },
+      {
+        id: 'all_active_count',
+        component: ActiveClientsCard,
+        props: {},
+        visibleWhen: ['All']
+      },
+      {
+        id: 'new_this_month_all',
+        component: NewThisMonthCard,
+        props: {},
+        visibleWhen: ['All']
+      },
+      {
+        id: 'total_client_value_all',
+        component: ClientValueCard,
+        props: {},
+        visibleWhen: ['All']
       },
     ],
 
-    // Status Tabs Configuration
-    statusTabs: [
-      { value: 'active', label: 'Active', preferredViewMode: 'large' },
-      { value: 'past', label: 'Past', preferredViewMode: 'medium' },
-      { value: 'expired', label: 'Expired', preferredViewMode: 'small' },
-      { value: 'All', label: 'All Clients', preferredViewMode: 'small' }
-    ],
-    defaultStatus: 'active',
+    // Status Tabs Configuration (from centralized config)
+    statusTabs: clientStatusTabs,
+    defaultStatus: 'Active',
 
-    // Scope Filter Configuration
-    getScopeOptions: (user) => {
-      if (!user) {
-        return [
-          { value: 'user', label: 'My Clients' },
-          { value: 'team', label: 'Team Clients' },
-          { value: 'broker', label: 'Broker Clients' }
-        ];
-      }
+    // Scope Filter Configuration (from navigation)
+    getScopeOptions: getClientScopeOptions,
+    defaultScope: clientDefaultScope,
 
-      // Handle both camelCase and snake_case from backend
-      const firstName = user.firstName || user.first_name || 'My';
-      const lastName = user.lastName || user.last_name || '';
-      const fullName = lastName ? `${firstName} ${lastName}` : (user.username || firstName);
-      const teamName = user.teamName || user.team_name || 'Team';
-      const brokerName = user.brokerName || user.broker_name || 'Broker';
+    // Sort Options Configuration (from navigation)
+    sortOptions: clientSortOptions,
+    defaultSort: clientDefaultSort,
 
-      return [
-        {
-          value: 'user',
-          label: `${firstName}'s Clients`,
-          fullLabel: fullName
-        },
-        {
-          value: 'team',
-          label: `${teamName}'s Clients`,
-          fullLabel: teamName
-        },
-        {
-          value: 'broker',
-          label: `${brokerName}'s Clients`,
-          fullLabel: brokerName
-        }
-      ];
-    },
-    defaultScope: 'user',
-
-    // Sort Options Configuration
-    sortOptions: [
-      { value: 'created_at', label: 'Date Added' },
-      { value: 'updated_at', label: 'Last Updated' },
-      { value: 'first_name', label: 'First Name' },
-      { value: 'last_name', label: 'Last Name' },
-      { value: 'total_value', label: 'Total Value' }
-    ],
-    defaultSort: 'created_at',
-
-    // View Modes Configuration
-    viewModes: [
-      { value: 'card', label: 'Card', icon: 'GridView' },
-      { value: 'large', label: 'Full Width', icon: 'ViewList' },
-      { value: 'calendar', label: 'Calendar', icon: 'CalendarToday' }
-    ],
-    defaultViewMode: 'card', // 4 cards per row
+    // View Modes Configuration (from navigation)
+    viewModes: clientViewModes,
+    defaultViewMode: clientDefaultViewMode,
 
     // Archive Configuration
     showArchive: true,

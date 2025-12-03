@@ -108,42 +108,43 @@ export const LISTING_CATEGORIES = {
 };
 
 // ============================================================================
-// CLIENT CATEGORIES (Future Implementation)
+// CLIENT CATEGORIES
+// Database statuses: active, lead, inactive, past_client
 // ============================================================================
 
 export const CLIENT_CATEGORIES = {
   ACTIVE: {
-    id: 'active',
+    id: 'Active',
     label: 'Active',
     displayName: 'Active Clients',
-    statuses: ['active', 'prospecting', 'under_contract'],
-    description: 'Currently active clients',
+    statuses: ['active', 'lead'],
+    description: 'Active clients and leads',
     preferredViewMode: 'card',
     sortOrder: 1,
   },
-  CLOSED: {
-    id: 'closed',
-    label: 'Closed',
-    displayName: 'Closed Clients',
-    statuses: ['closed'],
-    description: 'Successfully closed clients',
+  PAST: {
+    id: 'Past',
+    label: 'Past',
+    displayName: 'Past Clients',
+    statuses: ['past_client'],
+    description: 'Past clients',
     preferredViewMode: 'list',
     sortOrder: 2,
   },
   INACTIVE: {
-    id: 'inactive',
+    id: 'Inactive',
     label: 'Inactive',
     displayName: 'Inactive Clients',
-    statuses: ['inactive', 'lost'],
-    description: 'Inactive or lost clients',
+    statuses: ['inactive'],
+    description: 'Inactive clients',
     preferredViewMode: 'list',
     sortOrder: 3,
   },
   ALL: {
-    id: 'all',
+    id: 'All',
     label: 'All Clients',
     displayName: 'All Clients',
-    statuses: ['active', 'prospecting', 'under_contract', 'closed', 'inactive', 'lost'],
+    statuses: ['active', 'lead', 'inactive', 'past_client'],
     description: 'All clients regardless of status',
     preferredViewMode: 'card',
     sortOrder: 4,
