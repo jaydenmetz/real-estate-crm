@@ -2,7 +2,7 @@
 
 **Complete Implementation Reference**
 
-Jillow Real Estate CRM · Version 2.0 · December 2024
+Jillow Real Estate CRM · Version 2.1 · December 2024
 
 ---
 
@@ -13,11 +13,12 @@ Jillow Real Estate CRM · Version 2.0 · December 2024
 3. [Config Structure](#3-config-structure)
 4. [Navigation Configuration](#4-navigation-configuration)
 5. [Hero Carousel](#5-hero-carousel)
-6. [View Modes](#6-view-modes)
-7. [Inline Editors](#7-inline-editors)
-8. [AI Manager Integration](#8-ai-manager-integration)
+6. [AI Manager Integration](#6-ai-manager-integration)
+7. [View Modes](#7-view-modes)
+8. [Inline Editors](#8-inline-editors)
 9. [Complete Barrel Exports](#9-complete-barrel-exports)
-10. [Implementation Checklist](#10-implementation-checklist)
+10. [Dependencies](#10-dependencies)
+11. [Implementation Checklist](#11-implementation-checklist)
 
 ---
 
@@ -43,10 +44,10 @@ frontend/src/components/dashboards/escrows/
 │   │   └── TotalCommissionCard.jsx     # MASTER PRIVACY TOGGLE
 │   └── pages/
 │       ├── AIManagerPage/
-│       │   ├── index.jsx
-│       │   └── AIManagerStatCard.jsx
+│       │   ├── index.jsx               # Page 2 of carousel
+│       │   └── AIManagerStatCard.jsx   # Stat cards for AI page
 │       └── HomePage/
-│           └── AIManagerTeaser.jsx
+│           └── AIManagerTeaser.jsx     # 300x300 clickable widget
 │
 ├── navigation/
 │   ├── index.js                        # Barrel: all nav configs
@@ -175,7 +176,8 @@ api: {
     people: '/escrows/:id/people',
     financials: '/escrows/:id/financials',
     timeline: '/escrows/:id/timeline',
-    checklists: '/escrows/:id/checklists'
+    checklists: '/escrows/:id/checklists',
+    manager: '/escrows/manager'  // AI Manager endpoint
   }
 }
 ```
@@ -248,6 +250,19 @@ fields: {
   status: 'escrow_status',
   date: 'closing_date',
   amount: 'purchase_price'
+}
+```
+
+### 3.8 AI Manager Widget Configuration
+
+```js
+dashboard: {
+  hero: {
+    showAIAssistant: true,
+    aiAssistantWidget: AIManagerTeaser,  // Component reference
+    aiAssistantLabel: 'AI Escrow Manager',
+    aiAssistantDescription: 'Hire an AI assistant to manage escrows...'
+  }
 }
 ```
 
@@ -377,55 +392,298 @@ export const escrowDefaultViewMode = {
 
 ## 5. Hero Carousel
 
-### 5.1 Component Structure
+The HeroCarousel is a **2-page carousel** that wraps the entire hero section with navigation and animations.
+
+### 5.1 Carousel Architecture
+
+```
+EscrowsHeroCarousel
+├── Page 1: DashboardHero (standard hero with stats + AI widget)
+│   └── AIManagerTeaser (clickable, opens modal)
+├── Page 2: AIManagerPage (full AI dashboard)
+└── AIManagerModal (fullscreen upsell, triggered by clicks)
+```
+
+### 5.2 Full Component Implementation
 
 ```jsx
 // hero/EscrowsHeroCarousel.jsx
-import { useState } from 'react';
-import { Box } from '@mui/material';
+import React, { useState, useCallback } from 'react';
+import { Box, IconButton } from '@mui/material';
 import {
-  TotalEscrowsCard,
-  TotalThisMonthCard,
-  TotalVolumeCard,
-  TotalCommissionCard
-} from './stats';
-import AIManagerModal from './AIManagerModal';  // Same folder
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+} from '@mui/icons-material';
+import { useSwipeable } from 'react-swipeable';
+import { motion, AnimatePresence } from 'framer-motion';
+import { DashboardHero } from '../../../../templates/Dashboard/components/DashboardHero';
+import AIManagerModal from './AIManagerModal';
+import AIManagerPage from './pages/AIManagerPage';
 
-export const EscrowsHeroCarousel = ({ stats, activeTab }) => {
-  const [showAIManager, setShowAIManager] = useState(false);
+const EscrowsHeroCarousel = ({
+  // All props passed through from DashboardTemplate
+  config,
+  stats,
+  statsConfig,
+  selectedStatus,
+  onNewItem,
+  dateRangeFilter,
+  setDateRangeFilter,
+  customStartDate,
+  setCustomStartDate,
+  customEndDate,
+  setCustomEndDate,
+  dateRange,
+  detectPresetRange,
+  selectedYear,
+  setSelectedYear,
+  StatCardComponent,
+  allData,
+}) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  const statCards = [
-    TotalEscrowsCard,
-    TotalThisMonthCard,
-    TotalVolumeCard,
-    TotalCommissionCard
-  ];
+  const totalPages = 2;
+
+  // Navigation handlers
+  const goToNext = useCallback(() => {
+    setDirection(1);
+    setCurrentPage((prev) => (prev + 1) % totalPages);
+  }, [totalPages]);
+
+  const goToPrevious = useCallback(() => {
+    setDirection(-1);
+    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
+  }, [totalPages]);
+
+  const goToPage = useCallback((index) => {
+    setDirection(index > currentPage ? 1 : -1);
+    setCurrentPage(index);
+  }, [currentPage]);
+
+  // Animation variants for page transitions
+  const slideVariants = {
+    enter: (dir) => ({
+      x: dir > 0 ? 300 : -300,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (dir) => ({
+      x: dir > 0 ? -300 : 300,
+      opacity: 0,
+    }),
+  };
+
+  // Swipe handlers for mobile
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: goToNext,
+    onSwipedRight: goToPrevious,
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: false,
+  });
+
+  // Keyboard navigation
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') goToPrevious();
+      if (e.key === 'ArrowRight') goToNext();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [goToNext, goToPrevious]);
+
+  // Wrap AI widget to make it clickable
+  const configWithClickableWidget = {
+    ...config,
+    aiAssistantWidget: () => {
+      const OriginalWidget = config.aiAssistantWidget;
+      if (!OriginalWidget) return null;
+
+      return (
+        <Box onClick={() => setModalOpen(true)} sx={{ cursor: 'pointer' }}>
+          <OriginalWidget />
+        </Box>
+      );
+    },
+  };
 
   return (
-    <>
-      <Box sx={{ display: 'flex', gap: 2 }}>
-        {statCards.map((StatCard, i) => (
-          <StatCard
-            key={i}
-            stats={stats}
-            onAIClick={() => setShowAIManager(true)}
-          />
-        ))}
+    <Box sx={{ position: 'relative' }}>
+      {/* Navigation Arrows (desktop only) */}
+      {totalPages > 1 && (
+        <>
+          <IconButton
+            onClick={goToPrevious}
+            disabled={currentPage === 0}
+            sx={{
+              position: 'absolute',
+              left: -60,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              display: { xs: 'none', lg: 'flex' },
+              // ... styling
+            }}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+
+          <IconButton
+            onClick={goToNext}
+            disabled={currentPage === totalPages - 1}
+            sx={{
+              position: 'absolute',
+              right: -60,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              display: { xs: 'none', lg: 'flex' },
+              // ... styling
+            }}
+          >
+            <ChevronRightIcon />
+          </IconButton>
+        </>
+      )}
+
+      {/* Hero Pages with Animation */}
+      <Box {...swipeHandlers} sx={{ position: 'relative', overflow: 'hidden' }}>
+        <AnimatePresence initial={false} mode="wait" custom={direction}>
+          {currentPage === 0 && (
+            <motion.div
+              key="page-1"
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
+              <DashboardHero
+                config={configWithClickableWidget}
+                stats={stats}
+                statsConfig={statsConfig}
+                selectedStatus={selectedStatus}
+                onNewItem={onNewItem}
+                dateRangeFilter={dateRangeFilter}
+                setDateRangeFilter={setDateRangeFilter}
+                customStartDate={customStartDate}
+                setCustomStartDate={setCustomStartDate}
+                customEndDate={customEndDate}
+                setCustomEndDate={setCustomEndDate}
+                dateRange={dateRange}
+                detectPresetRange={detectPresetRange}
+                selectedYear={selectedYear}
+                setSelectedYear={setSelectedYear}
+                StatCardComponent={StatCardComponent}
+                allData={allData}
+              />
+            </motion.div>
+          )}
+
+          {currentPage === 1 && (
+            <motion.div
+              key="page-2"
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
+              <AIManagerPage
+                isVisible={currentPage === 1}
+                onConfigureAI={() => setModalOpen(true)}
+                onViewActivity={() => {/* TODO */}}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Carousel Dots */}
+        {totalPages > 1 && (
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 50,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              gap: 1.5,
+              zIndex: 10,
+            }}
+          >
+            {Array.from({ length: totalPages }).map((_, index) => (
+              <Box
+                key={index}
+                onClick={() => goToPage(index)}
+                sx={{
+                  width: currentPage === index ? 32 : 8,
+                  height: 8,
+                  borderRadius: 4,
+                  background: currentPage === index
+                    ? 'rgba(255,255,255,0.9)'
+                    : 'rgba(255,255,255,0.4)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                }}
+              />
+            ))}
+          </Box>
+        )}
       </Box>
+
+      {/* AI Manager Modal */}
       <AIManagerModal
-        open={showAIManager}
-        onClose={() => setShowAIManager(false)}
-        entityType="escrows"
-        stats={stats}
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
       />
-    </>
+    </Box>
   );
 };
 
 export default EscrowsHeroCarousel;
 ```
 
-### 5.2 Stat Card Summary
+### 5.3 Props Reference
+
+The HeroCarousel receives all props from DashboardTemplate that would normally go to DashboardHero:
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| config | object | Entity configuration |
+| stats | object | Calculated statistics |
+| statsConfig | array | Stat card configurations |
+| selectedStatus | string | Current status tab |
+| onNewItem | function | Handler for "New" button |
+| dateRangeFilter | string | Current date filter |
+| setDateRangeFilter | function | Date filter setter |
+| customStartDate | Date | Custom range start |
+| setCustomStartDate | function | Start date setter |
+| customEndDate | Date | Custom range end |
+| setCustomEndDate | function | End date setter |
+| dateRange | object | Computed date range |
+| detectPresetRange | function | Preset range detector |
+| selectedYear | number | Selected year |
+| setSelectedYear | function | Year setter |
+| StatCardComponent | component | Stat card renderer |
+| allData | array | All escrow data |
+
+### 5.4 Carousel Features
+
+| Feature | Implementation |
+|---------|----------------|
+| **Page Navigation** | Arrow buttons (desktop), dots (all) |
+| **Swipe Support** | `react-swipeable` for mobile/touch |
+| **Keyboard Nav** | ArrowLeft/ArrowRight keys |
+| **Animations** | Framer Motion slide transitions |
+| **Lazy Loading** | Page 2 only fetches data when visible |
+
+### 5.5 Stat Card Summary
 
 | Component | Calculation | Special Features |
 |-----------|-------------|------------------|
@@ -436,9 +694,135 @@ export default EscrowsHeroCarousel;
 
 ---
 
-## 6. View Modes
+## 6. AI Manager Integration
 
-### 6.1 Card View Template
+### 6.1 Component Overview
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **AIManagerModal** | `hero/AIManagerModal.jsx` | Fullscreen upsell/waitlist modal |
+| **AIManagerPage** | `hero/pages/AIManagerPage/index.jsx` | Page 2 of carousel - full AI dashboard |
+| **AIManagerTeaser** | `hero/pages/HomePage/AIManagerTeaser.jsx` | 300x300 clickable widget in hero |
+| **AIManagerStatCard** | `hero/pages/AIManagerPage/AIManagerStatCard.jsx` | Stat cards used in AIManagerPage |
+
+### 6.2 AIManagerModal
+
+Fullscreen upsell modal with:
+- Feature highlights (6 AI capabilities)
+- "Add Me to Waitlist" CTA button
+- Gradient background design
+- Close button (top-right)
+
+```jsx
+// hero/AIManagerModal.jsx
+const AIManagerModal = ({ open, onClose }) => {
+  const features = [
+    { title: 'Smart Deadline Tracking', description: '...' },
+    { title: 'Automated Document Management', description: '...' },
+    { title: 'Compliance Monitoring', description: '...' },
+    { title: 'Workflow Automation', description: '...' },
+    { title: 'Predictive Analytics', description: '...' },
+    { title: 'Team Coordination', description: '...' },
+  ];
+
+  const handleWaitlist = () => {
+    // TODO: Connect to waitlist API
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} fullScreen>
+      {/* Crown icon, title, features list, CTA button */}
+    </Dialog>
+  );
+};
+```
+
+### 6.3 AIManagerPage (Carousel Page 2)
+
+Full AI dashboard with:
+- 4 stat cards (AI-managed, Due in 48h, Docs Pending, Compliance)
+- Date filter buttons (1 Day, 1 Month, 1 Year, YTD)
+- Quick info chips (urgent items, pending docs, follow-ups, reminders)
+- AI status bar
+- Configure AI / View Activity buttons
+- **Lazy loading via React Query**
+
+```jsx
+// hero/pages/AIManagerPage/index.jsx
+import { useQuery } from '@tanstack/react-query';
+import apiInstance from '../../../../../../services/api.service';
+
+const AIManagerPage = ({ isVisible = true, onConfigureAI, onViewActivity }) => {
+  const [dateFilter, setDateFilter] = useState('1_month');
+
+  // Lazy load - only fetch when page is visible
+  const { data, isLoading } = useQuery({
+    queryKey: ['escrows', 'manager', dateFilter],
+    queryFn: async () => {
+      const response = await apiInstance.get(`/escrows/manager?period=${dateFilter}`);
+      return response.data;
+    },
+    enabled: isVisible,  // KEY: Only fetches when carousel page is active
+    staleTime: 30000,
+    refetchOnWindowFocus: false,
+  });
+
+  const stats = data?.data?.stats || {
+    managed_count: 0,
+    due_in_48h: 0,
+    docs_pending: 0,
+    compliance_rate: 100,
+  };
+
+  // ... render stats, quick items, action buttons
+};
+```
+
+### 6.4 AIManagerTeaser (Hero Widget)
+
+300x300 clickable widget that:
+- Shows in DashboardHero (Page 1)
+- Has hover animations
+- Opens AIManagerModal on click
+
+```jsx
+// hero/pages/HomePage/AIManagerTeaser.jsx
+const AIManagerTeaser = ({ onClick }) => {
+  return (
+    <Paper
+      onClick={onClick}
+      sx={{
+        width: 300,
+        height: 300,
+        cursor: 'pointer',
+        // ... glass morphism styling
+      }}
+    >
+      {/* Crown icon, title, subtitle, "Click to learn more" */}
+    </Paper>
+  );
+};
+```
+
+### 6.5 File Structure
+
+```
+hero/
+├── AIManagerModal.jsx              # Fullscreen modal
+└── pages/
+    ├── AIManagerPage/
+    │   ├── index.jsx               # Page 2 with React Query
+    │   └── AIManagerStatCard.jsx   # Stat card component
+    └── HomePage/
+        └── AIManagerTeaser.jsx     # 300x300 widget
+```
+
+---
+
+## 7. View Modes
+
+### 7.1 Card View Template
 
 ```jsx
 // view-modes/card/EscrowCard.jsx
@@ -502,7 +886,7 @@ export const EscrowCard = ({ item, onUpdate, onDelete }) => {
 export default EscrowCard;
 ```
 
-### 6.2 View Mode Summary
+### 7.2 View Mode Summary
 
 | Mode | Best For | Key Features |
 |------|----------|--------------|
@@ -512,9 +896,9 @@ export default EscrowCard;
 
 ---
 
-## 7. Inline Editors
+## 8. Inline Editors
 
-### 7.1 Editor Components (6 Total)
+### 8.1 Editor Components (6 Total)
 
 | Editor | Field Type | Features |
 |--------|------------|----------|
@@ -525,7 +909,7 @@ export default EscrowCard;
 | EditCommissionAmount | Currency + % | Amount/percentage toggle |
 | EditClients | Multi-select | Client picker with search |
 
-### 7.2 Barrel Export
+### 8.2 Barrel Export
 
 ```js
 // editors/index.js
@@ -535,32 +919,6 @@ export { EditClosingDate } from './EditClosingDate';
 export { EditAcceptanceDate } from './EditAcceptanceDate';
 export { EditCommissionAmount } from './EditCommissionAmount';
 export { EditClients } from './EditClients';
-```
-
----
-
-## 8. AI Manager Integration
-
-### 8.1 Components
-
-| Component | Purpose |
-|-----------|---------|
-| AIManagerModal | Full-screen modal with AI analysis and recommendations |
-| AIManagerTeaser | Widget preview for detail page sidebar |
-| AIManagerPage | Standalone full-page view (`/escrows/ai-manager`) |
-| AIManagerStatCard | Stat card component used within AIManagerPage |
-
-### 8.2 File Locations (Under hero/)
-
-```
-hero/
-├── AIManagerModal.jsx              # Full modal
-└── pages/
-    ├── AIManagerPage/
-    │   ├── index.jsx               # Main page component
-    │   └── AIManagerStatCard.jsx   # Stats for AI page
-    └── HomePage/
-        └── AIManagerTeaser.jsx     # Teaser widget
 ```
 
 ---
@@ -625,9 +983,34 @@ export { NewEscrowModal } from './NewEscrowModal';
 
 ---
 
-## 10. Implementation Checklist
+## 10. Dependencies
 
-### 10.1 Setup Steps
+### 10.1 Required Packages
+
+| Package | Purpose | Used In |
+|---------|---------|---------|
+| `react-swipeable` | Touch/swipe gesture support | EscrowsHeroCarousel |
+| `framer-motion` | Page transition animations | EscrowsHeroCarousel |
+| `@tanstack/react-query` | Data fetching with caching | AIManagerPage |
+| `@mui/material` | UI components | All components |
+| `@mui/icons-material` | Icons | All components |
+
+### 10.2 Internal Dependencies
+
+| Module | Purpose |
+|--------|---------|
+| `templates/Dashboard/components/DashboardHero` | Standard hero layout |
+| `templates/Card/CardTemplate` | Card view template |
+| `contexts/PrivacyContext` | Commission visibility toggle |
+| `contexts/StatusContext` | Database-driven statuses |
+| `services/api.service` | API client |
+| `config/statuses/statusCategories` | Centralized status config |
+
+---
+
+## 11. Implementation Checklist
+
+### 11.1 Setup Steps
 
 1. Create folder structure under `components/dashboards/escrows/`
 2. Create `escrows.config.js` with `createEntityConfig()` wrapper
@@ -635,15 +1018,23 @@ export { NewEscrowModal } from './NewEscrowModal';
 4. Create status tabs using `getEntityTabs('escrows')`
 5. Create filter configs (sort, scope, view modes) in `navigation/filters/`
 6. Build 4 stat card components in `hero/stats/`
-7. Create HeroCarousel with AI Manager integration
-8. Build view mode components (Card, List, Table)
-9. Create 6 inline editor components
-10. Build `NewEscrowModal`
-11. Wire up `index.jsx` with providers and DashboardTemplate
-12. Add route in `App.jsx`
-13. Create all barrel exports
+7. Create AIManagerTeaser widget in `hero/pages/HomePage/`
+8. Create AIManagerPage with React Query in `hero/pages/AIManagerPage/`
+9. Create AIManagerModal in `hero/`
+10. Create HeroCarousel with:
+    - 2-page carousel logic
+    - Framer Motion animations
+    - Swipe support
+    - Keyboard navigation
+    - Clickable widget wrapper
+11. Build view mode components (Card, List, Table)
+12. Create 6 inline editor components
+13. Build `NewEscrowModal`
+14. Wire up `index.jsx` with providers and DashboardTemplate
+15. Add route in `App.jsx`
+16. Create all barrel exports
 
-### 10.2 Time Estimates
+### 11.2 Time Estimates
 
 | Task | Time |
 |------|------|
@@ -651,13 +1042,16 @@ export { NewEscrowModal } from './NewEscrowModal';
 | Status categories (centralized) | 15 minutes |
 | Navigation (tabs + filters) | 30 minutes |
 | Stat cards (4 components) | 1 hour |
-| HeroCarousel + AI Manager | 2 hours |
+| AIManagerTeaser | 30 minutes |
+| AIManagerPage + StatCard | 1.5 hours |
+| AIManagerModal | 1 hour |
+| HeroCarousel (full implementation) | 2 hours |
 | View modes (3 components) | 2 hours |
 | Editors (6 components) | 2 hours |
 | NewEscrowModal | 1 hour |
 | Wiring + barrel exports | 30 minutes |
 | Testing & polish | 1 hour |
-| **TOTAL** | **~10.75 hours** |
+| **TOTAL** | **~13.75 hours** |
 
 ---
 
@@ -666,7 +1060,9 @@ export { NewEscrowModal } from './NewEscrowModal';
 | Feature | Escrows | Others |
 |---------|---------|--------|
 | PrivacyProvider | ✅ Required | Optional |
-| AI Manager Integration | ✅ Full (Modal, Teaser, Page) | Partial/None |
+| AI Manager Integration | ✅ Full (Modal, Teaser, Page, Carousel) | Partial/None |
+| Hero Carousel | ✅ 2-page with animations | Standard hero |
+| Swipe/Keyboard Navigation | ✅ Full support | None |
+| Lazy Data Loading | ✅ React Query (AIManagerPage) | Standard fetch |
 | Centralized Status Config | ✅ Uses `getEntityTabs()` | May use hardcoded |
-| HeroCarousel | ✅ Custom component | Standard hero |
 | Commission Privacy | ✅ Master toggle | N/A |
