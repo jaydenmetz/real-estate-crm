@@ -1,9 +1,10 @@
-import React from 'react';
-import { EditText } from '../../../common/editors/fields/EditText';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Text } from '../../../common/setters/Text';
 
 /**
  * Appointment-specific Location Editor
- * Wraps EditText with appointment-specific context and styling
+ * Uses EditorModal + Text setter pattern
  * Used for editing appointment location/address
  *
  * @param {boolean} open - Dialog open state
@@ -12,16 +13,23 @@ import { EditText } from '../../../common/editors/fields/EditText';
  * @param {string} value - Current location
  */
 export const EditAppointmentLocation = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value || '');
+
+  const handleSave = async () => {
+    await onSave(editValue);
+  };
+
   return (
-    <EditText
-      open={open}
-      onClose={onClose}
-      onSave={onSave}
-      label="Location"
-      value={value}
-      color="#9c27b0" // Purple theme for appointments
-      multiline={true}
-      rows={3}
-    />
+    <EditorModal open={open} onClose={onClose} onSave={handleSave} color="#0891b2">
+      <Text
+        label="Location"
+        value={editValue}
+        onChange={setEditValue}
+        color="#0891b2"
+        placeholder="Enter appointment location..."
+        multiline={true}
+        rows={3}
+      />
+    </EditorModal>
   );
 };

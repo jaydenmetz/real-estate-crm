@@ -1,9 +1,10 @@
-import React from 'react';
-import { EditText } from '../../../common/editors/fields/EditText';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Text } from '../../../common/setters/Text';
 
 /**
  * Appointment-specific Title Editor
- * Wraps EditText with appointment-specific context and styling
+ * Uses EditorModal + Text setter pattern
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
@@ -11,14 +12,21 @@ import { EditText } from '../../../common/editors/fields/EditText';
  * @param {string} value - Current appointment title
  */
 export const EditAppointmentTitle = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value || '');
+
+  const handleSave = async () => {
+    await onSave(editValue);
+  };
+
   return (
-    <EditText
-      open={open}
-      onClose={onClose}
-      onSave={onSave}
-      label="Appointment Title"
-      value={value}
-      color="#9c27b0" // Purple theme for appointments
-    />
+    <EditorModal open={open} onClose={onClose} onSave={handleSave} color="#0891b2">
+      <Text
+        label="Appointment Title"
+        value={editValue}
+        onChange={setEditValue}
+        color="#0891b2"
+        placeholder="Enter appointment title..."
+      />
+    </EditorModal>
   );
 };

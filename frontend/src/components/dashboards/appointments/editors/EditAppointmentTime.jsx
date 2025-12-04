@@ -1,9 +1,10 @@
-import React from 'react';
-import { EditTime } from '../../../common/editors/fields/EditTime';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Time } from '../../../common/setters/Time';
 
 /**
  * Appointment-specific Time Editor
- * Wraps EditTime with appointment-specific context and styling
+ * Uses EditorModal + Time setter pattern
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
@@ -11,14 +12,20 @@ import { EditTime } from '../../../common/editors/fields/EditTime';
  * @param {string} value - Current appointment time (HH:MM format)
  */
 export const EditAppointmentTime = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value || '');
+
+  const handleSave = async () => {
+    await onSave(editValue);
+  };
+
   return (
-    <EditTime
-      open={open}
-      onClose={onClose}
-      onSave={onSave}
-      label="Appointment Time"
-      value={value}
-      color="#9c27b0" // Purple theme for appointments
-    />
+    <EditorModal open={open} onClose={onClose} onSave={handleSave} color="#0891b2">
+      <Time
+        label="Appointment Time"
+        value={editValue}
+        onChange={setEditValue}
+        color="#0891b2"
+      />
+    </EditorModal>
   );
 };

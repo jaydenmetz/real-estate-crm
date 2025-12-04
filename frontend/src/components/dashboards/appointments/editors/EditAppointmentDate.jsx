@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
 import { EditorModal } from '../../../common/modals/EditorModal';
-import { Date } from '../../../common/setters/Date';
+import { DateSetter } from '../../../common/setters/Date';
 
+/**
+ * Appointment-specific Date Editor
+ * Uses EditorModal + DateSetter pattern
+ *
+ * @param {boolean} open - Dialog open state
+ * @param {function} onClose - Close handler
+ * @param {function} onSave - Save handler (newValue) => void - receives date string YYYY-MM-DD
+ * @param {string} value - Current appointment date (YYYY-MM-DD format)
+ */
 export const EditAppointmentDate = ({ open, onClose, onSave, value }) => {
   const [editValue, setEditValue] = useState(value);
 
@@ -15,8 +24,8 @@ export const EditAppointmentDate = ({ open, onClose, onSave, value }) => {
   };
 
   return (
-    <EditorModal open={open} onClose={onClose} onSave={handleSave} color="#6366f1">
-      <Date label="Appointment Date" value={editValue} onChange={setEditValue} color="#6366f1" />
+    <EditorModal open={open} onClose={onClose} onSave={handleSave} color="#0891b2">
+      <DateSetter label="Appointment Date" value={editValue} onChange={setEditValue} color="#0891b2" />
     </EditorModal>
   );
 };
