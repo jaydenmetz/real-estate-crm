@@ -1,614 +1,451 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Dialog,
-  TextField,
-  Button,
   Box,
-  Alert,
-  CircularProgress,
-  IconButton,
-  Typography,
-  Autocomplete,
   Fade,
-  Chip,
+  Typography,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material';
 import {
-  Close,
-  PersonAdd,
-  Phone,
-  Email,
   CheckCircle,
-  NavigateNext,
-  NavigateBefore,
-  Link as LinkIcon,
+  Home,
+  Sell,
 } from '@mui/icons-material';
-import { clientsAPI, leadsAPI } from '../../../../services/api.service';
-import PrivacyControl from '../../../common/settings/PrivacyControl';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ModalStepPage } from '../../../common/modals/ModalStepPage';
+import { EditClientName } from '../editors/EditClientName';
+import { Phone } from '../../../common/setters/Phone';
+import { Email } from '../../../common/setters/Email';
+import { Currency } from '../../../common/setters/Currency';
+import ClientCard from '../view-modes/card/ClientCard';
+import { clientsAPI } from '../../../../services/api.service';
 
+/**
+ * NewClientModal - Quick-Add Flow for Clients
+ * Step-based modal using existing editors with progress dots and arrow navigation
+ * Matches NewEscrowModal pattern exactly
+ *
+ * Steps:
+ * 1. Name (with lead search)
+ * 2. Client Type (Buyer/Seller)
+ * 3. Contact Info (Phone + Email)
+ * 4. Budget
+ * 5. Preview & Confirm
+ */
 const NewClientModal = ({ open, onClose, onSuccess }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
-  const [leads, setLeads] = useState([]);
-  const [loadingLeads, setLoadingLeads] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Form data state
   const [formData, setFormData] = useState({
+    // Name (from lead or manual)
     firstName: '',
     lastName: '',
+    displayName: '',
+    leadId: null,
+
+    // Client Type
+    clientType: 'buyer', // 'buyer' | 'seller'
+
+    // Contact Info
     phone: '',
     email: '',
-    linkedLeadId: null,
-    isPrivate: false,
-    accessLevel: 'team',
+
+    // Financial
+    budget: '',
   });
 
-  const steps = [
-    { label: 'Select Lead', icon: LinkIcon, color: '#1976d2' },
-    { label: 'Contact Info', icon: PersonAdd, color: '#9c27b0' },
-    { label: 'Review', icon: CheckCircle, color: '#388e3c' }
-  ];
+  // Step configuration
+  const steps = useMemo(() => [
+    { id: 'name', label: 'Client Name' },
+    { id: 'client-type', label: 'Client Type' },
+    { id: 'contact', label: 'Contact Info' },
+    { id: 'budget', label: 'Budget' },
+    { id: 'preview', label: 'Preview & Confirm' },
+  ], []);
 
-  // Fetch leads when modal opens
-  useEffect(() => {
-    if (open) {
-      fetchLeads();
-    }
-  }, [open]);
+  const currentStepConfig = steps[currentStep];
+  const totalSteps = steps.length;
+  const isLastStep = currentStep === totalSteps - 1;
 
-  const fetchLeads = async () => {
-    setLoadingLeads(true);
-    try {
-      const response = await leadsAPI.getAll();
-      if (response.success) {
-        setLeads(response.data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching leads:', err);
-    } finally {
-      setLoadingLeads(false);
-    }
-  };
-
-  // Phone formatting: (XXX) XXX-XXXX
-  const formatPhone = (value) => {
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length === 0) return '';
-    if (cleaned.length <= 3) return cleaned;
-    if (cleaned.length <= 6) return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
-    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
-  };
-
-  const handlePhoneChange = (e) => {
-    const formatted = formatPhone(e.target.value);
-    setFormData({ ...formData, phone: formatted });
-  };
-
-  // Handle lead selection - populate fields with lead data
-  const handleLeadSelect = (event, value) => {
-    if (value) {
-      setFormData({
-        ...formData,
-        firstName: value.firstName || '',
-        lastName: value.lastName || '',
-        phone: value.phone || '',
-        email: value.email || '',
-        linkedLeadId: value.id,
-      });
-    } else {
-      setFormData({
-        ...formData,
-        linkedLeadId: null,
-      });
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!formData.firstName || !formData.lastName || !formData.phone || !formData.email) {
-      setError('Please fill in all required fields');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    const phoneDigits = formData.phone.replace(/\D/g, '');
-    if (phoneDigits.length !== 10) {
-      setError('Please enter a valid 10-digit phone number');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
-    try {
-      const clientData = {
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        phone: formData.phone,
-        email: formData.email.trim().toLowerCase(),
-        status: 'active',
-        isPrivate: formData.isPrivate,
-        accessLevel: formData.accessLevel,
-      };
-
-      if (formData.linkedLeadId) {
-        clientData.leadId = formData.linkedLeadId;
-      }
-
-      const response = await clientsAPI.create(clientData);
-
-      if (response.success) {
-        if (onSuccess) {
-          onSuccess(response.data);
-        }
-        handleClose();
-      } else {
-        setError(response.error?.message || 'Failed to create client');
-      }
-    } catch (err) {
-      console.error('Error creating client:', err);
-      setError('An error occurred while creating the client');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    if (!loading) {
-      setFormData({
-        firstName: '',
-        lastName: '',
-        phone: '',
-        email: '',
-        linkedLeadId: null,
-        isPrivate: false,
-        accessLevel: 'team',
-      });
-      setError('');
-      setCurrentStep(0);
-      onClose();
-    }
-  };
-
+  // Navigation handlers
   const handleNext = () => {
-    // Step 0: Lead selection - no validation needed, can proceed with or without lead
-    // Step 1: Contact info validation
-    if (currentStep === 1) {
-      if (!formData.firstName || !formData.lastName || !formData.phone || !formData.email) {
-        setError('Please complete all contact information fields');
-        return;
-      }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        setError('Please enter a valid email address');
-        return;
-      }
-      const phoneDigits = formData.phone.replace(/\D/g, '');
-      if (phoneDigits.length !== 10) {
-        setError('Please enter a valid 10-digit phone number');
-        return;
-      }
-    }
-
-    setError('');
-    if (currentStep < steps.length - 1) {
+    if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1);
+    } else {
+      handleSubmit();
     }
   };
 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
-      setError('');
     }
   };
 
-  const getSelectedLead = () => {
-    if (!Array.isArray(leads) || !formData.linkedLeadId) return null;
-    return leads.find(lead => lead.id === formData.linkedLeadId);
+  const handleClose = () => {
+    if (!saving) {
+      setCurrentStep(0);
+      setFormData({
+        firstName: '',
+        lastName: '',
+        displayName: '',
+        leadId: null,
+        clientType: 'buyer',
+        phone: '',
+        email: '',
+        budget: '',
+      });
+      setShowSuccess(false);
+      onClose();
+    }
   };
 
-  const StepIcon = steps[currentStep].icon;
+  // Step-specific save handlers
+  const handleNameSave = (nameData) => {
+    setFormData({
+      ...formData,
+      firstName: nameData.first_name || '',
+      lastName: nameData.last_name || '',
+      displayName: nameData.display_name || `${nameData.first_name || ''} ${nameData.last_name || ''}`.trim(),
+      leadId: nameData.lead_id || null,
+      // If lead selected, also grab contact info
+      phone: nameData.phone || formData.phone,
+      email: nameData.email || formData.email,
+    });
+  };
+
+  const handleClientTypeChange = (event, newType) => {
+    if (newType !== null) {
+      setFormData({ ...formData, clientType: newType });
+    }
+  };
+
+  const handlePhoneSave = (phone) => {
+    setFormData({ ...formData, phone });
+  };
+
+  const handleEmailSave = (email) => {
+    setFormData({ ...formData, email });
+  };
+
+  const handleBudgetSave = (budget) => {
+    setFormData({ ...formData, budget });
+  };
+
+  // Final submission
+  const handleSubmit = async () => {
+    setSaving(true);
+
+    try {
+      const clientData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        client_type: formData.clientType,
+        phone: formData.phone,
+        email: formData.email,
+        budget: parseFloat(formData.budget) || 0,
+        client_status: 'active',
+        stage: 'New',
+        // Link to lead if selected
+        lead_id: formData.leadId,
+      };
+
+      const response = await clientsAPI.create(clientData);
+
+      if (response.success) {
+        // Show success animation
+        setShowSuccess(true);
+
+        // Auto-close after animation
+        setTimeout(() => {
+          if (onSuccess) {
+            onSuccess(response.data.id || response.data.client_id);
+          }
+          handleClose();
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Error creating client:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Render current step
+  const renderStep = () => {
+    const stepId = currentStepConfig.id;
+
+    switch (stepId) {
+      case 'name':
+        return (
+          <EditClientName
+            open={true}
+            onClose={() => {}}
+            onSave={handleNameSave}
+            value={formData.displayName}
+            data={{
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              phone: formData.phone,
+              email: formData.email,
+            }}
+            inline={true}
+            color="#8b5cf6"
+          />
+        );
+
+      case 'client-type':
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 350 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.9)',
+                  mb: 1,
+                  display: 'block',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}
+              >
+                Client Type
+              </Typography>
+
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 900,
+                  color: 'white',
+                  mb: 3,
+                  letterSpacing: '-1px',
+                  textTransform: 'capitalize',
+                }}
+              >
+                {formData.clientType || 'Select Type'}
+              </Typography>
+
+              <ToggleButtonGroup
+                value={formData.clientType}
+                exclusive
+                onChange={handleClientTypeChange}
+                fullWidth
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  borderRadius: 2,
+                  '& .MuiToggleButton-root': {
+                    color: 'rgba(255,255,255,0.7)',
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    fontWeight: 600,
+                    py: 2,
+                    fontSize: '1rem',
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(255,255,255,0.25)',
+                      color: 'white',
+                      borderColor: 'rgba(255,255,255,0.5)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.35)',
+                      },
+                    },
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="buyer">
+                  <Home sx={{ mr: 1, fontSize: 22 }} />
+                  Buyer
+                </ToggleButton>
+                <ToggleButton value="seller">
+                  <Sell sx={{ mr: 1, fontSize: 22 }} />
+                  Seller
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          </Box>
+        );
+
+      case 'contact':
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 300, display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <Phone
+                label="Phone Number"
+                value={formData.phone}
+                onChange={handlePhoneSave}
+                color="#8b5cf6"
+                showCurrentValue={false}
+              />
+              <Email
+                label="Email Address"
+                value={formData.email}
+                onChange={handleEmailSave}
+                color="#8b5cf6"
+                showCurrentValue={false}
+              />
+            </Box>
+          </Box>
+        );
+
+      case 'budget':
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 300 }}>
+              <Currency
+                label="Budget"
+                value={formData.budget}
+                onChange={handleBudgetSave}
+                color="#8b5cf6"
+                showCurrentValue={false}
+              />
+            </Box>
+          </Box>
+        );
+
+      case 'preview':
+        // Build preview client object from formData
+        const previewClient = {
+          id: 'preview',
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          client_type: formData.clientType,
+          clientType: formData.clientType,
+          phone: formData.phone,
+          email: formData.email,
+          budget: parseFloat(formData.budget) || 0,
+          client_status: 'active',
+          stage: 'New',
+          lifetime_value: 0,
+          leads: [],
+          is_preview: true,
+        };
+
+        return (
+          <Box>
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'white',
+                mb: 2,
+                fontWeight: 600,
+                textAlign: 'center',
+              }}
+            >
+              Preview Your Client
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <ClientCard
+                client={previewClient}
+                onClick={() => {}}
+                onUpdate={(updatedClient) => {
+                  // Sync updates back to formData
+                  const newFormData = { ...formData };
+
+                  if (updatedClient.budget !== undefined) {
+                    newFormData.budget = updatedClient.budget.toString();
+                  }
+
+                  if (updatedClient.first_name !== undefined) {
+                    newFormData.firstName = updatedClient.first_name;
+                    newFormData.lastName = updatedClient.last_name || '';
+                    newFormData.displayName = `${updatedClient.first_name} ${updatedClient.last_name || ''}`.trim();
+                  }
+
+                  setFormData(newFormData);
+                }}
+              />
+            </Box>
+          </Box>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="md"
-      fullWidth
+      maxWidth={false}
       PaperProps={{
         sx: {
           borderRadius: 3,
-          overflow: 'hidden',
+          background: 'transparent',
+          boxShadow: 'none',
         },
       }}
     >
-      {/* Gradient Header */}
-      <Box
-        sx={{
-          background: `linear-gradient(135deg, ${steps[currentStep].color}ee, ${steps[currentStep].color}99)`,
-          px: 3,
-          py: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          position: 'relative',
-          overflow: 'hidden',
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)',
-            pointerEvents: 'none',
-          }
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 1 }}>
+      {!showSuccess ? (
+        <ModalStepPage
+          title="Create New Client"
+          color="#8b5cf6" // Purple theme for clients
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          onNext={handleNext}
+          onBack={handleBack}
+          onClose={handleClose}
+          onStepClick={setCurrentStep}
+          saving={saving}
+          isLastStep={isLastStep}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {renderStep()}
+            </motion.div>
+          </AnimatePresence>
+        </ModalStepPage>
+      ) : (
+        // Success Animation
+        <Fade in timeout={500}>
           <Box
             sx={{
-              width: 48,
-              height: 48,
-              borderRadius: 2,
-              bgcolor: 'rgba(255,255,255,0.95)',
+              p: 6,
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+              borderRadius: 3,
+              minHeight: 300,
             }}
           >
-            <StepIcon sx={{ fontSize: 28, color: steps[currentStep].color }} />
-          </Box>
-          <Box>
-            <Typography variant="h5" fontWeight="700" color="white" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-              Create New Client
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.95)', fontWeight: 500 }}>
-              Step {currentStep + 1} of {steps.length}: {steps[currentStep].label}
-            </Typography>
-          </Box>
-        </Box>
-        <IconButton
-          onClick={handleClose}
-          disabled={loading}
-          sx={{
-            color: 'white',
-            bgcolor: 'rgba(255,255,255,0.15)',
-            backdropFilter: 'blur(10px)',
-            '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
-            position: 'relative',
-            zIndex: 1,
-          }}
-        >
-          <Close />
-        </IconButton>
-      </Box>
-
-      {/* Compact Progress Stepper */}
-      <Box sx={{ px: 3, pt: 2, pb: 1, bgcolor: '#fafafa' }}>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          {steps.map((step, index) => {
-            const isActive = currentStep === index;
-            const isCompleted = currentStep > index;
-
-            return (
-              <Box
-                key={step.label}
-                sx={{
-                  flex: 1,
-                  height: 6,
-                  borderRadius: 3,
-                  bgcolor: isCompleted || isActive ? step.color : '#e0e0e0',
-                  opacity: isCompleted || isActive ? 1 : 0.5,
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: isActive ? 'scaleY(1.3)' : 'scaleY(1)',
-                }}
-              />
-            );
-          })}
-        </Box>
-      </Box>
-
-      <form onSubmit={handleSubmit}>
-        {/* Form Content */}
-        <Box sx={{ px: 3, py: 3, minHeight: 400, maxHeight: '60vh', overflowY: 'auto' }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-              {error}
-            </Alert>
-          )}
-
-          {/* Step 0: Select Lead */}
-          {currentStep === 0 && (
-            <Fade in timeout={400}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
-                  Search for an existing lead to convert into a client. Their information will be auto-filled.
-                </Typography>
-
-                <Autocomplete
-                  options={Array.isArray(leads) ? leads : []}
-                  loading={loadingLeads}
-                  value={getSelectedLead() || null}
-                  getOptionLabel={(option) => `${option.firstName} ${option.lastName} - ${option.email}`}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Select Lead to Convert"
-                      placeholder="Search by name or email..."
-                      helperText="Start typing to search for a lead"
-                      autoFocus
-                    />
-                  )}
-                  onChange={handleLeadSelect}
-                  noOptionsText={loadingLeads ? "Loading leads..." : "No leads found"}
-                />
-
-                {formData.linkedLeadId && (
-                  <Alert severity="success">
-                    Lead selected! Contact information has been auto-filled. Click Next to review and edit if needed.
-                  </Alert>
-                )}
-
-                {!loadingLeads && Array.isArray(leads) && leads.length === 0 && (
-                  <Alert severity="info">
-                    No leads available. You'll need to create a lead first, or manually enter client information in the next step.
-                  </Alert>
-                )}
-              </Box>
-            </Fade>
-          )}
-
-          {/* Step 1: Contact Info (Review/Edit) */}
-          {currentStep === 1 && (
-            <Fade in timeout={400}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                {formData.linkedLeadId && (
-                  <Alert severity="info" sx={{ mb: 1 }}>
-                    Information auto-filled from lead. You can edit any field below.
-                  </Alert>
-                )}
-
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <TextField
-                    fullWidth
-                    label="First Name"
-                    placeholder="John"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    required
-                    autoFocus={!formData.linkedLeadId}
-                  />
-                  <TextField
-                    fullWidth
-                    label="Last Name"
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    required
-                  />
-                </Box>
-
-                <TextField
-                  fullWidth
-                  label="Phone"
-                  placeholder="(555) 555-5555"
-                  value={formData.phone}
-                  onChange={handlePhoneChange}
-                  required
-                  helperText="10-digit phone number"
-                  InputProps={{
-                    startAdornment: <Phone sx={{ mr: 1, color: 'action.active' }} />,
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  label="Email"
-                  type="email"
-                  placeholder="john.doe@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                  helperText="Valid email address"
-                  InputProps={{
-                    startAdornment: <Email sx={{ mr: 1, color: 'action.active' }} />,
-                  }}
-                />
-
-                <PrivacyControl
-                  isPrivate={formData.isPrivate}
-                  accessLevel={formData.accessLevel}
-                  onPrivateChange={(value) => setFormData({ ...formData, isPrivate: value })}
-                  onAccessLevelChange={(value) => setFormData({ ...formData, accessLevel: value })}
-                />
-              </Box>
-            </Fade>
-          )}
-
-          {/* Step 2: Review */}
-          {currentStep === 2 && (
-            <Fade in timeout={400}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box
-                  sx={{
-                    p: 2.5,
-                    borderRadius: 2,
-                    background: 'linear-gradient(135deg, #1976d220, #2196f320)',
-                    border: '2px solid #1976d2',
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'start', gap: 2 }}>
-                    <PersonAdd sx={{ color: '#1976d2', fontSize: 28 }} />
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Full Name
-                      </Typography>
-                      <Typography variant="h6" fontWeight="600">
-                        {formData.firstName} {formData.lastName}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Box>
-
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <Box
-                    sx={{
-                      flex: 1,
-                      p: 2.5,
-                      borderRadius: 2,
-                      background: 'linear-gradient(135deg, #9c27b020, #e91e6320)',
-                      border: '2px solid #9c27b0',
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                      <Phone sx={{ color: '#9c27b0', fontSize: 20 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Phone
-                      </Typography>
-                    </Box>
-                    <Typography variant="body1" fontWeight="600">
-                      {formData.phone}
-                    </Typography>
-                  </Box>
-
-                  <Box
-                    sx={{
-                      flex: 1,
-                      p: 2.5,
-                      borderRadius: 2,
-                      background: 'linear-gradient(135deg, #9c27b020, #e91e6320)',
-                      border: '2px solid #9c27b0',
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                      <Email sx={{ color: '#9c27b0', fontSize: 20 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Email
-                      </Typography>
-                    </Box>
-                    <Typography variant="body1" fontWeight="600" sx={{ wordBreak: 'break-word' }}>
-                      {formData.email}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {formData.linkedLeadId && (
-                  <Box
-                    sx={{
-                      p: 2.5,
-                      borderRadius: 2,
-                      background: 'linear-gradient(135deg, #388e3c20, #66bb6a20)',
-                      border: '2px solid #388e3c',
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                      <LinkIcon sx={{ color: '#388e3c', fontSize: 20 }} />
-                      <Typography variant="body2" color="text.secondary">
-                        Linked Lead
-                      </Typography>
-                    </Box>
-                    <Typography variant="body1" fontWeight="600">
-                      {getSelectedLead()?.firstName} {getSelectedLead()?.lastName}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {getSelectedLead()?.email}
-                    </Typography>
-                  </Box>
-                )}
-
-                {formData.isPrivate && (
-                  <Chip
-                    label="Private Client"
-                    color="error"
-                    icon={<PersonAdd />}
-                    sx={{ alignSelf: 'flex-start' }}
-                  />
-                )}
-
-                {!formData.isPrivate && (
-                  <Box
-                    sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      bgcolor: '#f5f5f5',
-                      border: '1px solid #e0e0e0',
-                    }}
-                  >
-                    <Typography variant="body2" color="text.secondary">
-                      Sharing Level: <strong style={{ textTransform: 'capitalize' }}>{formData.accessLevel}</strong>
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            </Fade>
-          )}
-        </Box>
-
-        {/* Navigation Buttons */}
-        <Box
-          sx={{
-            px: 3,
-            py: 2.5,
-            bgcolor: '#fafafa',
-            borderTop: '1px solid #e0e0e0',
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Button
-            onClick={handleBack}
-            disabled={currentStep === 0 || loading}
-            startIcon={<NavigateBefore />}
-            sx={{ textTransform: 'none', fontWeight: 600 }}
-          >
-            Back
-          </Button>
-
-          {currentStep < steps.length - 1 ? (
-            <Button
-              onClick={handleNext}
-              variant="contained"
-              endIcon={<NavigateNext />}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+            >
+              <CheckCircle sx={{ fontSize: 80, color: 'white', mb: 2 }} />
+            </motion.div>
+            <Typography
+              variant="h4"
               sx={{
-                textTransform: 'none',
-                fontWeight: 600,
-                background: `linear-gradient(135deg, ${steps[currentStep].color}ee, ${steps[currentStep].color}99)`,
-                '&:hover': {
-                  background: `linear-gradient(135deg, ${steps[currentStep].color}, ${steps[currentStep].color}dd)`,
-                }
+                color: 'white',
+                fontWeight: 700,
+                textAlign: 'center',
               }}
             >
-              Next
-            </Button>
-          ) : (
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={loading}
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CheckCircle />}
-              sx={{
-                textTransform: 'none',
-                fontWeight: 600,
-                background: `linear-gradient(135deg, ${steps[currentStep].color}ee, ${steps[currentStep].color}99)`,
-                '&:hover': {
-                  background: `linear-gradient(135deg, ${steps[currentStep].color}, ${steps[currentStep].color}dd)`,
-                }
-              }}
-            >
-              {loading ? 'Creating...' : 'Create Client'}
-            </Button>
-          )}
-        </Box>
-      </form>
+              Client Created!
+            </Typography>
+          </Box>
+        </Fade>
+      )}
     </Dialog>
   );
 };
 
+export { NewClientModal };
 export default NewClientModal;
