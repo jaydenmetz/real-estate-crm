@@ -1,7 +1,14 @@
+import { alpha } from '@mui/material';
+
 /**
- * Appointment Constants
- * Centralized configuration and constants for the appointments module
+ * Appointment Constants - Centralized Configuration
+ * All appointment-related constants, statuses, and configurations in one place.
+ * Follows the same pattern as escrowConfig.js, clientConfig.js, and listingConfig.js
  */
+
+// ========================================
+// STATUS CONSTANTS
+// ========================================
 
 export const APPOINTMENT_STATUS = {
   SCHEDULED: 'scheduled',
@@ -36,6 +43,73 @@ export const APPOINTMENT_STATUS_COLORS = {
   [APPOINTMENT_STATUS.ARCHIVED]: '#6b7280'
 };
 
+/**
+ * Appointment status configurations with full styling
+ * Created once and reused - prevents object creation on every render
+ */
+export const APPOINTMENT_STATUS_CONFIG = {
+  'scheduled': {
+    color: '#3b82f6',
+    bg: 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(37,99,235,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#3b82f6', 0.2)}`,
+    icon: 'schedule',
+    label: 'Scheduled'
+  },
+  'confirmed': {
+    color: '#10b981',
+    bg: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#10b981', 0.2)}`,
+    icon: 'check_circle',
+    label: 'Confirmed'
+  },
+  'in_progress': {
+    color: '#f59e0b',
+    bg: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(217,119,6,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#f59e0b', 0.2)}`,
+    icon: 'play_circle',
+    label: 'In Progress'
+  },
+  'completed': {
+    color: '#6366f1',
+    bg: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#6366f1', 0.2)}`,
+    icon: 'task_alt',
+    label: 'Completed'
+  },
+  'cancelled': {
+    color: '#ef4444',
+    bg: 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#ef4444', 0.2)}`,
+    icon: 'cancel',
+    label: 'Cancelled'
+  },
+  'no_show': {
+    color: '#dc2626',
+    bg: 'linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(185,28,28,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#dc2626', 0.2)}`,
+    icon: 'person_off',
+    label: 'No Show'
+  },
+  'rescheduled': {
+    color: '#8b5cf6',
+    bg: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(124,58,237,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#8b5cf6', 0.2)}`,
+    icon: 'event_repeat',
+    label: 'Rescheduled'
+  },
+  'archived': {
+    color: '#6b7280',
+    bg: 'linear-gradient(135deg, rgba(107,114,128,0.08) 0%, rgba(75,85,99,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#6b7280', 0.2)}`,
+    icon: 'archive',
+    label: 'Archived'
+  }
+};
+
+// ========================================
+// APPOINTMENT TYPES
+// ========================================
+
 export const APPOINTMENT_TYPES = {
   SHOWING: 'showing',
   CONSULTATION: 'consultation',
@@ -62,6 +136,10 @@ export const APPOINTMENT_TYPE_LABELS = {
   [APPOINTMENT_TYPES.OTHER]: 'Other'
 };
 
+// ========================================
+// PRIORITY LEVELS
+// ========================================
+
 export const APPOINTMENT_PRIORITY = {
   HIGH: 'high',
   MEDIUM: 'medium',
@@ -79,6 +157,10 @@ export const APPOINTMENT_PRIORITY_COLORS = {
   [APPOINTMENT_PRIORITY.MEDIUM]: '#f59e0b',
   [APPOINTMENT_PRIORITY.LOW]: '#10b981'
 };
+
+// ========================================
+// DURATION & REMINDER OPTIONS
+// ========================================
 
 export const APPOINTMENT_DURATION_OPTIONS = [
   { value: 15, label: '15 minutes' },
@@ -101,6 +183,10 @@ export const APPOINTMENT_REMINDER_OPTIONS = [
   { value: 2880, label: '2 days before' }
 ];
 
+// ========================================
+// LOCATION TYPES
+// ========================================
+
 export const APPOINTMENT_LOCATION_TYPES = {
   PROPERTY: 'property',
   OFFICE: 'office',
@@ -118,6 +204,10 @@ export const APPOINTMENT_LOCATION_TYPE_LABELS = {
   [APPOINTMENT_LOCATION_TYPES.VIDEO]: 'Video Call',
   [APPOINTMENT_LOCATION_TYPES.OTHER]: 'Other Location'
 };
+
+// ========================================
+// FILTERS & SORTING
+// ========================================
 
 export const APPOINTMENT_FILTERS = {
   STATUS: 'status',
@@ -143,6 +233,10 @@ export const APPOINTMENT_VIEW_MODES = {
   TABLE: 'table',
   CALENDAR: 'calendar'
 };
+
+// ========================================
+// VALIDATION RULES
+// ========================================
 
 export const APPOINTMENT_VALIDATION_RULES = {
   title: {
@@ -170,6 +264,10 @@ export const APPOINTMENT_VALIDATION_RULES = {
   }
 };
 
+// ========================================
+// DEFAULT VALUES
+// ========================================
+
 export const APPOINTMENT_DEFAULT_VALUES = {
   status: APPOINTMENT_STATUS.SCHEDULED,
   appointmentType: APPOINTMENT_TYPES.SHOWING,
@@ -180,6 +278,10 @@ export const APPOINTMENT_DEFAULT_VALUES = {
   notes: '',
   participants: []
 };
+
+// ========================================
+// DATE RANGE PRESETS
+// ========================================
 
 export const DATE_RANGE_PRESETS = {
   TODAY: 'today',
@@ -201,6 +303,10 @@ export const DATE_RANGE_LABELS = {
   [DATE_RANGE_PRESETS.CUSTOM]: 'Custom Range'
 };
 
+// ========================================
+// GENERAL CONSTANTS
+// ========================================
+
 export const APPOINTMENT_CONSTANTS = {
   DEFAULT_PAGE_SIZE: 20,
   DEFAULT_VIEW_MODE: APPOINTMENT_VIEW_MODES.GRID,
@@ -214,6 +320,10 @@ export const APPOINTMENT_CONSTANTS = {
   MAX_APPOINTMENT_DURATION: 480 // 8 hours
 };
 
+// ========================================
+// TIME SLOTS & BUSINESS HOURS
+// ========================================
+
 export const TIME_SLOTS = [
   '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
   '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
@@ -226,4 +336,26 @@ export const BUSINESS_HOURS = {
   start: '08:00',
   end: '20:00',
   timezone: 'America/Los_Angeles' // Default PST
+};
+
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
+
+/**
+ * Get status config with fallback to scheduled
+ * @param {string} status - Appointment status
+ * @returns {object} Status configuration
+ */
+export const getStatusConfig = (status) => {
+  return APPOINTMENT_STATUS_CONFIG[status] || APPOINTMENT_STATUS_CONFIG.scheduled;
+};
+
+/**
+ * Get appointment status config (alias for getStatusConfig)
+ * @param {string} status - Appointment status
+ * @returns {object} Status configuration
+ */
+export const getAppointmentStatusConfig = (status) => {
+  return APPOINTMENT_STATUS_CONFIG[status] || APPOINTMENT_STATUS_CONFIG.scheduled;
 };

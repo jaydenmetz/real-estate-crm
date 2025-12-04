@@ -7,7 +7,7 @@ import {
   alpha,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { APPOINTMENT_STATUS_COLORS } from '../../constants/appointmentConstants';
+import { APPOINTMENT_STATUS_COLORS } from '../../../../../constants/appointmentConfig';
 import { formatDate as formatDateUtil } from '../../../../../utils/formatters';
 import { QuickActionsMenu } from '../../../../common/ui/QuickActionsMenu';
 

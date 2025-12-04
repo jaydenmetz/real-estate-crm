@@ -1,6 +1,6 @@
 import React from 'react';
 import { EditSelect } from '../../../common/editors/fields/EditSelect';
-import { APPOINTMENT_STATUS, APPOINTMENT_STATUS_LABELS } from '../constants/appointmentConstants';
+import { APPOINTMENT_STATUS, APPOINTMENT_STATUS_LABELS } from '../../../../constants/appointmentConfig';
 
 /**
  * Appointment-specific Status Editor
