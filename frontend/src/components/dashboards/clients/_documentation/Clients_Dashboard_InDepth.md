@@ -2,7 +2,7 @@
 
 **Complete Implementation Reference**
 
-Jillow Real Estate CRM · Version 2.2 · December 2024
+Jillow Real Estate CRM · Version 2.3 · December 2024
 
 ---
 
@@ -26,17 +26,11 @@ Jillow Real Estate CRM · Version 2.2 · December 2024
 
 Standard dashboard folder structure for the clients entity.
 
-### 1.1 Complete File Tree (31 Files)
+### 1.1 Complete File Tree (29 Files)
 
 ```
 frontend/src/components/dashboards/clients/
 ├── index.jsx                           # Dashboard entry point
-│
-├── config/
-│   └── viewModeConfig.js               # View mode configuration (Card/List/Table)
-│
-├── constants/
-│   └── clientConstants.js              # Client status, types, sources, validation
 │
 ├── hero/
 │   ├── index.js                        # Barrel: exports stats + carousel + modal + teaser

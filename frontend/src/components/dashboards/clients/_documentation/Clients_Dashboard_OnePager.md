@@ -1,18 +1,14 @@
 # Clients Dashboard - Quick Reference
 
-**Version 2.2** | December 2024
+**Version 2.3** | December 2024
 
 ---
 
-## Folder Structure (31 Files)
+## Folder Structure (29 Files)
 
 ```
 frontend/src/components/dashboards/clients/
 ├── index.jsx                           # Dashboard entry point
-├── config/
-│   └── viewModeConfig.js               # View mode configurations (Card/List/Table)
-├── constants/
-│   └── clientConstants.js              # Client status, types, sources, validation
 ├── hero/
 │   ├── index.js                        # Barrel: exports stats + carousel + modal + teaser
 │   ├── ClientsHeroCarousel.jsx         # 2-page carousel with animations

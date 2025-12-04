@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, MenuItem, Select, FormControl } from '@mui/material';
 import { EditorModal } from '../../../common/modals/EditorModal';
-import { CLIENT_STATUS, CLIENT_STATUS_LABELS } from '../constants/clientConstants';
+import { CLIENT_STATUS, CLIENT_STATUS_LABELS } from '../../../../constants/clientConfig';
 
 /**
  * Client-specific Status Editor

@@ -15,7 +15,7 @@ import {
   CalendarToday,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { CLIENT_STATUS_COLORS } from '../../constants/clientConstants';
+import { CLIENT_STATUS_COLORS } from '../../../../../constants/clientConfig';
 import { formatCurrency, formatDate as formatDateUtil } from '../../../../../utils/formatters';
 import { QuickActionsMenu } from '../../../../common/ui/QuickActionsMenu';
 
