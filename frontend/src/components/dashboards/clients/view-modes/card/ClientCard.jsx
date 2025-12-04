@@ -164,9 +164,9 @@ const useClientCardConfig = (statuses) => {
           },
         },
 
-        // Lifetime Value (calculated from escrows, not editable)
+        // Commission (calculated from escrows, not editable)
         {
-          label: 'Lifetime Value',
+          label: 'Commission',
           field: (client) => client.lifetime_value || 0,
           formatter: (value) => formatCurrency(value),
           color: {
