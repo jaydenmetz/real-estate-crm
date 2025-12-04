@@ -385,7 +385,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       case 'purchase-price':
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 500 }}>
+            <Box sx={{ width: '100%', maxWidth: 300 }}>
               <EditPurchasePrice
                 open={true}
                 onClose={() => {}}
@@ -403,7 +403,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         const isBuyerCommission = stepId === 'buyer-commission' || stepId === 'commission';
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 500 }}>
+            <Box sx={{ width: '100%', maxWidth: 300 }}>
               <EditCommission
                 open={true}
                 onClose={() => {}}
