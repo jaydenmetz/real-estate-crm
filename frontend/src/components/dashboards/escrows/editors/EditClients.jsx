@@ -56,6 +56,7 @@ export const EditClients = ({
   // State for NewClientModal
   const [showNewClientModal, setShowNewClientModal] = useState(false);
   const [newClientRole, setNewClientRole] = useState(null); // 'buyer' | 'seller' | null
+  const [newClientInitialName, setNewClientInitialName] = useState({ firstName: '', lastName: '' });
 
   // Ref to track if we've already loaded initial data (prevents resetting on parent re-renders)
   const hasLoadedInitialData = useRef(false);
@@ -326,6 +327,12 @@ export const EditClients = ({
 
   // Handle opening the NewClientModal for a specific role
   const handleOpenNewClientModal = (role) => {
+    // Parse the search text to extract first/last name
+    const nameParts = (clientSearch?.trim() || '').split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    setNewClientInitialName({ firstName, lastName });
     setNewClientRole(role);
     setShowNewClientModal(true);
     setClientSearch('');
@@ -675,7 +682,7 @@ export const EditClients = ({
                             >
                               <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
                               <Typography variant="body2" fontWeight={600}>
-                                Add New Client
+                                {clientSearch?.trim() ? `Add "${clientSearch.trim()}" as New Client` : 'Add New Client'}
                               </Typography>
                             </Box>
                           );
@@ -892,7 +899,7 @@ export const EditClients = ({
                             >
                               <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
                               <Typography variant="body2" fontWeight={600}>
-                                Add New Client
+                                {clientSearch?.trim() ? `Add "${clientSearch.trim()}" as New Client` : 'Add New Client'}
                               </Typography>
                             </Box>
                           );
@@ -1118,7 +1125,7 @@ export const EditClients = ({
                           >
                             <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
                             <Typography variant="body2" fontWeight={600}>
-                              Add New Client
+                              {clientSearch?.trim() ? `Add "${clientSearch.trim()}" as New Client` : 'Add New Client'}
                             </Typography>
                           </Box>
                         );
@@ -1474,8 +1481,10 @@ export const EditClients = ({
       onClose={() => {
         setShowNewClientModal(false);
         setNewClientRole(null);
+        setNewClientInitialName({ firstName: '', lastName: '' });
       }}
       onSuccess={handleNewClientCreated}
+      initialData={newClientInitialName}
     />
   );
 

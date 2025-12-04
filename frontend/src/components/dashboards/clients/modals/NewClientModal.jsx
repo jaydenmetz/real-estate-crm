@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Dialog,
   Box,
@@ -33,7 +33,7 @@ import { clientsAPI } from '../../../../services/api.service';
  * 4. Budget
  * 5. Preview & Confirm
  */
-const NewClientModal = ({ open, onClose, onSuccess }) => {
+const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -56,6 +56,22 @@ const NewClientModal = ({ open, onClose, onSuccess }) => {
     // Financial
     budget: '',
   });
+
+  // Initialize form data from initialData when modal opens
+  useEffect(() => {
+    if (open && initialData) {
+      const firstName = initialData.firstName || '';
+      const lastName = initialData.lastName || '';
+      const displayName = `${firstName} ${lastName}`.trim();
+
+      setFormData(prev => ({
+        ...prev,
+        firstName,
+        lastName,
+        displayName,
+      }));
+    }
+  }, [open, initialData]);
 
   // Step configuration
   const steps = useMemo(() => [
