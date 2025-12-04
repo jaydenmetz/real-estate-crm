@@ -1,6 +1,6 @@
 import React from 'react';
 import { EditSelect } from '../../../common/editors/fields/EditSelect';
-import { LEAD_SOURCES, LEAD_SOURCE_LABELS } from '../constants/leadConstants';
+import { LEAD_SOURCES, LEAD_SOURCE_LABELS } from '../../../../constants/leadConfig';
 
 /**
  * Lead-specific Source Editor

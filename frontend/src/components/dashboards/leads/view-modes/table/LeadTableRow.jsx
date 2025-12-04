@@ -9,7 +9,7 @@ import {
   LinearProgress,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { LEAD_STATUS_COLORS } from '../../constants/leadConstants';
+import { LEAD_STATUS_COLORS } from '../../../../../constants/leadConfig';
 import { formatDate as formatDateUtil } from '../../../../../utils/formatters';
 import { QuickActionsMenu } from '../../../../common/ui/QuickActionsMenu';
 
