@@ -4,6 +4,7 @@ import { Check, Close, PersonAdd, Delete, Person, Home, Group } from '@mui/icons
 import { ModalContainer as ModalDialog } from '../../../common/modals/ModalContainer';
 import { clientsAPI } from '../../../../services/api.service';
 import debounce from 'lodash/debounce';
+import { NewClientModal } from '../../clients/modals/NewClientModal';
 
 /**
  * Unified Clients Editor for Escrows
@@ -51,6 +52,10 @@ export const EditClients = ({
   const [clientOptions, setClientOptions] = useState([]);
   const [loadingClients, setLoadingClients] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // State for NewClientModal
+  const [showNewClientModal, setShowNewClientModal] = useState(false);
+  const [newClientRole, setNewClientRole] = useState(null); // 'buyer' | 'seller' | null
 
   // Ref to track if we've already loaded initial data (prevents resetting on parent re-renders)
   const hasLoadedInitialData = useRef(false);
@@ -319,6 +324,56 @@ export const EditClients = ({
     setClientSearch('');
   };
 
+  // Handle opening the NewClientModal for a specific role
+  const handleOpenNewClientModal = (role) => {
+    setNewClientRole(role);
+    setShowNewClientModal(true);
+    setClientSearch('');
+    setActiveSearchRole(null);
+  };
+
+  // Handle when a new client is successfully created via NewClientModal
+  const handleNewClientCreated = async (clientId) => {
+    try {
+      // Fetch the newly created client from the API
+      const response = await clientsAPI.getById(clientId);
+      if (response.success && response.data) {
+        const newClient = {
+          id: response.data.client_id || response.data.id,
+          firstName: response.data.first_name,
+          lastName: response.data.last_name,
+          email: response.data.email,
+        };
+
+        // Add to the appropriate list based on the role
+        if (newClientRole === 'buyer') {
+          setBuyerClients(prev => [...prev, newClient]);
+        } else if (newClientRole === 'seller') {
+          setSellerClients(prev => [...prev, newClient]);
+        } else if (selectedType === 'buyer' || (!showRepresentationType && representationType === 'buyer')) {
+          // For single mode or standalone buyer mode
+          if (showRepresentationType) {
+            setBuyerClients(prev => [...prev, newClient]);
+          } else {
+            setSelectedClients(prev => [...prev, newClient]);
+          }
+        } else if (selectedType === 'seller' || (!showRepresentationType && representationType === 'seller')) {
+          // For single mode or standalone seller mode
+          if (showRepresentationType) {
+            setSellerClients(prev => [...prev, newClient]);
+          } else {
+            setSelectedClients(prev => [...prev, newClient]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching newly created client:', error);
+    } finally {
+      setShowNewClientModal(false);
+      setNewClientRole(null);
+    }
+  };
+
   const handleRemoveClient = (clientId) => {
     setSelectedClients(prev => prev.filter(c => c.id !== clientId));
   };
@@ -566,20 +621,8 @@ export const EditClients = ({
                       onChange={(event, client) => {
                         if (!client) return;
                         if (client.isAddNew) {
-                          // Parse name from search text: "FirstName LastName" or just "FirstName"
-                          const nameParts = (clientSearch?.trim() || '').split(/\s+/);
-                          const firstName = nameParts[0] || '';
-                          const lastName = nameParts.slice(1).join(' ') || '';
-                          // Create a temporary client object with the parsed name
-                          const newClient = {
-                            id: `temp-${Date.now()}`, // Temporary ID until saved to backend
-                            firstName,
-                            lastName,
-                            isNew: true, // Flag to indicate this needs to be saved
-                          };
-                          setBuyerClients([...buyerClients, newClient]);
-                          setClientSearch('');
-                          setActiveSearchRole(null);
+                          // Open NewClientModal instead of creating temp object
+                          handleOpenNewClientModal('buyer');
                           return;
                         }
                         if (!buyerClients.some(c => c.id === client.id)) {
@@ -632,7 +675,7 @@ export const EditClients = ({
                             >
                               <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
                               <Typography variant="body2" fontWeight={600}>
-                                {clientSearch?.trim() ? `Add "${clientSearch.trim()}" as New Client` : 'Add New Client'}
+                                Add New Client
                               </Typography>
                             </Box>
                           );
@@ -796,20 +839,8 @@ export const EditClients = ({
                       onChange={(event, client) => {
                         if (!client) return;
                         if (client.isAddNew) {
-                          // Parse name from search text: "FirstName LastName" or just "FirstName"
-                          const nameParts = (clientSearch?.trim() || '').split(/\s+/);
-                          const firstName = nameParts[0] || '';
-                          const lastName = nameParts.slice(1).join(' ') || '';
-                          // Create a temporary client object with the parsed name
-                          const newClient = {
-                            id: `temp-${Date.now()}`, // Temporary ID until saved to backend
-                            firstName,
-                            lastName,
-                            isNew: true, // Flag to indicate this needs to be saved
-                          };
-                          setSellerClients([...sellerClients, newClient]);
-                          setClientSearch('');
-                          setActiveSearchRole(null);
+                          // Open NewClientModal instead of creating temp object
+                          handleOpenNewClientModal('seller');
                           return;
                         }
                         if (!sellerClients.some(c => c.id === client.id)) {
@@ -861,7 +892,7 @@ export const EditClients = ({
                             >
                               <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
                               <Typography variant="body2" fontWeight={600}>
-                                {clientSearch?.trim() ? `Add "${clientSearch.trim()}" as New Client` : 'Add New Client'}
+                                Add New Client
                               </Typography>
                             </Box>
                           );
@@ -1028,24 +1059,8 @@ export const EditClients = ({
                     onChange={(event, client) => {
                       if (!client) return;
                       if (client.isAddNew) {
-                        // Parse name from search text: "FirstName LastName" or just "FirstName"
-                        const nameParts = (clientSearch?.trim() || '').split(/\s+/);
-                        const firstName = nameParts[0] || '';
-                        const lastName = nameParts.slice(1).join(' ') || '';
-                        // Create a temporary client object with the parsed name
-                        const newClient = {
-                          id: `temp-${Date.now()}`, // Temporary ID until saved to backend
-                          firstName,
-                          lastName,
-                          isNew: true, // Flag to indicate this needs to be saved
-                        };
-                        if (selectedType === 'buyer') {
-                          setBuyerClients([...buyerClients, newClient]);
-                        } else {
-                          setSellerClients([...sellerClients, newClient]);
-                        }
-                        setClientSearch('');
-                        setActiveSearchRole(null);
+                        // Open NewClientModal instead of creating temp object
+                        handleOpenNewClientModal(selectedType);
                         return;
                       }
                       if (selectedType === 'buyer') {
@@ -1103,7 +1118,7 @@ export const EditClients = ({
                           >
                             <PersonAdd sx={{ mr: 1, fontSize: 18 }} />
                             <Typography variant="body2" fontWeight={600}>
-                              {clientSearch?.trim() ? `Add "${clientSearch.trim()}" as New Client` : 'Add New Client'}
+                              Add New Client
                             </Typography>
                           </Box>
                         );
@@ -1452,11 +1467,28 @@ export const EditClients = ({
     </Box>
   );
 
+  // NewClientModal component - shared between inline and modal modes
+  const newClientModalComponent = (
+    <NewClientModal
+      open={showNewClientModal}
+      onClose={() => {
+        setShowNewClientModal(false);
+        setNewClientRole(null);
+      }}
+      onSuccess={handleNewClientCreated}
+    />
+  );
+
   // Render with or without modal wrapper based on mode
   if (inline) {
     // Inline mode (used in NewEscrowModal flow): Return content directly without modal wrapper
     // This applies to BOTH role-specific mode AND combined representation type mode
-    return content;
+    return (
+      <>
+        {content}
+        {newClientModalComponent}
+      </>
+    );
   }
 
   // Standalone mode: Wrap in ModalDialog
@@ -1464,13 +1496,16 @@ export const EditClients = ({
   const modalWidth = showRepresentationType ? 600 : 500;
 
   return (
-    <ModalDialog
-      open={open}
-      onClose={onClose}
-      color={modalColor}
-      maxWidth={modalWidth}
-    >
-      {content}
-    </ModalDialog>
+    <>
+      <ModalDialog
+        open={open}
+        onClose={onClose}
+        color={modalColor}
+        maxWidth={modalWidth}
+      >
+        {content}
+      </ModalDialog>
+      {newClientModalComponent}
+    </>
   );
 };
