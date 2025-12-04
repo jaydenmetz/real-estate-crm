@@ -5,6 +5,7 @@ import { ListingCard, ListingListItem, ListingTableRow } from './view-modes';
 import NewListingModal from './modals/NewListingModal';
 import { PrivacyProvider } from '../../../contexts/PrivacyContext';
 import { StatusProvider } from '../../../contexts/StatusContext';
+import { ListingsHeroCarousel } from './hero';
 
 /**
  * ListingsDashboard - Config-driven dashboard using DashboardTemplate
@@ -22,6 +23,7 @@ import { StatusProvider } from '../../../contexts/StatusContext';
  *   - Card (grid): ListingCard component
  *   - List: ListingListItem component (horizontal with image)
  *   - Table: ListingTableRow component (compact table)
+ * - Hero Carousel: 2-page carousel with AI Manager integration
  *
  * Privacy Context:
  * - PrivacyProvider enables master toggle control for commission privacy
@@ -43,6 +45,7 @@ const ListingsDashboard = () => {
           ListComponent={ListingListItem}
           TableComponent={ListingTableRow}
           NewItemModal={NewListingModal}
+          HeroComponent={ListingsHeroCarousel}
         />
       </PrivacyProvider>
     </StatusProvider>
