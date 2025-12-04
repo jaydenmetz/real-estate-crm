@@ -24,7 +24,7 @@ import { Box, Typography, TextField } from '@mui/material';
  * @param {boolean} disabled - Disable input
  * @param {string} placeholder - Placeholder text
  * @param {boolean} autoFocus - Auto focus on mount
- * @param {string|number} maxWidth - Maximum width of input field (default: '300px')
+ * @param {string|number} maxWidth - Maximum width of input field (default: '100%' - let parent control)
  */
 export const Currency = ({
   label,
@@ -36,7 +36,7 @@ export const Currency = ({
   disabled = false,
   placeholder = '0',
   autoFocus = true,
-  maxWidth = '300px',
+  maxWidth = '100%', // Let parent (EditorModal) control width
 }) => {
   const inputRef = useRef(null);
   const [isFocused, setIsFocused] = useState(false);

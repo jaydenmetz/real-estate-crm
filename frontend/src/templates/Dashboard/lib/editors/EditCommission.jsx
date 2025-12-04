@@ -381,9 +381,9 @@ export const EditCommission = ({
     return content;
   }
 
-  // Standalone mode: Wrap in ModalDialog
+  // Standalone mode: Wrap in ModalDialog with wider modal, compact content
   return (
-    <ModalDialog open={open} onClose={onClose} color={color}>
+    <ModalDialog open={open} onClose={onClose} color={color} maxWidth={520}>
       {content}
     </ModalDialog>
   );

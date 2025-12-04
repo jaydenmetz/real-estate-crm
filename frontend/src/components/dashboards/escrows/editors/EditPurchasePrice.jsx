@@ -32,7 +32,6 @@ export const EditPurchasePrice = ({ open, onClose, onSave, value, inline = false
       onChange={handleChange}
       color="#10b981"
       showCurrentValue={!inline}
-      maxWidth="300px"
     />
   );
 
