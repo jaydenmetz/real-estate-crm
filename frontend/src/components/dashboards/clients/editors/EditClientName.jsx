@@ -62,12 +62,15 @@ export const EditClientName = ({
   const [saving, setSaving] = useState(false);
   const [clientMenuAnchor, setClientMenuAnchor] = useState(null);
 
-  // Extract current values from data object
+  // Extract current values from data object or value prop
   const getCurrentName = () => {
-    if (!data) return value || '';
+    // First check if value prop has a display name
+    if (value) return value;
+    // Then check data object for first/last name
+    if (!data) return '';
     const firstName = data.firstName || data.first_name || '';
     const lastName = data.lastName || data.last_name || '';
-    return `${firstName} ${lastName}`.trim() || value || '';
+    return `${firstName} ${lastName}`.trim() || '';
   };
 
   const getCurrentPhone = () => {
@@ -89,16 +92,17 @@ export const EditClientName = ({
   const hasTextChanged = inputText.trim() !== currentName;
   const hasUnsavedChanges = hasSelectedNewLead || hasTextChanged;
 
-  // Reset state when modal opens/closes
+  // Reset state when modal opens/closes or value changes
   useEffect(() => {
     if (!open) {
       setSelectedLead(null);
       setInputText('');
       setLeadOptions([]);
     } else {
+      // Initialize input text from current name (which uses value prop first)
       setInputText(currentName);
     }
-  }, [open]);
+  }, [open, currentName]);
 
   // Debounced lead search - searches as user types in the Legal Name field
   const searchLeadsDebounced = useCallback(
@@ -551,7 +555,7 @@ export const EditClientName = ({
               letterSpacing: '0.5px',
             }}
           >
-            Legal Name
+            Client Name
           </Typography>
           <Autocomplete
             freeSolo
