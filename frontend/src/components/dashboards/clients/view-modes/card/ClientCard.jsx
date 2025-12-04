@@ -16,6 +16,7 @@ import {
   EditClientPhone,
   EditClientStatus,
   EditClientBudget,
+  EditLeads,
 } from '../../editors';
 
 // Import LeadCircles component for footer
@@ -226,11 +227,16 @@ const useClientCardConfig = (statuses) => {
                 />
               );
             },
-            editable: false, // Set to true when EditLeads component is ready
-            // editor: EditLeads, // TODO: Create EditLeads component
-            // onSave: (client, leadsData) => {
-            //   return { leads: leadsData };
-            // },
+            editable: true,
+            editor: EditLeads,
+            editorProps: (client) => ({
+              value: client.leads || [],
+            }),
+            onSave: (client, leadsData) => {
+              // Convert lead objects to array of IDs for saving
+              const leadIds = leadsData.map(l => l.id || l.lead_id);
+              return { lead_ids: leadIds, leads: leadsData };
+            },
           },
         ],
       },
