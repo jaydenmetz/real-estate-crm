@@ -212,7 +212,7 @@ const useClientCardConfig = (statuses) => {
           {
             label: (client) => {
               const leads = client.leads || [];
-              return leads.length === 1 ? 'Lead' : 'Leads';
+              return leads.length > 1 ? 'Leads' : 'Lead';
             },
             field: 'leads',
             customRenderer: (client, onEdit) => {
