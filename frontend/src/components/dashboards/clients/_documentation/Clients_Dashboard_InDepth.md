@@ -2,7 +2,7 @@
 
 **Complete Implementation Reference**
 
-Jillow Real Estate CRM · Version 2.1 · December 2024
+Jillow Real Estate CRM · Version 2.2 · December 2024
 
 ---
 
@@ -26,20 +26,20 @@ Jillow Real Estate CRM · Version 2.1 · December 2024
 
 Standard dashboard folder structure for the clients entity.
 
-### 1.1 Complete File Tree (30 Files)
+### 1.1 Complete File Tree (31 Files)
 
 ```
 frontend/src/components/dashboards/clients/
 ├── index.jsx                           # Dashboard entry point
 │
 ├── config/
-│   └── viewModeConfig.js               # View mode configuration
+│   └── viewModeConfig.js               # View mode configuration (Card/List/Table)
 │
 ├── constants/
-│   └── clientConstants.js              # Client-specific constants
+│   └── clientConstants.js              # Client status, types, sources, validation
 │
 ├── hero/
-│   ├── index.js                        # Barrel: exports stats + carousel + modal
+│   ├── index.js                        # Barrel: exports stats + carousel + modal + teaser
 │   ├── ClientsHeroCarousel.jsx         # Carousel (2-page with animations)
 │   ├── AIManagerModal.jsx              # Full AI upsell modal
 │   ├── stats/
@@ -49,9 +49,11 @@ frontend/src/components/dashboards/clients/
 │   │   ├── NewThisMonthCard.jsx
 │   │   └── ClientValueCard.jsx
 │   └── pages/
-│       └── AIManagerPage/
-│           ├── index.jsx               # Page 2 of carousel
-│           └── AIManagerStatCard.jsx   # Stat cards for AI page
+│       ├── AIManagerPage/
+│       │   ├── index.jsx               # Page 2 of carousel
+│       │   └── AIManagerStatCard.jsx   # Stat cards for AI page
+│       └── HomePage/
+│           └── AIManagerTeaser.jsx     # 300x300 clickable widget
 │
 ├── navigation/
 │   ├── index.js                        # Barrel: all nav configs
@@ -908,6 +910,7 @@ export { EditClientBudget } from './EditClientBudget';
 export { default as ClientsHeroCarousel } from './ClientsHeroCarousel';
 export { default as AIManagerModal } from './AIManagerModal';
 export { default as AIManagerPage } from './pages/AIManagerPage';
+export { default as AIManagerTeaser } from './pages/HomePage/AIManagerTeaser';
 export * from './stats';
 ```
 

@@ -928,14 +928,11 @@ export { EditClients } from './EditClients';
 ### 9.1 hero/index.js
 
 ```js
-export {
-  TotalEscrowsCard,
-  TotalThisMonthCard,
-  TotalVolumeCard,
-  TotalCommissionCard
-} from './stats';
-
-// NOTE: EscrowsHeroCarousel uses direct import, not exported here
+export { default as EscrowsHeroCarousel } from './EscrowsHeroCarousel';
+export { default as AIManagerModal } from './AIManagerModal';
+export { default as AIManagerPage } from './pages/AIManagerPage';
+export { default as AIManagerTeaser } from './pages/HomePage/AIManagerTeaser';
+export * from './stats';
 ```
 
 ### 9.2 hero/stats/index.js

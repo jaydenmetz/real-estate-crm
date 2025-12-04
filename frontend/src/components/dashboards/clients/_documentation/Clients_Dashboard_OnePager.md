@@ -1,20 +1,20 @@
 # Clients Dashboard - Quick Reference
 
-**Version 2.1** | December 2024
+**Version 2.2** | December 2024
 
 ---
 
-## Folder Structure (30 Files)
+## Folder Structure (31 Files)
 
 ```
 frontend/src/components/dashboards/clients/
 ├── index.jsx                           # Dashboard entry point
 ├── config/
-│   └── viewModeConfig.js
+│   └── viewModeConfig.js               # View mode configurations (Card/List/Table)
 ├── constants/
-│   └── clientConstants.js
+│   └── clientConstants.js              # Client status, types, sources, validation
 ├── hero/
-│   ├── index.js                        # Barrel: exports stats + carousel + modal
+│   ├── index.js                        # Barrel: exports stats + carousel + modal + teaser
 │   ├── ClientsHeroCarousel.jsx         # 2-page carousel with animations
 │   ├── AIManagerModal.jsx              # Fullscreen upsell modal
 │   ├── stats/
@@ -24,9 +24,11 @@ frontend/src/components/dashboards/clients/
 │   │   ├── NewThisMonthCard.jsx
 │   │   └── ClientValueCard.jsx
 │   └── pages/
-│       └── AIManagerPage/
-│           ├── index.jsx               # Page 2 with React Query
-│           └── AIManagerStatCard.jsx
+│       ├── AIManagerPage/
+│       │   ├── index.jsx               # Page 2 with React Query
+│       │   └── AIManagerStatCard.jsx
+│       └── HomePage/
+│           └── AIManagerTeaser.jsx     # 300x300 clickable widget
 ├── navigation/
 │   ├── index.js                        # Barrel: all nav configs
 │   ├── tabs/

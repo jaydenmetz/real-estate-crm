@@ -6,4 +6,5 @@
 export { default as ClientsHeroCarousel } from './ClientsHeroCarousel';
 export { default as AIManagerModal } from './AIManagerModal';
 export { default as AIManagerPage } from './pages/AIManagerPage';
+export { default as AIManagerTeaser } from './pages/HomePage/AIManagerTeaser';
 export * from './stats';
