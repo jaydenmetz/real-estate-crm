@@ -9,7 +9,9 @@ import { clientsAPI } from '../../../../services/api.service';
  *
  * @param {object} value - Currently selected client object
  * @param {function} onChange - Change handler: (client) => void
- * @param {string} label - Optional label above input
+ * @param {string} label - Static label (overrides dynamic labels)
+ * @param {string} initialLabel - Label before selection (default: "Select Client")
+ * @param {string} selectedLabel - Label after selection (default: "Selected Client")
  * @param {string} placeholder - Placeholder text
  * @param {string} color - Theme color
  * @param {boolean} disabled - Disabled state
@@ -20,6 +22,8 @@ export const ClientInput = ({
   value,
   onChange,
   label,
+  initialLabel = 'Select Client',
+  selectedLabel = 'Selected Client',
   placeholder = 'Search clients...',
   color = '#8b5cf6', // Purple for clients
   disabled = false,
@@ -74,6 +78,8 @@ export const ClientInput = ({
       color={color}
       placeholder={placeholder}
       label={label}
+      initialLabel={initialLabel}
+      selectedLabel={selectedLabel}
       disabled={disabled}
       autoFocus={autoFocus}
       noOptionsText="No clients found"

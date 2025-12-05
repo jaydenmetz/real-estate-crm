@@ -7,11 +7,10 @@ import {
   ToggleButtonGroup,
   ToggleButton,
 } from '@mui/material';
-import { CheckCircle } from '@mui/icons-material';
+import { CheckCircle, Person } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Percent, AttachMoney } from '@mui/icons-material';
 import { ModalStepPage } from '../../../common/modals/ModalStepPage';
-import { EditClientName } from '../editors/EditClientName';
 import { Phone } from '../../../common/setters/Phone';
 import { Email } from '../../../common/setters/Email';
 import { Currency } from '../../../common/setters/Currency';
@@ -20,7 +19,8 @@ import { CurrencyInput } from '../../../common/inputs/shared/CurrencyInput';
 import { PercentageInput } from '../../../common/inputs/shared/PercentageInput';
 import { LeadInput } from '../../../common/inputs/shared/LeadInput';
 import ClientCard from '../view-modes/card/ClientCard';
-import { clientsAPI } from '../../../../services/api.service';
+import { clientsAPI, leadsAPI } from '../../../../services/api.service';
+import NewLeadModal from '../../leads/modals/NewLeadModal';
 
 /**
  * NewClientModal - Quick-Add Flow for Clients
@@ -40,6 +40,10 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // NewLeadModal state
+  const [showNewLeadModal, setShowNewLeadModal] = useState(false);
+  const [newLeadSearchText, setNewLeadSearchText] = useState('');
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -62,7 +66,7 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     agreementStartDate: null,
     agreementEndDate: null,
 
-    // Lead connection
+    // Lead connection (step 1 - required to select lead first)
     leadId: null,
     selectedLead: null,
   });
@@ -84,14 +88,14 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
   }, [open, initialData]);
 
   // Step configuration - fixed order
+  // Step 1 requires selecting a lead (or creating new one) before proceeding
   const steps = useMemo(() => [
-    { id: 'name', label: 'Client Name' },
+    { id: 'name', label: 'Select Lead' },       // Lead selection is now step 1
     { id: 'contact', label: 'Contact Info' },
     { id: 'target-price', label: 'Target Price' },
     { id: 'commission', label: 'Projected Commission' },
     { id: 'agreement-start', label: 'Agreement Start' },
     { id: 'agreement-end', label: 'Agreement Expiration' },
-    { id: 'connect-lead', label: 'Connect Lead' },
     { id: 'preview', label: 'Preview & Confirm' },
   ], []);
 
@@ -133,23 +137,13 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         selectedLead: null,
       });
       setShowSuccess(false);
+      setShowNewLeadModal(false);
+      setNewLeadSearchText('');
       onClose();
     }
   };
 
   // Step-specific save handlers
-  const handleNameSave = (nameData) => {
-    setFormData({
-      ...formData,
-      firstName: nameData.first_name || '',
-      lastName: nameData.last_name || '',
-      displayName: nameData.display_name || `${nameData.first_name || ''} ${nameData.last_name || ''}`.trim(),
-      // If lead selected from name editor, also grab contact info
-      phone: nameData.phone || formData.phone,
-      email: nameData.email || formData.email,
-    });
-  };
-
   const handleAgreementStartDate = (date) => {
     setFormData({ ...formData, agreementStartDate: date });
   };
@@ -200,19 +194,55 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     }
   };
 
+  // Handle lead selection - this is now step 1, so also populate name/contact
   const handleLeadSelect = (lead) => {
     if (lead) {
+      const firstName = lead.first_name || lead.firstName || '';
+      const lastName = lead.last_name || lead.lastName || '';
+      const displayName = `${firstName} ${lastName}`.trim();
+
       setFormData({
         ...formData,
         leadId: lead.id || lead.lead_id,
         selectedLead: lead,
+        // Auto-populate from lead
+        firstName,
+        lastName,
+        displayName,
+        phone: lead.phone || lead.lead_phone || formData.phone,
+        email: lead.email || lead.lead_email || formData.email,
       });
     } else {
       setFormData({
         ...formData,
         leadId: null,
         selectedLead: null,
+        firstName: '',
+        lastName: '',
+        displayName: '',
       });
+    }
+  };
+
+  // Handle "Add New Lead" from LeadInput
+  const handleAddNewLead = (searchText) => {
+    setNewLeadSearchText(searchText);
+    setShowNewLeadModal(true);
+  };
+
+  // Handle successful lead creation from NewLeadModal
+  const handleNewLeadCreated = async (leadId) => {
+    try {
+      const response = await leadsAPI.getById(leadId);
+      if (response.success && response.data) {
+        const lead = response.data;
+        handleLeadSelect(lead);
+      }
+    } catch (error) {
+      console.error('Error fetching newly created lead:', error);
+    } finally {
+      setShowNewLeadModal(false);
+      setNewLeadSearchText('');
     }
   };
 
@@ -268,20 +298,95 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     switch (stepId) {
       case 'name':
         return (
-          <EditClientName
-            open={true}
-            onClose={() => {}}
-            onSave={handleNameSave}
-            value={formData.displayName}
-            data={{
-              firstName: formData.firstName,
-              lastName: formData.lastName,
-              phone: formData.phone,
-              email: formData.email,
-            }}
-            inline={true}
-            color="#8b5cf6"
-          />
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 500 }}>
+              {/* Selected Lead Display - shown after selection */}
+              {formData.selectedLead && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: 'rgba(255,255,255,0.7)',
+                      mb: 0.5,
+                      display: 'block',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    Selected Lead
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: 0.75,
+                      borderRadius: 1.5,
+                      p: 0.75,
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      backgroundColor: 'rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <Person sx={{ color: 'white', mt: 0.25, fontSize: 20 }} />
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          fontWeight: 700,
+                          color: 'white',
+                          fontSize: '0.9rem',
+                          lineHeight: 1.3,
+                          wordBreak: 'break-word',
+                        }}
+                      >
+                        {formData.displayName}
+                      </Typography>
+                      {(formData.phone || formData.email) && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'rgba(255,255,255,0.7)',
+                            display: 'block',
+                            mt: 0.25,
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          {[formData.phone, formData.email].filter(Boolean).join(' • ')}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                </Box>
+              )}
+
+              {/* LeadInput with dynamic labels */}
+              <LeadInput
+                value={formData.selectedLead}
+                onChange={handleLeadSelect}
+                initialLabel="Select Lead"
+                selectedLabel="Client Name"
+                placeholder="Search leads by name..."
+                color="#3b82f6"
+                onAddNew={handleAddNewLead}
+                autoFocus
+              />
+
+              {!formData.selectedLead && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: 'rgba(255,255,255,0.5)',
+                    display: 'block',
+                    mt: 2,
+                    textAlign: 'center',
+                  }}
+                >
+                  Select a lead to create a client from, or add a new lead
+                </Typography>
+              )}
+            </Box>
+          </Box>
         );
 
       case 'contact':
@@ -455,112 +560,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           </Box>
         );
 
-      case 'connect-lead':
-        return (
-          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 400 }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'rgba(255,255,255,0.9)',
-                  mb: 1,
-                  display: 'block',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                }}
-              >
-                Connect Lead
-              </Typography>
-
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 900,
-                  color: 'white',
-                  mb: 1,
-                  letterSpacing: '-0.5px',
-                }}
-              >
-                {formData.selectedLead
-                  ? `${formData.selectedLead.first_name || ''} ${formData.selectedLead.last_name || ''}`.trim() || 'Selected Lead'
-                  : 'Search Leads'}
-              </Typography>
-
-              <Typography
-                variant="body2"
-                sx={{
-                  color: 'rgba(255,255,255,0.7)',
-                  mb: 3,
-                }}
-              >
-                Link this client to an existing lead in your database. You can skip this step if not applicable.
-              </Typography>
-
-              {/* Selected Lead Display */}
-              {formData.selectedLead && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    p: 1.5,
-                    mb: 2,
-                    borderRadius: 2,
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: '50%',
-                      backgroundColor: '#3b82f6',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontWeight: 600,
-                      fontSize: '0.9rem',
-                    }}
-                  >
-                    {(formData.selectedLead.first_name || 'L')[0].toUpperCase()}
-                  </Box>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ color: 'white', fontWeight: 600, fontSize: '0.95rem' }}>
-                      {`${formData.selectedLead.first_name || ''} ${formData.selectedLead.last_name || ''}`.trim()}
-                    </Typography>
-                    <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
-                      {formData.selectedLead.email || formData.selectedLead.phone || 'No contact info'}
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
-
-              <LeadInput
-                value={formData.selectedLead}
-                onChange={handleLeadSelect}
-                placeholder="Search leads by name..."
-                color="#3b82f6"
-              />
-
-              <Typography
-                variant="caption"
-                sx={{
-                  color: 'rgba(255,255,255,0.5)',
-                  display: 'block',
-                  mt: 2,
-                  textAlign: 'center',
-                }}
-              >
-                Optional - you can connect a lead later
-              </Typography>
-            </Box>
-          </Box>
-        );
-
       case 'preview':
         // Build preview client object from formData
         const previewClient = {
@@ -674,6 +673,7 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           onStepClick={setCurrentStep}
           saving={saving}
           isLastStep={isLastStep}
+          canProceed={currentStep === 0 ? Boolean(formData.selectedLead) : true}
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -722,6 +722,20 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           </Box>
         </Fade>
       )}
+
+      {/* NewLeadModal for "Add New Lead" option */}
+      <NewLeadModal
+        open={showNewLeadModal}
+        onClose={() => {
+          setShowNewLeadModal(false);
+          setNewLeadSearchText('');
+        }}
+        onSuccess={handleNewLeadCreated}
+        initialData={{
+          firstName: newLeadSearchText.split(' ')[0] || '',
+          lastName: newLeadSearchText.split(' ').slice(1).join(' ') || '',
+        }}
+      />
     </Dialog>
   );
 };

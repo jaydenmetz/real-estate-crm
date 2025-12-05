@@ -9,7 +9,9 @@ import { leadsAPI } from '../../../../services/api.service';
  *
  * @param {object} value - Currently selected lead object
  * @param {function} onChange - Change handler: (lead) => void
- * @param {string} label - Optional label above input
+ * @param {string} label - Static label (overrides dynamic labels)
+ * @param {string} initialLabel - Label before selection (default: "Select Lead")
+ * @param {string} selectedLabel - Label after selection (default: "Selected Lead")
  * @param {string} placeholder - Placeholder text
  * @param {string} color - Theme color
  * @param {boolean} disabled - Disabled state
@@ -20,6 +22,8 @@ export const LeadInput = ({
   value,
   onChange,
   label,
+  initialLabel = 'Select Lead',
+  selectedLabel = 'Selected Lead',
   placeholder = 'Search leads...',
   color = '#3b82f6', // Blue for leads
   disabled = false,
@@ -74,6 +78,8 @@ export const LeadInput = ({
       color={color}
       placeholder={placeholder}
       label={label}
+      initialLabel={initialLabel}
+      selectedLabel={selectedLabel}
       disabled={disabled}
       autoFocus={autoFocus}
       noOptionsText="No leads found"

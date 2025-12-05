@@ -17,6 +17,7 @@ const ADD_NEW_OPTION_ID = '__add_new__';
  * - Themed to match modal backgrounds
  * - Returns full entity object on selection
  * - Built-in "Add New" option support
+ * - Dynamic label that changes based on selection state
  *
  * @param {function} searchFn - Async function to search entities: (searchText) => Promise<array>
  * @param {function} getDisplayLabel - Function to get main display text: (entity) => string
@@ -27,7 +28,9 @@ const ADD_NEW_OPTION_ID = '__add_new__';
  * @param {React.Component} icon - Icon component to show in input
  * @param {string} color - Theme color for styling
  * @param {string} placeholder - Placeholder text
- * @param {string} label - Optional label above input
+ * @param {string} label - Static label (overrides dynamic labels if provided)
+ * @param {string} initialLabel - Label shown before selection (e.g., "Select Lead")
+ * @param {string} selectedLabel - Label shown after selection (e.g., "Client Name")
  * @param {boolean} disabled - Disabled state
  * @param {boolean} autoFocus - Auto focus on mount
  * @param {number} debounceMs - Debounce delay in ms (default: 300)
@@ -47,6 +50,8 @@ export const EntitySearchInput = ({
   color = '#8b5cf6',
   placeholder = 'Search...',
   label,
+  initialLabel,
+  selectedLabel,
   disabled = false,
   autoFocus = false,
   debounceMs = 300,
@@ -198,9 +203,20 @@ export const EntitySearchInput = ({
     return options;
   }, [options, onAddNew, searchText, loading]);
 
+  // Compute display label: static label > dynamic (initial/selected) > null
+  const displayLabel = useMemo(() => {
+    // Static label takes precedence
+    if (label) return label;
+    // Dynamic labels based on selection state
+    if (initialLabel || selectedLabel) {
+      return value ? (selectedLabel || initialLabel) : (initialLabel || selectedLabel);
+    }
+    return null;
+  }, [label, initialLabel, selectedLabel, value]);
+
   return (
     <Box sx={{ width: '100%' }}>
-      {label && (
+      {displayLabel && (
         <Typography
           variant="caption"
           sx={{
@@ -213,7 +229,7 @@ export const EntitySearchInput = ({
             letterSpacing: '0.5px',
           }}
         >
-          {label}
+          {displayLabel}
         </Typography>
       )}
 

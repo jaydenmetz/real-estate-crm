@@ -24,6 +24,7 @@ import { ArrowBack, ArrowForward, CheckCircle, Close } from '@mui/icons-material
  * @param {function} onStepClick - Jump to step handler (index) => void
  * @param {boolean} saving - Disable buttons during save
  * @param {boolean} isLastStep - Show checkmark instead of arrow
+ * @param {boolean} canProceed - Whether Next button is enabled (default: true)
  */
 export const ModalStepPage = ({
   children,
@@ -37,6 +38,7 @@ export const ModalStepPage = ({
   onStepClick,
   saving = false,
   isLastStep = false,
+  canProceed = true,
 }) => {
   const isFirstStep = currentStep === 0;
 
@@ -199,7 +201,7 @@ export const ModalStepPage = ({
         {onNext && (
           <IconButton
             onClick={onNext}
-            disabled={saving}
+            disabled={saving || !canProceed}
             sx={{
               width: 48,
               height: 48,

@@ -9,7 +9,9 @@ import { listingsAPI } from '../../../../services/api.service';
  *
  * @param {object} value - Currently selected listing object
  * @param {function} onChange - Change handler: (listing) => void
- * @param {string} label - Optional label above input
+ * @param {string} label - Static label (overrides dynamic labels)
+ * @param {string} initialLabel - Label before selection (default: "Select Listing")
+ * @param {string} selectedLabel - Label after selection (default: "Selected Listing")
  * @param {string} placeholder - Placeholder text
  * @param {string} color - Theme color
  * @param {boolean} disabled - Disabled state
@@ -20,6 +22,8 @@ export const ListingInput = ({
   value,
   onChange,
   label,
+  initialLabel = 'Select Listing',
+  selectedLabel = 'Selected Listing',
   placeholder = 'Search listings...',
   color = '#f59e0b', // Amber for listings
   disabled = false,
@@ -71,6 +75,8 @@ export const ListingInput = ({
       color={color}
       placeholder={placeholder}
       label={label}
+      initialLabel={initialLabel}
+      selectedLabel={selectedLabel}
       disabled={disabled}
       autoFocus={autoFocus}
       noOptionsText="No listings found"
