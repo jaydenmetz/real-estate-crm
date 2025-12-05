@@ -146,12 +146,13 @@ const useClientCardConfig = (statuses) => {
         },
       },
 
-      // Subtitle Configuration (client type + email)
+      // Subtitle Configuration (phone + email, matching EditClientName modal)
       subtitle: {
         formatter: (client) => {
-          const clientType = client.clientType || client.client_type || 'Buyer';
+          const phone = client.phone || client.client_phone || '';
           const email = client.email || client.client_email || '';
-          return email ? `${clientType} • ${email}` : clientType;
+          const parts = [phone, email].filter(Boolean);
+          return parts.length > 0 ? parts.join(' • ') : 'No contact info';
         },
       },
 
