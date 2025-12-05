@@ -1,5 +1,5 @@
 import React from 'react';
-import { Business } from '@mui/icons-material';
+import { Business, Add as AddIcon } from '@mui/icons-material';
 import { EntitySearchInput } from './EntitySearchInput';
 import { listingsAPI } from '../../../../services/api.service';
 
@@ -14,6 +14,7 @@ import { listingsAPI } from '../../../../services/api.service';
  * @param {string} color - Theme color
  * @param {boolean} disabled - Disabled state
  * @param {boolean} autoFocus - Auto focus on mount
+ * @param {function} onAddNew - Optional callback when "Add New Listing" is clicked: (searchText) => void
  */
 export const ListingInput = ({
   value,
@@ -23,6 +24,7 @@ export const ListingInput = ({
   color = '#f59e0b', // Amber for listings
   disabled = false,
   autoFocus = false,
+  onAddNew,
   ...props
 }) => {
   // Search function for listings
@@ -72,6 +74,10 @@ export const ListingInput = ({
       disabled={disabled}
       autoFocus={autoFocus}
       noOptionsText="No listings found"
+      // "Add New Listing" functionality
+      onAddNew={onAddNew}
+      addNewLabel={(text) => `Add "${text}" as New Listing`}
+      addNewIcon={AddIcon}
       {...props}
     />
   );

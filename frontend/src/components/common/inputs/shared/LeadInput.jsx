@@ -1,5 +1,5 @@
 import React from 'react';
-import { Person } from '@mui/icons-material';
+import { Person, PersonAdd } from '@mui/icons-material';
 import { EntitySearchInput } from './EntitySearchInput';
 import { leadsAPI } from '../../../../services/api.service';
 
@@ -14,6 +14,7 @@ import { leadsAPI } from '../../../../services/api.service';
  * @param {string} color - Theme color
  * @param {boolean} disabled - Disabled state
  * @param {boolean} autoFocus - Auto focus on mount
+ * @param {function} onAddNew - Optional callback when "Add New Lead" is clicked: (searchText) => void
  */
 export const LeadInput = ({
   value,
@@ -23,6 +24,7 @@ export const LeadInput = ({
   color = '#3b82f6', // Blue for leads
   disabled = false,
   autoFocus = false,
+  onAddNew,
   ...props
 }) => {
   // Search function for leads
@@ -75,6 +77,10 @@ export const LeadInput = ({
       disabled={disabled}
       autoFocus={autoFocus}
       noOptionsText="No leads found"
+      // "Add New Lead" functionality
+      onAddNew={onAddNew}
+      addNewLabel={(text) => `Add "${text}" as New Lead`}
+      addNewIcon={PersonAdd}
       {...props}
     />
   );

@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Box, TextField, Autocomplete, CircularProgress, InputAdornment, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import { Search } from '@mui/icons-material';
+import { Search, Add as AddIcon } from '@mui/icons-material';
 import debounce from 'lodash/debounce';
+
+// Special marker for "Add New" option
+const ADD_NEW_OPTION_ID = '__add_new__';
 
 /**
  * Generic Entity Search Input Component
@@ -13,6 +16,7 @@ import debounce from 'lodash/debounce';
  * - Customizable display labels and sublabels
  * - Themed to match modal backgrounds
  * - Returns full entity object on selection
+ * - Built-in "Add New" option support
  *
  * @param {function} searchFn - Async function to search entities: (searchText) => Promise<array>
  * @param {function} getDisplayLabel - Function to get main display text: (entity) => string
@@ -28,6 +32,9 @@ import debounce from 'lodash/debounce';
  * @param {boolean} autoFocus - Auto focus on mount
  * @param {number} debounceMs - Debounce delay in ms (default: 300)
  * @param {number} minSearchLength - Minimum chars before searching (default: 2)
+ * @param {function} onAddNew - Optional callback when "Add New" is clicked: (searchText) => void
+ * @param {function} addNewLabel - Optional function to generate "Add New" label: (searchText) => string
+ * @param {React.Component} addNewIcon - Optional icon for "Add New" option (default: AddIcon)
  */
 export const EntitySearchInput = ({
   searchFn,
@@ -46,6 +53,10 @@ export const EntitySearchInput = ({
   minSearchLength = 2,
   noOptionsText = 'No results found',
   renderOption: customRenderOption,
+  // "Add New" functionality
+  onAddNew,
+  addNewLabel = (text) => `Add "${text}" as New`,
+  addNewIcon: AddNewIcon = AddIcon,
 }) => {
   const inputRef = useRef(null);
   const [options, setOptions] = useState([]);
@@ -104,17 +115,50 @@ export const EntitySearchInput = ({
 
   const handleSelect = useCallback((event, selectedEntity) => {
     if (selectedEntity && typeof selectedEntity !== 'string') {
+      // Check if this is the "Add New" option
+      if (selectedEntity.id === ADD_NEW_OPTION_ID && onAddNew) {
+        onAddNew(searchText.trim());
+        return;
+      }
+
       setOptions([]); // Clear dropdown
       setSearchText(getDisplayLabel(selectedEntity)); // Show selected name
       onChange(selectedEntity);
     } else if (!selectedEntity) {
       onChange(null);
     }
-  }, [onChange, getDisplayLabel]);
+  }, [onChange, getDisplayLabel, onAddNew, searchText]);
 
   // Default option renderer
   const defaultRenderOption = (props, option) => {
     const { key, ...otherProps } = props;
+
+    // Handle "Add New" option
+    if (option.id === ADD_NEW_OPTION_ID) {
+      return (
+        <Box
+          component="li"
+          key={key}
+          {...otherProps}
+          sx={{
+            py: 1.5,
+            borderTop: '1px solid rgba(0,0,0,0.1)',
+            backgroundColor: alpha(color, 0.05),
+            '&:hover': {
+              backgroundColor: alpha(color, 0.1),
+            },
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <AddNewIcon sx={{ color: color, fontSize: 22 }} />
+            <Typography sx={{ fontWeight: 600, fontSize: '0.9rem', color: color }}>
+              {addNewLabel(searchText.trim())}
+            </Typography>
+          </Box>
+        </Box>
+      );
+    }
+
     const displayLabel = getDisplayLabel(option);
     const subLabel = getSubLabel ? getSubLabel(option) : null;
 
@@ -142,6 +186,18 @@ export const EntitySearchInput = ({
     );
   };
 
+  // Compute options with "Add New" appended when applicable
+  const optionsWithAddNew = useMemo(() => {
+    // Add "Add New" option if:
+    // 1. onAddNew callback is provided
+    // 2. There's search text with content
+    // 3. Search is not loading
+    if (onAddNew && searchText.trim().length > 0 && !loading) {
+      return [...options, { id: ADD_NEW_OPTION_ID, isAddNew: true }];
+    }
+    return options;
+  }, [options, onAddNew, searchText, loading]);
+
   return (
     <Box sx={{ width: '100%' }}>
       {label && (
@@ -162,7 +218,7 @@ export const EntitySearchInput = ({
       )}
 
       <Autocomplete
-        options={options}
+        options={optionsWithAddNew}
         loading={loading}
         loadingText={<span style={{ color: 'rgba(0,0,0,0.6)' }}>Searching...</span>}
         inputValue={searchText}
@@ -171,8 +227,16 @@ export const EntitySearchInput = ({
         value={value}
         disabled={disabled}
         filterOptions={(x) => x} // Don't filter - server handles it
-        getOptionLabel={(option) => typeof option === 'string' ? option : getDisplayLabel(option)}
-        isOptionEqualToValue={(option, val) => getOptionKey(option) === getOptionKey(val)}
+        getOptionLabel={(option) => {
+          if (typeof option === 'string') return option;
+          if (option.id === ADD_NEW_OPTION_ID) return addNewLabel(searchText.trim());
+          return getDisplayLabel(option);
+        }}
+        isOptionEqualToValue={(option, val) => {
+          // Handle "Add New" option
+          if (option?.id === ADD_NEW_OPTION_ID || val?.id === ADD_NEW_OPTION_ID) return false;
+          return getOptionKey(option) === getOptionKey(val);
+        }}
         noOptionsText={searchText.length >= minSearchLength ? noOptionsText : `Type ${minSearchLength}+ characters to search...`}
         renderOption={customRenderOption || defaultRenderOption}
         renderInput={(params) => (
@@ -232,5 +296,8 @@ export const EntitySearchInput = ({
     </Box>
   );
 };
+
+// Export the constant for external use (e.g., custom renderOption implementations)
+export { ADD_NEW_OPTION_ID };
 
 export default EntitySearchInput;

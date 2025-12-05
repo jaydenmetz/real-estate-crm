@@ -1,5 +1,5 @@
 import React from 'react';
-import { Person } from '@mui/icons-material';
+import { Person, PersonAdd } from '@mui/icons-material';
 import { EntitySearchInput } from './EntitySearchInput';
 import { clientsAPI } from '../../../../services/api.service';
 
@@ -14,6 +14,7 @@ import { clientsAPI } from '../../../../services/api.service';
  * @param {string} color - Theme color
  * @param {boolean} disabled - Disabled state
  * @param {boolean} autoFocus - Auto focus on mount
+ * @param {function} onAddNew - Optional callback when "Add New Client" is clicked: (searchText) => void
  */
 export const ClientInput = ({
   value,
@@ -23,6 +24,7 @@ export const ClientInput = ({
   color = '#8b5cf6', // Purple for clients
   disabled = false,
   autoFocus = false,
+  onAddNew,
   ...props
 }) => {
   // Search function for clients
@@ -75,6 +77,10 @@ export const ClientInput = ({
       disabled={disabled}
       autoFocus={autoFocus}
       noOptionsText="No clients found"
+      // "Add New Client" functionality
+      onAddNew={onAddNew}
+      addNewLabel={(text) => `Add "${text}" as New Client`}
+      addNewIcon={PersonAdd}
       {...props}
     />
   );
