@@ -449,25 +449,13 @@ export const EditClients = ({
                 fontSize: 12,
                 fontWeight: 700,
                 color: 'rgba(255,255,255,0.9)',
-                mb: 1,
+                mb: 2,
                 display: 'block',
                 textTransform: 'uppercase',
                 letterSpacing: '1px',
               }}
             >
               Representation Type
-            </Typography>
-
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 900,
-                color: 'white',
-                mb: 2,
-                letterSpacing: '-1px',
-              }}
-            >
-              Who do you represent?
             </Typography>
 
             <ToggleButtonGroup
