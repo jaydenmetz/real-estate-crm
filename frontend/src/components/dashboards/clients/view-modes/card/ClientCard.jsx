@@ -156,13 +156,13 @@ const useClientCardConfig = (statuses) => {
         },
       },
 
-      // Metrics Configuration (2 columns - Budget and Lifetime Value)
+      // Metrics Configuration (2 columns - Target Price and Projected Commission)
       metrics: [
-        // Budget (editable) - numeric currency field
-        // When budget changes, auto-recalculate commission if type is percentage
+        // Target Price (editable) - renamed from Budget
+        // When target price changes, auto-recalculate commission if type is percentage
         {
-          label: 'Budget',
-          field: (client) => client.budget || 0,
+          label: 'Target Price',
+          field: (client) => client.target_price || client.targetPrice || client.budget || 0,
           formatter: (value) => formatCurrency(value),
           color: {
             primary: '#10b981',
@@ -170,30 +170,30 @@ const useClientCardConfig = (statuses) => {
             bg: alpha('#10b981', 0.08),
           },
           editable: true,
-          editor: EditClientBudget,
+          editor: EditClientBudget, // Reuse budget editor, just with different label
           editorProps: (client) => ({
-            value: client.budget || 0,
+            value: client.target_price || client.targetPrice || client.budget || 0,
           }),
-          onSave: (client, newBudget) => {
-            const updates = { budget: newBudget };
+          onSave: (client, newTargetPrice) => {
+            const updates = { target_price: newTargetPrice };
 
             // Auto-recalculate commission if type is percentage
             const commissionType = client.commission_type || client.commissionType || 'percentage';
             const commissionPercentage = client.commission_percentage || client.commissionPercentage;
 
             if (commissionType === 'percentage' && commissionPercentage) {
-              const newCommission = (newBudget * commissionPercentage) / 100;
-              updates.commission = newCommission;
+              const newCommission = (newTargetPrice * commissionPercentage) / 100;
+              updates.projected_commission = newCommission;
             }
 
             return updates;
           },
         },
 
-        // Commission (editable) - percentage or flat
+        // Projected Commission (editable) - renamed from Commission
         {
-          label: 'Commission',
-          field: (client) => client.commission || client.lifetime_value || 0,
+          label: 'Proj. Commission',
+          field: (client) => client.projected_commission || client.projectedCommission || client.commission || client.lifetime_value || 0,
           formatter: (value) => formatCurrency(value),
           color: {
             primary: '#06b6d4',
@@ -203,15 +203,16 @@ const useClientCardConfig = (statuses) => {
           editable: true,
           editor: EditClientCommission,
           editorProps: (client) => ({
-            value: client.commission || client.lifetime_value || 0,
+            value: client.projected_commission || client.projectedCommission || client.commission || client.lifetime_value || 0,
             commissionPercentage: client.commission_percentage || client.commissionPercentage,
             commissionType: client.commission_type || client.commissionType || 'percentage',
-            budget: client.budget || 0,
+            budget: client.target_price || client.targetPrice || client.budget || 0, // Use target_price as base
           }),
           onSave: (client, updates) => {
             // updates contains: { commission, commission_percentage, commission_type }
+            // Map to new field names
             return {
-              commission: updates.commission,
+              projected_commission: updates.commission,
               commission_percentage: updates.commission_percentage,
               commission_type: updates.commission_type,
             };

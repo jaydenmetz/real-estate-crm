@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Dialog,
   Box,
@@ -6,17 +6,8 @@ import {
   Typography,
   ToggleButtonGroup,
   ToggleButton,
-  TextField,
-  Autocomplete,
-  CircularProgress,
 } from '@mui/material';
-import {
-  CheckCircle,
-  Home,
-  Sell,
-  SwapHoriz,
-  Business,
-} from '@mui/icons-material';
+import { CheckCircle } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Percent, AttachMoney } from '@mui/icons-material';
 import { ModalStepPage } from '../../../common/modals/ModalStepPage';
@@ -27,23 +18,23 @@ import { Currency } from '../../../common/setters/Currency';
 import { DateSetter } from '../../../common/setters/Date';
 import { CurrencyInput } from '../../../common/inputs/shared/CurrencyInput';
 import { PercentageInput } from '../../../common/inputs/shared/PercentageInput';
+import { LeadInput } from '../../../common/inputs/shared/LeadInput';
 import ClientCard from '../view-modes/card/ClientCard';
-import { clientsAPI, listingsAPI } from '../../../../services/api.service';
-import debounce from 'lodash/debounce';
+import { clientsAPI } from '../../../../services/api.service';
 
 /**
  * NewClientModal - Quick-Add Flow for Clients
  * Step-based modal using existing editors with progress dots and arrow navigation
- * Matches NewEscrowModal pattern exactly
  *
  * Steps:
- * 1. Name (with lead search)
- * 2. Client Type (Buyer/Seller)
- * 3. Contact Info (Phone + Email)
- * 4. Budget
- * 5. Commission
- * 6. Agreement Dates (Start + End)
- * 7. Preview & Confirm
+ * 1. Client Name (with lead search for pre-fill)
+ * 2. Contact Info (Phone + Email)
+ * 3. Target Price
+ * 4. Projected Commission
+ * 5. Client Beginning Date
+ * 6. Client Expiration Date
+ * 7. Connect Lead from Database
+ * 8. Preview & Confirm
  */
 const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -56,36 +47,25 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     firstName: '',
     lastName: '',
     displayName: '',
-    leadId: null,
-
-    // Client Type - 'buyer' | 'seller' | 'both'
-    clientType: 'buyer',
-    // For seller/both: are they also buying?
-    alsoHelpingBuy: false,
 
     // Contact Info
     phone: '',
     email: '',
 
-    // Financial
-    budget: '',
-    commission: '',
+    // Financial - renamed fields
+    targetPrice: '', // was: budget
+    projectedCommission: '', // was: commission
     commissionPercentage: '',
     commissionType: 'percentage', // 'percentage' | 'flat'
 
-    // Agreement Dates (simplified - one set of dates)
+    // Agreement Dates
     agreementStartDate: null,
     agreementEndDate: null,
 
-    // Listing (for seller/both - link to existing listing)
-    listingId: null,
-    selectedListing: null,
+    // Lead connection
+    leadId: null,
+    selectedLead: null,
   });
-
-  // State for listing search
-  const [listingOptions, setListingOptions] = useState([]);
-  const [loadingListings, setLoadingListings] = useState(false);
-  const [listingSearchText, setListingSearchText] = useState('');
 
   // Initialize form data from initialData when modal opens
   useEffect(() => {
@@ -103,33 +83,17 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     }
   }, [open, initialData]);
 
-  // Determine if client is a seller (seller only or both)
-  const isSeller = formData.clientType === 'seller' || formData.clientType === 'both';
-  const isBuyer = formData.clientType === 'buyer' || formData.clientType === 'both';
-
-  // Step configuration - dynamic based on client type
-  // Now has 3 options on one page: Buyer, Seller, Seller & Buyer
-  // Listing search is on the client-type page when seller is selected
-  const steps = useMemo(() => {
-    const baseSteps = [
-      { id: 'name', label: 'Client Name' },
-      { id: 'client-type', label: 'Client Type' }, // Includes listing search for sellers
-      { id: 'contact', label: 'Contact Info' },
-      { id: 'agreement-start', label: 'Agreement Start' }, // Single date per page
-      { id: 'agreement-end', label: 'Agreement Expiration' }, // Single date per page
-    ];
-
-    // If buyer or both, add budget
-    if (isBuyer) {
-      baseSteps.push({ id: 'budget', label: 'Budget' });
-    }
-
-    // Commission and preview always at the end
-    baseSteps.push({ id: 'commission', label: 'Commission' });
-    baseSteps.push({ id: 'preview', label: 'Preview & Confirm' });
-
-    return baseSteps;
-  }, [formData.clientType, isSeller, isBuyer]);
+  // Step configuration - fixed order
+  const steps = useMemo(() => [
+    { id: 'name', label: 'Client Name' },
+    { id: 'contact', label: 'Contact Info' },
+    { id: 'target-price', label: 'Target Price' },
+    { id: 'commission', label: 'Projected Commission' },
+    { id: 'agreement-start', label: 'Agreement Start' },
+    { id: 'agreement-end', label: 'Agreement Expiration' },
+    { id: 'connect-lead', label: 'Connect Lead' },
+    { id: 'preview', label: 'Preview & Confirm' },
+  ], []);
 
   const currentStepConfig = steps[currentStep];
   const totalSteps = steps.length;
@@ -157,63 +121,21 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         firstName: '',
         lastName: '',
         displayName: '',
-        leadId: null,
-        clientType: 'buyer',
-        alsoHelpingBuy: false,
         phone: '',
         email: '',
-        budget: '',
-        commission: '',
+        targetPrice: '',
+        projectedCommission: '',
         commissionPercentage: '',
         commissionType: 'percentage',
         agreementStartDate: null,
         agreementEndDate: null,
-        listingId: null,
-        selectedListing: null,
+        leadId: null,
+        selectedLead: null,
       });
-      setListingOptions([]);
-      setListingSearchText('');
       setShowSuccess(false);
       onClose();
     }
   };
-
-  // Debounced listing search
-  const searchListingsDebounced = useCallback(
-    debounce(async (searchText) => {
-      if (!searchText || searchText.length < 2) {
-        setListingOptions([]);
-        return;
-      }
-
-      setLoadingListings(true);
-      try {
-        const response = await listingsAPI.getAll({
-          search: searchText,
-          limit: 10,
-        });
-
-        const results = response.success && response.data
-          ? (response.data.listings || response.data || [])
-          : [];
-
-        setListingOptions(results);
-      } catch (error) {
-        console.error('Error searching listings:', error);
-        setListingOptions([]);
-      } finally {
-        setLoadingListings(false);
-      }
-    }, 200),
-    []
-  );
-
-  // Search listings when input changes
-  useEffect(() => {
-    if (listingSearchText) {
-      searchListingsDebounced(listingSearchText);
-    }
-  }, [listingSearchText, searchListingsDebounced]);
 
   // Step-specific save handlers
   const handleNameSave = (nameData) => {
@@ -222,52 +144,10 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
       firstName: nameData.first_name || '',
       lastName: nameData.last_name || '',
       displayName: nameData.display_name || `${nameData.first_name || ''} ${nameData.last_name || ''}`.trim(),
-      leadId: nameData.lead_id || null,
-      // If lead selected, also grab contact info
+      // If lead selected from name editor, also grab contact info
       phone: nameData.phone || formData.phone,
       email: nameData.email || formData.email,
     });
-  };
-
-  const handleClientTypeChange = (event, newType) => {
-    if (newType !== null) {
-      // If changing to 'both', it means they selected seller then said yes to also buying
-      // If changing from seller to buyer, reset the also buying flag
-      setFormData({
-        ...formData,
-        clientType: newType,
-        // Reset also buying if switching away from seller
-        alsoHelpingBuy: newType === 'both' ? true : false,
-      });
-    }
-  };
-
-  const handleAlsoBuyingChange = (event, value) => {
-    if (value !== null) {
-      if (value === 'yes') {
-        // They are seller AND buyer
-        setFormData({ ...formData, clientType: 'both', alsoHelpingBuy: true });
-      } else {
-        // They are seller only
-        setFormData({ ...formData, alsoHelpingBuy: false });
-      }
-    }
-  };
-
-  const handleListingSelect = (event, listing) => {
-    if (listing) {
-      setFormData({
-        ...formData,
-        listingId: listing.id || listing.listing_id,
-        selectedListing: listing,
-      });
-    } else {
-      setFormData({
-        ...formData,
-        listingId: null,
-        selectedListing: null,
-      });
-    }
   };
 
   const handleAgreementStartDate = (date) => {
@@ -286,22 +166,31 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     setFormData({ ...formData, email });
   };
 
-  const handleBudgetSave = (budget) => {
-    setFormData({ ...formData, budget });
+  const handleTargetPriceSave = (targetPrice) => {
+    // When target price changes, recalculate commission if type is percentage
+    const newFormData = { ...formData, targetPrice };
+
+    if (formData.commissionType === 'percentage' && formData.commissionPercentage) {
+      const price = parseFloat(targetPrice) || 0;
+      const percentage = parseFloat(formData.commissionPercentage) || 0;
+      newFormData.projectedCommission = ((price * percentage) / 100).toString();
+    }
+
+    setFormData(newFormData);
   };
 
   const handleCommissionValueChange = (value) => {
     if (formData.commissionType === 'percentage') {
-      const budget = parseFloat(formData.budget) || 0;
+      const targetPrice = parseFloat(formData.targetPrice) || 0;
       const percentage = parseFloat(value) || 0;
-      const calculated = budget ? (budget * percentage) / 100 : 0;
+      const calculated = targetPrice ? (targetPrice * percentage) / 100 : 0;
       setFormData({
         ...formData,
         commissionPercentage: value,
-        commission: calculated.toString(),
+        projectedCommission: calculated.toString(),
       });
     } else {
-      setFormData({ ...formData, commission: value });
+      setFormData({ ...formData, projectedCommission: value });
     }
   };
 
@@ -311,6 +200,21 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     }
   };
 
+  const handleLeadSelect = (lead) => {
+    if (lead) {
+      setFormData({
+        ...formData,
+        leadId: lead.id || lead.lead_id,
+        selectedLead: lead,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        leadId: null,
+        selectedLead: null,
+      });
+    }
+  };
 
   // Final submission
   const handleSubmit = async () => {
@@ -320,22 +224,20 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
       const clientData = {
         first_name: formData.firstName,
         last_name: formData.lastName,
-        client_type: formData.clientType, // 'buyer', 'seller', or 'both'
         phone: formData.phone,
         email: formData.email,
-        budget: parseFloat(formData.budget) || 0,
-        commission: parseFloat(formData.commission) || 0,
+        // Renamed fields - map to database columns
+        target_price: parseFloat(formData.targetPrice) || 0,
+        projected_commission: parseFloat(formData.projectedCommission) || 0,
         commission_percentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
         commission_type: formData.commissionType,
-        // Agreement dates (simplified - one set)
+        // Agreement dates
         agreement_start_date: formData.agreementStartDate,
         agreement_end_date: formData.agreementEndDate,
-        // Link to listing if seller
-        listing_id: formData.listingId,
+        // Lead connection
+        lead_id: formData.leadId,
         client_status: 'active',
         stage: 'New',
-        // Link to lead if selected
-        lead_id: formData.leadId,
       };
 
       const response = await clientsAPI.create(clientData);
@@ -382,186 +284,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           />
         );
 
-      case 'client-type':
-        // Get display label for client type
-        const getClientTypeLabel = () => {
-          if (formData.clientType === 'both') return 'Seller & Buyer';
-          if (formData.clientType === 'seller') return 'Seller';
-          return 'Buyer';
-        };
-
-        return (
-          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 400 }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'rgba(255,255,255,0.9)',
-                  mb: 1,
-                  display: 'block',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                }}
-              >
-                Client Type
-              </Typography>
-
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 900,
-                  color: 'white',
-                  mb: 3,
-                  letterSpacing: '-1px',
-                }}
-              >
-                {getClientTypeLabel()}
-              </Typography>
-
-              <ToggleButtonGroup
-                value={formData.clientType}
-                exclusive
-                onChange={handleClientTypeChange}
-                fullWidth
-                sx={{
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                  borderRadius: 2,
-                  '& .MuiToggleButton-root': {
-                    color: 'rgba(255,255,255,0.7)',
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    fontWeight: 600,
-                    py: 1.5,
-                    fontSize: '0.85rem',
-                    flexDirection: 'column',
-                    gap: 0.5,
-                    '&.Mui-selected': {
-                      backgroundColor: 'rgba(255,255,255,0.25)',
-                      color: 'white',
-                      borderColor: 'rgba(255,255,255,0.5)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.35)',
-                      },
-                    },
-                    '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.15)',
-                    },
-                  },
-                }}
-              >
-                <ToggleButton value="buyer">
-                  <Home sx={{ fontSize: 24 }} />
-                  Buyer
-                </ToggleButton>
-                <ToggleButton value="seller">
-                  <Sell sx={{ fontSize: 24 }} />
-                  Seller
-                </ToggleButton>
-                <ToggleButton value="both">
-                  <SwapHoriz sx={{ fontSize: 24 }} />
-                  Seller & Buyer
-                </ToggleButton>
-              </ToggleButtonGroup>
-
-              {/* Listing Search - shown when seller or both is selected */}
-              {isSeller && (
-                <Box sx={{ mt: 3 }}>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: 'rgba(255,255,255,0.7)',
-                      mb: 1,
-                      display: 'block',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    Listing
-                  </Typography>
-                  <Autocomplete
-                    options={listingOptions}
-                    getOptionLabel={(option) => option.property_address || option.display_address || 'Unknown'}
-                    loading={loadingListings}
-                    inputValue={listingSearchText}
-                    onInputChange={(e, value) => setListingSearchText(value)}
-                    onChange={handleListingSelect}
-                    value={formData.selectedListing}
-                    isOptionEqualToValue={(option, value) => (option.id || option.listing_id) === (value?.id || value?.listing_id)}
-                    noOptionsText={listingSearchText?.length >= 2 ? "No listings found" : "Type to search..."}
-                    renderOption={(props, option) => {
-                      const { key, ...otherProps } = props;
-                      return (
-                        <Box
-                          component="li"
-                          key={key}
-                          {...otherProps}
-                          sx={{ py: 1 }}
-                        >
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Business sx={{ color: '#8b5cf6', fontSize: 22 }} />
-                            <Box>
-                              <Typography sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
-                                {option.property_address || option.display_address}
-                              </Typography>
-                              <Typography sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
-                                {[option.city, option.state].filter(Boolean).join(', ')}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        </Box>
-                      );
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        placeholder="Search listings..."
-                        size="small"
-                        InputProps={{
-                          ...params.InputProps,
-                          startAdornment: <Business sx={{ color: 'rgba(255,255,255,0.5)', mr: 1, fontSize: 20 }} />,
-                          endAdornment: (
-                            <>
-                              {loadingListings ? <CircularProgress color="inherit" size={18} /> : null}
-                              {params.InputProps.endAdornment}
-                            </>
-                          ),
-                        }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            backgroundColor: 'rgba(255,255,255,0.1)',
-                            borderRadius: 2,
-                            '& fieldset': { borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1 },
-                            '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
-                            '&.Mui-focused fieldset': { borderColor: 'rgba(255,255,255,0.6)' },
-                          },
-                          '& .MuiInputBase-input': {
-                            color: 'white',
-                            fontSize: '0.9rem',
-                            '&::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 },
-                          },
-                        }}
-                      />
-                    )}
-                    slotProps={{
-                      paper: {
-                        sx: {
-                          backgroundColor: '#fff',
-                          borderRadius: 2,
-                          mt: 1,
-                          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-                        },
-                      },
-                    }}
-                  />
-                </Box>
-              )}
-            </Box>
-          </Box>
-        );
-
       case 'contact':
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
@@ -584,14 +306,14 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           </Box>
         );
 
-      case 'budget':
+      case 'target-price':
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
             <Box sx={{ width: '100%', maxWidth: 300 }}>
               <Currency
-                label="Budget"
-                value={formData.budget}
-                onChange={handleBudgetSave}
+                label="Target Price"
+                value={formData.targetPrice}
+                onChange={handleTargetPriceSave}
                 color="#8b5cf6"
                 showCurrentValue={false}
               />
@@ -603,13 +325,13 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         // Calculate display value for commission
         const getCommissionDisplay = () => {
           if (formData.commissionType === 'percentage') {
-            const budget = parseFloat(formData.budget) || 0;
+            const targetPrice = parseFloat(formData.targetPrice) || 0;
             const percentage = parseFloat(formData.commissionPercentage) || 0;
-            if (!budget) return `${percentage}% (set budget first)`;
-            const amount = (budget * percentage) / 100;
+            if (!targetPrice) return `${percentage}% (set target price first)`;
+            const amount = (targetPrice * percentage) / 100;
             return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
           } else {
-            const amount = parseFloat(formData.commission) || 0;
+            const amount = parseFloat(formData.projectedCommission) || 0;
             return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
           }
         };
@@ -630,7 +352,7 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
                   letterSpacing: '1px',
                 }}
               >
-                Commission
+                Projected Commission
               </Typography>
 
               {/* Current Value Display */}
@@ -693,7 +415,7 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
                 />
               ) : (
                 <CurrencyInput
-                  value={formData.commission}
+                  value={formData.projectedCommission}
                   onChange={handleCommissionValueChange}
                   placeholder="2000"
                 />
@@ -733,6 +455,112 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           </Box>
         );
 
+      case 'connect-lead':
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 400 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.9)',
+                  mb: 1,
+                  display: 'block',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}
+              >
+                Connect Lead
+              </Typography>
+
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 900,
+                  color: 'white',
+                  mb: 1,
+                  letterSpacing: '-0.5px',
+                }}
+              >
+                {formData.selectedLead
+                  ? `${formData.selectedLead.first_name || ''} ${formData.selectedLead.last_name || ''}`.trim() || 'Selected Lead'
+                  : 'Search Leads'}
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'rgba(255,255,255,0.7)',
+                  mb: 3,
+                }}
+              >
+                Link this client to an existing lead in your database. You can skip this step if not applicable.
+              </Typography>
+
+              {/* Selected Lead Display */}
+              {formData.selectedLead && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    p: 1.5,
+                    mb: 2,
+                    borderRadius: 2,
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      backgroundColor: '#3b82f6',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '0.9rem',
+                    }}
+                  >
+                    {(formData.selectedLead.first_name || 'L')[0].toUpperCase()}
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography sx={{ color: 'white', fontWeight: 600, fontSize: '0.95rem' }}>
+                      {`${formData.selectedLead.first_name || ''} ${formData.selectedLead.last_name || ''}`.trim()}
+                    </Typography>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
+                      {formData.selectedLead.email || formData.selectedLead.phone || 'No contact info'}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+
+              <LeadInput
+                value={formData.selectedLead}
+                onChange={handleLeadSelect}
+                placeholder="Search leads by name..."
+                color="#3b82f6"
+              />
+
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'rgba(255,255,255,0.5)',
+                  display: 'block',
+                  mt: 2,
+                  textAlign: 'center',
+                }}
+              >
+                Optional - you can connect a lead later
+              </Typography>
+            </Box>
+          </Box>
+        );
+
       case 'preview':
         // Build preview client object from formData
         const previewClient = {
@@ -741,12 +569,15 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           last_name: formData.lastName,
           firstName: formData.firstName,
           lastName: formData.lastName,
-          client_type: formData.clientType,
-          clientType: formData.clientType,
           phone: formData.phone,
           email: formData.email,
-          budget: parseFloat(formData.budget) || 0,
-          commission: parseFloat(formData.commission) || 0,
+          // Use new field names
+          target_price: parseFloat(formData.targetPrice) || 0,
+          targetPrice: parseFloat(formData.targetPrice) || 0,
+          budget: parseFloat(formData.targetPrice) || 0, // Fallback for card display
+          projected_commission: parseFloat(formData.projectedCommission) || 0,
+          projectedCommission: parseFloat(formData.projectedCommission) || 0,
+          commission: parseFloat(formData.projectedCommission) || 0, // Fallback for card display
           commission_percentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
           commissionPercentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
           commission_type: formData.commissionType,
@@ -755,11 +586,11 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           agreementEndDate: formData.agreementEndDate,
           agreement_start_date: formData.agreementStartDate,
           agreement_end_date: formData.agreementEndDate,
-          listing_id: formData.listingId,
+          lead_id: formData.leadId,
           client_status: 'active',
           stage: 'New',
-          lifetime_value: parseFloat(formData.commission) || 0,
-          leads: [],
+          lifetime_value: parseFloat(formData.projectedCommission) || 0,
+          leads: formData.selectedLead ? [formData.selectedLead] : [],
           is_preview: true,
         };
 
@@ -784,12 +615,12 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
                   // Sync updates back to formData
                   const newFormData = { ...formData };
 
-                  if (updatedClient.budget !== undefined) {
-                    newFormData.budget = updatedClient.budget.toString();
+                  if (updatedClient.target_price !== undefined || updatedClient.budget !== undefined) {
+                    newFormData.targetPrice = (updatedClient.target_price || updatedClient.budget || 0).toString();
                   }
 
-                  if (updatedClient.commission !== undefined) {
-                    newFormData.commission = updatedClient.commission.toString();
+                  if (updatedClient.projected_commission !== undefined || updatedClient.commission !== undefined) {
+                    newFormData.projectedCommission = (updatedClient.projected_commission || updatedClient.commission || 0).toString();
                   }
 
                   if (updatedClient.agreement_start_date !== undefined) {
