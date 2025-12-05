@@ -203,42 +203,43 @@ const useClientCardConfig = (statuses) => {
           // Beginning Date (editable)
           {
             label: 'Beginning',
-            field: 'agreementStartDate',
+            field: (client) => client.agreement_start_date || client.agreementStartDate,
             formatter: (value) => formatCompactDate(value),
             editable: true,
             editor: EditAgreementStartDate,
             editorProps: (client) => ({
-              value: client.agreementStartDate || client.agreement_start_date,
+              value: client.agreement_start_date || client.agreementStartDate,
             }),
             onSave: (client, newDate) => {
-              return { agreement_start_date: newDate, agreementStartDate: newDate };
+              return { agreement_start_date: newDate };
             },
           },
 
           // Expiration Date with countdown (editable)
           {
             label: (client) => {
-              if (!client?.agreementEndDate && !client?.agreement_end_date) return 'Expiration';
-              const endDate = new Date(client.agreementEndDate || client.agreement_end_date);
+              const endDate = client.agreement_end_date || client.agreementEndDate;
+              if (!endDate) return 'Expiration';
+              const date = new Date(endDate);
               const today = new Date();
               today.setHours(0, 0, 0, 0);
-              endDate.setHours(0, 0, 0, 0);
-              const diffDays = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+              date.setHours(0, 0, 0, 0);
+              const diffDays = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
 
               if (diffDays < 0) return 'Expired';
               if (diffDays <= 30) return 'Expiring';
               return 'Expiration';
             },
-            field: 'agreementEndDate',
+            field: (client) => client.agreement_end_date || client.agreementEndDate,
             formatter: (value) => formatCompactDate(value),
             editable: true,
             editor: EditAgreementEndDate,
             editorProps: (client) => ({
-              value: client.agreementEndDate || client.agreement_end_date,
-              minDate: client.agreementStartDate || client.agreement_start_date,
+              value: client.agreement_end_date || client.agreementEndDate,
+              minDate: client.agreement_start_date || client.agreementStartDate,
             }),
             onSave: (client, newDate) => {
-              return { agreement_end_date: newDate, agreementEndDate: newDate };
+              return { agreement_end_date: newDate };
             },
           },
 
