@@ -185,6 +185,11 @@ const useListingCardConfig = (statuses) => {
           show: 'Visibility',
           hide: 'VisibilityOff',
         },
+        onToggle: (listing, newToggleState) => {
+          // newToggleState is true when showing, false when hiding
+          // show_commission in database is true when showing
+          return { show_commission: newToggleState };
+        },
       },
     },
   ],
