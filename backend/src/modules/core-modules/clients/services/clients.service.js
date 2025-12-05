@@ -127,6 +127,7 @@ class ClientsService {
         cl.commission_type,
         cl.agreement_start_date,
         cl.agreement_end_date,
+        cl.lead_ids,
         cl.created_at,
         cl.updated_at,
         co.first_name,
@@ -142,7 +143,8 @@ class ClientsService {
         COALESCE(ltv.lifetime_value, 0) as lifetime_value,
         COALESCE(ltv.closed_value, 0) as closed_value,
         COALESCE(ltv.pending_value, 0) as pending_value,
-        COALESCE(ltv.escrow_count, 0) as escrow_count
+        COALESCE(ltv.escrow_count, 0) as escrow_count,
+        COALESCE(leads_data.leads, '[]'::jsonb) as leads
       FROM clients cl
       JOIN contacts co ON cl.contact_id = co.id
       LEFT JOIN LATERAL (
@@ -158,6 +160,19 @@ class ClientsService {
            OR e.people->>'sellerAgent' = co.id::text
            OR e.people->>'referral' = co.id::text
       ) ltv ON true
+      LEFT JOIN LATERAL (
+        SELECT jsonb_agg(
+          jsonb_build_object(
+            'id', l.id,
+            'firstName', l.first_name,
+            'lastName', l.last_name,
+            'email', l.email,
+            'phone', l.phone
+          )
+        ) as leads
+        FROM leads l
+        WHERE l.id = ANY(cl.lead_ids)
+      ) leads_data ON true
       ${whereClause}
       ${orderByClause}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
@@ -427,13 +442,15 @@ class ClientsService {
       // Update client if needed (accept both camelCase and snake_case)
       const clientType = updates.clientType || updates.client_type;
       const clientStatus = updates.status || updates.client_status || updates.stage;
+      const leadIds = updates.lead_ids || updates.leadIds;
       const hasClientUpdates = clientType || clientStatus ||
         updates.budget !== undefined ||
         updates.commission !== undefined ||
         updates.commission_percentage !== undefined ||
         updates.commission_type !== undefined ||
         updates.agreement_start_date !== undefined ||
-        updates.agreement_end_date !== undefined;
+        updates.agreement_end_date !== undefined ||
+        leadIds !== undefined;
 
       if (hasClientUpdates) {
         const clientUpdates = [];
@@ -471,6 +488,10 @@ class ClientsService {
         if (updates.agreement_end_date !== undefined) {
           clientUpdates.push(`agreement_end_date = $${paramIndex++}`);
           clientValues.push(updates.agreement_end_date);
+        }
+        if (leadIds !== undefined) {
+          clientUpdates.push(`lead_ids = $${paramIndex++}`);
+          clientValues.push(leadIds);
         }
 
         if (clientUpdates.length > 0) {
