@@ -799,8 +799,10 @@ const CardTemplate = React.memo(({
             open={openEditors[`metric_${idx}`] || false}
             onClose={() => closeEditor(`metric_${idx}`)}
             onSave={async (newValue) => {
+              console.log('[CardTemplate] Metric onSave called:', { metric: metric.label, newValue, dataId: data?.id, hasOnUpdate: !!onUpdate });
               if (onUpdate && metric.onSave) {
                 const updates = metric.onSave(data, newValue);
+                console.log('[CardTemplate] Calling onUpdate with:', { id: data.id, updates });
                 await onUpdate(data.id, updates);
               }
               closeEditor(`metric_${idx}`);
@@ -826,8 +828,10 @@ const CardTemplate = React.memo(({
             open={openEditors[`footer_${idx}`] || false}
             onClose={() => closeEditor(`footer_${idx}`)}
             onSave={async (newValue) => {
+              console.log('[CardTemplate] Footer onSave called:', { field: field.label, newValue, dataId: data?.id, hasOnUpdate: !!onUpdate });
               if (onUpdate && field.onSave) {
                 const updates = field.onSave(data, newValue);
+                console.log('[CardTemplate] Calling onUpdate with:', { id: data.id, updates });
                 await onUpdate(data.id, updates);
               }
               closeEditor(`footer_${idx}`);

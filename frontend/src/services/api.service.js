@@ -454,8 +454,13 @@ export const clientsAPI = {
   getAll: (params) => apiInstance.get('/clients', params),
   getById: (id) => apiInstance.get(`/clients/${id}`),
   create: (data) => apiInstance.post('/clients', data),
-  update: (id, data) => apiInstance.put(`/clients/${id}`, data),
+  update: (id, data) => {
+    console.log('🟢 clientsAPI.update called:', { id, data, idType: typeof id, dataType: typeof data });
+    return apiInstance.put(`/clients/${id}`, data);
+  },
   delete: (id) => apiInstance.delete(`/clients/${id}`),
+  archive: (id) => apiInstance.patch(`/clients/${id}/archive`),
+  restore: (id) => apiInstance.patch(`/clients/${id}/restore`),
   updateChecklist: (id, checklist) => apiInstance.put(`/clients/${id}/checklist`, { checklist }),
   getTransactions: (id) => apiInstance.get(`/clients/${id}/transactions`),
   getCommunications: (id) => apiInstance.get(`/clients/${id}/communications`),
