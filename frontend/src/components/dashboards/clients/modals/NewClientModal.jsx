@@ -73,13 +73,9 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     commissionPercentage: '',
     commissionType: 'percentage', // 'percentage' | 'flat'
 
-    // Buyer Agreement Dates (for buyer or both)
-    buyerAgreementStartDate: null,
-    buyerAgreementEndDate: null,
-
-    // Listing Agreement Dates (for seller or both)
-    listingAgreementStartDate: null,
-    listingAgreementEndDate: null,
+    // Agreement Dates (simplified - one set of dates)
+    agreementStartDate: null,
+    agreementEndDate: null,
 
     // Listing (for seller/both - link to existing listing)
     listingId: null,
@@ -112,29 +108,19 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
   const isBuyer = formData.clientType === 'buyer' || formData.clientType === 'both';
 
   // Step configuration - dynamic based on client type
+  // Now has 3 options on one page: Buyer, Seller, Seller & Buyer
+  // Listing search is on the client-type page when seller is selected
   const steps = useMemo(() => {
     const baseSteps = [
       { id: 'name', label: 'Client Name' },
-      { id: 'client-type', label: 'Client Type' },
+      { id: 'client-type', label: 'Client Type' }, // Includes listing search for sellers
+      { id: 'contact', label: 'Contact Info' },
+      { id: 'agreement-start', label: 'Agreement Start' }, // Single date per page
+      { id: 'agreement-end', label: 'Agreement Expiration' }, // Single date per page
     ];
 
-    // If seller selected, ask if also helping them buy
-    if (formData.clientType === 'seller') {
-      baseSteps.push({ id: 'also-buying', label: 'Also Buying?' });
-    }
-
-    // Contact info always comes next
-    baseSteps.push({ id: 'contact', label: 'Contact Info' });
-
-    // If seller or both, add listing selection
-    if (isSeller) {
-      baseSteps.push({ id: 'listing', label: 'Select Listing' });
-      baseSteps.push({ id: 'listing-agreement-dates', label: 'Listing Agreement' });
-    }
-
-    // If buyer or both, add buyer agreement dates and budget
+    // If buyer or both, add budget
     if (isBuyer) {
-      baseSteps.push({ id: 'buyer-agreement-dates', label: 'Buyer Agreement' });
       baseSteps.push({ id: 'budget', label: 'Budget' });
     }
 
@@ -180,10 +166,8 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         commission: '',
         commissionPercentage: '',
         commissionType: 'percentage',
-        buyerAgreementStartDate: null,
-        buyerAgreementEndDate: null,
-        listingAgreementStartDate: null,
-        listingAgreementEndDate: null,
+        agreementStartDate: null,
+        agreementEndDate: null,
         listingId: null,
         selectedListing: null,
       });
@@ -286,20 +270,12 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     }
   };
 
-  const handleListingAgreementStartDate = (date) => {
-    setFormData({ ...formData, listingAgreementStartDate: date });
+  const handleAgreementStartDate = (date) => {
+    setFormData({ ...formData, agreementStartDate: date });
   };
 
-  const handleListingAgreementEndDate = (date) => {
-    setFormData({ ...formData, listingAgreementEndDate: date });
-  };
-
-  const handleBuyerAgreementStartDate = (date) => {
-    setFormData({ ...formData, buyerAgreementStartDate: date });
-  };
-
-  const handleBuyerAgreementEndDate = (date) => {
-    setFormData({ ...formData, buyerAgreementEndDate: date });
+  const handleAgreementEndDate = (date) => {
+    setFormData({ ...formData, agreementEndDate: date });
   };
 
   const handlePhoneSave = (phone) => {
@@ -341,20 +317,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     setSaving(true);
 
     try {
-      // Determine primary agreement dates based on client type
-      // For dual clients, use buyer agreement as primary (since they're searching for a home)
-      // For seller-only, use listing agreement as primary
-      let agreementStartDate = null;
-      let agreementEndDate = null;
-
-      if (isBuyer) {
-        agreementStartDate = formData.buyerAgreementStartDate;
-        agreementEndDate = formData.buyerAgreementEndDate;
-      } else if (isSeller) {
-        agreementStartDate = formData.listingAgreementStartDate;
-        agreementEndDate = formData.listingAgreementEndDate;
-      }
-
       const clientData = {
         first_name: formData.firstName,
         last_name: formData.lastName,
@@ -365,15 +327,9 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         commission: parseFloat(formData.commission) || 0,
         commission_percentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
         commission_type: formData.commissionType,
-        // Primary agreement dates (displayed on card)
-        agreement_start_date: agreementStartDate,
-        agreement_end_date: agreementEndDate,
-        // Buyer-specific agreement dates
-        buyer_agreement_start_date: formData.buyerAgreementStartDate,
-        buyer_agreement_end_date: formData.buyerAgreementEndDate,
-        // Listing/Seller-specific agreement dates
-        listing_agreement_start_date: formData.listingAgreementStartDate,
-        listing_agreement_end_date: formData.listingAgreementEndDate,
+        // Agreement dates (simplified - one set)
+        agreement_start_date: formData.agreementStartDate,
+        agreement_end_date: formData.agreementEndDate,
         // Link to listing if seller
         listing_id: formData.listingId,
         client_status: 'active',
@@ -429,83 +385,11 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
       case 'client-type':
         // Get display label for client type
         const getClientTypeLabel = () => {
-          if (formData.clientType === 'both') return 'Buyer & Seller';
+          if (formData.clientType === 'both') return 'Seller & Buyer';
           if (formData.clientType === 'seller') return 'Seller';
           return 'Buyer';
         };
 
-        return (
-          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 350 }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'rgba(255,255,255,0.9)',
-                  mb: 1,
-                  display: 'block',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                }}
-              >
-                Are you representing them as a...
-              </Typography>
-
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 900,
-                  color: 'white',
-                  mb: 3,
-                  letterSpacing: '-1px',
-                }}
-              >
-                {getClientTypeLabel()}
-              </Typography>
-
-              <ToggleButtonGroup
-                value={formData.clientType === 'both' ? 'seller' : formData.clientType}
-                exclusive
-                onChange={handleClientTypeChange}
-                fullWidth
-                sx={{
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                  borderRadius: 2,
-                  '& .MuiToggleButton-root': {
-                    color: 'rgba(255,255,255,0.7)',
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    fontWeight: 600,
-                    py: 2,
-                    fontSize: '1rem',
-                    '&.Mui-selected': {
-                      backgroundColor: 'rgba(255,255,255,0.25)',
-                      color: 'white',
-                      borderColor: 'rgba(255,255,255,0.5)',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255,255,255,0.35)',
-                      },
-                    },
-                    '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.15)',
-                    },
-                  },
-                }}
-              >
-                <ToggleButton value="buyer">
-                  <Home sx={{ mr: 1, fontSize: 22 }} />
-                  Buyer
-                </ToggleButton>
-                <ToggleButton value="seller">
-                  <Sell sx={{ mr: 1, fontSize: 22 }} />
-                  Seller
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </Box>
-          </Box>
-        );
-
-      case 'also-buying':
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
             <Box sx={{ width: '100%', maxWidth: 400 }}>
@@ -521,7 +405,7 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
                   letterSpacing: '1px',
                 }}
               >
-                Are you also helping them buy?
+                Client Type
               </Typography>
 
               <Typography
@@ -529,29 +413,17 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
                 sx={{
                   fontWeight: 900,
                   color: 'white',
-                  mb: 1,
+                  mb: 3,
                   letterSpacing: '-1px',
                 }}
               >
-                {formData.alsoHelpingBuy ? 'Yes, Buyer & Seller' : 'No, Seller Only'}
-              </Typography>
-
-              <Typography
-                variant="body2"
-                sx={{
-                  color: 'rgba(255,255,255,0.7)',
-                  mb: 3,
-                }}
-              >
-                {formData.alsoHelpingBuy
-                  ? 'We\'ll set up both a listing agreement and buyer agreement for this client.'
-                  : 'We\'ll only set up a listing agreement for this client.'}
+                {getClientTypeLabel()}
               </Typography>
 
               <ToggleButtonGroup
-                value={formData.alsoHelpingBuy ? 'yes' : 'no'}
+                value={formData.clientType}
                 exclusive
-                onChange={handleAlsoBuyingChange}
+                onChange={handleClientTypeChange}
                 fullWidth
                 sx={{
                   backgroundColor: 'rgba(255,255,255,0.1)',
@@ -560,8 +432,10 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
                     color: 'rgba(255,255,255,0.7)',
                     borderColor: 'rgba(255,255,255,0.3)',
                     fontWeight: 600,
-                    py: 2,
-                    fontSize: '1rem',
+                    py: 1.5,
+                    fontSize: '0.85rem',
+                    flexDirection: 'column',
+                    gap: 0.5,
                     '&.Mui-selected': {
                       backgroundColor: 'rgba(255,255,255,0.25)',
                       color: 'white',
@@ -576,15 +450,114 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
                   },
                 }}
               >
-                <ToggleButton value="yes">
-                  <SwapHoriz sx={{ mr: 1, fontSize: 22 }} />
-                  Yes, Also Buying
+                <ToggleButton value="buyer">
+                  <Home sx={{ fontSize: 24 }} />
+                  Buyer
                 </ToggleButton>
-                <ToggleButton value="no">
-                  <Sell sx={{ mr: 1, fontSize: 22 }} />
-                  No, Seller Only
+                <ToggleButton value="seller">
+                  <Sell sx={{ fontSize: 24 }} />
+                  Seller
+                </ToggleButton>
+                <ToggleButton value="both">
+                  <SwapHoriz sx={{ fontSize: 24 }} />
+                  Seller & Buyer
                 </ToggleButton>
               </ToggleButtonGroup>
+
+              {/* Listing Search - shown when seller or both is selected */}
+              {isSeller && (
+                <Box sx={{ mt: 3 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: 'rgba(255,255,255,0.7)',
+                      mb: 1,
+                      display: 'block',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    Listing
+                  </Typography>
+                  <Autocomplete
+                    options={listingOptions}
+                    getOptionLabel={(option) => option.property_address || option.display_address || 'Unknown'}
+                    loading={loadingListings}
+                    inputValue={listingSearchText}
+                    onInputChange={(e, value) => setListingSearchText(value)}
+                    onChange={handleListingSelect}
+                    value={formData.selectedListing}
+                    isOptionEqualToValue={(option, value) => (option.id || option.listing_id) === (value?.id || value?.listing_id)}
+                    noOptionsText={listingSearchText?.length >= 2 ? "No listings found" : "Type to search..."}
+                    renderOption={(props, option) => {
+                      const { key, ...otherProps } = props;
+                      return (
+                        <Box
+                          component="li"
+                          key={key}
+                          {...otherProps}
+                          sx={{ py: 1 }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                            <Business sx={{ color: '#8b5cf6', fontSize: 22 }} />
+                            <Box>
+                              <Typography sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                                {option.property_address || option.display_address}
+                              </Typography>
+                              <Typography sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+                                {[option.city, option.state].filter(Boolean).join(', ')}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      );
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        placeholder="Search listings..."
+                        size="small"
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: <Business sx={{ color: 'rgba(255,255,255,0.5)', mr: 1, fontSize: 20 }} />,
+                          endAdornment: (
+                            <>
+                              {loadingListings ? <CircularProgress color="inherit" size={18} /> : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                            borderRadius: 2,
+                            '& fieldset': { borderColor: 'rgba(255,255,255,0.2)', borderWidth: 1 },
+                            '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
+                            '&.Mui-focused fieldset': { borderColor: 'rgba(255,255,255,0.6)' },
+                          },
+                          '& .MuiInputBase-input': {
+                            color: 'white',
+                            fontSize: '0.9rem',
+                            '&::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 },
+                          },
+                        }}
+                      />
+                    )}
+                    slotProps={{
+                      paper: {
+                        sx: {
+                          backgroundColor: '#fff',
+                          borderRadius: 2,
+                          mt: 1,
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                        },
+                      },
+                    }}
+                  />
+                </Box>
+              )}
             </Box>
           </Box>
         );
@@ -729,237 +702,31 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           </Box>
         );
 
-      case 'listing':
+      case 'agreement-start':
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 400 }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'rgba(255,255,255,0.9)',
-                  mb: 1,
-                  display: 'block',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                }}
-              >
-                Link to Listing
-              </Typography>
-
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 900,
-                  color: 'white',
-                  mb: 1,
-                  letterSpacing: '-0.5px',
-                }}
-              >
-                {formData.selectedListing
-                  ? formData.selectedListing.property_address || formData.selectedListing.display_address || 'Selected Listing'
-                  : 'Search Listings'}
-              </Typography>
-
-              <Typography
-                variant="body2"
-                sx={{
-                  color: 'rgba(255,255,255,0.7)',
-                  mb: 3,
-                }}
-              >
-                Link this seller client to their property listing. You can skip this step if the listing hasn't been created yet.
-              </Typography>
-
-              {/* Selected Listing Display */}
-              {formData.selectedListing && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    p: 1.5,
-                    mb: 2,
-                    borderRadius: 2,
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                  }}
-                >
-                  <Business sx={{ color: 'white', fontSize: 28 }} />
-                  <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ color: 'white', fontWeight: 600, fontSize: '0.95rem' }}>
-                      {formData.selectedListing.property_address || formData.selectedListing.display_address}
-                    </Typography>
-                    <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
-                      {[
-                        formData.selectedListing.city,
-                        formData.selectedListing.state,
-                        formData.selectedListing.zip_code
-                      ].filter(Boolean).join(', ')}
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
-
-              <Autocomplete
-                options={listingOptions}
-                getOptionLabel={(option) => option.property_address || option.display_address || 'Unknown'}
-                loading={loadingListings}
-                inputValue={listingSearchText}
-                onInputChange={(e, value) => setListingSearchText(value)}
-                onChange={handleListingSelect}
-                value={formData.selectedListing}
-                isOptionEqualToValue={(option, value) => (option.id || option.listing_id) === (value.id || value.listing_id)}
-                noOptionsText={listingSearchText?.length >= 2 ? "No listings found" : "Type to search listings..."}
-                renderOption={(props, option) => {
-                  const { key, ...otherProps } = props;
-                  return (
-                    <Box
-                      component="li"
-                      key={key}
-                      {...otherProps}
-                      sx={{ py: 1 }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Business sx={{ color: '#8b5cf6', fontSize: 24 }} />
-                        <Box>
-                          <Typography sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                            {option.property_address || option.display_address}
-                          </Typography>
-                          <Typography sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
-                            {[option.city, option.state].filter(Boolean).join(', ')}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </Box>
-                  );
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="Search by address..."
-                    InputProps={{
-                      ...params.InputProps,
-                      endAdornment: (
-                        <>
-                          {loadingListings ? <CircularProgress color="inherit" size={20} /> : null}
-                          {params.InputProps.endAdornment}
-                        </>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: 'rgba(255,255,255,0.15)',
-                        borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2 },
-                        '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
-                        '&.Mui-focused fieldset': { borderColor: 'white' },
-                      },
-                      '& .MuiInputBase-input': {
-                        color: 'white',
-                        '&::placeholder': { color: 'rgba(255,255,255,0.5)', opacity: 1 },
-                      },
-                    }}
-                  />
-                )}
-                slotProps={{
-                  paper: {
-                    sx: {
-                      backgroundColor: '#fff',
-                      borderRadius: 2,
-                      mt: 1,
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-                    },
-                  },
-                }}
-              />
-
-              <Typography
-                variant="caption"
-                sx={{
-                  color: 'rgba(255,255,255,0.5)',
-                  display: 'block',
-                  mt: 2,
-                  textAlign: 'center',
-                }}
-              >
-                Optional - you can link a listing later
-              </Typography>
-            </Box>
-          </Box>
-        );
-
-      case 'listing-agreement-dates':
-        return (
-          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 300, display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'rgba(255,255,255,0.9)',
-                  mb: -2,
-                  display: 'block',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                  textAlign: 'center',
-                }}
-              >
-                Listing Agreement Dates
-              </Typography>
+            <Box sx={{ width: '100%', maxWidth: 300 }}>
               <DateSetter
-                label="Listing Agreement Start"
-                value={formData.listingAgreementStartDate}
-                onChange={handleListingAgreementStartDate}
-                color="#f59e0b"
-                showCurrentValue={false}
-              />
-              <DateSetter
-                label="Listing Agreement Expiration"
-                value={formData.listingAgreementEndDate}
-                onChange={handleListingAgreementEndDate}
-                color="#ef4444"
-                minDate={formData.listingAgreementStartDate}
-                showCurrentValue={false}
-              />
-            </Box>
-          </Box>
-        );
-
-      case 'buyer-agreement-dates':
-        return (
-          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 300, display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: 'rgba(255,255,255,0.9)',
-                  mb: -2,
-                  display: 'block',
-                  textTransform: 'uppercase',
-                  letterSpacing: '1px',
-                  textAlign: 'center',
-                }}
-              >
-                Buyer Agreement Dates
-              </Typography>
-              <DateSetter
-                label="Buyer Agreement Start"
-                value={formData.buyerAgreementStartDate}
-                onChange={handleBuyerAgreementStartDate}
+                label="Client Beginning Date"
+                value={formData.agreementStartDate}
+                onChange={handleAgreementStartDate}
                 color="#8b5cf6"
                 showCurrentValue={false}
               />
+            </Box>
+          </Box>
+        );
+
+      case 'agreement-end':
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 300 }}>
               <DateSetter
-                label="Buyer Agreement Expiration"
-                value={formData.buyerAgreementEndDate}
-                onChange={handleBuyerAgreementEndDate}
+                label="Client Expiration Date"
+                value={formData.agreementEndDate}
+                onChange={handleAgreementEndDate}
                 color="#f59e0b"
-                minDate={formData.buyerAgreementStartDate}
+                minDate={formData.agreementStartDate}
                 showCurrentValue={false}
               />
             </Box>
@@ -967,10 +734,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         );
 
       case 'preview':
-        // Determine primary agreement dates for display
-        const previewAgreementStart = isBuyer ? formData.buyerAgreementStartDate : formData.listingAgreementStartDate;
-        const previewAgreementEnd = isBuyer ? formData.buyerAgreementEndDate : formData.listingAgreementEndDate;
-
         // Build preview client object from formData
         const previewClient = {
           id: 'preview',
@@ -988,15 +751,10 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           commissionPercentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
           commission_type: formData.commissionType,
           commissionType: formData.commissionType,
-          agreementStartDate: previewAgreementStart,
-          agreementEndDate: previewAgreementEnd,
-          agreement_start_date: previewAgreementStart,
-          agreement_end_date: previewAgreementEnd,
-          // Store all agreement dates
-          buyer_agreement_start_date: formData.buyerAgreementStartDate,
-          buyer_agreement_end_date: formData.buyerAgreementEndDate,
-          listing_agreement_start_date: formData.listingAgreementStartDate,
-          listing_agreement_end_date: formData.listingAgreementEndDate,
+          agreementStartDate: formData.agreementStartDate,
+          agreementEndDate: formData.agreementEndDate,
+          agreement_start_date: formData.agreementStartDate,
+          agreement_end_date: formData.agreementEndDate,
           listing_id: formData.listingId,
           client_status: 'active',
           stage: 'New',
