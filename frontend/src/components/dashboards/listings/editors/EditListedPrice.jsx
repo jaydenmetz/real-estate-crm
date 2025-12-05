@@ -2,12 +2,45 @@ import React, { useState } from 'react';
 import { EditorModal } from '../../../common/modals/EditorModal';
 import { Currency } from '../../../common/setters/Currency';
 
-export const EditListedPrice = ({ open, onClose, onSave, value }) => {
+/**
+ * Listed Price Editor
+ * Uses EditorModal + Currency setter pattern
+ *
+ * @param {boolean} open - Dialog open state
+ * @param {function} onClose - Close handler
+ * @param {function} onSave - Save handler (newPrice) => void
+ * @param {number} value - Current list price
+ * @param {boolean} inline - If true, renders without EditorModal wrapper
+ */
+export const EditListedPrice = ({ open, onClose, onSave, value, inline = false }) => {
   const [editValue, setEditValue] = useState(value);
 
+  // Handler that updates local state AND calls onSave in inline mode
+  const handleChange = (newValue) => {
+    setEditValue(newValue);
+    // In inline mode, immediately notify parent of changes
+    if (inline && onSave) {
+      onSave(newValue);
+    }
+  };
+
+  const content = (
+    <Currency
+      label="List Price"
+      value={editValue}
+      onChange={handleChange}
+      color="#f59e0b"
+      showCurrentValue={!inline}
+    />
+  );
+
+  if (inline) {
+    return content;
+  }
+
   return (
-    <EditorModal open={open} onClose={onClose} onSave={() => onSave(parseFloat(editValue))} color="#10b981">
-      <Currency label="Listed Price" value={editValue} onChange={setEditValue} color="#10b981" />
+    <EditorModal open={open} onClose={onClose} onSave={() => onSave(parseFloat(editValue))} color="#f59e0b">
+      {content}
     </EditorModal>
   );
 };

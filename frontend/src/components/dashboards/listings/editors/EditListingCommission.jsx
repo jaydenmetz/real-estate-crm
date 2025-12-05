@@ -12,6 +12,7 @@ import { EditCommission } from '../../../../templates/Dashboard/lib/editors';
  * @param {number} commissionPercentage - Current commission percentage
  * @param {string} commissionType - Commission type ('percentage' or 'flat')
  * @param {number} purchasePrice - List price for percentage calculation
+ * @param {boolean} inline - If true, renders without EditorModal wrapper
  */
 export const EditListingCommission = ({
   open,
@@ -21,6 +22,7 @@ export const EditListingCommission = ({
   commissionPercentage,
   commissionType,
   purchasePrice,
+  inline = false,
 }) => {
   return (
     <EditCommission
@@ -32,7 +34,8 @@ export const EditListingCommission = ({
       commissionPercentage={commissionPercentage}
       commissionType={commissionType}
       purchasePrice={purchasePrice}
-      color="#f59e0b" // Amber theme for commission
+      color="#f59e0b"
+      inline={inline}
     />
   );
 };

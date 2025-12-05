@@ -15,6 +15,7 @@ import { NewClientModal } from '../../clients/modals/NewClientModal';
  * @param {function} onSave - Save handler (sellers) => void
  * @param {array} value - Array of seller client objects
  * @param {string} color - Theme color (orange for sellers)
+ * @param {boolean} inline - Render inline without modal wrapper (for step modals)
  */
 export const EditSellers = ({
   open,
@@ -22,6 +23,7 @@ export const EditSellers = ({
   onSave,
   value = [],
   color = '#f97316', // Orange for sellers
+  inline = false,
 }) => {
   // State for seller clients
   const [sellers, setSellers] = useState([]);
@@ -105,6 +107,13 @@ export const EditSellers = ({
 
     loadSellers();
   }, [open]);
+
+  // Auto-save when sellers change in inline mode
+  useEffect(() => {
+    if (inline && sellers.length >= 0) {
+      onSave(sellers);
+    }
+  }, [sellers, inline, onSave]);
 
   // Debounced client search
   const searchClientsDebounced = useCallback(
@@ -442,56 +451,76 @@ export const EditSellers = ({
           ))}
         </Box>
 
-        {/* Action Buttons */}
-        <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-            }}
-            disabled={saving}
-            sx={{
-              width: 48,
-              height: 48,
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.25)',
-              },
-              '&:disabled': {
-                backgroundColor: 'rgba(255,255,255,0.05)',
-                color: 'rgba(255,255,255,0.3)',
-              },
-            }}
-          >
-            <Close />
-          </IconButton>
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSave();
-            }}
-            disabled={saving}
-            sx={{
-              width: 48,
-              height: 48,
-              backgroundColor: 'white',
-              color: color,
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.9)',
-              },
-              '&:disabled': {
-                backgroundColor: 'rgba(255,255,255,0.3)',
-                color: 'rgba(0,0,0,0.2)',
-              },
-            }}
-          >
-            <Check />
-          </IconButton>
-        </Box>
+        {/* Action Buttons - Only show when NOT inline (modal handles navigation in inline mode) */}
+        {!inline && (
+          <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              disabled={saving}
+              sx={{
+                width: 48,
+                height: 48,
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.25)',
+                },
+                '&:disabled': {
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  color: 'rgba(255,255,255,0.3)',
+                },
+              }}
+            >
+              <Close />
+            </IconButton>
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSave();
+              }}
+              disabled={saving}
+              sx={{
+                width: 48,
+                height: 48,
+                backgroundColor: 'white',
+                color: color,
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.9)',
+                },
+                '&:disabled': {
+                  backgroundColor: 'rgba(255,255,255,0.3)',
+                  color: 'rgba(0,0,0,0.2)',
+                },
+              }}
+            >
+              <Check />
+            </IconButton>
+          </Box>
+        )}
       </Box>
     </Box>
   );
+
+  // Inline mode: render content directly without modal wrapper
+  if (inline) {
+    return (
+      <>
+        {content}
+        <NewClientModal
+          open={showNewClientModal}
+          onClose={() => {
+            setShowNewClientModal(false);
+            setNewClientInitialName({ firstName: '', lastName: '' });
+          }}
+          onSuccess={handleNewClientCreated}
+          initialData={newClientInitialName}
+        />
+      </>
+    );
+  }
 
   return (
     <>
