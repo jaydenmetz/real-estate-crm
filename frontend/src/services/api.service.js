@@ -459,8 +459,8 @@ export const clientsAPI = {
     return apiInstance.put(`/clients/${id}`, data);
   },
   delete: (id) => apiInstance.delete(`/clients/${id}`),
-  archive: (id) => apiInstance.patch(`/clients/${id}/archive`),
-  restore: (id) => apiInstance.patch(`/clients/${id}/restore`),
+  archive: (id) => apiInstance.put(`/clients/${id}/archive`),
+  restore: (id) => apiInstance.put(`/clients/${id}`, { status: 'active' }), // No dedicated restore endpoint, use update
   updateChecklist: (id, checklist) => apiInstance.put(`/clients/${id}/checklist`, { checklist }),
   getTransactions: (id) => apiInstance.get(`/clients/${id}/transactions`),
   getCommunications: (id) => apiInstance.get(`/clients/${id}/communications`),
