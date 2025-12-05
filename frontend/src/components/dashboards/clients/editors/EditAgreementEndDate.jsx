@@ -1,0 +1,61 @@
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { DateSetter } from '../../../common/setters/Date';
+
+/**
+ * Agreement End Date (Expiration) Editor for Clients
+ * Uses EditorModal + DateSetter pattern
+ *
+ * @param {boolean} open - Dialog open state
+ * @param {function} onClose - Close handler
+ * @param {function} onSave - Save handler (newDateValue) => void
+ * @param {string|Date} value - Current agreement end date
+ * @param {string|Date} minDate - Optional minimum date (e.g., agreement start date)
+ * @param {boolean} inline - If true, renders without EditorModal wrapper
+ */
+export const EditAgreementEndDate = ({ open, onClose, onSave, value, minDate, inline = false }) => {
+  const [editValue, setEditValue] = useState(value);
+
+  const handleSave = async () => {
+    if (editValue) {
+      const year = editValue.getFullYear();
+      const month = String(editValue.getMonth() + 1).padStart(2, '0');
+      const day = String(editValue.getDate()).padStart(2, '0');
+      await onSave(`${year}-${month}-${day}`);
+    }
+  };
+
+  // Handler that updates local state AND calls onSave in inline mode
+  const handleChange = (newDate) => {
+    setEditValue(newDate);
+    // In inline mode, immediately notify parent of changes
+    if (inline && onSave && newDate) {
+      const year = newDate.getFullYear();
+      const month = String(newDate.getMonth() + 1).padStart(2, '0');
+      const day = String(newDate.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      onSave(dateString);
+    }
+  };
+
+  const content = (
+    <DateSetter
+      label="Agreement Expiration Date"
+      value={editValue}
+      onChange={handleChange}
+      color="#f59e0b"
+      minDate={minDate}
+      showCurrentValue={!inline}
+    />
+  );
+
+  if (inline) {
+    return content;
+  }
+
+  return (
+    <EditorModal open={open} onClose={onClose} onSave={handleSave} color="#f59e0b">
+      {content}
+    </EditorModal>
+  );
+};

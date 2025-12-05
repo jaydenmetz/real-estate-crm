@@ -18,6 +18,7 @@ import { EditClientName } from '../editors/EditClientName';
 import { Phone } from '../../../common/setters/Phone';
 import { Email } from '../../../common/setters/Email';
 import { Currency } from '../../../common/setters/Currency';
+import { DateSetter } from '../../../common/setters/Date';
 import ClientCard from '../view-modes/card/ClientCard';
 import { clientsAPI } from '../../../../services/api.service';
 
@@ -31,7 +32,9 @@ import { clientsAPI } from '../../../../services/api.service';
  * 2. Client Type (Buyer/Seller)
  * 3. Contact Info (Phone + Email)
  * 4. Budget
- * 5. Preview & Confirm
+ * 5. Commission
+ * 6. Agreement Dates (Start + End)
+ * 7. Preview & Confirm
  */
 const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -55,6 +58,11 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
 
     // Financial
     budget: '',
+    commission: '',
+
+    // Agreement Dates
+    agreementStartDate: null,
+    agreementEndDate: null,
   });
 
   // Initialize form data from initialData when modal opens
@@ -79,6 +87,8 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     { id: 'client-type', label: 'Client Type' },
     { id: 'contact', label: 'Contact Info' },
     { id: 'budget', label: 'Budget' },
+    { id: 'commission', label: 'Commission' },
+    { id: 'agreement-dates', label: 'Agreement Dates' },
     { id: 'preview', label: 'Preview & Confirm' },
   ], []);
 
@@ -113,6 +123,9 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         phone: '',
         email: '',
         budget: '',
+        commission: '',
+        agreementStartDate: null,
+        agreementEndDate: null,
       });
       setShowSuccess(false);
       onClose();
@@ -151,6 +164,18 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     setFormData({ ...formData, budget });
   };
 
+  const handleCommissionSave = (commission) => {
+    setFormData({ ...formData, commission });
+  };
+
+  const handleStartDateSave = (date) => {
+    setFormData({ ...formData, agreementStartDate: date });
+  };
+
+  const handleEndDateSave = (date) => {
+    setFormData({ ...formData, agreementEndDate: date });
+  };
+
   // Final submission
   const handleSubmit = async () => {
     setSaving(true);
@@ -163,6 +188,9 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         phone: formData.phone,
         email: formData.email,
         budget: parseFloat(formData.budget) || 0,
+        commission: parseFloat(formData.commission) || 0,
+        agreement_start_date: formData.agreementStartDate || null,
+        agreement_end_date: formData.agreementEndDate || null,
         client_status: 'active',
         stage: 'New',
         // Link to lead if selected
@@ -323,6 +351,44 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           </Box>
         );
 
+      case 'commission':
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 300 }}>
+              <Currency
+                label="Commission"
+                value={formData.commission}
+                onChange={handleCommissionSave}
+                color="#06b6d4"
+                showCurrentValue={false}
+              />
+            </Box>
+          </Box>
+        );
+
+      case 'agreement-dates':
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 300, display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <DateSetter
+                label="Agreement Start Date"
+                value={formData.agreementStartDate}
+                onChange={handleStartDateSave}
+                color="#8b5cf6"
+                showCurrentValue={false}
+              />
+              <DateSetter
+                label="Agreement End Date"
+                value={formData.agreementEndDate}
+                onChange={handleEndDateSave}
+                color="#f59e0b"
+                minDate={formData.agreementStartDate}
+                showCurrentValue={false}
+              />
+            </Box>
+          </Box>
+        );
+
       case 'preview':
         // Build preview client object from formData
         const previewClient = {
@@ -336,9 +402,14 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           phone: formData.phone,
           email: formData.email,
           budget: parseFloat(formData.budget) || 0,
+          commission: parseFloat(formData.commission) || 0,
+          agreementStartDate: formData.agreementStartDate,
+          agreementEndDate: formData.agreementEndDate,
+          agreement_start_date: formData.agreementStartDate,
+          agreement_end_date: formData.agreementEndDate,
           client_status: 'active',
           stage: 'New',
-          lifetime_value: 0,
+          lifetime_value: parseFloat(formData.commission) || 0,
           leads: [],
           is_preview: true,
         };
@@ -366,6 +437,18 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
 
                   if (updatedClient.budget !== undefined) {
                     newFormData.budget = updatedClient.budget.toString();
+                  }
+
+                  if (updatedClient.commission !== undefined) {
+                    newFormData.commission = updatedClient.commission.toString();
+                  }
+
+                  if (updatedClient.agreement_start_date !== undefined) {
+                    newFormData.agreementStartDate = updatedClient.agreement_start_date;
+                  }
+
+                  if (updatedClient.agreement_end_date !== undefined) {
+                    newFormData.agreementEndDate = updatedClient.agreement_end_date;
                   }
 
                   if (updatedClient.first_name !== undefined) {

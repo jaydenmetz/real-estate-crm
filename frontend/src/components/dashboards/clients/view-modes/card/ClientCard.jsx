@@ -16,6 +16,9 @@ import {
   EditClientPhone,
   EditClientStatus,
   EditClientBudget,
+  EditClientCommission,
+  EditAgreementStartDate,
+  EditAgreementEndDate,
   EditLeads,
 } from '../../editors';
 
@@ -165,36 +168,50 @@ const useClientCardConfig = (statuses) => {
           },
         },
 
-        // Commission (calculated from escrows, not editable)
+        // Commission (editable)
         {
           label: 'Commission',
-          field: (client) => client.lifetime_value || 0,
+          field: (client) => client.commission || client.lifetime_value || 0,
           formatter: (value) => formatCurrency(value),
           color: {
             primary: '#06b6d4',
             secondary: '#0891b2',
             bg: alpha('#06b6d4', 0.08),
           },
-          editable: false, // Calculated field
+          editable: true,
+          editor: EditClientCommission,
+          editorProps: (client) => ({
+            value: client.commission || client.lifetime_value || 0,
+          }),
+          onSave: (client, newCommission) => {
+            return { commission: newCommission };
+          },
         },
       ],
 
       // Footer Configuration (Agreement dates + Leads)
       footer: {
         fields: [
-          // Beginning Date
+          // Beginning Date (editable)
           {
             label: 'Beginning',
             field: 'agreementStartDate',
             formatter: (value) => formatCompactDate(value),
-            editable: false, // Can be made editable
+            editable: true,
+            editor: EditAgreementStartDate,
+            editorProps: (client) => ({
+              value: client.agreementStartDate || client.agreement_start_date,
+            }),
+            onSave: (client, newDate) => {
+              return { agreement_start_date: newDate, agreementStartDate: newDate };
+            },
           },
 
-          // Expiration Date with countdown
+          // Expiration Date with countdown (editable)
           {
             label: (client) => {
-              if (!client?.agreementEndDate) return 'Expiration';
-              const endDate = new Date(client.agreementEndDate);
+              if (!client?.agreementEndDate && !client?.agreement_end_date) return 'Expiration';
+              const endDate = new Date(client.agreementEndDate || client.agreement_end_date);
               const today = new Date();
               today.setHours(0, 0, 0, 0);
               endDate.setHours(0, 0, 0, 0);
@@ -206,7 +223,15 @@ const useClientCardConfig = (statuses) => {
             },
             field: 'agreementEndDate',
             formatter: (value) => formatCompactDate(value),
-            editable: false, // Can be made editable
+            editable: true,
+            editor: EditAgreementEndDate,
+            editorProps: (client) => ({
+              value: client.agreementEndDate || client.agreement_end_date,
+              minDate: client.agreementStartDate || client.agreement_start_date,
+            }),
+            onSave: (client, newDate) => {
+              return { agreement_end_date: newDate, agreementEndDate: newDate };
+            },
           },
 
           // Leads (editable) - Shows lead avatars/initials like escrows has clients
