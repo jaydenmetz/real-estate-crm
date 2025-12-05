@@ -122,6 +122,11 @@ class ClientsService {
         cl.status,
         cl.owner_id,
         cl.budget,
+        cl.commission,
+        cl.commission_percentage,
+        cl.commission_type,
+        cl.agreement_start_date,
+        cl.agreement_end_date,
         cl.created_at,
         cl.updated_at,
         co.first_name,
@@ -183,6 +188,11 @@ class ClientsService {
         cl.client_type,
         cl.status,
         cl.budget,
+        cl.commission,
+        cl.commission_percentage,
+        cl.commission_type,
+        cl.agreement_start_date,
+        cl.agreement_end_date,
         cl.created_at,
         cl.updated_at,
         co.first_name,
@@ -224,6 +234,8 @@ class ClientsService {
         firstName, lastName, email, phone, clientType,
         addressStreet, addressCity, addressState, addressZip,
         notes, tags = [], budget,
+        commission, commission_percentage, commission_type,
+        agreement_start_date, agreement_end_date,
         // snake_case alternatives
         first_name, last_name, client_type,
         address_street, address_city, address_state, address_zip,
@@ -283,8 +295,13 @@ class ClientsService {
 
       // Create client with owner_id and team_id for proper ownership filtering
       const clientQuery = `
-        INSERT INTO clients (contact_id, client_type, status, budget, owner_id, team_id, created_at, updated_at)
-        VALUES ($1, $2, 'active', $3, $4, $5, NOW(), NOW())
+        INSERT INTO clients (
+          contact_id, client_type, status, budget,
+          commission, commission_percentage, commission_type,
+          agreement_start_date, agreement_end_date,
+          owner_id, team_id, created_at, updated_at
+        )
+        VALUES ($1, $2, 'active', $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
         RETURNING id
       `;
 
@@ -292,6 +309,11 @@ class ClientsService {
         contactId,
         finalClientType.toLowerCase(),
         budget || null,
+        commission || null,
+        commission_percentage || null,
+        commission_type || 'percentage',
+        agreement_start_date || null,
+        agreement_end_date || null,
         user?.id || null,
         user?.teamId || user?.team_id || null
       ]);
@@ -401,7 +423,15 @@ class ClientsService {
       }
 
       // Update client if needed
-      if (updates.clientType || updates.status || updates.budget !== undefined) {
+      const hasClientUpdates = updates.clientType || updates.status ||
+        updates.budget !== undefined ||
+        updates.commission !== undefined ||
+        updates.commission_percentage !== undefined ||
+        updates.commission_type !== undefined ||
+        updates.agreement_start_date !== undefined ||
+        updates.agreement_end_date !== undefined;
+
+      if (hasClientUpdates) {
         const clientUpdates = [];
         const clientValues = [];
         let paramIndex = 1;
@@ -417,6 +447,26 @@ class ClientsService {
         if (updates.budget !== undefined) {
           clientUpdates.push(`budget = $${paramIndex++}`);
           clientValues.push(updates.budget);
+        }
+        if (updates.commission !== undefined) {
+          clientUpdates.push(`commission = $${paramIndex++}`);
+          clientValues.push(updates.commission);
+        }
+        if (updates.commission_percentage !== undefined) {
+          clientUpdates.push(`commission_percentage = $${paramIndex++}`);
+          clientValues.push(updates.commission_percentage);
+        }
+        if (updates.commission_type !== undefined) {
+          clientUpdates.push(`commission_type = $${paramIndex++}`);
+          clientValues.push(updates.commission_type);
+        }
+        if (updates.agreement_start_date !== undefined) {
+          clientUpdates.push(`agreement_start_date = $${paramIndex++}`);
+          clientValues.push(updates.agreement_start_date);
+        }
+        if (updates.agreement_end_date !== undefined) {
+          clientUpdates.push(`agreement_end_date = $${paramIndex++}`);
+          clientValues.push(updates.agreement_end_date);
         }
 
         if (clientUpdates.length > 0) {
