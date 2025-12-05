@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EditorModal } from '../../../common/modals/EditorModal';
 import { DateSetter } from '../../../common/setters/Date';
 
@@ -13,14 +13,35 @@ import { DateSetter } from '../../../common/setters/Date';
  * @param {boolean} inline - If true, renders without EditorModal wrapper
  */
 export const EditAgreementStartDate = ({ open, onClose, onSave, value, inline = false }) => {
-  const [editValue, setEditValue] = useState(value);
+  const [editValue, setEditValue] = useState(null);
+
+  // Initialize/reset date when modal opens or value changes
+  useEffect(() => {
+    if (open || inline) {
+      // Parse the value to a Date object
+      if (value) {
+        const date = value instanceof Date ? value : new Date(value);
+        // Check for valid date
+        if (!isNaN(date.getTime())) {
+          setEditValue(date);
+        } else {
+          setEditValue(null);
+        }
+      } else {
+        setEditValue(null);
+      }
+    }
+  }, [open, inline, value]);
 
   const handleSave = async () => {
-    if (editValue) {
+    if (editValue && editValue instanceof Date && !isNaN(editValue.getTime())) {
       const year = editValue.getFullYear();
       const month = String(editValue.getMonth() + 1).padStart(2, '0');
       const day = String(editValue.getDate()).padStart(2, '0');
+      console.log('[EditAgreementStartDate] Saving date:', `${year}-${month}-${day}`);
       await onSave(`${year}-${month}-${day}`);
+    } else {
+      console.log('[EditAgreementStartDate] No valid date to save:', editValue);
     }
   };
 
@@ -28,7 +49,7 @@ export const EditAgreementStartDate = ({ open, onClose, onSave, value, inline = 
   const handleChange = (newDate) => {
     setEditValue(newDate);
     // In inline mode, immediately notify parent of changes
-    if (inline && onSave && newDate) {
+    if (inline && onSave && newDate && newDate instanceof Date && !isNaN(newDate.getTime())) {
       const year = newDate.getFullYear();
       const month = String(newDate.getMonth() + 1).padStart(2, '0');
       const day = String(newDate.getDate()).padStart(2, '0');

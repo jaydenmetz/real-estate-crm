@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EditorModal } from '../../../common/modals/EditorModal';
 import { DateSetter } from '../../../common/setters/Date';
 
@@ -14,14 +14,48 @@ import { DateSetter } from '../../../common/setters/Date';
  * @param {boolean} inline - If true, renders without EditorModal wrapper
  */
 export const EditAgreementEndDate = ({ open, onClose, onSave, value, minDate, inline = false }) => {
-  const [editValue, setEditValue] = useState(value);
+  const [editValue, setEditValue] = useState(null);
+  const [parsedMinDate, setParsedMinDate] = useState(null);
+
+  // Initialize/reset date when modal opens or value changes
+  useEffect(() => {
+    if (open || inline) {
+      // Parse the value to a Date object
+      if (value) {
+        const date = value instanceof Date ? value : new Date(value);
+        // Check for valid date
+        if (!isNaN(date.getTime())) {
+          setEditValue(date);
+        } else {
+          setEditValue(null);
+        }
+      } else {
+        setEditValue(null);
+      }
+
+      // Parse minDate
+      if (minDate) {
+        const min = minDate instanceof Date ? minDate : new Date(minDate);
+        if (!isNaN(min.getTime())) {
+          setParsedMinDate(min);
+        } else {
+          setParsedMinDate(null);
+        }
+      } else {
+        setParsedMinDate(null);
+      }
+    }
+  }, [open, inline, value, minDate]);
 
   const handleSave = async () => {
-    if (editValue) {
+    if (editValue && editValue instanceof Date && !isNaN(editValue.getTime())) {
       const year = editValue.getFullYear();
       const month = String(editValue.getMonth() + 1).padStart(2, '0');
       const day = String(editValue.getDate()).padStart(2, '0');
+      console.log('[EditAgreementEndDate] Saving date:', `${year}-${month}-${day}`);
       await onSave(`${year}-${month}-${day}`);
+    } else {
+      console.log('[EditAgreementEndDate] No valid date to save:', editValue);
     }
   };
 
@@ -29,7 +63,7 @@ export const EditAgreementEndDate = ({ open, onClose, onSave, value, minDate, in
   const handleChange = (newDate) => {
     setEditValue(newDate);
     // In inline mode, immediately notify parent of changes
-    if (inline && onSave && newDate) {
+    if (inline && onSave && newDate && newDate instanceof Date && !isNaN(newDate.getTime())) {
       const year = newDate.getFullYear();
       const month = String(newDate.getMonth() + 1).padStart(2, '0');
       const day = String(newDate.getDate()).padStart(2, '0');
@@ -44,7 +78,7 @@ export const EditAgreementEndDate = ({ open, onClose, onSave, value, minDate, in
       value={editValue}
       onChange={handleChange}
       color="#f59e0b"
-      minDate={minDate}
+      minDate={parsedMinDate}
       showCurrentValue={!inline}
     />
   );
