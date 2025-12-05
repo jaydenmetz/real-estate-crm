@@ -403,22 +403,67 @@ class ListingsService {
 
     // Map camelCase to snake_case and build update fields
     const columnMap = {
+      // Address fields
       propertyAddress: 'property_address',
+      property_address: 'property_address',
       displayAddress: 'display_address',
+      display_address: 'display_address',
+      city: 'city',
+      state: 'state',
+      zipCode: 'zip_code',
+      zip_code: 'zip_code',
+      county: 'county',
+      latitude: 'latitude',
+      longitude: 'longitude',
+
+      // Price and status
       listPrice: 'list_price',
+      list_price: 'list_price',
       listingStatus: 'listing_status',
+      listing_status: 'listing_status',
+
+      // Property details
       propertyType: 'property_type',
+      property_type: 'property_type',
       squareFootage: 'square_feet',
+      square_feet: 'square_feet',
       lotSize: 'lot_size',
+      lot_size: 'lot_size',
       yearBuilt: 'year_built',
+      year_built: 'year_built',
+      bedrooms: 'bedrooms',
+      bathrooms: 'bathrooms',
+      description: 'description',
+
+      // Commission fields
       listingCommission: 'listing_commission',
+      listing_commission: 'listing_commission',
       buyerCommission: 'buyer_commission',
+      buyer_commission: 'buyer_commission',
+      commissionType: 'commission_type',
+      commission_type: 'commission_type',
+      showCommission: 'show_commission',
+      show_commission: 'show_commission',
+
+      // Dates
+      listingDate: 'listing_date',
+      listing_date: 'listing_date',
+      expirationDate: 'expiration_date',
+      expiration_date: 'expiration_date',
+
+      // Marketing/Media
       virtualTourLink: 'virtual_tour_link',
+      virtual_tour_link: 'virtual_tour_link',
       professionalPhotos: 'professional_photos',
+      professional_photos: 'professional_photos',
       dronePhotos: 'drone_photos',
+      drone_photos: 'drone_photos',
       videoWalkthrough: 'video_walkthrough',
+      video_walkthrough: 'video_walkthrough',
       showingInstructions: 'showing_instructions',
+      showing_instructions: 'showing_instructions',
       priceReductionDate: 'price_reduction_date',
+      price_reduction_date: 'price_reduction_date',
     };
 
     Object.entries(updates).forEach(([key, value]) => {
