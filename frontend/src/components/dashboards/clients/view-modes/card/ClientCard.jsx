@@ -192,7 +192,7 @@ const useClientCardConfig = (statuses) => {
 
         // Projected Commission (editable) - renamed from Commission
         {
-          label: 'Proj. Commission',
+          label: 'Projected Commission',
           field: (client) => client.projected_commission || client.projectedCommission || client.commission || client.lifetime_value || 0,
           formatter: (value) => formatCurrency(value),
           color: {
