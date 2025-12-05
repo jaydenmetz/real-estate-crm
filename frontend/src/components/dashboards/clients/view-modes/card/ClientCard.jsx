@@ -253,11 +253,11 @@ const useClientCardConfig = (statuses) => {
             },
           },
 
-          // Leads (editable) - Shows lead avatars/initials like escrows has clients
+          // Contacts (editable) - Shows contact avatars/initials like escrows has clients
           {
             label: (client) => {
               const leads = client.leads || [];
-              return leads.length > 1 ? 'Leads' : 'Lead';
+              return leads.length > 1 ? 'Contacts' : 'Contact';
             },
             field: 'leads',
             customRenderer: (client, onEdit) => {
