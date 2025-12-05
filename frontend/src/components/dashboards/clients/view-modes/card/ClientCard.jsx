@@ -159,6 +159,7 @@ const useClientCardConfig = (statuses) => {
       // Metrics Configuration (2 columns - Budget and Lifetime Value)
       metrics: [
         // Budget (editable) - numeric currency field
+        // When budget changes, auto-recalculate commission if type is percentage
         {
           label: 'Budget',
           field: (client) => client.budget || 0,
@@ -174,7 +175,18 @@ const useClientCardConfig = (statuses) => {
             value: client.budget || 0,
           }),
           onSave: (client, newBudget) => {
-            return { budget: newBudget };
+            const updates = { budget: newBudget };
+
+            // Auto-recalculate commission if type is percentage
+            const commissionType = client.commission_type || client.commissionType || 'percentage';
+            const commissionPercentage = client.commission_percentage || client.commissionPercentage;
+
+            if (commissionType === 'percentage' && commissionPercentage) {
+              const newCommission = (newBudget * commissionPercentage) / 100;
+              updates.commission = newCommission;
+            }
+
+            return updates;
           },
         },
 
