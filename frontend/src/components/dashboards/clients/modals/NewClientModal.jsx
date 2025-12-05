@@ -13,12 +13,15 @@ import {
   Sell,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Percent, AttachMoney } from '@mui/icons-material';
 import { ModalStepPage } from '../../../common/modals/ModalStepPage';
 import { EditClientName } from '../editors/EditClientName';
 import { Phone } from '../../../common/setters/Phone';
 import { Email } from '../../../common/setters/Email';
 import { Currency } from '../../../common/setters/Currency';
 import { DateSetter } from '../../../common/setters/Date';
+import { CurrencyInput } from '../../../common/inputs/shared/CurrencyInput';
+import { PercentageInput } from '../../../common/inputs/shared/PercentageInput';
 import ClientCard from '../view-modes/card/ClientCard';
 import { clientsAPI } from '../../../../services/api.service';
 
@@ -59,6 +62,8 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     // Financial
     budget: '',
     commission: '',
+    commissionPercentage: '',
+    commissionType: 'percentage', // 'percentage' | 'flat'
 
     // Agreement Dates
     agreementStartDate: null,
@@ -124,6 +129,8 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         email: '',
         budget: '',
         commission: '',
+        commissionPercentage: '',
+        commissionType: 'percentage',
         agreementStartDate: null,
         agreementEndDate: null,
       });
@@ -164,8 +171,25 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     setFormData({ ...formData, budget });
   };
 
-  const handleCommissionSave = (commission) => {
-    setFormData({ ...formData, commission });
+  const handleCommissionValueChange = (value) => {
+    if (formData.commissionType === 'percentage') {
+      const budget = parseFloat(formData.budget) || 0;
+      const percentage = parseFloat(value) || 0;
+      const calculated = budget ? (budget * percentage) / 100 : 0;
+      setFormData({
+        ...formData,
+        commissionPercentage: value,
+        commission: calculated.toString(),
+      });
+    } else {
+      setFormData({ ...formData, commission: value });
+    }
+  };
+
+  const handleCommissionTypeChange = (e, newType) => {
+    if (newType !== null) {
+      setFormData({ ...formData, commissionType: newType });
+    }
   };
 
   const handleStartDateSave = (date) => {
@@ -189,6 +213,8 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         email: formData.email,
         budget: parseFloat(formData.budget) || 0,
         commission: parseFloat(formData.commission) || 0,
+        commission_percentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
+        commission_type: formData.commissionType,
         agreement_start_date: formData.agreementStartDate || null,
         agreement_end_date: formData.agreementEndDate || null,
         client_status: 'active',
@@ -352,16 +378,104 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         );
 
       case 'commission':
+        // Calculate display value for commission
+        const getCommissionDisplay = () => {
+          if (formData.commissionType === 'percentage') {
+            const budget = parseFloat(formData.budget) || 0;
+            const percentage = parseFloat(formData.commissionPercentage) || 0;
+            if (!budget) return `${percentage}% (set budget first)`;
+            const amount = (budget * percentage) / 100;
+            return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          } else {
+            const amount = parseFloat(formData.commission) || 0;
+            return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          }
+        };
+
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
             <Box sx={{ width: '100%', maxWidth: 300 }}>
-              <Currency
-                label="Commission"
-                value={formData.commission}
-                onChange={handleCommissionSave}
-                color="#06b6d4"
-                showCurrentValue={false}
-              />
+              {/* Label */}
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.9)',
+                  mb: 1,
+                  display: 'block',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}
+              >
+                Commission
+              </Typography>
+
+              {/* Current Value Display */}
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 900,
+                  color: 'white',
+                  mb: 3,
+                  letterSpacing: '-1px',
+                }}
+              >
+                {getCommissionDisplay()}
+              </Typography>
+
+              {/* Commission Type Toggle */}
+              <Box sx={{ mb: 3 }}>
+                <ToggleButtonGroup
+                  value={formData.commissionType}
+                  exclusive
+                  onChange={handleCommissionTypeChange}
+                  fullWidth
+                  sx={{
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    '& .MuiToggleButton-root': {
+                      color: 'rgba(255,255,255,0.7)',
+                      borderColor: 'rgba(255,255,255,0.3)',
+                      fontWeight: 600,
+                      '&.Mui-selected': {
+                        backgroundColor: 'rgba(255,255,255,0.25)',
+                        color: 'white',
+                        borderColor: 'rgba(255,255,255,0.5)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255,255,255,0.35)',
+                        },
+                      },
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.15)',
+                      },
+                    },
+                  }}
+                >
+                  <ToggleButton value="percentage">
+                    <Percent sx={{ mr: 1, fontSize: 18 }} />
+                    Percentage
+                  </ToggleButton>
+                  <ToggleButton value="flat">
+                    <AttachMoney sx={{ mr: 1, fontSize: 18 }} />
+                    Flat
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+
+              {/* Edit Input */}
+              {formData.commissionType === 'percentage' ? (
+                <PercentageInput
+                  value={formData.commissionPercentage}
+                  onChange={handleCommissionValueChange}
+                  placeholder="3"
+                />
+              ) : (
+                <CurrencyInput
+                  value={formData.commission}
+                  onChange={handleCommissionValueChange}
+                  placeholder="2000"
+                />
+              )}
             </Box>
           </Box>
         );
@@ -403,6 +517,10 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           email: formData.email,
           budget: parseFloat(formData.budget) || 0,
           commission: parseFloat(formData.commission) || 0,
+          commission_percentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
+          commissionPercentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
+          commission_type: formData.commissionType,
+          commissionType: formData.commissionType,
           agreementStartDate: formData.agreementStartDate,
           agreementEndDate: formData.agreementEndDate,
           agreement_start_date: formData.agreementStartDate,

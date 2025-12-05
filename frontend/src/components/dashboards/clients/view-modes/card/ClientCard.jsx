@@ -168,7 +168,7 @@ const useClientCardConfig = (statuses) => {
           },
         },
 
-        // Commission (editable)
+        // Commission (editable) - percentage or flat
         {
           label: 'Commission',
           field: (client) => client.commission || client.lifetime_value || 0,
@@ -182,9 +182,17 @@ const useClientCardConfig = (statuses) => {
           editor: EditClientCommission,
           editorProps: (client) => ({
             value: client.commission || client.lifetime_value || 0,
+            commissionPercentage: client.commission_percentage || client.commissionPercentage,
+            commissionType: client.commission_type || client.commissionType || 'percentage',
+            budget: client.budget || 0,
           }),
-          onSave: (client, newCommission) => {
-            return { commission: newCommission };
+          onSave: (client, updates) => {
+            // updates contains: { commission, commission_percentage, commission_type }
+            return {
+              commission: updates.commission,
+              commission_percentage: updates.commission_percentage,
+              commission_type: updates.commission_type,
+            };
           },
         },
       ],
