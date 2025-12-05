@@ -385,19 +385,21 @@ class ClientsService {
 
       await dbClient.query('BEGIN');
 
-      // Update contact if needed
-      if (updates.firstName || updates.lastName || updates.email || updates.phone) {
+      // Update contact if needed (accept both camelCase and snake_case)
+      const firstName = updates.firstName || updates.first_name;
+      const lastName = updates.lastName || updates.last_name;
+      if (firstName || lastName || updates.email || updates.phone) {
         const contactUpdates = [];
         const contactValues = [];
         let paramIndex = 1;
 
-        if (updates.firstName) {
+        if (firstName) {
           contactUpdates.push(`first_name = $${paramIndex++}`);
-          contactValues.push(updates.firstName);
+          contactValues.push(firstName);
         }
-        if (updates.lastName) {
+        if (lastName) {
           contactUpdates.push(`last_name = $${paramIndex++}`);
-          contactValues.push(updates.lastName);
+          contactValues.push(lastName);
         }
         if (updates.email) {
           contactUpdates.push(`email = $${paramIndex++}`);
@@ -422,8 +424,10 @@ class ClientsService {
         }
       }
 
-      // Update client if needed
-      const hasClientUpdates = updates.clientType || updates.status ||
+      // Update client if needed (accept both camelCase and snake_case)
+      const clientType = updates.clientType || updates.client_type;
+      const clientStatus = updates.status || updates.client_status || updates.stage;
+      const hasClientUpdates = clientType || clientStatus ||
         updates.budget !== undefined ||
         updates.commission !== undefined ||
         updates.commission_percentage !== undefined ||
@@ -436,13 +440,13 @@ class ClientsService {
         const clientValues = [];
         let paramIndex = 1;
 
-        if (updates.clientType) {
+        if (clientType) {
           clientUpdates.push(`client_type = $${paramIndex++}`);
-          clientValues.push(updates.clientType.toLowerCase());
+          clientValues.push(clientType.toLowerCase());
         }
-        if (updates.status) {
+        if (clientStatus) {
           clientUpdates.push(`status = $${paramIndex++}`);
-          clientValues.push(updates.status);
+          clientValues.push(clientStatus);
         }
         if (updates.budget !== undefined) {
           clientUpdates.push(`budget = $${paramIndex++}`);
