@@ -239,12 +239,12 @@ const useEscrowCardConfig = (statuses) => {
             },
           },
 
-          // Clients (editable) - Shows client avatars/initials
+          // Client Contacts (editable) - Shows client contact avatars/initials
           {
             label: (escrow) => {
               const clients = escrow.clients || { buyers: [], sellers: [] };
               const totalClients = (clients.buyers?.length || 0) + (clients.sellers?.length || 0);
-              return totalClients === 1 ? 'Client' : 'Clients';
+              return totalClients === 1 ? 'Client Contact' : 'Client Contacts';
             },
             field: 'clients',
             customRenderer: (escrow, onEdit) => {
