@@ -23,18 +23,29 @@ import {
 import { leadsAPI } from '../../../../services/api.service';
 import PrivacyControl from '../../../common/settings/PrivacyControl';
 
-const NewLeadModal = ({ open, onClose, onSuccess }) => {
+const NewLeadModal = ({ open, onClose, onSuccess, initialData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    firstName: initialData?.firstName || '',
+    lastName: initialData?.lastName || '',
     phone: '',
     email: '',
     isPrivate: false,
     accessLevel: 'team',
   });
+
+  // Update formData when initialData changes (e.g., when modal opens with new data)
+  React.useEffect(() => {
+    if (open && initialData) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: initialData.firstName || prev.firstName,
+        lastName: initialData.lastName || prev.lastName,
+      }));
+    }
+  }, [open, initialData]);
 
   const steps = [
     { label: 'Contact Info', icon: PersonAdd, color: '#1976d2' },

@@ -20,10 +20,12 @@ import {
   Email,
   Phone,
   Clear,
+  PersonAdd,
 } from '@mui/icons-material';
 import { ModalContainer } from '../../../common/modals/ModalContainer';
 import { leadsAPI } from '../../../../services/api.service';
 import debounce from 'lodash/debounce';
+import NewLeadModal from '../../leads/modals/NewLeadModal';
 
 /**
  * Client Name Editor with Lead Search
@@ -61,6 +63,10 @@ export const EditClientName = ({
 
   const [saving, setSaving] = useState(false);
   const [clientMenuAnchor, setClientMenuAnchor] = useState(null);
+
+  // State for NewLeadModal
+  const [showNewLeadModal, setShowNewLeadModal] = useState(false);
+  const [newLeadInitialName, setNewLeadInitialName] = useState({ firstName: '', lastName: '' });
 
   // Extract current values from data object or value prop
   const getCurrentName = () => {
@@ -280,6 +286,57 @@ export const EditClientName = ({
     setInputText('');
     setSelectedLead(null);
     setLeadOptions([]);
+  };
+
+  // Handle opening the NewLeadModal
+  const handleOpenNewLeadModal = () => {
+    // Parse the input text to extract first/last name
+    const nameParts = (inputText?.trim() || '').split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    setNewLeadInitialName({ firstName, lastName });
+    setShowNewLeadModal(true);
+  };
+
+  // Handle when a new lead is successfully created via NewLeadModal
+  const handleNewLeadCreated = async (leadId) => {
+    try {
+      // Fetch the newly created lead from the API
+      const response = await leadsAPI.getById(leadId);
+      if (response.success && response.data) {
+        const newLead = {
+          id: response.data.lead_id || response.data.id,
+          firstName: response.data.first_name || '',
+          lastName: response.data.last_name || '',
+          phone: response.data.phone || '',
+          email: response.data.email || '',
+          temperature: response.data.temperature || 'new',
+        };
+
+        // Select the newly created lead
+        setSelectedLead(newLead);
+        const fullName = `${newLead.firstName} ${newLead.lastName}`.trim();
+        setInputText(fullName);
+
+        // In inline mode, immediately notify parent
+        if (inline && onSave) {
+          onSave({
+            lead_id: newLead.id,
+            first_name: newLead.firstName,
+            last_name: newLead.lastName,
+            phone: newLead.phone,
+            email: newLead.email,
+            display_name: fullName,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching newly created lead:', error);
+    } finally {
+      setShowNewLeadModal(false);
+      setNewLeadInitialName({ firstName: '', lastName: '' });
+    }
   };
 
   // Render content
@@ -559,22 +616,68 @@ export const EditClientName = ({
           </Typography>
           <Autocomplete
             freeSolo
-            options={leadOptions}
+            options={[
+              ...leadOptions,
+              // Always add "Add New Lead" option at the end when there's input text
+              ...(inputText?.trim() ? [{ id: '__add_new__', isAddNew: true }] : [])
+            ]}
             getOptionLabel={(option) => {
               // If option is a string (user typed), return it directly
               if (typeof option === 'string') return option;
+              if (option?.isAddNew) return '+ Add New Lead';
               return `${option.firstName} ${option.lastName}`.trim() || 'Unknown';
             }}
-            filterOptions={(x) => x} // Disable client-side filtering (server handles it)
+            filterOptions={(options) => {
+              // Keep all regular options, always keep "Add New" at the end
+              const filtered = options.filter(opt => !opt?.isAddNew);
+              const addNew = options.find(opt => opt?.isAddNew);
+              return addNew ? [...filtered, addNew] : filtered;
+            }}
             loading={loadingLeads}
             inputValue={inputText}
             onInputChange={handleInputChange}
-            onChange={handleLeadSelect}
+            onChange={(event, option) => {
+              if (option?.isAddNew) {
+                // Open NewLeadModal instead of selecting
+                handleOpenNewLeadModal();
+                return;
+              }
+              handleLeadSelect(event, option);
+            }}
             value={selectedLead}
             isOptionEqualToValue={(option, value) => option?.id === value?.id}
             noOptionsText={inputText?.length >= 2 ? "No leads found" : "Type to search leads..."}
             renderOption={(props, option) => {
               const { key, ...otherProps } = props;
+
+              // Render "Add New Lead" option
+              if (option?.isAddNew) {
+                return (
+                  <Box
+                    component="li"
+                    key={key}
+                    {...otherProps}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      py: 1.5,
+                      borderTop: leadOptions.length > 0 ? '1px solid rgba(255,255,255,0.2)' : 'none',
+                      color: 'white',
+                      fontWeight: 600,
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.15) !important',
+                      },
+                    }}
+                  >
+                    <PersonAdd sx={{ fontSize: 20, color: 'white' }} />
+                    <Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: 'white' }}>
+                      {inputText?.trim() ? `Add "${inputText.trim()}" as New Lead` : 'Add New Lead'}
+                    </Typography>
+                  </Box>
+                );
+              }
+
               return (
                 <Box
                   component="li"
@@ -768,14 +871,35 @@ export const EditClientName = ({
     </Box>
   );
 
+  // NewLeadModal component
+  const newLeadModalComponent = (
+    <NewLeadModal
+      open={showNewLeadModal}
+      onClose={() => {
+        setShowNewLeadModal(false);
+        setNewLeadInitialName({ firstName: '', lastName: '' });
+      }}
+      onSuccess={handleNewLeadCreated}
+      initialData={newLeadInitialName}
+    />
+  );
+
   // Render with or without modal wrapper based on mode
   if (inline) {
-    return content;
+    return (
+      <>
+        {content}
+        {newLeadModalComponent}
+      </>
+    );
   }
 
   return (
-    <ModalContainer open={open} onClose={onClose} color={color} maxWidth={520}>
-      {content}
-    </ModalContainer>
+    <>
+      <ModalContainer open={open} onClose={onClose} color={color} maxWidth={520}>
+        {content}
+      </ModalContainer>
+      {newLeadModalComponent}
+    </>
   );
 };
