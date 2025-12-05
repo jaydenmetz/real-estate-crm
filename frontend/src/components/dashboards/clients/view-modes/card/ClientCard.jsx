@@ -125,9 +125,18 @@ const useClientCardConfig = (statuses) => {
         },
         editable: true,
         editor: EditClientName,
-        onSave: (client, newName) => {
-          // Parse name into first/last
-          const parts = newName.trim().split(/\s+/);
+        onSave: (client, nameData) => {
+          // nameData is an object from EditClientName with first_name, last_name, etc.
+          // Handle both object (from EditClientName) and string (legacy) formats
+          if (typeof nameData === 'object' && nameData !== null) {
+            return {
+              first_name: nameData.first_name,
+              last_name: nameData.last_name,
+              lead_id: nameData.lead_id, // If linking to a lead
+            };
+          }
+          // Fallback: parse string into first/last (legacy support)
+          const parts = String(nameData).trim().split(/\s+/);
           const firstName = parts[0] || '';
           const lastName = parts.slice(1).join(' ') || '';
           return {
