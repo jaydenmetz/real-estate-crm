@@ -107,33 +107,48 @@ export const APPOINTMENT_STATUS_CONFIG = {
 };
 
 // ========================================
-// APPOINTMENT TYPES
+// APPOINTMENT TYPES (4 core types)
 // ========================================
 
 export const APPOINTMENT_TYPES = {
-  SHOWING: 'showing',
-  CONSULTATION: 'consultation',
+  LOAN_PRE_APPROVAL: 'loan_pre_approval',
+  BUYER_CONSULTATION: 'buyer_consultation',
   LISTING_PRESENTATION: 'listing_presentation',
-  OPEN_HOUSE: 'open_house',
-  INSPECTION: 'inspection',
-  CLOSING: 'closing',
-  FOLLOW_UP: 'follow_up',
-  PHONE_CALL: 'phone_call',
-  VIDEO_CALL: 'video_call',
-  OTHER: 'other'
+  SHOWING: 'showing',
 };
 
 export const APPOINTMENT_TYPE_LABELS = {
-  [APPOINTMENT_TYPES.SHOWING]: 'Property Showing',
-  [APPOINTMENT_TYPES.CONSULTATION]: 'Consultation',
+  [APPOINTMENT_TYPES.LOAN_PRE_APPROVAL]: 'Loan Pre-Approval',
+  [APPOINTMENT_TYPES.BUYER_CONSULTATION]: 'Buyer Consultation',
   [APPOINTMENT_TYPES.LISTING_PRESENTATION]: 'Listing Presentation',
-  [APPOINTMENT_TYPES.OPEN_HOUSE]: 'Open House',
-  [APPOINTMENT_TYPES.INSPECTION]: 'Inspection',
-  [APPOINTMENT_TYPES.CLOSING]: 'Closing',
-  [APPOINTMENT_TYPES.FOLLOW_UP]: 'Follow-up',
-  [APPOINTMENT_TYPES.PHONE_CALL]: 'Phone Call',
-  [APPOINTMENT_TYPES.VIDEO_CALL]: 'Video Call',
-  [APPOINTMENT_TYPES.OTHER]: 'Other'
+  [APPOINTMENT_TYPES.SHOWING]: 'Showing',
+};
+
+// ========================================
+// MEETING MODES (In Person vs Virtual)
+// ========================================
+
+export const MEETING_MODES = {
+  IN_PERSON: 'in_person',
+  VIRTUAL: 'virtual',
+};
+
+export const MEETING_MODE_LABELS = {
+  [MEETING_MODES.IN_PERSON]: 'In Person',
+  [MEETING_MODES.VIRTUAL]: 'Virtual',
+};
+
+// Virtual meeting sub-types
+export const VIRTUAL_MEETING_TYPES = {
+  PHONE_CALL: 'phone_call',
+  VIDEO_CALL: 'video_call',
+  OTHER: 'other',
+};
+
+export const VIRTUAL_MEETING_TYPE_LABELS = {
+  [VIRTUAL_MEETING_TYPES.PHONE_CALL]: 'Phone Call',
+  [VIRTUAL_MEETING_TYPES.VIDEO_CALL]: 'Video Call',
+  [VIRTUAL_MEETING_TYPES.OTHER]: 'Other',
 };
 
 // ========================================

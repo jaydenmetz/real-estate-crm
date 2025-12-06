@@ -34,11 +34,21 @@ import { AttendeeCircles } from '../../../../common/ui/AttendeeCircles';
 // HELPER FUNCTIONS
 // ============================================================================
 
+import {
+  APPOINTMENT_TYPE_LABELS,
+  MEETING_MODES,
+  VIRTUAL_MEETING_TYPE_LABELS,
+} from '../../../../../constants/appointmentConfig';
+
 /**
  * Format appointment type for display
  */
 const formatAppointmentType = (type) => {
   if (!type) return 'Showing';
+  // Use labels from config if available
+  if (APPOINTMENT_TYPE_LABELS[type]) {
+    return APPOINTMENT_TYPE_LABELS[type];
+  }
   return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
 };
 
@@ -221,6 +231,9 @@ const useAppointmentCardConfig = (statuses) => {
         editor: EditAppointmentType,
         editorProps: (appointment) => ({
           appointmentType: appointment.appointment_type || appointment.type || 'showing',
+          meetingMode: appointment.meeting_mode || 'in_person',
+          virtualMeetingType: appointment.virtual_meeting_type || 'video_call',
+          displayName: appointment.display_name || '',
           initialStop: appointment.stops?.[0] || {
             location_address: appointment.location || appointment.first_stop_address || '',
             city: '',
@@ -229,13 +242,16 @@ const useAppointmentCardConfig = (statuses) => {
           },
         }),
         onSave: (appointment, data) => {
-          // EditAppointmentType returns { appointment_type, location, location_address, city, state, zip_code }
+          // EditAppointmentType returns { appointment_type, meeting_mode, virtual_meeting_type, location data }
           const updates = {
             appointment_type: data.appointment_type || data.appointmentType,
+            meeting_mode: data.meeting_mode || data.meetingMode,
+            virtual_meeting_type: data.virtual_meeting_type || data.virtualMeetingType,
+            display_name: data.display_name || data.displayName || '',
           };
 
-          // Update or create first stop with initial location
-          if (data.location_address || data.location) {
+          // Update or create first stop with initial location (only for in-person)
+          if (data.meeting_mode === 'in_person' && (data.location_address || data.location)) {
             const existingStops = appointment.stops || [];
             const firstStop = existingStops[0] || { stop_order: 0, estimated_duration: 30 };
 
@@ -257,13 +273,27 @@ const useAppointmentCardConfig = (statuses) => {
         },
       },
 
-      // Subtitle Configuration: Initial location (full address) - editable, opens same type+location editor
+      // Subtitle Configuration: Initial location OR virtual type - editable, opens same type+location editor
       subtitle: {
-        formatter: (appointment) => getFirstStopAddress(appointment) || 'No location set',
+        formatter: (appointment) => {
+          // For virtual meetings, show the virtual type
+          if (appointment.meeting_mode === 'virtual') {
+            const virtualType = appointment.virtual_meeting_type || 'video_call';
+            return VIRTUAL_MEETING_TYPE_LABELS[virtualType] || 'Virtual Meeting';
+          }
+          // For in-person, show address or display name
+          if (appointment.display_name) {
+            return appointment.display_name;
+          }
+          return getFirstStopAddress(appointment) || 'No location set';
+        },
         editable: true,
         editor: EditAppointmentType,
         editorProps: (appointment) => ({
           appointmentType: appointment.appointment_type || appointment.type || 'showing',
+          meetingMode: appointment.meeting_mode || 'in_person',
+          virtualMeetingType: appointment.virtual_meeting_type || 'video_call',
+          displayName: appointment.display_name || '',
           initialStop: appointment.stops?.[0] || {
             location_address: appointment.location || appointment.first_stop_address || '',
             city: '',
@@ -272,12 +302,15 @@ const useAppointmentCardConfig = (statuses) => {
           },
         }),
         onSave: (appointment, data) => {
-          // Same logic as title onSave - update type and first stop
+          // Same logic as title onSave
           const updates = {
             appointment_type: data.appointment_type || data.appointmentType,
+            meeting_mode: data.meeting_mode || data.meetingMode,
+            virtual_meeting_type: data.virtual_meeting_type || data.virtualMeetingType,
+            display_name: data.display_name || data.displayName || '',
           };
 
-          if (data.location_address || data.location) {
+          if (data.meeting_mode === 'in_person' && (data.location_address || data.location)) {
             const existingStops = appointment.stops || [];
             const firstStop = existingStops[0] || { stop_order: 0, estimated_duration: 30 };
 
