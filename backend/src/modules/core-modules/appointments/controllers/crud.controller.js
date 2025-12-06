@@ -273,3 +273,199 @@ exports.batchDeleteAppointments = async (req, res) => {
     });
   }
 };
+
+// ============================================================================
+// STOPS MANAGEMENT
+// ============================================================================
+
+// PUT /api/v1/appointments/:id/stops
+exports.updateStops = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { stops } = req.body;
+
+    if (!Array.isArray(stops)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'stops must be an array',
+        },
+      });
+    }
+
+    const updatedStops = await appointmentsService.updateStops(id, stops, req.user);
+
+    res.json({
+      success: true,
+      data: updatedStops,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error updating appointment stops:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'UPDATE_ERROR',
+        message: 'Failed to update appointment stops',
+        details: error.message,
+      },
+    });
+  }
+};
+
+// POST /api/v1/appointments/:id/stops
+exports.addStop = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const stop = await appointmentsService.addStop(id, req.body, req.user);
+
+    res.status(201).json({
+      success: true,
+      data: stop,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error adding stop to appointment:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'CREATE_ERROR',
+        message: 'Failed to add stop',
+        details: error.message,
+      },
+    });
+  }
+};
+
+// DELETE /api/v1/appointments/stops/:stopId
+exports.deleteStop = async (req, res) => {
+  try {
+    const { stopId } = req.params;
+    const deleted = await appointmentsService.deleteStop(stopId, req.user);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Stop not found',
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Stop deleted successfully',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error deleting stop:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'DELETE_ERROR',
+        message: 'Failed to delete stop',
+        details: error.message,
+      },
+    });
+  }
+};
+
+// ============================================================================
+// ATTENDEES MANAGEMENT
+// ============================================================================
+
+// PUT /api/v1/appointments/:id/attendees
+exports.updateAttendees = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { attendees } = req.body;
+
+    if (!Array.isArray(attendees)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'attendees must be an array',
+        },
+      });
+    }
+
+    const updatedAttendees = await appointmentsService.updateAttendees(id, attendees, req.user);
+
+    res.json({
+      success: true,
+      data: updatedAttendees,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error updating appointment attendees:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'UPDATE_ERROR',
+        message: 'Failed to update appointment attendees',
+        details: error.message,
+      },
+    });
+  }
+};
+
+// POST /api/v1/appointments/:id/attendees
+exports.addAttendee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const attendee = await appointmentsService.addAttendee(id, req.body, req.user);
+
+    res.status(201).json({
+      success: true,
+      data: attendee,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error adding attendee to appointment:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'CREATE_ERROR',
+        message: 'Failed to add attendee',
+        details: error.message,
+      },
+    });
+  }
+};
+
+// DELETE /api/v1/appointments/attendees/:attendeeId
+exports.removeAttendee = async (req, res) => {
+  try {
+    const { attendeeId } = req.params;
+    const deleted = await appointmentsService.removeAttendee(attendeeId, req.user);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Attendee not found',
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Attendee removed successfully',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error removing attendee:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'DELETE_ERROR',
+        message: 'Failed to remove attendee',
+        details: error.message,
+      },
+    });
+  }
+};

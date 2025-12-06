@@ -8,3 +8,5 @@ export { EditAppointmentDate } from './EditAppointmentDate';
 export { EditAppointmentTime } from './EditAppointmentTime';
 export { EditAppointmentStatus } from './EditAppointmentStatus';
 export { EditAppointmentLocation } from './EditAppointmentLocation';
+export { EditStops } from './EditStops';
+export { EditAttendees } from './EditAttendees';

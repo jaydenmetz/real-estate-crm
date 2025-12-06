@@ -11,6 +11,7 @@ import {
   Autocomplete,
   Fade,
   Chip,
+  MenuItem,
 } from '@mui/material';
 import debounce from 'lodash/debounce';
 import {
@@ -23,253 +24,92 @@ import {
   NavigateBefore,
   Schedule,
   Lock,
+  Route,
+  Group,
 } from '@mui/icons-material';
 import { appointmentsAPI, leadsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../../../utils/googleMapsLoader';
 import PrivacyControl from '../../../common/settings/PrivacyControl';
+import { EditStops, EditAttendees } from '../editors';
+
+// Appointment types for selection
+const APPOINTMENT_TYPES = [
+  { value: 'showing', label: 'Showing' },
+  { value: 'open_house', label: 'Open House' },
+  { value: 'listing_presentation', label: 'Listing Presentation' },
+  { value: 'buyer_consultation', label: 'Buyer Consultation' },
+  { value: 'inspection', label: 'Inspection' },
+  { value: 'appraisal', label: 'Appraisal' },
+  { value: 'closing', label: 'Closing' },
+  { value: 'walkthrough', label: 'Walkthrough' },
+  { value: 'meeting', label: 'Meeting' },
+  { value: 'other', label: 'Other' },
+];
 
 const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
-  const [leads, setLeads] = useState([]);
-  const [loadingLeads, setLoadingLeads] = useState(false);
-  const [leadSearchText, setLeadSearchText] = useState('');
-  const [addressSuggestions, setAddressSuggestions] = useState([]);
-  const [loadingAddress, setLoadingAddress] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState(null);
-  const [addressSearchText, setAddressSearchText] = useState('');
-  const abortControllerRef = useRef(null);
-  const autocompleteServiceRef = useRef(null);
-  const sessionTokenRef = useRef(null);
-  const placesServiceRef = useRef(null);
 
   // Get user's location preferences with fallback to Bakersfield
   const userCity = user?.home_city || 'Bakersfield';
   const userState = user?.home_state || 'CA';
-  const userLat = user?.home_lat || 35.3733;
-  const userLng = user?.home_lng || -119.0187;
-  const searchRadius = user?.search_radius_miles || 50;
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
-    time: '09:00', // Default to 9 AM
-    location: '',
-    linkedLeadId: null,
+    time: '09:00',
+    appointmentType: 'showing',
+    stops: [{
+      stop_order: 1,
+      location_address: '',
+      city: '',
+      state: '',
+      zip_code: '',
+      scheduled_time: '09:00',
+      estimated_duration: 30,
+    }],
+    attendees: [],
     isPrivate: false,
     accessLevel: 'team',
   });
 
+  // Steps for the multi-step wizard
   const steps = [
     { label: 'Schedule', icon: Schedule, color: '#1976d2' },
-    { label: 'Location', icon: LocationOn, color: '#9c27b0' },
-    { label: 'Lead & Privacy', icon: PersonAdd, color: '#f57c00' },
+    { label: 'Stops', icon: Route, color: '#9c27b0' },
+    { label: 'Attendees', icon: Group, color: '#f57c00' },
+    { label: 'Privacy', icon: Lock, color: '#d32f2f' },
     { label: 'Review', icon: CheckCircle, color: '#388e3c' }
   ];
 
-  // Check for Google API key
-  const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-  const hasValidGoogleKey = GOOGLE_API_KEY && GOOGLE_API_KEY !== 'YOUR_GOOGLE_API_KEY_HERE';
-  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
-
-  // Load Google Maps script when modal opens
-  useEffect(() => {
-    if (open && hasValidGoogleKey && !googleMapsLoaded) {
-      loadGoogleMapsScript()
-        .then(() => {
-          setGoogleMapsLoaded(true);
-          if (window.google?.maps?.places) {
-            autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-            placesServiceRef.current = new window.google.maps.places.PlacesService(
-              document.createElement('div')
-            );
-            sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
-          }
-        })
-        .catch((error) => {
-          console.warn('Failed to load Google Maps:', error.message);
-        });
-    }
-  }, [open, hasValidGoogleKey, googleMapsLoaded]);
-
-  // Fetch leads when modal opens
-  useEffect(() => {
-    if (open) {
-      fetchLeads();
-    }
-  }, [open]);
-
-  const fetchLeads = async () => {
-    setLoadingLeads(true);
-    try {
-      const response = await leadsAPI.getAll();
-      if (response.success) {
-        setLeads(response.data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching leads:', err);
-    } finally {
-      setLoadingLeads(false);
-    }
+  // Calculate total duration from all stops
+  const getTotalDuration = () => {
+    return formData.stops.reduce((sum, stop) => sum + (stop.estimated_duration || 30), 0);
   };
 
-  const resetSessionToken = () => {
-    if (window.google?.maps?.places) {
-      sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-        abortControllerRef.current = null;
-      }
-    };
-  }, []);
-
-  // Debounced Google Places search
-  const searchGooglePlaces = useMemo(
-    () => debounce(async (input, callback) => {
-      if (!autocompleteServiceRef.current || !input || input.length < 3) {
-        callback([]);
-        return;
-      }
-
-      const request = {
-        input,
-        sessionToken: sessionTokenRef.current,
-        componentRestrictions: { country: 'us' },
-        types: ['establishment', 'geocode'],
-        locationBias: new window.google.maps.Circle({
-          center: { lat: userLat, lng: userLng },
-          radius: searchRadius * 1609.34
-        })
-      };
-
-      autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-          const suggestions = predictions.map(prediction => ({
-            label: prediction.description,
-            value: prediction.description,
-            placeId: prediction.place_id
-          }));
-          callback(suggestions);
-        } else {
-          callback([]);
-        }
-      });
-    }, 300),
-    [userLat, userLng, searchRadius]
-  );
-
-  // Debounced Nominatim search (fallback)
-  const searchNominatim = useMemo(
-    () => debounce(async (input, callback) => {
-      if (!input || input.length < 2) {
-        callback([]);
-        return;
-      }
-
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
-      try {
-        const latRadius = searchRadius / 69;
-        const lngRadius = searchRadius / 55;
-        const minLat = userLat - latRadius;
-        const maxLat = userLat + latRadius;
-        const minLng = userLng - lngRadius;
-        const maxLng = userLng + lngRadius;
-
-        const searchQuery = input.includes(',')
-          ? input
-          : `${input}, ${userCity}, ${userState}`;
-
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?` +
-          `q=${encodeURIComponent(searchQuery)}&` +
-          `format=json&` +
-          `countrycodes=us&` +
-          `limit=8&` +
-          `addressdetails=1&` +
-          `viewbox=${minLng},${maxLat},${maxLng},${minLat}&` +
-          `bounded=0`,
-          {
-            signal: controller.signal,
-            headers: {
-              'User-Agent': 'RealEstateCRM/1.0'
-            }
-          }
-        );
-
-        if (!controller.signal.aborted) {
-          const data = await response.json();
-          const suggestions = data.map(item => ({
-            label: item.display_name,
-            value: item.display_name,
-          }));
-          callback(suggestions);
-        }
-      } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error('Nominatim search error:', error);
-          callback([]);
-        }
-      }
-    }, 500),
-    [userCity, userState, userLat, userLng, searchRadius]
-  );
-
-  const handleInputChange = useCallback((event, value, reason) => {
-    if (reason === 'input') {
-      setAddressSearchText(value);
-      setLoadingAddress(true);
-
-      if (googleMapsLoaded && autocompleteServiceRef.current) {
-        searchGooglePlaces(value, (suggestions) => {
-          setAddressSuggestions(suggestions);
-          setLoadingAddress(false);
-        });
-      } else {
-        searchNominatim(value, (suggestions) => {
-          setAddressSuggestions(suggestions);
-          setLoadingAddress(false);
-        });
-      }
-    } else if (reason === 'clear') {
-      setAddressSearchText('');
-      setAddressSuggestions([]);
-      setSelectedAddress(null);
-    }
-  }, [googleMapsLoaded, searchGooglePlaces, searchNominatim]);
-
-  const handleAddressSelect = async (event, value) => {
-    if (!value || typeof value === 'string') {
-      setSelectedAddress(null);
-      return;
-    }
-
-    setSelectedAddress(value);
-    setFormData(prev => ({
-      ...prev,
-      location: value.value,
-    }));
-    setAddressSearchText(value.value);
-    resetSessionToken();
+  // Format duration for display
+  const formatDuration = (minutes) => {
+    if (!minutes) return '30 min';
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (mins === 0) return `${hours}h`;
+    return `${hours}h ${mins}m`;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.date || !formData.time || !formData.location) {
+    if (!formData.date || !formData.time || formData.stops.length === 0) {
       setError('Please fill in all required fields');
+      return;
+    }
+
+    // Validate at least one stop has an address
+    if (!formData.stops.some(stop => stop.location_address)) {
+      setError('Please add at least one location');
       return;
     }
 
@@ -279,18 +119,25 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
     try {
       const appointmentDateTime = `${formData.date}T${formData.time}:00`;
 
+      // Get first stop for primary location
+      const firstStop = formData.stops[0];
+
       const appointmentData = {
         scheduledDate: appointmentDateTime,
-        location: formData.location,
+        location: firstStop.location_address,
+        city: firstStop.city,
+        state: firstStop.state,
+        zip_code: firstStop.zip_code,
         status: 'scheduled',
-        type: 'showing',
+        type: formData.appointmentType,
+        duration: getTotalDuration(),
         isPrivate: formData.isPrivate,
         accessLevel: formData.accessLevel,
+        // Include stops for multi-stop appointments
+        stops: formData.stops,
+        // Include attendees
+        attendees: formData.attendees,
       };
-
-      if (formData.linkedLeadId) {
-        appointmentData.leadId = formData.linkedLeadId;
-      }
 
       const response = await appointmentsAPI.create(appointmentData);
 
@@ -315,18 +162,22 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
       setFormData({
         date: new Date().toISOString().split('T')[0],
         time: '09:00',
-        location: '',
-        linkedLeadId: null,
+        appointmentType: 'showing',
+        stops: [{
+          stop_order: 1,
+          location_address: '',
+          city: '',
+          state: '',
+          zip_code: '',
+          scheduled_time: '09:00',
+          estimated_duration: 30,
+        }],
+        attendees: [],
         isPrivate: false,
         accessLevel: 'team',
       });
-      setSelectedAddress(null);
-      setAddressSuggestions([]);
-      setAddressSearchText('');
-      setLeadSearchText('');
       setError('');
       setCurrentStep(0);
-      resetSessionToken();
       onClose();
     }
   };
@@ -339,8 +190,8 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
         return;
       }
     } else if (currentStep === 1) {
-      if (!formData.location) {
-        setError('Please enter a location');
+      if (!formData.stops.some(stop => stop.location_address)) {
+        setError('Please add at least one location');
         return;
       }
     }
@@ -358,6 +209,22 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
     }
   };
 
+  // Handle stops update from EditStops component
+  const handleStopsUpdate = (newStops) => {
+    setFormData(prev => ({
+      ...prev,
+      stops: newStops,
+    }));
+  };
+
+  // Handle attendees update from EditAttendees component
+  const handleAttendeesUpdate = (newAttendees) => {
+    setFormData(prev => ({
+      ...prev,
+      attendees: newAttendees,
+    }));
+  };
+
   const formatDateTime = () => {
     if (!formData.date || !formData.time) return 'Not set';
     const date = new Date(`${formData.date}T${formData.time}`);
@@ -372,9 +239,25 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
     });
   };
 
-  const getSelectedLead = () => {
-    if (!Array.isArray(leads) || !formData.linkedLeadId) return null;
-    return leads.find(lead => lead.id === formData.linkedLeadId);
+  // Get primary attendee name for review
+  const getPrimaryAttendeeName = () => {
+    const primary = formData.attendees.find(a => a.is_primary);
+    if (primary) return primary.display_name;
+    if (formData.attendees.length > 0) return formData.attendees[0].display_name;
+    return null;
+  };
+
+  // Get first stop address for review
+  const getFirstStopAddress = () => {
+    if (formData.stops.length === 0) return 'No location set';
+    const firstStop = formData.stops[0];
+    const parts = [
+      firstStop.location_address,
+      firstStop.city,
+      firstStop.state,
+      firstStop.zip_code,
+    ].filter(Boolean);
+    return parts.join(', ') || 'No location set';
   };
 
   const StepIcon = steps[currentStep].icon;
@@ -490,10 +373,25 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
               </Alert>
             )}
 
-            {/* Step 0: Schedule (Date & Time) */}
+            {/* Step 0: Schedule (Date, Time, Type) */}
             {currentStep === 0 && (
               <Fade in timeout={400}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                  <TextField
+                    fullWidth
+                    select
+                    label="Appointment Type"
+                    value={formData.appointmentType}
+                    onChange={(e) => setFormData({ ...formData, appointmentType: e.target.value })}
+                    helperText="What type of appointment is this?"
+                  >
+                    {APPOINTMENT_TYPES.map((type) => (
+                      <MenuItem key={type.value} value={type.value}>
+                        {type.label}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+
                   <TextField
                     fullWidth
                     label="Date"
@@ -502,19 +400,18 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                     InputLabelProps={{ shrink: true }}
                     required
-                    autoFocus
                     helperText="Select the appointment date"
                   />
 
                   <TextField
                     fullWidth
-                    label="Time"
+                    label="Start Time"
                     type="time"
                     value={formData.time}
                     onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                     InputLabelProps={{ shrink: true }}
                     required
-                    helperText="Select the appointment time (default: 9:00 AM)"
+                    helperText="Select the appointment start time"
                   />
 
                   {formData.date && formData.time && (
@@ -538,123 +435,48 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
               </Fade>
             )}
 
-            {/* Step 1: Location */}
+            {/* Step 1: Stops (Multi-stop locations) */}
             {currentStep === 1 && (
               <Fade in timeout={400}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                  <Autocomplete
-                    freeSolo
-                    options={addressSuggestions}
-                    loading={loadingAddress}
-                    inputValue={addressSearchText}
-                    onInputChange={handleInputChange}
-                    onChange={handleAddressSelect}
-                    getOptionLabel={(option) => {
-                      if (typeof option === 'string') return option;
-                      return option.label || '';
+                <Box>
+                  <EditStops
+                    open={true}
+                    value={formData.stops}
+                    data={{
+                      start_time: formData.time,
+                      location: formData.stops[0]?.location_address || '',
                     }}
-                    filterOptions={(x) => x}
-                    renderOption={(props, option) => (
-                      <Box component="li" {...props} sx={{ py: 1.5 }}>
-                        <LocationOn sx={{ mr: 2, flexShrink: 0, color: 'action.active' }} />
-                        <Box>
-                          <Typography variant="body2">{option.label}</Typography>
-                          {googleMapsLoaded && (
-                            <Typography variant="caption" color="text.secondary">
-                              Powered by Google
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                    )}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Location"
-                        fullWidth
-                        placeholder="Start typing a location..."
-                        variant="outlined"
-                        autoFocus
-                        InputProps={{
-                          ...params.InputProps,
-                          startAdornment: <LocationOn sx={{ mr: 1, color: 'action.active' }} />,
-                          endAdornment: (
-                            <>
-                              {loadingAddress ? <CircularProgress color="inherit" size={20} /> : null}
-                              {params.InputProps.endAdornment}
-                            </>
-                          ),
-                        }}
-                        helperText={
-                          googleMapsLoaded
-                            ? "Powered by Google Places"
-                            : "Type at least 2 characters to search"
-                        }
-                      />
-                    )}
-                    noOptionsText={
-                      addressSearchText.length < (googleMapsLoaded ? 3 : 2)
-                        ? `Type at least ${googleMapsLoaded ? 3 : 2} characters to search`
-                        : "No locations found"
-                    }
+                    onSave={handleStopsUpdate}
+                    inline={true}
+                    color="#9c27b0"
                   />
                 </Box>
               </Fade>
             )}
 
-            {/* Step 2: Lead & Privacy */}
+            {/* Step 2: Attendees */}
             {currentStep === 2 && (
               <Fade in timeout={400}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                  <Autocomplete
-                    options={Array.isArray(leads) ? leads : []}
-                    loading={loadingLeads}
-                    inputValue={leadSearchText}
-                    onInputChange={(e, value) => setLeadSearchText(value)}
-                    getOptionLabel={(option) =>
-                      option.firstName && option.lastName
-                        ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}`
-                        : ''
-                    }
-                    filterOptions={(options, { inputValue }) => {
-                      if (!Array.isArray(options)) return [];
-                      if (!inputValue || inputValue.trim() === '') return options.slice(0, 5);
-
-                      const filtered = options.filter(option => {
-                        const searchText = inputValue.toLowerCase();
-                        const fullName = `${option.firstName || ''} ${option.lastName || ''}`.toLowerCase();
-                        const email = option.email?.toLowerCase() || '';
-                        return fullName.includes(searchText) || email.includes(searchText);
-                      });
-
-                      return filtered.slice(0, 5);
-                    }}
-                    renderOption={(props, option) => (
-                      <Box component="li" {...props}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                          <Typography variant="body2" fontWeight={600}>
-                            {option.firstName} {option.lastName}
-                          </Typography>
-                          {option.email && (
-                            <Typography variant="caption" color="text.secondary">
-                              {option.email}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                    )}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Link to Lead (optional)"
-                        placeholder="Search by name or email..."
-                        helperText="Optionally link this appointment to a lead"
-                      />
-                    )}
-                    onChange={(e, value) => setFormData({ ...formData, linkedLeadId: value?.id || null })}
-                    noOptionsText=""
-                    ListboxProps={{ sx: { maxHeight: 300 } }}
+                <Box>
+                  <EditAttendees
+                    open={true}
+                    value={formData.attendees}
+                    data={{}}
+                    onSave={handleAttendeesUpdate}
+                    inline={true}
+                    color="#f57c00"
                   />
+                </Box>
+              </Fade>
+            )}
+
+            {/* Step 3: Privacy */}
+            {currentStep === 3 && (
+              <Fade in timeout={400}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                  <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                    Configure privacy settings for this appointment
+                  </Typography>
 
                   <PrivacyControl
                     isPrivate={formData.isPrivate}
@@ -666,10 +488,11 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
               </Fade>
             )}
 
-            {/* Step 3: Review */}
-            {currentStep === 3 && (
+            {/* Step 4: Review */}
+            {currentStep === 4 && (
               <Fade in timeout={400}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {/* Type & Schedule */}
                   <Box
                     sx={{
                       p: 2.5,
@@ -682,15 +505,19 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
                       <Schedule sx={{ color: '#1976d2', fontSize: 28 }} />
                       <Box sx={{ flex: 1 }}>
                         <Typography variant="body2" color="text.secondary" gutterBottom>
-                          Scheduled For
+                          {APPOINTMENT_TYPES.find(t => t.value === formData.appointmentType)?.label || 'Appointment'}
                         </Typography>
                         <Typography variant="h6" fontWeight="600">
                           {formatDateTime()}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Duration: {formatDuration(getTotalDuration())}
                         </Typography>
                       </Box>
                     </Box>
                   </Box>
 
+                  {/* Stops */}
                   <Box
                     sx={{
                       p: 2.5,
@@ -700,19 +527,25 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'start', gap: 2 }}>
-                      <LocationOn sx={{ color: '#9c27b0', fontSize: 28 }} />
+                      <Route sx={{ color: '#9c27b0', fontSize: 28 }} />
                       <Box sx={{ flex: 1 }}>
                         <Typography variant="body2" color="text.secondary" gutterBottom>
-                          Location
+                          {formData.stops.length} {formData.stops.length === 1 ? 'Stop' : 'Stops'}
                         </Typography>
                         <Typography variant="h6" fontWeight="600">
-                          {formData.location || 'Not provided'}
+                          {getFirstStopAddress()}
                         </Typography>
+                        {formData.stops.length > 1 && (
+                          <Typography variant="body2" color="text.secondary">
+                            + {formData.stops.length - 1} more stops
+                          </Typography>
+                        )}
                       </Box>
                     </Box>
                   </Box>
 
-                  {formData.linkedLeadId && getSelectedLead() && (
+                  {/* Attendees */}
+                  {formData.attendees.length > 0 && (
                     <Box
                       sx={{
                         p: 2.5,
@@ -722,22 +555,25 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'start', gap: 2 }}>
-                        <PersonAdd sx={{ color: '#f57c00', fontSize: 28 }} />
+                        <Group sx={{ color: '#f57c00', fontSize: 28 }} />
                         <Box sx={{ flex: 1 }}>
                           <Typography variant="body2" color="text.secondary" gutterBottom>
-                            Linked Lead
+                            {formData.attendees.length} {formData.attendees.length === 1 ? 'Attendee' : 'Attendees'}
                           </Typography>
                           <Typography variant="h6" fontWeight="600">
-                            {getSelectedLead().firstName} {getSelectedLead().lastName}
+                            {getPrimaryAttendeeName() || 'No attendees'}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {getSelectedLead().email}
-                          </Typography>
+                          {formData.attendees.length > 1 && (
+                            <Typography variant="body2" color="text.secondary">
+                              + {formData.attendees.length - 1} more
+                            </Typography>
+                          )}
                         </Box>
                       </Box>
                     </Box>
                   )}
 
+                  {/* Privacy */}
                   {formData.isPrivate && (
                     <Box
                       sx={{

@@ -54,4 +54,30 @@ router.post(
   appointmentsController.batchDeleteAppointments,
 );
 
+// ============================================================================
+// STOPS MANAGEMENT
+// ============================================================================
+
+// Update all stops for an appointment (replace all)
+router.put('/:id/stops', requireModifyPermission('appointment'), appointmentsController.updateStops);
+
+// Add a single stop to an appointment
+router.post('/:id/stops', requireModifyPermission('appointment'), appointmentsController.addStop);
+
+// Delete a specific stop
+router.delete('/stops/:stopId', appointmentsController.deleteStop);
+
+// ============================================================================
+// ATTENDEES MANAGEMENT
+// ============================================================================
+
+// Update all attendees for an appointment (replace all)
+router.put('/:id/attendees', requireModifyPermission('appointment'), appointmentsController.updateAttendees);
+
+// Add a single attendee to an appointment
+router.post('/:id/attendees', requireModifyPermission('appointment'), appointmentsController.addAttendee);
+
+// Remove a specific attendee
+router.delete('/attendees/:attendeeId', appointmentsController.removeAttendee);
+
 module.exports = router;

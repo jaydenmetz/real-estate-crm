@@ -85,20 +85,86 @@ class AppointmentsService {
     const countResult = await pool.query(countQuery, queryParams);
     const totalCount = parseInt(countResult.rows[0].count);
 
-    // Query for paginated data with client name
+    // Query for paginated data with client name, stops count, attendees count, and first stop address
     queryParams.push(limit, offset);
     const dataQuery = `
       SELECT
         a.*,
-        COALESCE(c.full_name, c.first_name || ' ' || c.last_name) AS client_name
+        COALESCE(c.full_name, c.first_name || ' ' || c.last_name) AS client_name,
+        COALESCE(stops_agg.stop_count, 0) AS stop_count,
+        COALESCE(attendees_agg.attendee_count, 0) AS attendee_count,
+        stops_agg.first_stop_address,
+        stops_agg.first_stop_city,
+        stops_agg.first_stop_state,
+        stops_agg.first_stop_zip,
+        stops_agg.first_stop_time
       FROM appointments a
       LEFT JOIN clients cl ON a.client_id = cl.id
       LEFT JOIN contacts c ON cl.contact_id = c.id
+      LEFT JOIN LATERAL (
+        SELECT
+          COUNT(*) AS stop_count,
+          MIN(CASE WHEN stop_order = 1 THEN location_address END) AS first_stop_address,
+          MIN(CASE WHEN stop_order = 1 THEN city END) AS first_stop_city,
+          MIN(CASE WHEN stop_order = 1 THEN state END) AS first_stop_state,
+          MIN(CASE WHEN stop_order = 1 THEN zip_code END) AS first_stop_zip,
+          MIN(CASE WHEN stop_order = 1 THEN scheduled_time END) AS first_stop_time
+        FROM appointment_stops
+        WHERE appointment_id = a.id
+      ) stops_agg ON true
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*) AS attendee_count
+        FROM appointment_attendees
+        WHERE appointment_id = a.id
+      ) attendees_agg ON true
       ${whereClause}
       ORDER BY a.appointment_date DESC, a.start_time DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
     const dataResult = await pool.query(dataQuery, queryParams);
+
+    // Fetch attendees for each appointment
+    const appointmentIds = dataResult.rows.map(a => a.id);
+    if (appointmentIds.length > 0) {
+      const attendeesQuery = `
+        SELECT
+          aa.*,
+          CASE
+            WHEN aa.client_id IS NOT NULL THEN COALESCE(c_client.full_name, c_client.first_name || ' ' || c_client.last_name)
+            WHEN aa.lead_id IS NOT NULL THEN COALESCE(l.first_name || ' ' || l.last_name, l.email)
+            WHEN aa.contact_id IS NOT NULL THEN COALESCE(c_contact.full_name, c_contact.first_name || ' ' || c_contact.last_name)
+            ELSE aa.display_name
+          END AS resolved_name,
+          CASE
+            WHEN aa.client_id IS NOT NULL THEN c_client.email
+            WHEN aa.lead_id IS NOT NULL THEN l.email
+            WHEN aa.contact_id IS NOT NULL THEN c_contact.email
+            ELSE aa.email
+          END AS resolved_email
+        FROM appointment_attendees aa
+        LEFT JOIN clients cl_client ON aa.client_id = cl_client.id
+        LEFT JOIN contacts c_client ON cl_client.contact_id = c_client.id
+        LEFT JOIN leads l ON aa.lead_id = l.id
+        LEFT JOIN contacts c_contact ON aa.contact_id = c_contact.id
+        WHERE aa.appointment_id = ANY($1)
+        ORDER BY aa.is_primary DESC, aa.created_at ASC
+      `;
+      const attendeesResult = await pool.query(attendeesQuery, [appointmentIds]);
+
+      // Group attendees by appointment_id
+      const attendeesByAppointment = {};
+      attendeesResult.rows.forEach(attendee => {
+        if (!attendeesByAppointment[attendee.appointment_id]) {
+          attendeesByAppointment[attendee.appointment_id] = [];
+        }
+        attendeesByAppointment[attendee.appointment_id].push(attendee);
+      });
+
+      // Attach attendees to appointments
+      dataResult.rows.forEach(appointment => {
+        appointment.attendees = attendeesByAppointment[appointment.id] || [];
+      });
+    }
 
     return {
       appointments: dataResult.rows,
@@ -112,19 +178,70 @@ class AppointmentsService {
   }
 
   /**
-   * Get single appointment by ID
+   * Get single appointment by ID with stops and attendees
    * @param {string} id - Appointment ID
    * @returns {Promise<Object|null>} Appointment data or null if not found
    */
   async getAppointmentById(id) {
-    const query = 'SELECT * FROM appointments WHERE id = $1 AND deleted_at IS NULL';
+    const query = `
+      SELECT a.*,
+        COALESCE(c.full_name, c.first_name || ' ' || c.last_name) AS client_name
+      FROM appointments a
+      LEFT JOIN clients cl ON a.client_id = cl.id
+      LEFT JOIN contacts c ON cl.contact_id = c.id
+      WHERE a.id = $1 AND a.deleted_at IS NULL
+    `;
     const result = await pool.query(query, [id]);
 
     if (result.rows.length === 0) {
       return null;
     }
 
-    return result.rows[0];
+    const appointment = result.rows[0];
+
+    // Fetch stops
+    const stopsQuery = `
+      SELECT * FROM appointment_stops
+      WHERE appointment_id = $1
+      ORDER BY stop_order ASC
+    `;
+    const stopsResult = await pool.query(stopsQuery, [id]);
+    appointment.stops = stopsResult.rows;
+
+    // Fetch attendees with contact info
+    const attendeesQuery = `
+      SELECT
+        aa.*,
+        CASE
+          WHEN aa.client_id IS NOT NULL THEN COALESCE(c_client.full_name, c_client.first_name || ' ' || c_client.last_name)
+          WHEN aa.lead_id IS NOT NULL THEN COALESCE(l.first_name || ' ' || l.last_name, l.email)
+          WHEN aa.contact_id IS NOT NULL THEN COALESCE(c_contact.full_name, c_contact.first_name || ' ' || c_contact.last_name)
+          ELSE aa.display_name
+        END AS resolved_name,
+        CASE
+          WHEN aa.client_id IS NOT NULL THEN c_client.email
+          WHEN aa.lead_id IS NOT NULL THEN l.email
+          WHEN aa.contact_id IS NOT NULL THEN c_contact.email
+          ELSE aa.email
+        END AS resolved_email,
+        CASE
+          WHEN aa.client_id IS NOT NULL THEN c_client.phone
+          WHEN aa.lead_id IS NOT NULL THEN l.phone
+          WHEN aa.contact_id IS NOT NULL THEN c_contact.phone
+          ELSE aa.phone
+        END AS resolved_phone
+      FROM appointment_attendees aa
+      LEFT JOIN clients cl_client ON aa.client_id = cl_client.id
+      LEFT JOIN contacts c_client ON cl_client.contact_id = c_client.id
+      LEFT JOIN leads l ON aa.lead_id = l.id
+      LEFT JOIN contacts c_contact ON aa.contact_id = c_contact.id
+      WHERE aa.appointment_id = $1
+      ORDER BY aa.is_primary DESC, aa.created_at ASC
+    `;
+    const attendeesResult = await pool.query(attendeesQuery, [id]);
+    appointment.attendees = attendeesResult.rows;
+
+    return appointment;
   }
 
   /**
@@ -368,6 +485,389 @@ class AppointmentsService {
         deletedIds: result.rows.map((r) => r.id),
         message: `Successfully deleted ${result.rowCount} appointments`,
       };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  // ============================================================================
+  // STOPS MANAGEMENT
+  // ============================================================================
+
+  /**
+   * Add a stop to an appointment
+   * @param {string} appointmentId - Appointment ID
+   * @param {Object} stopData - Stop data
+   * @param {Object} user - Authenticated user
+   * @returns {Promise<Object>} Created stop
+   */
+  async addStop(appointmentId, stopData, user) {
+    const {
+      locationAddress,
+      city,
+      state,
+      zipCode,
+      latitude,
+      longitude,
+      scheduledTime,
+      estimatedDuration = 30,
+      notes,
+    } = stopData;
+
+    // Get current max stop_order
+    const maxOrderQuery = `
+      SELECT COALESCE(MAX(stop_order), 0) as max_order
+      FROM appointment_stops
+      WHERE appointment_id = $1
+    `;
+    const maxOrderResult = await pool.query(maxOrderQuery, [appointmentId]);
+    const nextOrder = maxOrderResult.rows[0].max_order + 1;
+
+    const query = `
+      INSERT INTO appointment_stops (
+        appointment_id, stop_order, location_address, city, state, zip_code,
+        latitude, longitude, scheduled_time, estimated_duration, notes
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING *
+    `;
+
+    const values = [
+      appointmentId,
+      nextOrder,
+      locationAddress || null,
+      city || null,
+      state || null,
+      zipCode || null,
+      latitude || null,
+      longitude || null,
+      scheduledTime || null,
+      estimatedDuration,
+      notes || null,
+    ];
+
+    const result = await pool.query(query, values);
+
+    // Emit WebSocket event
+    this._emitWebSocketEvent(user, 'updated', { id: appointmentId, title: 'Stop added' });
+
+    return result.rows[0];
+  }
+
+  /**
+   * Update a stop
+   * @param {string} stopId - Stop ID
+   * @param {Object} updates - Fields to update
+   * @param {Object} user - Authenticated user
+   * @returns {Promise<Object|null>} Updated stop or null if not found
+   */
+  async updateStop(stopId, updates, user) {
+    const setClause = [];
+    const values = [];
+    let paramIndex = 1;
+
+    const allowedFields = [
+      'location_address', 'city', 'state', 'zip_code', 'latitude', 'longitude',
+      'scheduled_time', 'estimated_duration', 'actual_arrival_time',
+      'actual_departure_time', 'status', 'notes', 'stop_order',
+    ];
+
+    for (const field of allowedFields) {
+      const camelField = field.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+      if (updates[field] !== undefined || updates[camelField] !== undefined) {
+        setClause.push(`${field} = $${paramIndex}`);
+        values.push(updates[field] ?? updates[camelField]);
+        paramIndex++;
+      }
+    }
+
+    if (setClause.length === 0) {
+      throw new Error('No valid fields to update');
+    }
+
+    setClause.push('updated_at = CURRENT_TIMESTAMP');
+    values.push(stopId);
+
+    const query = `
+      UPDATE appointment_stops
+      SET ${setClause.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    // Emit WebSocket event
+    this._emitWebSocketEvent(user, 'updated', { id: result.rows[0].appointment_id, title: 'Stop updated' });
+
+    return result.rows[0];
+  }
+
+  /**
+   * Delete a stop
+   * @param {string} stopId - Stop ID
+   * @param {Object} user - Authenticated user
+   * @returns {Promise<boolean>} True if deleted
+   */
+  async deleteStop(stopId, user) {
+    // Get appointment ID before deletion
+    const getQuery = 'SELECT appointment_id FROM appointment_stops WHERE id = $1';
+    const getResult = await pool.query(getQuery, [stopId]);
+
+    if (getResult.rows.length === 0) {
+      return false;
+    }
+
+    const appointmentId = getResult.rows[0].appointment_id;
+
+    const deleteQuery = 'DELETE FROM appointment_stops WHERE id = $1';
+    await pool.query(deleteQuery, [stopId]);
+
+    // Reorder remaining stops
+    await this._reorderStops(appointmentId);
+
+    // Emit WebSocket event
+    this._emitWebSocketEvent(user, 'updated', { id: appointmentId, title: 'Stop deleted' });
+
+    return true;
+  }
+
+  /**
+   * Reorder stops after deletion
+   * @private
+   */
+  async _reorderStops(appointmentId) {
+    const query = `
+      WITH ordered AS (
+        SELECT id, ROW_NUMBER() OVER (ORDER BY stop_order) as new_order
+        FROM appointment_stops
+        WHERE appointment_id = $1
+      )
+      UPDATE appointment_stops
+      SET stop_order = ordered.new_order
+      FROM ordered
+      WHERE appointment_stops.id = ordered.id
+    `;
+    await pool.query(query, [appointmentId]);
+  }
+
+  /**
+   * Update stops for an appointment (replace all)
+   * @param {string} appointmentId - Appointment ID
+   * @param {Array} stops - Array of stop data
+   * @param {Object} user - Authenticated user
+   * @returns {Promise<Array>} Updated stops
+   */
+  async updateStops(appointmentId, stops, user) {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // Delete existing stops
+      await client.query('DELETE FROM appointment_stops WHERE appointment_id = $1', [appointmentId]);
+
+      // Insert new stops
+      const insertedStops = [];
+      for (let i = 0; i < stops.length; i++) {
+        const stop = stops[i];
+        const query = `
+          INSERT INTO appointment_stops (
+            appointment_id, stop_order, location_address, city, state, zip_code,
+            latitude, longitude, scheduled_time, estimated_duration, notes
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          RETURNING *
+        `;
+
+        const values = [
+          appointmentId,
+          i + 1,
+          stop.location_address || stop.locationAddress || null,
+          stop.city || null,
+          stop.state || null,
+          stop.zip_code || stop.zipCode || null,
+          stop.latitude || null,
+          stop.longitude || null,
+          stop.scheduled_time || stop.scheduledTime || null,
+          stop.estimated_duration || stop.estimatedDuration || 30,
+          stop.notes || null,
+        ];
+
+        const result = await client.query(query, values);
+        insertedStops.push(result.rows[0]);
+      }
+
+      await client.query('COMMIT');
+
+      // Emit WebSocket event
+      this._emitWebSocketEvent(user, 'updated', { id: appointmentId, title: 'Stops updated' });
+
+      return insertedStops;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  // ============================================================================
+  // ATTENDEES MANAGEMENT
+  // ============================================================================
+
+  /**
+   * Add an attendee to an appointment
+   * @param {string} appointmentId - Appointment ID
+   * @param {Object} attendeeData - Attendee data
+   * @param {Object} user - Authenticated user
+   * @returns {Promise<Object>} Created attendee
+   */
+  async addAttendee(appointmentId, attendeeData, user) {
+    const {
+      clientId,
+      leadId,
+      contactId,
+      attendeeType,
+      displayName,
+      email,
+      phone,
+      rsvpStatus = 'pending',
+      isPrimary = false,
+    } = attendeeData;
+
+    // Determine attendee type
+    let type = attendeeType;
+    if (!type) {
+      if (clientId) type = 'client';
+      else if (leadId) type = 'lead';
+      else if (contactId) type = 'contact';
+      else type = 'agent';
+    }
+
+    const query = `
+      INSERT INTO appointment_attendees (
+        appointment_id, client_id, lead_id, contact_id, attendee_type,
+        display_name, email, phone, rsvp_status, is_primary
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      RETURNING *
+    `;
+
+    const values = [
+      appointmentId,
+      clientId || null,
+      leadId || null,
+      contactId || null,
+      type,
+      displayName || null,
+      email || null,
+      phone || null,
+      rsvpStatus,
+      isPrimary,
+    ];
+
+    const result = await pool.query(query, values);
+
+    // Emit WebSocket event
+    this._emitWebSocketEvent(user, 'updated', { id: appointmentId, title: 'Attendee added' });
+
+    return result.rows[0];
+  }
+
+  /**
+   * Remove an attendee from an appointment
+   * @param {string} attendeeId - Attendee ID
+   * @param {Object} user - Authenticated user
+   * @returns {Promise<boolean>} True if deleted
+   */
+  async removeAttendee(attendeeId, user) {
+    // Get appointment ID before deletion
+    const getQuery = 'SELECT appointment_id FROM appointment_attendees WHERE id = $1';
+    const getResult = await pool.query(getQuery, [attendeeId]);
+
+    if (getResult.rows.length === 0) {
+      return false;
+    }
+
+    const appointmentId = getResult.rows[0].appointment_id;
+
+    const deleteQuery = 'DELETE FROM appointment_attendees WHERE id = $1';
+    await pool.query(deleteQuery, [attendeeId]);
+
+    // Emit WebSocket event
+    this._emitWebSocketEvent(user, 'updated', { id: appointmentId, title: 'Attendee removed' });
+
+    return true;
+  }
+
+  /**
+   * Update attendees for an appointment (replace all)
+   * @param {string} appointmentId - Appointment ID
+   * @param {Array} attendees - Array of attendee data
+   * @param {Object} user - Authenticated user
+   * @returns {Promise<Array>} Updated attendees
+   */
+  async updateAttendees(appointmentId, attendees, user) {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // Delete existing attendees
+      await client.query('DELETE FROM appointment_attendees WHERE appointment_id = $1', [appointmentId]);
+
+      // Insert new attendees
+      const insertedAttendees = [];
+      for (const attendee of attendees) {
+        // Determine attendee type
+        let type = attendee.attendee_type || attendee.attendeeType;
+        if (!type) {
+          if (attendee.client_id || attendee.clientId) type = 'client';
+          else if (attendee.lead_id || attendee.leadId) type = 'lead';
+          else if (attendee.contact_id || attendee.contactId) type = 'contact';
+          else type = 'agent';
+        }
+
+        const query = `
+          INSERT INTO appointment_attendees (
+            appointment_id, client_id, lead_id, contact_id, attendee_type,
+            display_name, email, phone, rsvp_status, is_primary
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          RETURNING *
+        `;
+
+        const values = [
+          appointmentId,
+          attendee.client_id || attendee.clientId || null,
+          attendee.lead_id || attendee.leadId || null,
+          attendee.contact_id || attendee.contactId || null,
+          type,
+          attendee.display_name || attendee.displayName || attendee.resolved_name || null,
+          attendee.email || attendee.resolved_email || null,
+          attendee.phone || attendee.resolved_phone || null,
+          attendee.rsvp_status || attendee.rsvpStatus || 'pending',
+          attendee.is_primary || attendee.isPrimary || false,
+        ];
+
+        const result = await client.query(query, values);
+        insertedAttendees.push(result.rows[0]);
+      }
+
+      await client.query('COMMIT');
+
+      // Emit WebSocket event
+      this._emitWebSocketEvent(user, 'updated', { id: appointmentId, title: 'Attendees updated' });
+
+      return insertedAttendees;
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;

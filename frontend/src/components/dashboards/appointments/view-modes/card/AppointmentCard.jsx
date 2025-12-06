@@ -8,6 +8,8 @@ import {
   EventAvailable,
   EventBusy,
   Pending,
+  Route,
+  Timer,
 } from '@mui/icons-material';
 import { alpha } from '@mui/material';
 import { getStatusConfig, APPOINTMENT_STATUS } from '../../../../../constants/appointmentConfig';
@@ -21,21 +23,46 @@ import {
   EditAppointmentTime,
   EditAppointmentLocation,
   EditAppointmentStatus,
+  EditStops,
+  EditAttendees,
 } from '../../editors';
+
+// Import AttendeeCircles component
+import { AttendeeCircles } from '../../../../common/ui/AttendeeCircles';
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
 /**
- * Format appointment time for display
+ * Format appointment type for display
+ */
+const formatAppointmentType = (type) => {
+  if (!type) return 'Showing';
+  return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
+};
+
+/**
+ * Get primary attendee display name
+ */
+const getPrimaryAttendeeName = (attendees) => {
+  if (!attendees || attendees.length === 0) return null;
+  // Find primary attendee first
+  const primary = attendees.find(a => a.is_primary);
+  if (primary) return primary.display_name;
+  // Fall back to first attendee
+  return attendees[0]?.display_name || null;
+};
+
+/**
+ * Format appointment time for display (12-hour format)
  */
 const formatTime = (time) => {
-  if (!time) return 'TBD';
+  if (!time) return '';
   // If it's already a formatted string like "4:00 PM", return it
-  if (time.includes('AM') || time.includes('PM')) return time;
+  if (time.includes && (time.includes('AM') || time.includes('PM'))) return time;
   // If it's 24-hour format, convert to 12-hour
-  const [hours, minutes] = time.split(':');
+  const [hours, minutes] = String(time).split(':');
   const h = parseInt(hours);
   const ampm = h >= 12 ? 'PM' : 'AM';
   const hour12 = h % 12 || 12;
@@ -43,10 +70,21 @@ const formatTime = (time) => {
 };
 
 /**
+ * Format date without year
+ */
+const formatDateNoYear = (value) => {
+  if (!value) return 'TBD';
+  const date = new Date(value);
+  const month = date.toLocaleDateString('en-US', { month: 'short' });
+  const day = date.getDate();
+  return `${month} ${day}`;
+};
+
+/**
  * Format duration in minutes
  */
 const formatDuration = (minutes) => {
-  if (!minutes) return '';
+  if (!minutes) return '30 min';
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
@@ -71,19 +109,58 @@ const getStatusIcon = (status) => {
   return icons[status?.toLowerCase()] || Schedule;
 };
 
+/**
+ * Get first stop address for subtitle
+ */
+const getFirstStopAddress = (appointment) => {
+  // If we have stops array with at least one stop
+  if (appointment.stops && appointment.stops.length > 0) {
+    const firstStop = appointment.stops[0];
+    const parts = [
+      firstStop.location_address,
+      firstStop.city,
+      firstStop.state,
+      firstStop.zip_code,
+    ].filter(Boolean);
+    return parts.join(', ') || null;
+  }
+  // Fall back to first_stop_address from API aggregation
+  if (appointment.first_stop_address) {
+    return appointment.first_stop_address;
+  }
+  // Fall back to legacy location field
+  return appointment.location || null;
+};
+
+/**
+ * Calculate total duration from all stops
+ */
+const getTotalDuration = (appointment) => {
+  if (appointment.stops && appointment.stops.length > 0) {
+    return appointment.stops.reduce((sum, stop) => sum + (stop.estimated_duration || 30), 0);
+  }
+  return appointment.duration || 30;
+};
+
 // ============================================================================
 // CARD VIEW CONFIGURATION HOOK
 // ============================================================================
 
 /**
  * Hook to generate card config with database-driven status options
+ *
+ * NEW LAYOUT (per user spec):
+ * - Title: "Appt Type - Contact Display Name"
+ * - Subtitle: Initial location (Street Address, City, State, Zip)
+ * - Metrics: Stops count (left) + Duration (right)
+ * - Footer: Start date + time, End date, Attendees with circles
+ *
  * @param {Array} statuses - Status array from StatusContext
  * @returns {Object} Card configuration object
  */
 const useAppointmentCardConfig = (statuses) => {
   return useMemo(() => {
     // Transform database statuses into dropdown options
-    // Fallback to hardcoded options if database statuses not loaded yet
     const statusOptions = statuses && statuses.length > 0
       ? statuses.map((status) => ({
           value: status.status_key,
@@ -125,9 +202,21 @@ const useAppointmentCardConfig = (statuses) => {
         },
       },
 
-      // Title Configuration (appointment title/purpose, editable)
+      // Title Configuration: "Appt Type - Contact Display Name"
       title: {
-        field: (appointment) => appointment.title || appointment.purpose || 'Untitled Appointment',
+        field: (appointment) => {
+          const type = formatAppointmentType(appointment.appointment_type || appointment.type);
+          const attendeeName = getPrimaryAttendeeName(appointment.attendees);
+
+          if (attendeeName) {
+            return `${type} - ${attendeeName}`;
+          }
+          // Fall back to legacy client_name if no attendees yet
+          if (appointment.client_name || appointment.clientName) {
+            return `${type} - ${appointment.client_name || appointment.clientName}`;
+          }
+          return type;
+        },
         editable: true,
         editor: EditAppointmentTitle,
         onSave: (appointment, newTitle) => {
@@ -135,80 +224,136 @@ const useAppointmentCardConfig = (statuses) => {
         },
       },
 
-      // Subtitle Configuration (appointment type)
+      // Subtitle Configuration: Initial location (full address)
       subtitle: {
-        formatter: (appointment) => {
-          const type = appointment.appointment_type || appointment.type || 'showing';
-          return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
-        },
+        formatter: (appointment) => getFirstStopAddress(appointment) || 'No location set',
       },
 
-      // Metrics Configuration (Date + Time in horizontal row)
+      // Metrics Configuration: Stops (left) + Duration (right)
       metrics: [
-        // Date
+        // Stops count (editable)
         {
-          label: 'Date',
-          field: (appointment) => appointment.appointment_date || appointment.date,
-          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',
+          label: 'Stops',
+          field: (appointment) => appointment.stop_count || appointment.stops?.length || 1,
+          formatter: (value) => String(value),
           color: {
             primary: '#3b82f6',
             secondary: '#2563eb',
             bg: alpha('#3b82f6', 0.08),
           },
+          icon: Route,
           editable: true,
-          editor: EditAppointmentDate,
-          onSave: (appointment, newDate) => {
-            return { appointment_date: newDate };
+          editor: EditStops,
+          editorProps: (appointment) => ({
+            value: appointment.stops || [],
+            data: appointment,
+          }),
+          onSave: (appointment, stops) => {
+            return { stops };
           },
         },
 
-        // Time
+        // Duration (calculated from all stops)
         {
-          label: 'Time',
-          field: (appointment) => appointment.appointment_time || appointment.time,
-          formatter: (value) => formatTime(value),
+          label: 'Duration',
+          field: (appointment) => getTotalDuration(appointment),
+          formatter: (value) => formatDuration(value),
           color: {
             primary: '#10b981',
             secondary: '#059669',
             bg: alpha('#10b981', 0.08),
           },
-          editable: true,
-          editor: EditAppointmentTime,
-          onSave: (appointment, newTime) => {
-            return { appointment_time: newTime };
-          },
+          icon: Timer,
+          editable: false, // Duration is calculated from stops
         },
       ],
 
-      // Footer Configuration (Duration + Location + Client)
+      // Footer Configuration: Start date/time + End date + Attendees
       footer: {
         fields: [
-          // Duration
+          // Start date + time (no year)
           {
-            label: 'Duration',
-            field: 'duration',
-            formatter: (value) => formatDuration(value) || '30 min',
-          },
-
-          // Location (editable)
-          {
-            label: 'Location',
-            field: 'location',
-            formatter: (value) => value || 'TBD',
-            editable: true,
-            editor: EditAppointmentLocation,
-            onSave: (appointment, newLocation) => {
-              return { location: newLocation };
+            label: 'Start',
+            field: (appointment) => {
+              const date = appointment.appointment_date || appointment.date;
+              const time = appointment.appointment_time || appointment.time;
+              if (!date) return null;
+              return { date, time };
             },
-            truncate: true,
-            maxWidth: 150,
+            formatter: (value) => {
+              if (!value) return 'TBD';
+              const dateStr = formatDateNoYear(value.date);
+              const timeStr = value.time ? formatTime(value.time) : '';
+              return timeStr ? `${dateStr} ${timeStr}` : dateStr;
+            },
+            editable: true,
+            editor: EditAppointmentDate,
+            onSave: (appointment, newDate) => {
+              return { appointment_date: newDate };
+            },
           },
 
-          // Client
+          // End date (no year) - calculated from start + duration
           {
-            label: 'Client',
-            field: (appointment) => appointment.client_name || appointment.clientName,
-            formatter: (value) => value || '—',
+            label: 'End',
+            field: (appointment) => {
+              const startDate = appointment.appointment_date || appointment.date;
+              const startTime = appointment.appointment_time || appointment.time;
+              const duration = getTotalDuration(appointment);
+
+              if (!startDate || !startTime) return null;
+
+              // Calculate end time
+              const [hours, minutes] = String(startTime).split(':').map(Number);
+              const startMinutes = hours * 60 + minutes;
+              const endMinutes = startMinutes + duration;
+
+              const endHours = Math.floor(endMinutes / 60) % 24;
+              const endMins = endMinutes % 60;
+
+              // Check if appointment spans to next day
+              const spansToNextDay = endMinutes >= 24 * 60;
+
+              return {
+                date: startDate,
+                time: `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`,
+                spansToNextDay,
+              };
+            },
+            formatter: (value) => {
+              if (!value) return 'TBD';
+              const timeStr = formatTime(value.time);
+              if (value.spansToNextDay) {
+                return `${timeStr} +1d`;
+              }
+              return timeStr;
+            },
+            editable: false, // End time is calculated
+          },
+
+          // Attendees with circles (editable)
+          {
+            label: 'Attendees',
+            field: 'attendees',
+            customRenderer: (appointment, onEdit) => {
+              const attendees = appointment.attendees || [];
+              return (
+                <AttendeeCircles
+                  attendees={attendees}
+                  onEdit={onEdit}
+                  maxVisible={4}
+                />
+              );
+            },
+            editable: true,
+            editor: EditAttendees,
+            editorProps: (appointment) => ({
+              value: appointment.attendees || [],
+              data: appointment,
+            }),
+            onSave: (appointment, attendees) => {
+              return { attendees };
+            },
           },
         ],
       },
@@ -267,18 +412,19 @@ const useAppointmentCardConfig = (statuses) => {
 /**
  * AppointmentCard - Card view for appointments dashboard
  *
- * Now uses CardTemplate with inline configuration for better colocation.
- * Now uses database-driven status options from StatusContext.
- *
- * Reduced from 780+ lines to ~240 lines by using CardTemplate.
+ * NEW LAYOUT (per user specification):
+ * - Title: "Appt Type - Contact Display Name"
+ * - Subtitle: Initial location (full address)
+ * - Metrics: Stops count (editable, opens multi-stop editor) + Duration
+ * - Footer: Start date/time (no year), End time, Attendees with circles
  *
  * Features:
- * - Inline editors: title, date, time, location, status
- * - Status menu: dynamically populated from database
+ * - Multi-stop appointments with individual scheduling
+ * - Multiple attendees (clients, leads) with visual circles
+ * - Inline editors for all fields
+ * - Status menu dynamically populated from database
  * - Today/Soon badges for upcoming appointments
- * - Relative time display
- * - Click vs drag: text selection support
- * - Quick actions: view, archive, restore, delete
+ * - End time calculated from start + total duration
  */
 const AppointmentCard = React.memo(({
   appointment,
