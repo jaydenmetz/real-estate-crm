@@ -299,12 +299,16 @@ const useAppointmentCardConfig = (statuses) => {
         },
       },
 
-      // Metrics Configuration: Stops (left) + Duration (right)
+      // Metrics Configuration: Additional Stops (left) + Duration (right)
       metrics: [
-        // Stops count (editable)
+        // Additional stops count (editable) - excludes first stop which is the initial location
         {
-          label: 'Stops',
-          field: (appointment) => appointment.stop_count || appointment.stops?.length || 1,
+          label: '+ Stops',
+          field: (appointment) => {
+            // Count additional stops (excluding first one)
+            const stopCount = appointment.stop_count || appointment.stops?.length || 1;
+            return Math.max(0, stopCount - 1);  // Exclude first stop
+          },
           formatter: (value) => String(value),
           color: {
             primary: '#3b82f6',
@@ -317,6 +321,7 @@ const useAppointmentCardConfig = (statuses) => {
           editorProps: (appointment) => ({
             value: appointment.stops || [],
             data: appointment,
+            excludeFirstStop: true,  // Only manage additional stops
           }),
           onSave: (appointment, stops) => {
             return { stops };

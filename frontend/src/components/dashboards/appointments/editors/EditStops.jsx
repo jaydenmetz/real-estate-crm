@@ -529,14 +529,19 @@ const StopItem = ({
  * - Listing selection for showings mode
  * - Route optimization placeholder (for future map integration)
  *
+ * Note: The first stop (initial location) is edited via EditAppointmentType.
+ * This editor manages ADDITIONAL stops (index 1 and beyond).
+ * When excludeFirstStop=true (default), this editor only shows/manages additional stops.
+ *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
  * @param {function} onSave - Save handler (stops) => void
- * @param {Array} value - Current stops array
+ * @param {Array} value - Current stops array (all stops including first)
  * @param {Object} data - Full appointment object
  * @param {boolean} inline - If true, renders without ModalContainer wrapper
  * @param {string} color - Theme color
  * @param {string} appointmentType - Type of appointment (showing, listing_presentation, etc.)
+ * @param {boolean} excludeFirstStop - If true (default), only manage additional stops
  */
 export const EditStops = ({
   open,
@@ -547,6 +552,7 @@ export const EditStops = ({
   inline = false,
   color = '#3b82f6',
   appointmentType,
+  excludeFirstStop = true,
 }) => {
   // Determine if this is a showing type appointment
   const isShowingMode = appointmentType === 'showing' ||
@@ -554,30 +560,46 @@ export const EditStops = ({
     data?.appointment_type === 'showing' ||
     data?.appointment_type === 'Property Showing' ||
     data?.type === 'showing';
-  // Initialize with at least one stop
+
+  // Store the first stop separately when excludeFirstStop is true
+  const [firstStop, setFirstStop] = useState(() => {
+    if (excludeFirstStop && value && value.length > 0) {
+      return value[0];
+    }
+    return null;
+  });
+
+  // Initialize stops - when excludeFirstStop=true, only show additional stops
   const [stops, setStops] = useState(() => {
-    if (value && value.length > 0) return [...value];
-    // Create initial stop from appointment's location if available
-    if (data?.location) {
+    if (value && value.length > 0) {
+      // If excluding first stop, only include stops from index 1 onwards
+      return excludeFirstStop ? value.slice(1) : [...value];
+    }
+    // If no value and NOT excluding first stop, create a default initial stop
+    if (!excludeFirstStop) {
+      if (data?.location) {
+        return [{
+          stop_order: 1,
+          location_address: data.location,
+          city: data.first_stop_city || '',
+          state: data.first_stop_state || '',
+          zip_code: data.first_stop_zip || '',
+          scheduled_time: data.start_time || '',
+          estimated_duration: 30,
+        }];
+      }
       return [{
         stop_order: 1,
-        location_address: data.location,
-        city: data.first_stop_city || '',
-        state: data.first_stop_state || '',
-        zip_code: data.first_stop_zip || '',
-        scheduled_time: data.start_time || '',
+        location_address: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        scheduled_time: '',
         estimated_duration: 30,
       }];
     }
-    return [{
-      stop_order: 1,
-      location_address: '',
-      city: '',
-      state: '',
-      zip_code: '',
-      scheduled_time: '',
-      estimated_duration: 30,
-    }];
+    // excludeFirstStop=true and no additional stops yet
+    return [];
   });
   const [saving, setSaving] = useState(false);
 
@@ -585,8 +607,13 @@ export const EditStops = ({
   useEffect(() => {
     if (open) {
       if (value && value.length > 0) {
-        setStops([...value]);
-      } else if (data?.location) {
+        if (excludeFirstStop) {
+          setFirstStop(value[0]);
+          setStops(value.slice(1));
+        } else {
+          setStops([...value]);
+        }
+      } else if (!excludeFirstStop && data?.location) {
         setStops([{
           stop_order: 1,
           location_address: data.location,
@@ -596,13 +623,29 @@ export const EditStops = ({
           scheduled_time: data.start_time || '',
           estimated_duration: 30,
         }]);
+      } else if (excludeFirstStop) {
+        setStops([]);
       }
     }
-  }, [open, value, data]);
+  }, [open, value, data, excludeFirstStop]);
+
+  // Helper to combine first stop with additional stops for saving
+  const combineStopsForSave = (additionalStops) => {
+    if (excludeFirstStop && firstStop) {
+      // Re-number all stops with first stop at index 0
+      return [
+        { ...firstStop, stop_order: 1 },
+        ...additionalStops.map((s, i) => ({ ...s, stop_order: i + 2 })),
+      ];
+    }
+    return additionalStops.map((s, i) => ({ ...s, stop_order: i + 1 }));
+  };
 
   const handleAddStop = () => {
+    // For additional stops, order starts at 2 (first stop is order 1)
+    const newStopOrder = excludeFirstStop ? stops.length + 2 : stops.length + 1;
     const newStop = {
-      stop_order: stops.length + 1,
+      stop_order: newStopOrder,
       location_address: '',
       city: '',
       state: '',
@@ -613,41 +656,48 @@ export const EditStops = ({
     const updatedStops = [...stops, newStop];
     setStops(updatedStops);
 
-    // In inline mode, immediately notify parent
+    // In inline mode, immediately notify parent with combined stops
     if (inline && onSave) {
-      onSave(updatedStops);
+      onSave(combineStopsForSave(updatedStops));
     }
   };
 
   const handleUpdateStop = (index, updatedStop) => {
     const updatedStops = [...stops];
-    updatedStops[index] = { ...updatedStop, stop_order: index + 1 };
+    // For additional stops, order starts at 2
+    const stopOrder = excludeFirstStop ? index + 2 : index + 1;
+    updatedStops[index] = { ...updatedStop, stop_order: stopOrder };
     setStops(updatedStops);
 
-    // In inline mode, immediately notify parent
+    // In inline mode, immediately notify parent with combined stops
     if (inline && onSave) {
-      onSave(updatedStops);
+      onSave(combineStopsForSave(updatedStops));
     }
   };
 
   const handleDeleteStop = (index) => {
-    if (stops.length <= 1) return; // Always keep at least one stop
+    // When excludeFirstStop=true, we CAN delete all additional stops (first stop is managed elsewhere)
+    // When excludeFirstStop=false, keep at least one stop
+    if (!excludeFirstStop && stops.length <= 1) return;
+
     const updatedStops = stops.filter((_, i) => i !== index).map((stop, i) => ({
       ...stop,
-      stop_order: i + 1,
+      stop_order: excludeFirstStop ? i + 2 : i + 1,
     }));
     setStops(updatedStops);
 
-    // In inline mode, immediately notify parent
+    // In inline mode, immediately notify parent with combined stops
     if (inline && onSave) {
-      onSave(updatedStops);
+      onSave(combineStopsForSave(updatedStops));
     }
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await onSave(stops);
+      // When saving, combine first stop with additional stops
+      const allStops = combineStopsForSave(stops);
+      await onSave(allStops);
       onClose?.();
     } catch (error) {
       console.error('Failed to save stops:', error);
@@ -664,6 +714,26 @@ export const EditStops = ({
     ? `${hours}h ${mins}m total`
     : `${mins} min total`;
 
+  // Get the header text based on mode
+  const getHeaderTitle = () => {
+    if (excludeFirstStop) {
+      // Managing additional stops only
+      return isShowingMode ? 'Additional Showings' : 'Additional Stops';
+    }
+    return isShowingMode ? 'Property Showings' : 'Appointment Stops';
+  };
+
+  const getHeaderSubtext = () => {
+    if (stops.length === 0 && excludeFirstStop) {
+      return 'No additional stops added yet';
+    }
+    const stopLabel = isShowingMode
+      ? (stops.length === 1 ? 'showing' : 'showings')
+      : (stops.length === 1 ? 'stop' : 'stops');
+    const prefix = excludeFirstStop ? 'additional ' : '';
+    return `${stops.length} ${prefix}${stopLabel} | ${totalDurationText}`;
+  };
+
   const content = (
     <Box sx={{ width: '100%', maxWidth: 500 }}>
       {/* Header */}
@@ -677,7 +747,7 @@ export const EditStops = ({
             mb: 0.5,
           }}
         >
-          {isShowingMode ? 'Property Showings' : 'Appointment Stops'}
+          {getHeaderTitle()}
         </Typography>
         <Typography
           sx={{
@@ -685,28 +755,60 @@ export const EditStops = ({
             fontSize: '0.8rem',
           }}
         >
-          {stops.length} {isShowingMode
-            ? (stops.length === 1 ? 'showing' : 'showings')
-            : (stops.length === 1 ? 'stop' : 'stops')} | {totalDurationText}
+          {getHeaderSubtext()}
         </Typography>
+        {excludeFirstStop && firstStop && (
+          <Typography
+            sx={{
+              color: 'rgba(255,255,255,0.5)',
+              fontSize: '0.75rem',
+              mt: 0.5,
+              fontStyle: 'italic',
+            }}
+          >
+            Initial location: {firstStop.location_address || 'Not set'} (edit via title)
+          </Typography>
+        )}
       </Box>
 
+      {/* Empty State */}
+      {stops.length === 0 && excludeFirstStop && (
+        <Box
+          sx={{
+            textAlign: 'center',
+            py: 4,
+            px: 2,
+            mb: 2,
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            borderRadius: 2,
+          }}
+        >
+          <Typography sx={{ color: 'rgba(255,255,255,0.5)', mb: 1 }}>
+            {isShowingMode
+              ? 'Add additional properties to show after the initial meeting location.'
+              : 'Add additional stops after the initial meeting location.'}
+          </Typography>
+        </Box>
+      )}
+
       {/* Stops List */}
-      <Box sx={{ mb: 2 }}>
-        {stops.map((stop, index) => (
-          <StopItem
-            key={stop.id || `stop-${index}`}
-            stop={stop}
-            index={index}
-            onUpdate={handleUpdateStop}
-            onDelete={handleDeleteStop}
-            color={color}
-            isFirst={index === 0}
-            canDelete={stops.length > 1}
-            isShowingMode={isShowingMode}
-          />
-        ))}
-      </Box>
+      {stops.length > 0 && (
+        <Box sx={{ mb: 2 }}>
+          {stops.map((stop, index) => (
+            <StopItem
+              key={stop.id || `stop-${index}`}
+              stop={stop}
+              index={excludeFirstStop ? index + 1 : index}  // Offset index to show "Stop 2", "Stop 3", etc.
+              onUpdate={handleUpdateStop}
+              onDelete={handleDeleteStop}
+              color={color}
+              isFirst={!excludeFirstStop && index === 0}  // Only mark as first if NOT excluding first stop
+              canDelete={excludeFirstStop || stops.length > 1}  // Can always delete additional stops
+              isShowingMode={isShowingMode}
+            />
+          ))}
+        </Box>
+      )}
 
       {/* Add Stop Button */}
       <Box
