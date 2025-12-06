@@ -490,75 +490,135 @@ const CardTemplate = React.memo(({
             flexDirection: 'column',
             overflow: 'hidden'
           }}>
-            {/* Title - Editable */}
-            {config.title && (
-              <Box sx={{ mb: 1 }}>
-                <Box
-                  onClick={(e) => {
-                    if (config.title.editable && onUpdate) {
-                      e.stopPropagation();
-                      openEditor('title');
-                    }
-                  }}
-                  sx={{
-                    cursor: config.title.editable && onUpdate ? 'pointer' : 'default',
-                    transition: 'all 0.2s',
-                    borderRadius: 1,
-                    px: 0.5,
-                    py: 0.25,
-                    '&:hover': config.title.editable && onUpdate ? {
-                      backgroundColor: 'action.hover',
-                    } : {},
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 800,
-                      fontSize: '0.9rem',
-                      color: theme.palette.text.primary,
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {titleValue}
-                  </Typography>
-                </Box>
-                {/* Subtitle - Potentially editable separately */}
-                {subtitleValue && (
+            {/* Title + Subtitle - Combined when sharing same editor */}
+            {config.title && (() => {
+              // Determine if title and subtitle share the same editor
+              const titleEditor = config.title.editor;
+              const subtitleEditor = config.subtitle?.editor;
+              const sharesSameEditor = subtitleEditor && titleEditor === subtitleEditor;
+
+              // When they share the same editor, combine into single hover container
+              if (sharesSameEditor) {
+                return (
+                  <Box sx={{ mb: 1 }}>
+                    <Box
+                      onClick={(e) => {
+                        if (config.title.editable && onUpdate) {
+                          e.stopPropagation();
+                          openEditor('title'); // Both use title editor
+                        }
+                      }}
+                      sx={{
+                        cursor: config.title.editable && onUpdate ? 'pointer' : 'default',
+                        transition: 'all 0.2s',
+                        borderRadius: 1,
+                        px: 0.5,
+                        py: 0.25,
+                        '&:hover': config.title.editable && onUpdate ? {
+                          backgroundColor: 'action.hover',
+                        } : {},
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 800,
+                          fontSize: '0.9rem',
+                          color: theme.palette.text.primary,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {titleValue}
+                      </Typography>
+                      {subtitleValue && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: '0.7rem',
+                            color: theme.palette.text.secondary,
+                            lineHeight: 1.3,
+                            display: 'block',
+                            mt: 0.25,
+                          }}
+                        >
+                          {subtitleValue}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                );
+              }
+
+              // Otherwise, render with separate hover containers (existing behavior)
+              return (
+                <Box sx={{ mb: 1 }}>
                   <Box
                     onClick={(e) => {
-                      if (config.subtitle?.editable && onUpdate) {
+                      if (config.title.editable && onUpdate) {
                         e.stopPropagation();
-                        openEditor('subtitle');
+                        openEditor('title');
                       }
                     }}
                     sx={{
-                      cursor: config.subtitle?.editable && onUpdate ? 'pointer' : 'default',
+                      cursor: config.title.editable && onUpdate ? 'pointer' : 'default',
                       transition: 'all 0.2s',
                       borderRadius: 1,
                       px: 0.5,
                       py: 0.25,
-                      mt: 0.25,
-                      '&:hover': config.subtitle?.editable && onUpdate ? {
+                      '&:hover': config.title.editable && onUpdate ? {
                         backgroundColor: 'action.hover',
                       } : {},
                     }}
                   >
                     <Typography
-                      variant="caption"
+                      variant="h6"
                       sx={{
-                        fontSize: '0.7rem',
-                        color: theme.palette.text.secondary,
-                        lineHeight: 1.3,
-                        display: 'block',
+                        fontWeight: 800,
+                        fontSize: '0.9rem',
+                        color: theme.palette.text.primary,
+                        lineHeight: 1.2,
                       }}
                     >
-                      {subtitleValue}
+                      {titleValue}
                     </Typography>
                   </Box>
-                )}
-              </Box>
-            )}
+                  {/* Subtitle - Separate hover only if different editor or not editable */}
+                  {subtitleValue && (
+                    <Box
+                      onClick={(e) => {
+                        if (config.subtitle?.editable && onUpdate) {
+                          e.stopPropagation();
+                          openEditor('subtitle');
+                        }
+                      }}
+                      sx={{
+                        cursor: config.subtitle?.editable && onUpdate ? 'pointer' : 'default',
+                        transition: 'all 0.2s',
+                        borderRadius: 1,
+                        px: 0.5,
+                        py: 0.25,
+                        mt: 0.25,
+                        '&:hover': config.subtitle?.editable && onUpdate ? {
+                          backgroundColor: 'action.hover',
+                        } : {},
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: '0.7rem',
+                          color: theme.palette.text.secondary,
+                          lineHeight: 1.3,
+                          display: 'block',
+                        }}
+                      >
+                        {subtitleValue}
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              );
+            })()}
 
             {/* Metrics Grid */}
             {config.metrics && config.metrics.length > 0 && (
