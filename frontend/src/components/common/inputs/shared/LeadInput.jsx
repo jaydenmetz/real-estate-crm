@@ -34,10 +34,18 @@ export const LeadInput = ({
   // Search function for leads
   const searchLeads = async (searchText) => {
     try {
-      const response = await leadsAPI.getAll({
-        search: searchText,
-        limit: 10,
-      });
+      const params = {
+        limit: searchText ? 10 : 5, // 5 recent items when empty, 10 for search
+        sortBy: 'created_at',
+        sortOrder: 'desc',
+      };
+
+      // Only add search param if there's text
+      if (searchText) {
+        params.search = searchText;
+      }
+
+      const response = await leadsAPI.getAll(params);
 
       if (response.success && response.data) {
         return response.data.leads || response.data || [];

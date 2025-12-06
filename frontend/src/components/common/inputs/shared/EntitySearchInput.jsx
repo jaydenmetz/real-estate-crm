@@ -12,7 +12,8 @@ const ADD_NEW_OPTION_ID = '__add_new__';
  * Reusable autocomplete for searching database entities (clients, leads, listings, contacts)
  *
  * Features:
- * - Debounced search with configurable delay
+ * - Shows 5 most recently created items by default (on focus)
+ * - Debounced search starting from first character
  * - Customizable display labels and sublabels
  * - Themed to match modal backgrounds
  * - Returns full entity object on selection
@@ -34,10 +35,11 @@ const ADD_NEW_OPTION_ID = '__add_new__';
  * @param {boolean} disabled - Disabled state
  * @param {boolean} autoFocus - Auto focus on mount
  * @param {number} debounceMs - Debounce delay in ms (default: 300)
- * @param {number} minSearchLength - Minimum chars before searching (default: 2)
+ * @param {number} minSearchLength - Minimum chars before searching (default: 1)
  * @param {function} onAddNew - Optional callback when "Add New" is clicked: (searchText) => void
  * @param {function} addNewLabel - Optional function to generate "Add New" label: (searchText) => string
  * @param {React.Component} addNewIcon - Optional icon for "Add New" option (default: AddIcon)
+ * @param {function} fetchRecentFn - Optional async function to fetch recent items: () => Promise<array>
  */
 export const EntitySearchInput = ({
   searchFn,
@@ -55,18 +57,22 @@ export const EntitySearchInput = ({
   disabled = false,
   autoFocus = false,
   debounceMs = 300,
-  minSearchLength = 2,
+  minSearchLength = 1,
   noOptionsText = 'No results found',
   renderOption: customRenderOption,
   // "Add New" functionality
   onAddNew,
   addNewLabel = (text) => `Add "${text}" as New`,
   addNewIcon: AddNewIcon = AddIcon,
+  // Recent items functionality
+  fetchRecentFn,
 }) => {
   const inputRef = useRef(null);
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const [recentItems, setRecentItems] = useState([]);
+  const [hasFetched, setHasFetched] = useState(false);
 
   // Auto focus
   useEffect(() => {
@@ -77,11 +83,33 @@ export const EntitySearchInput = ({
     }
   }, [autoFocus]);
 
-  // Debounced search
+  // Fetch recent items (5 most recently created) - called once on first focus or mount
+  const fetchRecentItems = useCallback(async () => {
+    if (hasFetched) return; // Only fetch once
+
+    try {
+      setLoading(true);
+      // Use custom fetchRecentFn if provided, otherwise use searchFn with empty string
+      const fetchFn = fetchRecentFn || searchFn;
+      const results = await fetchFn('');
+      const recent = (results || []).slice(0, 5); // Limit to 5 most recent
+      setRecentItems(recent);
+      setOptions(recent);
+      setHasFetched(true);
+    } catch (error) {
+      console.error('EntitySearchInput fetch recent error:', error);
+      setRecentItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [searchFn, fetchRecentFn, hasFetched]);
+
+  // Debounced search - triggers on first character
   const debouncedSearch = useMemo(
     () => debounce(async (text) => {
+      // If no search text, show recent items
       if (!text || text.length < minSearchLength) {
-        setOptions([]);
+        setOptions(recentItems);
         setLoading(false);
         return;
       }
@@ -96,7 +124,7 @@ export const EntitySearchInput = ({
         setLoading(false);
       }
     }, debounceMs),
-    [searchFn, debounceMs, minSearchLength]
+    [searchFn, debounceMs, minSearchLength, recentItems]
   );
 
   // Cleanup debounce on unmount
@@ -240,6 +268,7 @@ export const EntitySearchInput = ({
         inputValue={searchText}
         onInputChange={handleInputChange}
         onChange={handleSelect}
+        onOpen={fetchRecentItems}
         value={value}
         disabled={disabled}
         filterOptions={(x) => x} // Don't filter - server handles it
@@ -253,7 +282,7 @@ export const EntitySearchInput = ({
           if (option?.id === ADD_NEW_OPTION_ID || val?.id === ADD_NEW_OPTION_ID) return false;
           return getOptionKey(option) === getOptionKey(val);
         }}
-        noOptionsText={searchText.length >= minSearchLength ? noOptionsText : `Type ${minSearchLength}+ characters to search...`}
+        noOptionsText={noOptionsText}
         renderOption={customRenderOption || defaultRenderOption}
         renderInput={(params) => (
           <TextField

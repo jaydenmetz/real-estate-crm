@@ -34,10 +34,18 @@ export const ListingInput = ({
   // Search function for listings
   const searchListings = async (searchText) => {
     try {
-      const response = await listingsAPI.getAll({
-        search: searchText,
-        limit: 10,
-      });
+      const params = {
+        limit: searchText ? 10 : 5, // 5 recent items when empty, 10 for search
+        sortBy: 'created_at',
+        sortOrder: 'desc',
+      };
+
+      // Only add search param if there's text
+      if (searchText) {
+        params.search = searchText;
+      }
+
+      const response = await listingsAPI.getAll(params);
 
       if (response.success && response.data) {
         return response.data.listings || response.data || [];
