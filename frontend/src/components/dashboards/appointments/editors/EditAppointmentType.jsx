@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, ToggleButtonGroup, ToggleButton, Divider, TextField, InputAdornment } from '@mui/material';
+import { Box, Typography, ToggleButtonGroup, ToggleButton, Divider, TextField, InputAdornment, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import {
   AccountBalance,
@@ -12,8 +12,9 @@ import {
   MoreHoriz,
   Check,
   Close,
-  MyLocation,
-  Search,
+  ContentCopy,
+  Apple,
+  Map,
 } from '@mui/icons-material';
 import { ModalContainer } from '../../../common/modals/ModalContainer';
 import { AddressInput } from '../../../common/inputs/shared/AddressInput';
@@ -83,7 +84,6 @@ export const EditAppointmentType = ({
   const [selectedType, setSelectedType] = useState(appointmentType);
   const [meetingMode, setMeetingMode] = useState(initialMeetingMode);
   const [virtualMeetingType, setVirtualMeetingType] = useState(initialVirtualType);
-  const [useCurrentAddress, setUseCurrentAddress] = useState(false);
   const [locationData, setLocationData] = useState({
     location_address: initialStop?.location_address || '',
     city: initialStop?.city || '',
@@ -92,8 +92,9 @@ export const EditAppointmentType = ({
     latitude: initialStop?.latitude || null,
     longitude: initialStop?.longitude || null,
   });
-  const [displayName, setDisplayName] = useState(initialDisplayName);
+  const [selectedAddress, setSelectedAddress] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [addressMenuAnchor, setAddressMenuAnchor] = useState(null);
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -101,7 +102,6 @@ export const EditAppointmentType = ({
       setSelectedType(appointmentType || APPOINTMENT_TYPES.SHOWING);
       setMeetingMode(initialMeetingMode || MEETING_MODES.IN_PERSON);
       setVirtualMeetingType(initialVirtualType || VIRTUAL_MEETING_TYPES.VIDEO_CALL);
-      setUseCurrentAddress(false);
       setLocationData({
         location_address: initialStop?.location_address || '',
         city: initialStop?.city || '',
@@ -110,9 +110,9 @@ export const EditAppointmentType = ({
         latitude: initialStop?.latitude || null,
         longitude: initialStop?.longitude || null,
       });
-      setDisplayName(initialDisplayName || '');
+      setSelectedAddress(null);
     }
-  }, [open, appointmentType, initialMeetingMode, initialVirtualType, initialStop, initialDisplayName]);
+  }, [open, appointmentType, initialMeetingMode, initialVirtualType, initialStop]);
 
   const handleTypeChange = (event, newType) => {
     if (newType !== null) {
@@ -132,7 +132,8 @@ export const EditAppointmentType = ({
     }
   };
 
-  const handleAddressChange = (addressData) => {
+  const handleAddressSelect = (addressData) => {
+    setSelectedAddress(addressData);
     setLocationData({
       location_address: addressData.property_address || addressData.display_address || '',
       city: addressData.city || '',
@@ -141,39 +142,61 @@ export const EditAppointmentType = ({
       latitude: addressData.latitude || null,
       longitude: addressData.longitude || null,
     });
-    // Auto-populate display name from address if empty
-    if (!displayName && addressData.property_address) {
-      setDisplayName(addressData.property_address);
-    }
   };
 
-  const handleUseCurrentLocation = () => {
-    setUseCurrentAddress(true);
-    // Get current location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          // For now, just set coordinates - could integrate with geocoding API
-          setLocationData(prev => ({
-            ...prev,
-            latitude,
-            longitude,
-            location_address: 'Current Location',
-          }));
-          setDisplayName('Current Location');
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          setUseCurrentAddress(false);
-        }
-      );
-    }
+  // Address menu handlers
+  const handleAddressClick = (e) => {
+    e.stopPropagation();
+    setAddressMenuAnchor(e.currentTarget);
   };
+
+  const handleAddressMenuClose = () => {
+    setAddressMenuAnchor(null);
+  };
+
+  const handleCopyAddress = () => {
+    const fullAddress = getFullAddressString();
+    navigator.clipboard.writeText(fullAddress);
+    handleAddressMenuClose();
+  };
+
+  const handleOpenAppleMaps = () => {
+    const query = encodeURIComponent(locationData.location_address || '');
+    window.open(`maps://maps.apple.com/?q=${query}`, '_blank');
+    handleAddressMenuClose();
+  };
+
+  const handleOpenGoogleMaps = () => {
+    const query = encodeURIComponent(locationData.location_address || '');
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+    handleAddressMenuClose();
+  };
+
+  // Helper to format full address on one line
+  const getFullAddressString = () => {
+    const address = selectedAddress || locationData;
+    const parts = [];
+    if (address.location_address || address.property_address) {
+      parts.push(address.location_address || address.property_address);
+    }
+    if (address.city) parts.push(address.city);
+    if (address.state) parts.push(address.state);
+    if (address.zip_code) parts.push(address.zip_code);
+    return parts.join(', ');
+  };
+
+  // Check if we have an existing address
+  const hasExistingAddress = locationData.location_address && locationData.location_address.trim() !== '';
+
+  // Check if user has selected a NEW address (different from existing)
+  const hasSelectedNewAddress = selectedAddress !== null && selectedAddress.property_address !== locationData.location_address;
 
   const handleSave = async () => {
     setSaving(true);
     try {
+      // For appointments, display_name is the full address on one line
+      const fullAddressDisplayName = meetingMode === MEETING_MODES.IN_PERSON ? getFullAddressString() : null;
+
       await onSave({
         appointment_type: selectedType,
         appointmentType: selectedType,
@@ -189,8 +212,8 @@ export const EditAppointmentType = ({
         zip_code: meetingMode === MEETING_MODES.IN_PERSON ? locationData.zip_code : null,
         latitude: meetingMode === MEETING_MODES.IN_PERSON ? locationData.latitude : null,
         longitude: meetingMode === MEETING_MODES.IN_PERSON ? locationData.longitude : null,
-        display_name: displayName,
-        displayName: displayName,
+        display_name: fullAddressDisplayName,
+        displayName: fullAddressDisplayName,
       });
       onClose?.();
     } catch (error) {
@@ -376,91 +399,259 @@ export const EditAppointmentType = ({
             Meeting Location
           </Typography>
 
-          {/* Current Location Button */}
-          <Box
-            onClick={handleUseCurrentLocation}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1.5,
-              p: 1.5,
-              mb: 1.5,
-              borderRadius: 2,
-              backgroundColor: useCurrentAddress
-                ? alpha(currentTypeColor, 0.15)
-                : 'rgba(255,255,255,0.05)',
-              border: useCurrentAddress
-                ? `2px solid ${alpha(currentTypeColor, 0.4)}`
-                : '2px solid transparent',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              '&:hover': {
-                backgroundColor: alpha(currentTypeColor, 0.1),
+          {/* Current Address Display - Shows existing address if we have one */}
+          {hasExistingAddress && !hasSelectedNewAddress && (
+            <Box sx={{ mb: 2 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.7)',
+                  mb: 0.5,
+                  display: 'block',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                Current Location
+              </Typography>
+              <Box
+                onClick={handleAddressClick}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 0.75,
+                  cursor: 'pointer',
+                  borderRadius: 1.5,
+                  p: 1,
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.12)',
+                    borderColor: 'rgba(255,255,255,0.4)',
+                  },
+                }}
+              >
+                <LocationOn sx={{ color: 'white', mt: 0.25, fontSize: 20 }} />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontWeight: 700,
+                      color: 'white',
+                      fontSize: '0.9rem',
+                      lineHeight: 1.3,
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    {locationData.location_address}
+                  </Typography>
+                  {locationData.city && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: 'rgba(255,255,255,0.7)',
+                        display: 'block',
+                        mt: 0.25,
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      {[locationData.city, locationData.state, locationData.zip_code].filter(Boolean).join(', ')}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </Box>
+          )}
+
+          {/* Show comparison when new address selected */}
+          {hasSelectedNewAddress && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+              {/* Current Address (crossed out) */}
+              <Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: 'rgba(255,255,255,0.5)',
+                    mb: 0.5,
+                    display: 'block',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  Previous Location
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 0.75,
+                    borderRadius: 1.5,
+                    p: 1,
+                    backgroundColor: 'rgba(0,0,0,0.15)',
+                    opacity: 0.6,
+                  }}
+                >
+                  <LocationOn sx={{ color: 'white', mt: 0.25, fontSize: 18 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: 600,
+                        color: 'white',
+                        fontSize: '0.85rem',
+                        textDecoration: 'line-through',
+                      }}
+                    >
+                      {initialStop?.location_address || ''}
+                    </Typography>
+                    {initialStop?.city && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'rgba(255,255,255,0.5)',
+                          display: 'block',
+                          mt: 0.25,
+                          fontSize: '0.7rem',
+                        }}
+                      >
+                        {[initialStop.city, initialStop.state, initialStop.zip_code].filter(Boolean).join(', ')}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* New Address */}
+              <Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    color: 'rgba(255,255,255,0.9)',
+                    mb: 0.5,
+                    display: 'block',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  New Location
+                </Typography>
+                <Box
+                  onClick={handleAddressClick}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 0.75,
+                    cursor: 'pointer',
+                    borderRadius: 1.5,
+                    p: 1,
+                    border: '2px solid rgba(255,255,255,0.5)',
+                    backgroundColor: 'rgba(255,255,255,0.12)',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.18)',
+                      borderColor: 'rgba(255,255,255,0.7)',
+                    },
+                  }}
+                >
+                  <LocationOn sx={{ color: 'white', mt: 0.25, fontSize: 20 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: 700,
+                        color: 'white',
+                        fontSize: '0.9rem',
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {selectedAddress.property_address}
+                    </Typography>
+                    {selectedAddress.city && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'rgba(255,255,255,0.8)',
+                          display: 'block',
+                          mt: 0.25,
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        {[selectedAddress.city, selectedAddress.state, selectedAddress.zip_code].filter(Boolean).join(', ')}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          )}
+
+          {/* Address Action Menu */}
+          <Menu
+            anchorEl={addressMenuAnchor}
+            open={Boolean(addressMenuAnchor)}
+            onClose={handleAddressMenuClose}
+            onClick={(e) => e.stopPropagation()}
+            slotProps={{
+              paper: {
+                sx: {
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 2,
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                  minWidth: 200,
+                },
               },
             }}
           >
-            <MyLocation sx={{ color: currentTypeColor, fontSize: 22 }} />
-            <Typography sx={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', fontWeight: 500 }}>
-              Use Current Location
-            </Typography>
-          </Box>
+            <MenuItem onClick={handleCopyAddress}>
+              <ListItemIcon>
+                <ContentCopy fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Copy address</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleOpenAppleMaps}>
+              <ListItemIcon>
+                <Apple fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Open in Apple Maps</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleOpenGoogleMaps}>
+              <ListItemIcon>
+                <Map fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Open in Google Maps</ListItemText>
+            </MenuItem>
+          </Menu>
 
-          {/* Address Search */}
-          <Box sx={{ mb: 2 }}>
+          {/* Address Search Input - labeled based on whether we have existing address */}
+          <Box>
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: 10,
+                fontWeight: 600,
+                color: 'rgba(255,255,255,0.7)',
+                mb: 0.75,
+                display: 'block',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}
+            >
+              {hasExistingAddress || selectedAddress ? 'Change Location' : 'Street Address'}
+            </Typography>
             <AddressInput
-              value={locationData.location_address}
-              onChange={handleAddressChange}
+              value={selectedAddress?.property_address || locationData.location_address || ''}
+              onChange={handleAddressSelect}
               placeholder="Search for an address..."
               hideLabel
               color={currentTypeColor}
-            />
-            {locationData.city && (
-              <Typography
-                sx={{
-                  fontSize: '0.75rem',
-                  color: 'rgba(255,255,255,0.6)',
-                  mt: 0.5,
-                  pl: 1,
-                }}
-              >
-                {[locationData.city, locationData.state, locationData.zip_code].filter(Boolean).join(', ')}
-              </Typography>
-            )}
-          </Box>
-
-          {/* Display Name */}
-          <Box>
-            <Typography
-              sx={{
-                color: 'rgba(255,255,255,0.5)',
-                fontSize: '0.65rem',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                mb: 0.5,
-              }}
-            >
-              Display Name (Optional)
-            </Typography>
-            <TextField
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="e.g., Coffee Shop, Client's Office..."
-              fullWidth
-              size="small"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                  borderRadius: 1.5,
-                  '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                  '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
-                  '&.Mui-focused fieldset': { borderColor: currentTypeColor },
-                },
-                '& .MuiInputBase-input': {
-                  color: 'white',
-                  fontSize: '0.875rem',
-                },
-              }}
             />
           </Box>
         </Box>
