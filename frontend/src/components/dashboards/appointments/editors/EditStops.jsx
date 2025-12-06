@@ -6,6 +6,8 @@ import {
   TextField,
   InputAdornment,
   Tooltip,
+  Chip,
+  Avatar,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import {
@@ -17,9 +19,16 @@ import {
   Timer,
   Check,
   Close,
+  Home,
+  AttachMoney,
+  BedOutlined,
+  BathtubOutlined,
+  SquareFoot,
+  LinkOff,
 } from '@mui/icons-material';
 import { ModalContainer } from '../../../common/modals/ModalContainer';
 import { AddressInput } from '../../../common/inputs/shared/AddressInput';
+import { ListingInput } from '../../../common/inputs/shared/ListingInput';
 
 /**
  * Format time from 24h to 12h display
@@ -35,7 +44,157 @@ const formatTime = (time) => {
 };
 
 /**
+ * Format price for display
+ */
+const formatPrice = (price) => {
+  if (!price) return '';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+};
+
+/**
+ * Listing Preview Card - Shows when a listing is linked to a stop
+ */
+const ListingPreviewCard = ({ listing, onUnlink, color }) => {
+  if (!listing) return null;
+
+  return (
+    <Box
+      sx={{
+        backgroundColor: alpha(color, 0.15),
+        borderRadius: 2,
+        p: 1.5,
+        mb: 1.5,
+        border: `1px solid ${alpha(color, 0.3)}`,
+        display: 'flex',
+        gap: 1.5,
+      }}
+    >
+      {/* Listing Photo */}
+      <Box
+        sx={{
+          width: 80,
+          height: 60,
+          borderRadius: 1,
+          overflow: 'hidden',
+          flexShrink: 0,
+          backgroundColor: 'rgba(255,255,255,0.1)',
+        }}
+      >
+        {listing.primary_photo ? (
+          <Box
+            component="img"
+            src={listing.primary_photo}
+            alt={listing.property_address}
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <Box
+            sx={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Home sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 28 }} />
+          </Box>
+        )}
+      </Box>
+
+      {/* Listing Info */}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography
+          sx={{
+            color: 'white',
+            fontWeight: 600,
+            fontSize: '0.85rem',
+            lineHeight: 1.2,
+            mb: 0.5,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {listing.property_address || 'Unknown Address'}
+        </Typography>
+
+        {/* Price */}
+        {listing.list_price && (
+          <Typography
+            sx={{
+              color: alpha(color, 0.9),
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              mb: 0.5,
+            }}
+          >
+            {formatPrice(listing.list_price)}
+          </Typography>
+        )}
+
+        {/* Property Details */}
+        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+          {listing.bedrooms && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+              <BedOutlined sx={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }} />
+              <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem' }}>
+                {listing.bedrooms} bd
+              </Typography>
+            </Box>
+          )}
+          {listing.bathrooms && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+              <BathtubOutlined sx={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }} />
+              <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem' }}>
+                {listing.bathrooms} ba
+              </Typography>
+            </Box>
+          )}
+          {listing.square_feet && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+              <SquareFoot sx={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }} />
+              <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem' }}>
+                {listing.square_feet.toLocaleString()} sqft
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </Box>
+
+      {/* Unlink Button */}
+      <Tooltip title="Unlink listing">
+        <IconButton
+          size="small"
+          onClick={onUnlink}
+          sx={{
+            color: 'rgba(255,255,255,0.5)',
+            alignSelf: 'flex-start',
+            '&:hover': {
+              color: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            },
+          }}
+        >
+          <LinkOff fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  );
+};
+
+/**
  * Single Stop Item Component
+ * Enhanced to support showings mode with listing selection
  */
 const StopItem = ({
   stop,
@@ -45,6 +204,7 @@ const StopItem = ({
   color,
   isFirst,
   canDelete,
+  isShowingMode = false,
 }) => {
   const [localStop, setLocalStop] = useState(stop);
 
@@ -83,6 +243,38 @@ const StopItem = ({
     };
     setLocalStop(updated);
     onUpdate(index, updated);
+  };
+
+  // Handle listing selection for showings mode
+  const handleListingSelect = (listing) => {
+    if (!listing) {
+      // Unlink listing
+      const updated = {
+        ...localStop,
+        listing: null,
+        listing_id: null,
+      };
+      setLocalStop(updated);
+      onUpdate(index, updated);
+      return;
+    }
+
+    // Link listing - also use its address
+    const updated = {
+      ...localStop,
+      listing,
+      listing_id: listing.id,
+      location_address: listing.property_address || '',
+      city: listing.city || '',
+      state: listing.state || '',
+      zip_code: listing.zip_code || '',
+    };
+    setLocalStop(updated);
+    onUpdate(index, updated);
+  };
+
+  const handleUnlinkListing = () => {
+    handleListingSelect(null);
   };
 
   return (
@@ -125,7 +317,9 @@ const StopItem = ({
             letterSpacing: '0.5px',
           }}
         >
-          {isFirst ? 'Starting Location' : `Stop ${index + 1}`}
+          {isShowingMode
+            ? (isFirst ? 'First Showing' : `Showing ${index + 1}`)
+            : (isFirst ? 'Starting Location' : `Stop ${index + 1}`)}
         </Typography>
         {canDelete && (
           <Tooltip title="Remove stop">
@@ -146,42 +340,80 @@ const StopItem = ({
         )}
       </Box>
 
-      {/* Address */}
-      <Box sx={{ mb: 2 }}>
-        <Typography
-          variant="caption"
-          sx={{
-            fontSize: 10,
-            fontWeight: 600,
-            color: 'rgba(255,255,255,0.6)',
-            mb: 0.5,
-            display: 'block',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-          }}
-        >
-          Address
-        </Typography>
-        <AddressInput
-          value={localStop.location_address || ''}
-          onChange={handleAddressSelect}
-          placeholder="Enter address..."
-          hideLabel
-          color={color}
-        />
-        {localStop.city && (
+      {/* Listing Selection for Showings Mode */}
+      {isShowingMode && (
+        <Box sx={{ mb: 2 }}>
+          {localStop.listing ? (
+            <ListingPreviewCard
+              listing={localStop.listing}
+              onUnlink={handleUnlinkListing}
+              color={color}
+            />
+          ) : (
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.6)',
+                  mb: 0.5,
+                  display: 'block',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                Select Listing
+              </Typography>
+              <ListingInput
+                value={localStop.listing}
+                onChange={handleListingSelect}
+                placeholder="Search listings to show..."
+                color={color}
+              />
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {/* Address - Only show if not in showings mode OR if no listing selected */}
+      {(!isShowingMode || !localStop.listing) && (
+        <Box sx={{ mb: 2 }}>
           <Typography
+            variant="caption"
             sx={{
-              fontSize: '0.75rem',
+              fontSize: 10,
+              fontWeight: 600,
               color: 'rgba(255,255,255,0.6)',
-              mt: 0.5,
-              pl: 1,
+              mb: 0.5,
+              display: 'block',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
             }}
           >
-            {[localStop.city, localStop.state, localStop.zip_code].filter(Boolean).join(', ')}
+            {isShowingMode ? 'Or Enter Address Manually' : 'Address'}
           </Typography>
-        )}
-      </Box>
+          <AddressInput
+            value={localStop.location_address || ''}
+            onChange={handleAddressSelect}
+            placeholder="Enter address..."
+            hideLabel
+            color={color}
+          />
+          {localStop.city && !localStop.listing && (
+            <Typography
+              sx={{
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.6)',
+                mt: 0.5,
+                pl: 1,
+              }}
+            >
+              {[localStop.city, localStop.state, localStop.zip_code].filter(Boolean).join(', ')}
+            </Typography>
+          )}
+        </Box>
+      )}
 
       {/* Time and Duration Row */}
       <Box sx={{ display: 'flex', gap: 2 }}>
@@ -294,6 +526,7 @@ const StopItem = ({
  * - Address autocomplete per stop
  * - Time scheduling per stop
  * - Duration estimation
+ * - Listing selection for showings mode
  * - Route optimization placeholder (for future map integration)
  *
  * @param {boolean} open - Dialog open state
@@ -303,6 +536,7 @@ const StopItem = ({
  * @param {Object} data - Full appointment object
  * @param {boolean} inline - If true, renders without ModalContainer wrapper
  * @param {string} color - Theme color
+ * @param {string} appointmentType - Type of appointment (showing, listing_presentation, etc.)
  */
 export const EditStops = ({
   open,
@@ -312,7 +546,14 @@ export const EditStops = ({
   data,
   inline = false,
   color = '#3b82f6',
+  appointmentType,
 }) => {
+  // Determine if this is a showing type appointment
+  const isShowingMode = appointmentType === 'showing' ||
+    appointmentType === 'Property Showing' ||
+    data?.appointment_type === 'showing' ||
+    data?.appointment_type === 'Property Showing' ||
+    data?.type === 'showing';
   // Initialize with at least one stop
   const [stops, setStops] = useState(() => {
     if (value && value.length > 0) return [...value];
@@ -436,7 +677,7 @@ export const EditStops = ({
             mb: 0.5,
           }}
         >
-          Appointment Stops
+          {isShowingMode ? 'Property Showings' : 'Appointment Stops'}
         </Typography>
         <Typography
           sx={{
@@ -444,7 +685,9 @@ export const EditStops = ({
             fontSize: '0.8rem',
           }}
         >
-          {stops.length} {stops.length === 1 ? 'stop' : 'stops'} | {totalDurationText}
+          {stops.length} {isShowingMode
+            ? (stops.length === 1 ? 'showing' : 'showings')
+            : (stops.length === 1 ? 'stop' : 'stops')} | {totalDurationText}
         </Typography>
       </Box>
 
@@ -460,6 +703,7 @@ export const EditStops = ({
             color={color}
             isFirst={index === 0}
             canDelete={stops.length > 1}
+            isShowingMode={isShowingMode}
           />
         ))}
       </Box>
@@ -486,7 +730,7 @@ export const EditStops = ({
       >
         <Add sx={{ color: 'rgba(255,255,255,0.6)' }} />
         <Typography sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
-          Add Another Stop
+          {isShowingMode ? 'Add Another Showing' : 'Add Another Stop'}
         </Typography>
       </Box>
 

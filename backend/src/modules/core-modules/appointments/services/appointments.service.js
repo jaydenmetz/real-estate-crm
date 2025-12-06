@@ -876,6 +876,266 @@ class AppointmentsService {
     }
   }
 
+  // ============================================================================
+  // SHOWINGS MANAGEMENT (for 'showing' type appointments)
+  // ============================================================================
+
+  /**
+   * Add a showing to an appointment (links a listing to a stop)
+   * @param {string} appointmentId - Appointment ID
+   * @param {Object} showingData - Showing data
+   * @param {Object} user - Authenticated user
+   * @returns {Promise<Object>} Created showing with listing info
+   */
+  async addShowing(appointmentId, showingData, user) {
+    const {
+      stopId,
+      listingId,
+      showingOrder,
+      showingType = 'first_showing',
+      accessType,
+      lockboxCode,
+      accessNotes,
+    } = showingData;
+
+    // Get current max showing_order if not provided
+    let order = showingOrder;
+    if (!order) {
+      const maxOrderQuery = `
+        SELECT COALESCE(MAX(showing_order), 0) as max_order
+        FROM showings
+        WHERE appointment_id = $1
+      `;
+      const maxOrderResult = await pool.query(maxOrderQuery, [appointmentId]);
+      order = maxOrderResult.rows[0].max_order + 1;
+    }
+
+    const query = `
+      INSERT INTO showings (
+        appointment_id, stop_id, listing_id, showing_order, showing_type,
+        access_type, lockbox_code, access_notes, showing_status
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')
+      RETURNING *
+    `;
+
+    const values = [
+      appointmentId,
+      stopId || null,
+      listingId,
+      order,
+      showingType,
+      accessType || null,
+      lockboxCode || null,
+      accessNotes || null,
+    ];
+
+    const result = await pool.query(query, values);
+    const showing = result.rows[0];
+
+    // Fetch listing details
+    const listingQuery = `
+      SELECT l.*,
+        (SELECT url FROM listing_photos WHERE listing_id = l.id ORDER BY photo_order LIMIT 1) as primary_photo
+      FROM listings l
+      WHERE l.id = $1
+    `;
+    const listingResult = await pool.query(listingQuery, [listingId]);
+    if (listingResult.rows.length > 0) {
+      showing.listing = listingResult.rows[0];
+    }
+
+    // Emit WebSocket event
+    this._emitWebSocketEvent(user, 'updated', { id: appointmentId, title: 'Showing added' });
+
+    return showing;
+  }
+
+  /**
+   * Update a showing
+   * @param {string} showingId - Showing ID
+   * @param {Object} updates - Fields to update
+   * @param {Object} user - Authenticated user
+   * @returns {Promise<Object|null>} Updated showing or null if not found
+   */
+  async updateShowing(showingId, updates, user) {
+    const setClause = [];
+    const values = [];
+    let paramIndex = 1;
+
+    const allowedFields = [
+      'stop_id', 'showing_order', 'showing_status', 'showing_type',
+      'requested_at', 'confirmed_at', 'confirmation_number',
+      'access_type', 'lockbox_code', 'access_notes',
+      'client_interest_level', 'agent_notes', 'client_feedback',
+    ];
+
+    for (const field of allowedFields) {
+      const camelField = field.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+      if (updates[field] !== undefined || updates[camelField] !== undefined) {
+        setClause.push(`${field} = $${paramIndex}`);
+        values.push(updates[field] ?? updates[camelField]);
+        paramIndex++;
+      }
+    }
+
+    if (setClause.length === 0) {
+      throw new Error('No valid fields to update');
+    }
+
+    setClause.push('updated_at = CURRENT_TIMESTAMP');
+    values.push(showingId);
+
+    const query = `
+      UPDATE showings
+      SET ${setClause.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    // Emit WebSocket event
+    this._emitWebSocketEvent(user, 'updated', { id: result.rows[0].appointment_id, title: 'Showing updated' });
+
+    return result.rows[0];
+  }
+
+  /**
+   * Delete a showing
+   * @param {string} showingId - Showing ID
+   * @param {Object} user - Authenticated user
+   * @returns {Promise<boolean>} True if deleted
+   */
+  async deleteShowing(showingId, user) {
+    const getQuery = 'SELECT appointment_id FROM showings WHERE id = $1';
+    const getResult = await pool.query(getQuery, [showingId]);
+
+    if (getResult.rows.length === 0) {
+      return false;
+    }
+
+    const appointmentId = getResult.rows[0].appointment_id;
+
+    const deleteQuery = 'DELETE FROM showings WHERE id = $1';
+    await pool.query(deleteQuery, [showingId]);
+
+    // Reorder remaining showings
+    await this._reorderShowings(appointmentId);
+
+    // Emit WebSocket event
+    this._emitWebSocketEvent(user, 'updated', { id: appointmentId, title: 'Showing deleted' });
+
+    return true;
+  }
+
+  /**
+   * Reorder showings after deletion
+   * @private
+   */
+  async _reorderShowings(appointmentId) {
+    const query = `
+      WITH ordered AS (
+        SELECT id, ROW_NUMBER() OVER (ORDER BY showing_order) as new_order
+        FROM showings
+        WHERE appointment_id = $1
+      )
+      UPDATE showings
+      SET showing_order = ordered.new_order
+      FROM ordered
+      WHERE showings.id = ordered.id
+    `;
+    await pool.query(query, [appointmentId]);
+  }
+
+  /**
+   * Get showings for an appointment with listing details
+   * @param {string} appointmentId - Appointment ID
+   * @returns {Promise<Array>} Showings with listing info
+   */
+  async getShowings(appointmentId) {
+    const query = `
+      SELECT s.*,
+        l.property_address, l.city, l.state, l.zip_code,
+        l.list_price, l.bedrooms, l.bathrooms, l.square_feet,
+        l.listing_status, l.mls_number,
+        (SELECT url FROM listing_photos WHERE listing_id = l.id ORDER BY photo_order LIMIT 1) as primary_photo
+      FROM showings s
+      LEFT JOIN listings l ON s.listing_id = l.id
+      WHERE s.appointment_id = $1
+      ORDER BY s.showing_order ASC
+    `;
+    const result = await pool.query(query, [appointmentId]);
+    return result.rows;
+  }
+
+  /**
+   * Update showings for an appointment (replace all)
+   * @param {string} appointmentId - Appointment ID
+   * @param {Array} showings - Array of showing data
+   * @param {Object} user - Authenticated user
+   * @returns {Promise<Array>} Updated showings
+   */
+  async updateShowings(appointmentId, showings, user) {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // Delete existing showings
+      await client.query('DELETE FROM showings WHERE appointment_id = $1', [appointmentId]);
+
+      // Insert new showings
+      const insertedShowings = [];
+      for (let i = 0; i < showings.length; i++) {
+        const showing = showings[i];
+        const query = `
+          INSERT INTO showings (
+            appointment_id, stop_id, listing_id, showing_order, showing_type,
+            showing_status, access_type, lockbox_code, access_notes,
+            client_interest_level, agent_notes, client_feedback
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          RETURNING *
+        `;
+
+        const values = [
+          appointmentId,
+          showing.stop_id || showing.stopId || null,
+          showing.listing_id || showing.listingId,
+          i + 1,
+          showing.showing_type || showing.showingType || 'first_showing',
+          showing.showing_status || showing.showingStatus || 'pending',
+          showing.access_type || showing.accessType || null,
+          showing.lockbox_code || showing.lockboxCode || null,
+          showing.access_notes || showing.accessNotes || null,
+          showing.client_interest_level || showing.clientInterestLevel || null,
+          showing.agent_notes || showing.agentNotes || null,
+          showing.client_feedback || showing.clientFeedback || null,
+        ];
+
+        const result = await client.query(query, values);
+        insertedShowings.push(result.rows[0]);
+      }
+
+      await client.query('COMMIT');
+
+      // Emit WebSocket event
+      this._emitWebSocketEvent(user, 'updated', { id: appointmentId, title: 'Showings updated' });
+
+      return insertedShowings;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   /**
    * Emit WebSocket event for appointment changes
    * @private

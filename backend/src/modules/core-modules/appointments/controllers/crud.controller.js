@@ -469,3 +469,180 @@ exports.removeAttendee = async (req, res) => {
     });
   }
 };
+
+// ============================================================================
+// SHOWINGS MANAGEMENT (for 'showing' type appointments)
+// ============================================================================
+
+// GET /api/v1/appointments/:id/showings
+exports.getShowings = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const showings = await appointmentsService.getShowings(id);
+
+    res.json({
+      success: true,
+      data: showings,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error fetching showings:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'FETCH_ERROR',
+        message: 'Failed to fetch showings',
+        details: error.message,
+      },
+    });
+  }
+};
+
+// PUT /api/v1/appointments/:id/showings
+exports.updateShowings = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { showings } = req.body;
+
+    if (!Array.isArray(showings)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'showings must be an array',
+        },
+      });
+    }
+
+    const updatedShowings = await appointmentsService.updateShowings(id, showings, req.user);
+
+    res.json({
+      success: true,
+      data: updatedShowings,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error updating showings:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'UPDATE_ERROR',
+        message: 'Failed to update showings',
+        details: error.message,
+      },
+    });
+  }
+};
+
+// POST /api/v1/appointments/:id/showings
+exports.addShowing = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.body.listingId && !req.body.listing_id) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_FIELD',
+          message: 'listingId is required',
+        },
+      });
+    }
+
+    const showing = await appointmentsService.addShowing(id, req.body, req.user);
+
+    res.status(201).json({
+      success: true,
+      data: showing,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error adding showing:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'CREATE_ERROR',
+        message: 'Failed to add showing',
+        details: error.message,
+      },
+    });
+  }
+};
+
+// PUT /api/v1/appointments/showings/:showingId
+exports.updateShowing = async (req, res) => {
+  try {
+    const { showingId } = req.params;
+    const updated = await appointmentsService.updateShowing(showingId, req.body, req.user);
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Showing not found',
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      data: updated,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    if (error.message === 'No valid fields to update') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'NO_UPDATES',
+          message: error.message,
+        },
+      });
+    }
+
+    logger.error('Error updating showing:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'UPDATE_ERROR',
+        message: 'Failed to update showing',
+        details: error.message,
+      },
+    });
+  }
+};
+
+// DELETE /api/v1/appointments/showings/:showingId
+exports.deleteShowing = async (req, res) => {
+  try {
+    const { showingId } = req.params;
+    const deleted = await appointmentsService.deleteShowing(showingId, req.user);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Showing not found',
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Showing deleted successfully',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error deleting showing:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'DELETE_ERROR',
+        message: 'Failed to delete showing',
+        details: error.message,
+      },
+    });
+  }
+};

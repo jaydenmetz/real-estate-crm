@@ -80,4 +80,23 @@ router.post('/:id/attendees', requireModifyPermission('appointment'), appointmen
 // Remove a specific attendee
 router.delete('/attendees/:attendeeId', appointmentsController.removeAttendee);
 
+// ============================================================================
+// SHOWINGS MANAGEMENT (for 'showing' type appointments)
+// ============================================================================
+
+// Get all showings for an appointment with listing details
+router.get('/:id/showings', requireOwnership('appointment'), appointmentsController.getShowings);
+
+// Update all showings for an appointment (replace all)
+router.put('/:id/showings', requireModifyPermission('appointment'), appointmentsController.updateShowings);
+
+// Add a single showing to an appointment
+router.post('/:id/showings', requireModifyPermission('appointment'), appointmentsController.addShowing);
+
+// Update a specific showing (for feedback, status, etc.)
+router.put('/showings/:showingId', appointmentsController.updateShowing);
+
+// Delete a specific showing
+router.delete('/showings/:showingId', appointmentsController.deleteShowing);
+
 module.exports = router;
