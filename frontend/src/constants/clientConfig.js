@@ -6,9 +6,15 @@ import { alpha } from '@mui/material';
  * Reduces garbage collection pressure and improves performance
  *
  * Note: 'bg' is used for chip background, 'cardBg' for subtle card gradients
+ *
+ * Statuses match database schema:
+ * - Active (green) - Default status for new clients
+ * - Closed (blue) - Successfully completed/closed relationship
+ * - Expired (gray) - Agreement expired
+ * - Cancelled (red) - Client cancelled
  */
 export const CLIENT_STATUS_CONFIG = {
-  'active': {
+  'Active': {
     color: '#10b981',
     bg: '#10b981', // Solid green for chip
     cardBg: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
@@ -16,37 +22,29 @@ export const CLIENT_STATUS_CONFIG = {
     icon: 'person',
     label: 'Active'
   },
-  'lead': {
+  'Closed': {
     color: '#3b82f6',
     bg: '#3b82f6', // Solid blue for chip
     cardBg: 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(37,99,235,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#3b82f6', 0.2)}`,
-    icon: 'person_add',
-    label: 'Lead'
+    icon: 'check_circle',
+    label: 'Closed'
   },
-  'inactive': {
-    color: '#9ca3af',
-    bg: '#9ca3af', // Solid gray for chip
-    cardBg: 'linear-gradient(135deg, rgba(156,163,175,0.08) 0%, rgba(107,114,128,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#9ca3af', 0.2)}`,
-    icon: 'person_off',
-    label: 'Inactive'
-  },
-  'past_client': {
-    color: '#8b5cf6',
-    bg: '#8b5cf6', // Solid purple for chip
-    cardBg: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(124,58,237,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#8b5cf6', 0.2)}`,
-    icon: 'history',
-    label: 'Past Client'
-  },
-  'archived': {
+  'Expired': {
     color: '#6b7280',
-    bg: '#6b7280', // Solid dark gray for chip
+    bg: '#6b7280', // Solid gray for chip
     cardBg: 'linear-gradient(135deg, rgba(107,114,128,0.08) 0%, rgba(75,85,99,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#6b7280', 0.2)}`,
-    icon: 'archive',
-    label: 'Archived'
+    icon: 'schedule',
+    label: 'Expired'
+  },
+  'Cancelled': {
+    color: '#ef4444',
+    bg: '#ef4444', // Solid red for chip
+    cardBg: 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#ef4444', 0.2)}`,
+    icon: 'cancel',
+    label: 'Cancelled'
   }
 };
 
@@ -55,42 +53,43 @@ export const CLIENT_STATUS_CONFIG = {
  * Maps status keys to MUI color names
  */
 export const CLIENT_STATUS_COLORS = {
-  'active': 'success',
-  'lead': 'info',
-  'inactive': 'default',
-  'past_client': 'default',
-  'archived': 'default'
+  'Active': 'success',
+  'Closed': 'info',
+  'Expired': 'default',
+  'Cancelled': 'error'
 };
 
 /**
  * Status labels for display
  */
 export const CLIENT_STATUS_LABELS = {
-  'active': 'Active',
-  'lead': 'Lead',
-  'inactive': 'Inactive',
-  'past_client': 'Past Client',
-  'archived': 'Archived'
+  'Active': 'Active',
+  'Closed': 'Closed',
+  'Expired': 'Expired',
+  'Cancelled': 'Cancelled'
 };
 
 /**
  * All valid client statuses
  */
 export const CLIENT_STATUS = {
-  ACTIVE: 'active',
-  LEAD: 'lead',
-  INACTIVE: 'inactive',
-  PAST_CLIENT: 'past_client',
-  ARCHIVED: 'archived'
+  ACTIVE: 'Active',
+  CLOSED: 'Closed',
+  EXPIRED: 'Expired',
+  CANCELLED: 'Cancelled'
 };
 
 /**
- * Get status config with fallback to active
+ * Get status config with fallback to Active
+ * Case-insensitive lookup to handle various inputs
  * @param {string} status - Client status
  * @returns {object} Status configuration
  */
 export const getClientStatusConfig = (status) => {
-  if (!status) return CLIENT_STATUS_CONFIG.active;
-  const normalized = status.toLowerCase();
-  return CLIENT_STATUS_CONFIG[normalized] || CLIENT_STATUS_CONFIG.active;
+  if (!status) return CLIENT_STATUS_CONFIG.Active;
+
+  // Normalize status to match config keys (capitalize first letter)
+  const normalized = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
+  return CLIENT_STATUS_CONFIG[normalized] || CLIENT_STATUS_CONFIG.Active;
 };

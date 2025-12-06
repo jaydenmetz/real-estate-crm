@@ -27,22 +27,19 @@ import { LeadCircles } from '../../../../common/ui/LeadCircles';
 
 // ============================================================================
 // STATUS CONFIGURATION
+// Matches database schema: Active, Closed, Expired, Cancelled
 // ============================================================================
 
-const getStatusConfig = (stage) => {
+const getStatusConfig = (status) => {
   const configs = {
-    'New': { label: 'New', color: '#3b82f6', bg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
-    'Qualified': { label: 'Qualified', color: '#8b5cf6', bg: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
-    'Showing': { label: 'Showing', color: '#f59e0b', bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
-    'Offer': { label: 'Offer', color: '#ec4899', bg: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' },
-    'Contract': { label: 'Contract', color: '#10b981', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-    'Closed': { label: 'Closed', color: '#059669', bg: 'linear-gradient(135deg, #059669 0%, #047857 100%)' },
-    'active': { label: 'Active', color: '#10b981', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-    'inactive': { label: 'Inactive', color: '#9ca3af', bg: 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)' },
-    'lead': { label: 'Lead', color: '#3b82f6', bg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
-    'past_client': { label: 'Past', color: '#6b7280', bg: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' },
+    'Active': { label: 'Active', color: '#10b981', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+    'Closed': { label: 'Closed', color: '#3b82f6', bg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
+    'Expired': { label: 'Expired', color: '#6b7280', bg: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' },
+    'Cancelled': { label: 'Cancelled', color: '#ef4444', bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
   };
-  return configs[stage] || configs['New'];
+  // Normalize to capitalized first letter
+  const normalized = status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : 'Active';
+  return configs[normalized] || configs['Active'];
 };
 
 // Compact date formatter
@@ -76,18 +73,19 @@ const formatCompactDate = (value) => {
 const useClientCardConfig = (statuses) => {
   return useMemo(() => {
     // Transform database statuses into dropdown options
+    // Database statuses: Active, Closed, Expired, Cancelled
     const statusOptions = statuses && statuses.length > 0
       ? statuses.map((status) => ({
           value: status.status_key,
           label: status.label,
-          icon: status.status_key === 'inactive' ? Cancel : CheckCircle,
+          icon: status.status_key === 'Cancelled' ? Cancel : CheckCircle,
           color: status.color,
         }))
       : [
-          { value: 'active', label: 'Active', icon: CheckCircle, color: '#10b981' },
-          { value: 'lead', label: 'Lead', icon: CheckCircle, color: '#3b82f6' },
-          { value: 'inactive', label: 'Inactive', icon: Cancel, color: '#9ca3af' },
-          { value: 'past_client', label: 'Past Client', icon: CheckCircle, color: '#6b7280' },
+          { value: 'Active', label: 'Active', icon: CheckCircle, color: '#10b981' },
+          { value: 'Closed', label: 'Closed', icon: CheckCircle, color: '#3b82f6' },
+          { value: 'Expired', label: 'Expired', icon: CheckCircle, color: '#6b7280' },
+          { value: 'Cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
         ];
 
     return {
@@ -100,7 +98,7 @@ const useClientCardConfig = (statuses) => {
 
       // Status Chip Configuration (top-left, editable)
       status: {
-        field: (client) => client.stage || client.status || client.client_status || 'New',
+        field: (client) => client.client_status || client.status || 'Active',
         getConfig: (status) => {
           const config = getStatusConfig(status);
           return {
@@ -112,7 +110,7 @@ const useClientCardConfig = (statuses) => {
         editable: true,
         options: statusOptions,
         onSave: (client, newStatus) => {
-          return { client_status: newStatus, stage: newStatus };
+          return { client_status: newStatus };
         },
       },
 
