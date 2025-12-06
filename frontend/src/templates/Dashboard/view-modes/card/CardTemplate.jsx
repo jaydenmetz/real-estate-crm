@@ -492,49 +492,70 @@ const CardTemplate = React.memo(({
           }}>
             {/* Title - Editable */}
             {config.title && (
-              <Box
-                onClick={(e) => {
-                  if (config.title.editable && onUpdate) {
-                    e.stopPropagation();
-                    openEditor('title');
-                  }
-                }}
-                sx={{
-                  cursor: config.title.editable && onUpdate ? 'pointer' : 'default',
-                  transition: 'all 0.2s',
-                  borderRadius: 1,
-                  px: 0.5,
-                  py: 0.25,
-                  mb: 1,
-                  '&:hover': config.title.editable && onUpdate ? {
-                    backgroundColor: 'action.hover',
-                  } : {},
-                }}
-              >
-                <Typography
-                  variant="h6"
+              <Box sx={{ mb: 1 }}>
+                <Box
+                  onClick={(e) => {
+                    if (config.title.editable && onUpdate) {
+                      e.stopPropagation();
+                      openEditor('title');
+                    }
+                  }}
                   sx={{
-                    fontWeight: 800,
-                    fontSize: '0.9rem',
-                    color: theme.palette.text.primary,
-                    lineHeight: 1.2,
+                    cursor: config.title.editable && onUpdate ? 'pointer' : 'default',
+                    transition: 'all 0.2s',
+                    borderRadius: 1,
+                    px: 0.5,
+                    py: 0.25,
+                    '&:hover': config.title.editable && onUpdate ? {
+                      backgroundColor: 'action.hover',
+                    } : {},
                   }}
                 >
-                  {titleValue}
-                </Typography>
-                {subtitleValue && (
                   <Typography
-                    variant="caption"
+                    variant="h6"
                     sx={{
-                      fontSize: '0.7rem',
-                      color: theme.palette.text.secondary,
-                      lineHeight: 1.3,
-                      display: 'block',
-                      mt: 0.25,
+                      fontWeight: 800,
+                      fontSize: '0.9rem',
+                      color: theme.palette.text.primary,
+                      lineHeight: 1.2,
                     }}
                   >
-                    {subtitleValue}
+                    {titleValue}
                   </Typography>
+                </Box>
+                {/* Subtitle - Potentially editable separately */}
+                {subtitleValue && (
+                  <Box
+                    onClick={(e) => {
+                      if (config.subtitle?.editable && onUpdate) {
+                        e.stopPropagation();
+                        openEditor('subtitle');
+                      }
+                    }}
+                    sx={{
+                      cursor: config.subtitle?.editable && onUpdate ? 'pointer' : 'default',
+                      transition: 'all 0.2s',
+                      borderRadius: 1,
+                      px: 0.5,
+                      py: 0.25,
+                      mt: 0.25,
+                      '&:hover': config.subtitle?.editable && onUpdate ? {
+                        backgroundColor: 'action.hover',
+                      } : {},
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: '0.7rem',
+                        color: theme.palette.text.secondary,
+                        lineHeight: 1.3,
+                        display: 'block',
+                      }}
+                    >
+                      {subtitleValue}
+                    </Typography>
+                  </Box>
                 )}
               </Box>
             )}
@@ -766,21 +787,48 @@ const CardTemplate = React.memo(({
       </Box>
 
       {/* Editor Modals - Rendered from config */}
-      {config.title?.editor && (
-        <config.title.editor
-          open={openEditors.title || false}
-          onClose={() => closeEditor('title')}
-          onSave={async (newValue) => {
-            if (onUpdate && config.title.onSave) {
-              const updates = config.title.onSave(data, newValue);
-              await onUpdate(data.id, updates);
-            }
-            closeEditor('title');
-          }}
-          value={titleValue}
-          data={data}
-        />
-      )}
+      {config.title?.editor && (() => {
+        const titleEditorProps = config.title.editorProps
+          ? config.title.editorProps(data)
+          : { value: titleValue, data: data };
+
+        return (
+          <config.title.editor
+            open={openEditors.title || false}
+            onClose={() => closeEditor('title')}
+            onSave={async (newValue) => {
+              if (onUpdate && config.title.onSave) {
+                const updates = config.title.onSave(data, newValue);
+                await onUpdate(data.id, updates);
+              }
+              closeEditor('title');
+            }}
+            {...titleEditorProps}
+          />
+        );
+      })()}
+
+      {/* Subtitle Editor Modal */}
+      {config.subtitle?.editor && (() => {
+        const subtitleEditorProps = config.subtitle.editorProps
+          ? config.subtitle.editorProps(data)
+          : { value: subtitleValue, data: data };
+
+        return (
+          <config.subtitle.editor
+            open={openEditors.subtitle || false}
+            onClose={() => closeEditor('subtitle')}
+            onSave={async (newValue) => {
+              if (onUpdate && config.subtitle.onSave) {
+                const updates = config.subtitle.onSave(data, newValue);
+                await onUpdate(data.id, updates);
+              }
+              closeEditor('subtitle');
+            }}
+            {...subtitleEditorProps}
+          />
+        );
+      })()}
 
       {config.metrics?.map((metric, idx) => {
         if (!metric.editor) return null;

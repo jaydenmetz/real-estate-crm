@@ -4,6 +4,7 @@
  */
 
 export { EditAppointmentTitle } from './EditAppointmentTitle';
+export { EditAppointmentType } from './EditAppointmentType';
 export { EditAppointmentDate } from './EditAppointmentDate';
 export { EditAppointmentTime } from './EditAppointmentTime';
 export { EditAppointmentStatus } from './EditAppointmentStatus';

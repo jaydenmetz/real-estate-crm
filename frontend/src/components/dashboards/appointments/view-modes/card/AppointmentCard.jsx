@@ -18,7 +18,7 @@ import { useStatus } from '../../../../../contexts/StatusContext';
 
 // Import editor components
 import {
-  EditAppointmentTitle,
+  EditAppointmentType,
   EditAppointmentDate,
   EditAppointmentTime,
   EditAppointmentLocation,
@@ -218,15 +218,85 @@ const useAppointmentCardConfig = (statuses) => {
           return type;
         },
         editable: true,
-        editor: EditAppointmentTitle,
-        onSave: (appointment, newTitle) => {
-          return { title: newTitle };
+        editor: EditAppointmentType,
+        editorProps: (appointment) => ({
+          appointmentType: appointment.appointment_type || appointment.type || 'showing',
+          initialStop: appointment.stops?.[0] || {
+            location_address: appointment.location || appointment.first_stop_address || '',
+            city: '',
+            state: '',
+            zip_code: '',
+          },
+        }),
+        onSave: (appointment, data) => {
+          // EditAppointmentType returns { appointment_type, location, location_address, city, state, zip_code }
+          const updates = {
+            appointment_type: data.appointment_type || data.appointmentType,
+          };
+
+          // Update or create first stop with initial location
+          if (data.location_address || data.location) {
+            const existingStops = appointment.stops || [];
+            const firstStop = existingStops[0] || { stop_order: 0, estimated_duration: 30 };
+
+            updates.stops = [
+              {
+                ...firstStop,
+                location_address: data.location_address || data.location,
+                city: data.city || '',
+                state: data.state || '',
+                zip_code: data.zip_code || '',
+                latitude: data.latitude || null,
+                longitude: data.longitude || null,
+              },
+              ...existingStops.slice(1),
+            ];
+          }
+
+          return updates;
         },
       },
 
-      // Subtitle Configuration: Initial location (full address)
+      // Subtitle Configuration: Initial location (full address) - editable, opens same type+location editor
       subtitle: {
         formatter: (appointment) => getFirstStopAddress(appointment) || 'No location set',
+        editable: true,
+        editor: EditAppointmentType,
+        editorProps: (appointment) => ({
+          appointmentType: appointment.appointment_type || appointment.type || 'showing',
+          initialStop: appointment.stops?.[0] || {
+            location_address: appointment.location || appointment.first_stop_address || '',
+            city: '',
+            state: '',
+            zip_code: '',
+          },
+        }),
+        onSave: (appointment, data) => {
+          // Same logic as title onSave - update type and first stop
+          const updates = {
+            appointment_type: data.appointment_type || data.appointmentType,
+          };
+
+          if (data.location_address || data.location) {
+            const existingStops = appointment.stops || [];
+            const firstStop = existingStops[0] || { stop_order: 0, estimated_duration: 30 };
+
+            updates.stops = [
+              {
+                ...firstStop,
+                location_address: data.location_address || data.location,
+                city: data.city || '',
+                state: data.state || '',
+                zip_code: data.zip_code || '',
+                latitude: data.latitude || null,
+                longitude: data.longitude || null,
+              },
+              ...existingStops.slice(1),
+            ];
+          }
+
+          return updates;
+        },
       },
 
       // Metrics Configuration: Stops (left) + Duration (right)
