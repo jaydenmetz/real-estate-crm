@@ -66,11 +66,15 @@ const getStatuses = async (teamId, entityType) => {
 
 /**
  * Get status categories (tabs) for an entity type
+ * Uses direct category_id FK on statuses instead of junction table
+ * Dynamically computes "All" tab as union of active + won + lost
+ *
  * @param {string} teamId - Team UUID
  * @param {string} entityType - escrows, listings, clients, leads, appointments
  * @returns {Promise<Array>} Array of category objects with statuses
  */
 const getStatusCategories = async (teamId, entityType) => {
+  // Query using direct category_id FK on statuses table
   const query = `
     SELECT
       sc.id AS category_id,
@@ -79,25 +83,27 @@ const getStatusCategories = async (teamId, entityType) => {
       sc.description AS category_description,
       sc.preferred_view_mode,
       sc.sort_order AS category_sort_order,
-      json_agg(
-        json_build_object(
-          'id', s.id,
-          'status_key', s.status_key,
-          'label', s.label,
-          'color', s.color,
-          'icon', s.icon,
-          'sort_order', scm.sort_order
-        ) ORDER BY scm.sort_order ASC, s.label ASC
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'id', s.id,
+            'status_key', s.status_key,
+            'label', s.label,
+            'color', s.color,
+            'icon', s.icon,
+            'sort_order', s.sort_order
+          ) ORDER BY s.sort_order ASC, s.label ASC
+        ) FILTER (WHERE s.id IS NOT NULL),
+        '[]'::json
       ) AS statuses
     FROM status_categories sc
-    LEFT JOIN status_category_mappings scm ON sc.id = scm.category_id
-    LEFT JOIN statuses s ON scm.status_id = s.id
+    LEFT JOIN statuses s ON s.category_id = sc.id
     WHERE sc.team_id = $1 AND sc.entity_type = $2
     GROUP BY sc.id, sc.category_key, sc.label, sc.description, sc.preferred_view_mode, sc.sort_order
     ORDER BY sc.sort_order ASC
   `;
 
-  const result = await pool.query(query, [teamId, entityType]);
+  let result = await pool.query(query, [teamId, entityType]);
 
   // If team has no custom categories, fall back to system defaults
   if (result.rows.length === 0) {
@@ -109,30 +115,61 @@ const getStatusCategories = async (teamId, entityType) => {
         sc.description AS category_description,
         sc.preferred_view_mode,
         sc.sort_order AS category_sort_order,
-        json_agg(
-          json_build_object(
-            'id', s.id,
-            'status_key', s.status_key,
-            'label', s.label,
-            'color', s.color,
-            'icon', s.icon,
-            'sort_order', scm.sort_order
-          ) ORDER BY scm.sort_order ASC, s.label ASC
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id', s.id,
+              'status_key', s.status_key,
+              'label', s.label,
+              'color', s.color,
+              'icon', s.icon,
+              'sort_order', s.sort_order
+            ) ORDER BY s.sort_order ASC, s.label ASC
+          ) FILTER (WHERE s.id IS NOT NULL),
+          '[]'::json
         ) AS statuses
       FROM status_categories sc
-      LEFT JOIN status_category_mappings scm ON sc.id = scm.category_id
-      LEFT JOIN statuses s ON scm.status_id = s.id
+      LEFT JOIN statuses s ON s.category_id = sc.id
       WHERE sc.team_id = '00000000-0000-0000-0000-000000000000'
         AND sc.entity_type = $1
       GROUP BY sc.id, sc.category_key, sc.label, sc.description, sc.preferred_view_mode, sc.sort_order
       ORDER BY sc.sort_order ASC
     `;
 
-    const systemResult = await pool.query(systemQuery, [entityType]);
-    return systemResult.rows;
+    result = await pool.query(systemQuery, [entityType]);
   }
 
-  return result.rows;
+  // Dynamically compute "All" category as union of all statuses
+  const categories = result.rows;
+  const allStatuses = [];
+
+  // Collect all statuses from active, won, lost categories
+  for (const cat of categories) {
+    if (['active', 'won', 'lost'].includes(cat.category_key)) {
+      allStatuses.push(...(cat.statuses || []));
+    }
+  }
+
+  // Sort by sort_order, then by label
+  allStatuses.sort((a, b) => {
+    if (a.sort_order !== b.sort_order) {
+      return a.sort_order - b.sort_order;
+    }
+    return a.label.localeCompare(b.label);
+  });
+
+  // Add "All" category at the end
+  categories.push({
+    category_id: 'all',
+    category_key: 'all',
+    category_label: 'All',
+    category_description: 'All statuses',
+    preferred_view_mode: 'card',
+    category_sort_order: 999,
+    statuses: allStatuses,
+  });
+
+  return categories;
 };
 
 /**

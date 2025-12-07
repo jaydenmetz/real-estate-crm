@@ -8,139 +8,132 @@ import { alpha } from '@mui/material';
 
 // ========================================
 // STATUS CONSTANTS
+// Uses lowercase_snake_case keys (database-driven)
+// Categories: active, won, lost
 // ========================================
 
 export const LISTING_STATUS = {
-  COMING_SOON: 'Coming Soon',
-  ACTIVE: 'Active',
-  PENDING: 'Pending',
-  CLOSED: 'Closed',
-  EXPIRED: 'Expired',
-  CANCELLED: 'Cancelled',
-  WITHDRAWN: 'Withdrawn',
-  ARCHIVED: 'archived'
+  ACTIVE: 'active',
+  ACTIVE_UNDER_CONTRACT: 'active_under_contract',
+  PENDING: 'pending',
+  CLOSED: 'closed',
+  EXPIRED: 'expired',
+  WITHDRAWN: 'withdrawn',
+  CANCELLED: 'cancelled'
 };
 
 export const LISTING_STATUS_LABELS = {
-  [LISTING_STATUS.COMING_SOON]: 'Coming Soon',
   [LISTING_STATUS.ACTIVE]: 'Active',
+  [LISTING_STATUS.ACTIVE_UNDER_CONTRACT]: 'Active Under Contract',
   [LISTING_STATUS.PENDING]: 'Pending',
   [LISTING_STATUS.CLOSED]: 'Closed',
   [LISTING_STATUS.EXPIRED]: 'Expired',
-  [LISTING_STATUS.CANCELLED]: 'Cancelled',
   [LISTING_STATUS.WITHDRAWN]: 'Withdrawn',
-  [LISTING_STATUS.ARCHIVED]: 'Archived'
+  [LISTING_STATUS.CANCELLED]: 'Cancelled'
 };
 
 /**
  * Listing status configurations
  * Created once and reused - prevents object creation on every render
  * Reduces garbage collection pressure and improves performance
+ *
+ * Uses lowercase_snake_case keys (database-driven):
+ * - active [category: active]
+ * - active_under_contract [category: active]
+ * - pending [category: active]
+ * - closed [category: won]
+ * - expired [category: lost]
+ * - withdrawn [category: lost]
+ * - cancelled [category: lost]
  */
 export const LISTING_STATUS_CONFIG = {
-  'Coming Soon': {
-    color: '#8b5cf6',
-    bg: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(124,58,237,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#8b5cf6', 0.2)}`,
-    icon: 'schedule',
-    label: 'Coming Soon'
-  },
-  'Active': {
+  'active': {
     color: '#10b981',
     bg: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#10b981', 0.2)}`,
     icon: 'trending_up',
-    label: 'Active'
+    label: 'Active',
+    category: 'active'
   },
-  'Pending': {
+  'active_under_contract': {
     color: '#f59e0b',
     bg: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(217,119,6,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#f59e0b', 0.2)}`,
+    icon: 'handshake',
+    label: 'Active Under Contract',
+    category: 'active'
+  },
+  'pending': {
+    color: '#8b5cf6',
+    bg: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(124,58,237,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#8b5cf6', 0.2)}`,
     icon: 'schedule',
-    label: 'Pending'
+    label: 'Pending',
+    category: 'active'
   },
-  'Closed': {
-    color: '#6366f1',
-    bg: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#6366f1', 0.2)}`,
+  'closed': {
+    color: '#3b82f6',
+    bg: 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(37,99,235,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#3b82f6', 0.2)}`,
     icon: 'check_circle',
-    label: 'Closed'
+    label: 'Closed',
+    category: 'won'
   },
-  'Sold': {
-    color: '#6366f1',
-    bg: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#6366f1', 0.2)}`,
-    icon: 'check_circle',
-    label: 'Sold'
-  },
-  'Expired': {
-    color: '#94a3b8',
-    bg: 'linear-gradient(135deg, rgba(148,163,184,0.08) 0%, rgba(100,116,139,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#94a3b8', 0.2)}`,
+  'expired': {
+    color: '#6b7280',
+    bg: 'linear-gradient(135deg, rgba(107,114,128,0.08) 0%, rgba(75,85,99,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#6b7280', 0.2)}`,
     icon: 'schedule',
-    label: 'Expired'
+    label: 'Expired',
+    category: 'lost'
   },
-  'Withdrawn': {
+  'withdrawn': {
     color: '#64748b',
     bg: 'linear-gradient(135deg, rgba(100,116,139,0.08) 0%, rgba(71,85,105,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#64748b', 0.2)}`,
     icon: 'remove_circle',
-    label: 'Withdrawn'
+    label: 'Withdrawn',
+    category: 'lost'
   },
-  'Cancelled': {
+  'cancelled': {
     color: '#ef4444',
     bg: 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#ef4444', 0.2)}`,
     icon: 'cancel',
-    label: 'Cancelled'
-  },
-  'Off Market': {
-    color: '#64748b',
-    bg: 'linear-gradient(135deg, rgba(100,116,139,0.08) 0%, rgba(71,85,105,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#64748b', 0.2)}`,
-    icon: 'visibility_off',
-    label: 'Off Market'
+    label: 'Cancelled',
+    category: 'lost'
   }
 };
 
 // Simple color mapping for MUI chip variants
 export const LISTING_STATUS_COLORS = {
-  [LISTING_STATUS.COMING_SOON]: {
-    color: '#3b82f6',
-    bg: 'rgba(59, 130, 246, 0.1)',
-  },
   [LISTING_STATUS.ACTIVE]: {
     color: '#10b981',
     bg: 'rgba(16, 185, 129, 0.1)',
   },
-  [LISTING_STATUS.PENDING]: {
+  [LISTING_STATUS.ACTIVE_UNDER_CONTRACT]: {
     color: '#f59e0b',
     bg: 'rgba(245, 158, 11, 0.1)',
   },
+  [LISTING_STATUS.PENDING]: {
+    color: '#8b5cf6',
+    bg: 'rgba(139, 92, 246, 0.1)',
+  },
   [LISTING_STATUS.CLOSED]: {
-    color: '#6366f1',
-    bg: 'rgba(99, 102, 241, 0.1)',
+    color: '#3b82f6',
+    bg: 'rgba(59, 130, 246, 0.1)',
   },
   [LISTING_STATUS.EXPIRED]: {
-    color: '#ef4444',
-    bg: 'rgba(239, 68, 68, 0.1)',
+    color: '#6b7280',
+    bg: 'rgba(107, 114, 128, 0.1)',
+  },
+  [LISTING_STATUS.WITHDRAWN]: {
+    color: '#64748b',
+    bg: 'rgba(100, 116, 139, 0.1)',
   },
   [LISTING_STATUS.CANCELLED]: {
     color: '#ef4444',
     bg: 'rgba(239, 68, 68, 0.1)',
-  },
-  [LISTING_STATUS.WITHDRAWN]: {
-    color: '#6b7280',
-    bg: 'rgba(107, 114, 128, 0.1)',
-  },
-  [LISTING_STATUS.ARCHIVED]: {
-    color: '#6b7280',
-    bg: 'rgba(107, 114, 128, 0.1)',
-  },
-  // Default fallback
-  Active: {
-    color: '#10b981',
-    bg: 'rgba(16, 185, 129, 0.1)',
   },
 };
 
@@ -267,7 +260,7 @@ export const LISTING_VALIDATION_RULES = {
 // ========================================
 
 export const LISTING_DEFAULT_VALUES = {
-  listingStatus: LISTING_STATUS.COMING_SOON,
+  listingStatus: LISTING_STATUS.ACTIVE,
   propertyType: LISTING_TYPES.SINGLE_FAMILY,
   listingCommission: 3.0,
   buyerCommission: 2.5,
@@ -367,19 +360,25 @@ export const DAYS_ON_MARKET_RANGES = [
 // ========================================
 
 /**
- * Get status config with fallback to Active
+ * Get status config with fallback to active
+ * Case-insensitive lookup - normalizes to lowercase
  * @param {string} status - Listing status
  * @returns {object} Status configuration
  */
 export const getStatusConfig = (status) => {
-  return LISTING_STATUS_CONFIG[status] || LISTING_STATUS_CONFIG.Active;
+  if (!status) return LISTING_STATUS_CONFIG.active;
+  const normalized = status.toLowerCase();
+  return LISTING_STATUS_CONFIG[normalized] || LISTING_STATUS_CONFIG.active;
 };
 
 /**
  * Get listing status config (alias for getStatusConfig)
+ * Case-insensitive lookup - normalizes to lowercase
  * @param {string} status - Listing status
  * @returns {object} Status configuration
  */
 export const getListingStatusConfig = (status) => {
-  return LISTING_STATUS_CONFIG[status] || LISTING_STATUS_CONFIG.Active;
+  if (!status) return LISTING_STATUS_CONFIG.active;
+  const normalized = status.toLowerCase();
+  return LISTING_STATUS_CONFIG[normalized] || LISTING_STATUS_CONFIG.active;
 };

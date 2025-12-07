@@ -77,17 +77,26 @@ const LeadCard = React.memo(({ lead, viewMode = 'small', animationType = 'spring
   }, [lead.id, navigate]);
 
   // Status configuration for leads
+  // Uses lowercase_snake_case keys: new, contacted, met, under_contract, closed, competing, rejected, unresponsive, deferred, unqualified
   const getStatusConfig = (status) => {
     const configs = {
-      New: { label: 'NEW', color: '#3b82f6', bg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
-      Contacted: { label: 'CONTACTED', color: '#8b5cf6', bg: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
-      Qualified: { label: 'QUALIFIED', color: '#10b981', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-      Nurturing: { label: 'NURTURING', color: '#f59e0b', bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
-      'Hot Lead': { label: 'HOT', color: '#ef4444', bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
-      Converted: { label: 'CONVERTED', color: '#06b6d4', bg: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
-      Lost: { label: 'LOST', color: '#64748b', bg: 'linear-gradient(135deg, #64748b 0%, #475569 100%)' },
+      // Active category (3 statuses)
+      'new': { label: 'NEW', color: '#3b82f6', bg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
+      'contacted': { label: 'CONTACTED', color: '#8b5cf6', bg: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
+      'met': { label: 'MET', color: '#10b981', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+      // Won category (2 statuses)
+      'under_contract': { label: 'UNDER CONTRACT', color: '#f59e0b', bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
+      'closed': { label: 'CLOSED', color: '#06b6d4', bg: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
+      // Lost category (5 statuses)
+      'competing': { label: 'COMPETING', color: '#f97316', bg: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
+      'rejected': { label: 'REJECTED', color: '#ef4444', bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
+      'unresponsive': { label: 'UNRESPONSIVE', color: '#94a3b8', bg: 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)' },
+      'deferred': { label: 'DEFERRED', color: '#a855f7', bg: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)' },
+      'unqualified': { label: 'UNQUALIFIED', color: '#6b7280', bg: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' },
     };
-    return configs[status] || configs.New;
+    // Normalize status to lowercase for consistent lookup
+    const normalized = status ? status.toLowerCase() : 'new';
+    return configs[normalized] || configs['new'];
   };
 
   const statusConfig = getStatusConfig(lead.lead_status || lead.status);

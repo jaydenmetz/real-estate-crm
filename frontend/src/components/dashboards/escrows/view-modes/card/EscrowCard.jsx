@@ -69,18 +69,18 @@ const maskCommission = (value) => {
 const useEscrowCardConfig = (statuses) => {
   return useMemo(() => {
     // Transform database statuses into dropdown options
-    // Fallback to hardcoded options if database statuses not loaded yet
+    // Uses lowercase_snake_case keys: active, closed, cancelled
     const statusOptions = statuses && statuses.length > 0
       ? statuses.map((status) => ({
           value: status.status_key,
           label: status.label,
-          icon: status.status_key === 'Cancelled' ? Cancel : CheckCircle,
+          icon: status.status_key === 'cancelled' ? Cancel : CheckCircle,
           color: status.color,
         }))
       : [
-          { value: 'Active', label: 'Active', icon: CheckCircle, color: '#10b981' },
-          { value: 'Closed', label: 'Closed', icon: CheckCircle, color: '#3b82f6' },
-          { value: 'Cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
+          { value: 'active', label: 'Active', icon: CheckCircle, color: '#10b981' },
+          { value: 'closed', label: 'Closed', icon: CheckCircle, color: '#3b82f6' },
+          { value: 'cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
         ];
 
     return {
@@ -338,14 +338,8 @@ const EscrowCard = React.memo(({
   // Get statuses from context
   const { statuses } = useStatus();
 
-  // Debug: Log statuses to see what we're getting
-  console.log('[EscrowCard] statuses:', statuses);
-
   // Generate config with database-driven status options
   const config = useEscrowCardConfig(statuses);
-
-  // Debug: Log the generated options
-  console.log('[EscrowCard] config.status.options:', config.status.options);
 
   return (
     <CardTemplate

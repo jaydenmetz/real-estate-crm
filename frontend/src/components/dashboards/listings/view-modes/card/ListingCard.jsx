@@ -50,20 +50,22 @@ const maskCommission = (value) => {
 const useListingCardConfig = (statuses) => {
   return useMemo(() => {
     // Transform database statuses into dropdown options
-    // Fallback to hardcoded options if database statuses not loaded yet
+    // Uses lowercase_snake_case keys: active, active_under_contract, pending, closed, expired, withdrawn, cancelled
     const statusOptions = statuses && statuses.length > 0
       ? statuses.map((status) => ({
           value: status.status_key,
           label: status.label,
-          icon: status.status_key === 'Cancelled' ? Cancel : CheckCircle,
+          icon: status.status_key === 'cancelled' ? Cancel : CheckCircle,
           color: status.color,
         }))
       : [
-          { value: 'Active', label: 'Active', icon: CheckCircle, color: '#10b981' },
-          { value: 'Pending', label: 'Pending', icon: CheckCircle, color: '#f59e0b' },
-          { value: 'Closed', label: 'Closed', icon: CheckCircle, color: '#6366f1' },
-          { value: 'Expired', label: 'Expired', icon: CheckCircle, color: '#94a3b8' },
-          { value: 'Cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
+          { value: 'active', label: 'Active', icon: CheckCircle, color: '#10b981' },
+          { value: 'active_under_contract', label: 'Active Under Contract', icon: CheckCircle, color: '#8b5cf6' },
+          { value: 'pending', label: 'Pending', icon: CheckCircle, color: '#f59e0b' },
+          { value: 'closed', label: 'Closed', icon: CheckCircle, color: '#6366f1' },
+          { value: 'expired', label: 'Expired', icon: CheckCircle, color: '#94a3b8' },
+          { value: 'withdrawn', label: 'Withdrawn', icon: CheckCircle, color: '#6b7280' },
+          { value: 'cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
         ];
 
     return {
@@ -212,12 +214,13 @@ const useListingCardConfig = (statuses) => {
       // Expiration Date (editable with minDate validation) - Dynamic label based on status
       {
         label: (listing) => {
-          const status = listing?.listing_status;
-          if (status === 'Closed') return 'Closed';
-          if (status === 'Cancelled') return 'Cancelled';
-          if (status === 'Expired') return 'Expired';
-          if (status === 'Withdrawn') return 'Withdrawn';
-          return 'Expires'; // Active, Active Under Contract, Pending, and default
+          // Normalize status to lowercase for comparison
+          const status = listing?.listing_status?.toLowerCase();
+          if (status === 'closed') return 'Closed';
+          if (status === 'cancelled') return 'Cancelled';
+          if (status === 'expired') return 'Expired';
+          if (status === 'withdrawn') return 'Withdrawn';
+          return 'Expires'; // active, active_under_contract, pending, and default
         },
         field: 'expiration_date',
         formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : 'TBD',

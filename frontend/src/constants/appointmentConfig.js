@@ -8,101 +8,96 @@ import { alpha } from '@mui/material';
 
 // ========================================
 // STATUS CONSTANTS
+// Uses lowercase_snake_case keys (database-driven)
+// Categories: active (3), won (1), lost (2) = 6 total statuses
 // ========================================
 
 export const APPOINTMENT_STATUS = {
+  // Active category (3 statuses)
   SCHEDULED: 'scheduled',
   CONFIRMED: 'confirmed',
-  IN_PROGRESS: 'in_progress',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled',
-  NO_SHOW: 'no_show',
   RESCHEDULED: 'rescheduled',
-  ARCHIVED: 'archived'
+  // Won category (1 status)
+  COMPLETED: 'completed',
+  // Lost category (2 statuses)
+  CANCELLED: 'cancelled',
+  NO_SHOW: 'no_show'
 };
 
 export const APPOINTMENT_STATUS_LABELS = {
   [APPOINTMENT_STATUS.SCHEDULED]: 'Scheduled',
   [APPOINTMENT_STATUS.CONFIRMED]: 'Confirmed',
-  [APPOINTMENT_STATUS.IN_PROGRESS]: 'In Progress',
+  [APPOINTMENT_STATUS.RESCHEDULED]: 'Rescheduled',
   [APPOINTMENT_STATUS.COMPLETED]: 'Completed',
   [APPOINTMENT_STATUS.CANCELLED]: 'Cancelled',
-  [APPOINTMENT_STATUS.NO_SHOW]: 'No Show',
-  [APPOINTMENT_STATUS.RESCHEDULED]: 'Rescheduled',
-  [APPOINTMENT_STATUS.ARCHIVED]: 'Archived'
+  [APPOINTMENT_STATUS.NO_SHOW]: 'No-Show'
 };
 
 export const APPOINTMENT_STATUS_COLORS = {
   [APPOINTMENT_STATUS.SCHEDULED]: '#3b82f6',
   [APPOINTMENT_STATUS.CONFIRMED]: '#10b981',
-  [APPOINTMENT_STATUS.IN_PROGRESS]: '#f59e0b',
+  [APPOINTMENT_STATUS.RESCHEDULED]: '#8b5cf6',
   [APPOINTMENT_STATUS.COMPLETED]: '#6366f1',
   [APPOINTMENT_STATUS.CANCELLED]: '#ef4444',
-  [APPOINTMENT_STATUS.NO_SHOW]: '#dc2626',
-  [APPOINTMENT_STATUS.RESCHEDULED]: '#8b5cf6',
-  [APPOINTMENT_STATUS.ARCHIVED]: '#6b7280'
+  [APPOINTMENT_STATUS.NO_SHOW]: '#dc2626'
 };
 
 /**
  * Appointment status configurations with full styling
  * Created once and reused - prevents object creation on every render
+ * 6 statuses across 3 categories: active (3), won (1), lost (2)
  */
 export const APPOINTMENT_STATUS_CONFIG = {
+  // Active category (3 statuses)
   'scheduled': {
     color: '#3b82f6',
     bg: 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(37,99,235,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#3b82f6', 0.2)}`,
     icon: 'schedule',
-    label: 'Scheduled'
+    label: 'Scheduled',
+    category: 'active'
   },
   'confirmed': {
     color: '#10b981',
     bg: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#10b981', 0.2)}`,
     icon: 'check_circle',
-    label: 'Confirmed'
-  },
-  'in_progress': {
-    color: '#f59e0b',
-    bg: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(217,119,6,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#f59e0b', 0.2)}`,
-    icon: 'play_circle',
-    label: 'In Progress'
-  },
-  'completed': {
-    color: '#6366f1',
-    bg: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#6366f1', 0.2)}`,
-    icon: 'task_alt',
-    label: 'Completed'
-  },
-  'cancelled': {
-    color: '#ef4444',
-    bg: 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#ef4444', 0.2)}`,
-    icon: 'cancel',
-    label: 'Cancelled'
-  },
-  'no_show': {
-    color: '#dc2626',
-    bg: 'linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(185,28,28,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#dc2626', 0.2)}`,
-    icon: 'person_off',
-    label: 'No Show'
+    label: 'Confirmed',
+    category: 'active'
   },
   'rescheduled': {
     color: '#8b5cf6',
     bg: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(124,58,237,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#8b5cf6', 0.2)}`,
     icon: 'event_repeat',
-    label: 'Rescheduled'
+    label: 'Rescheduled',
+    category: 'active'
   },
-  'archived': {
-    color: '#6b7280',
-    bg: 'linear-gradient(135deg, rgba(107,114,128,0.08) 0%, rgba(75,85,99,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#6b7280', 0.2)}`,
-    icon: 'archive',
-    label: 'Archived'
+  // Won category (1 status)
+  'completed': {
+    color: '#6366f1',
+    bg: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#6366f1', 0.2)}`,
+    icon: 'task_alt',
+    label: 'Completed',
+    category: 'won'
+  },
+  // Lost category (2 statuses)
+  'cancelled': {
+    color: '#ef4444',
+    bg: 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#ef4444', 0.2)}`,
+    icon: 'cancel',
+    label: 'Cancelled',
+    category: 'lost'
+  },
+  'no_show': {
+    color: '#dc2626',
+    bg: 'linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(185,28,28,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#dc2626', 0.2)}`,
+    icon: 'person_off',
+    label: 'No-Show',
+    category: 'lost'
   }
 };
 

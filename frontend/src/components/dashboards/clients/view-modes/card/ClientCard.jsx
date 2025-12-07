@@ -27,19 +27,19 @@ import { LeadCircles } from '../../../../common/ui/LeadCircles';
 
 // ============================================================================
 // STATUS CONFIGURATION
-// Matches database schema: Active, Closed, Expired, Cancelled
+// Uses lowercase_snake_case keys: active, closed, expired, cancelled
 // ============================================================================
 
 const getStatusConfig = (status) => {
   const configs = {
-    'Active': { label: 'Active', color: '#10b981', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-    'Closed': { label: 'Closed', color: '#3b82f6', bg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
-    'Expired': { label: 'Expired', color: '#6b7280', bg: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' },
-    'Cancelled': { label: 'Cancelled', color: '#ef4444', bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
+    'active': { label: 'Active', color: '#10b981', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+    'closed': { label: 'Closed', color: '#3b82f6', bg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
+    'expired': { label: 'Expired', color: '#6b7280', bg: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' },
+    'cancelled': { label: 'Cancelled', color: '#ef4444', bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
   };
-  // Normalize to capitalized first letter
-  const normalized = status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : 'Active';
-  return configs[normalized] || configs['Active'];
+  // Normalize to lowercase
+  const normalized = status ? status.toLowerCase() : 'active';
+  return configs[normalized] || configs['active'];
 };
 
 // Compact date formatter
@@ -73,19 +73,19 @@ const formatCompactDate = (value) => {
 const useClientCardConfig = (statuses) => {
   return useMemo(() => {
     // Transform database statuses into dropdown options
-    // Database statuses: Active, Closed, Expired, Cancelled
+    // Database statuses: active, closed, expired, cancelled (lowercase)
     const statusOptions = statuses && statuses.length > 0
       ? statuses.map((status) => ({
           value: status.status_key,
           label: status.label,
-          icon: status.status_key === 'Cancelled' ? Cancel : CheckCircle,
+          icon: status.status_key === 'cancelled' ? Cancel : CheckCircle,
           color: status.color,
         }))
       : [
-          { value: 'Active', label: 'Active', icon: CheckCircle, color: '#10b981' },
-          { value: 'Closed', label: 'Closed', icon: CheckCircle, color: '#3b82f6' },
-          { value: 'Expired', label: 'Expired', icon: CheckCircle, color: '#6b7280' },
-          { value: 'Cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
+          { value: 'active', label: 'Active', icon: CheckCircle, color: '#10b981' },
+          { value: 'closed', label: 'Closed', icon: CheckCircle, color: '#3b82f6' },
+          { value: 'expired', label: 'Expired', icon: CheckCircle, color: '#6b7280' },
+          { value: 'cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
         ];
 
     return {
@@ -98,7 +98,7 @@ const useClientCardConfig = (statuses) => {
 
       // Status Chip Configuration (top-left, editable)
       status: {
-        field: (client) => client.client_status || client.status || 'Active',
+        field: (client) => client.client_status || client.status || 'active',
         getConfig: (status) => {
           const config = getStatusConfig(status);
           return {

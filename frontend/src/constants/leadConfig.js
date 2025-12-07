@@ -12,100 +12,139 @@ import { alpha } from '@mui/material';
 
 // ============================================================================
 // STATUS DEFINITIONS
+// Uses lowercase_snake_case keys (database-driven)
+// Categories: active (3), won (2), lost (5) = 10 total statuses
 // ============================================================================
 
 export const LEAD_STATUS = {
+  // Active category (3 statuses)
   NEW: 'new',
   CONTACTED: 'contacted',
-  QUALIFIED: 'qualified',
-  NURTURING: 'nurturing',
-  CONVERTED: 'converted',
-  UNQUALIFIED: 'unqualified',
-  DEAD: 'dead',
-  ARCHIVED: 'archived'
+  MET: 'met',
+  // Won category (2 statuses)
+  UNDER_CONTRACT: 'under_contract',
+  CLOSED: 'closed',
+  // Lost category (5 statuses)
+  COMPETING: 'competing',
+  REJECTED: 'rejected',
+  UNRESPONSIVE: 'unresponsive',
+  DEFERRED: 'deferred',
+  UNQUALIFIED: 'unqualified'
 };
 
 export const LEAD_STATUS_LABELS = {
   [LEAD_STATUS.NEW]: 'New',
   [LEAD_STATUS.CONTACTED]: 'Contacted',
-  [LEAD_STATUS.QUALIFIED]: 'Qualified',
-  [LEAD_STATUS.NURTURING]: 'Nurturing',
-  [LEAD_STATUS.CONVERTED]: 'Converted',
-  [LEAD_STATUS.UNQUALIFIED]: 'Unqualified',
-  [LEAD_STATUS.DEAD]: 'Dead',
-  [LEAD_STATUS.ARCHIVED]: 'Archived'
+  [LEAD_STATUS.MET]: 'Met',
+  [LEAD_STATUS.UNDER_CONTRACT]: 'Under Contract',
+  [LEAD_STATUS.CLOSED]: 'Closed',
+  [LEAD_STATUS.COMPETING]: 'Competing',
+  [LEAD_STATUS.REJECTED]: 'Rejected',
+  [LEAD_STATUS.UNRESPONSIVE]: 'Unresponsive',
+  [LEAD_STATUS.DEFERRED]: 'Deferred',
+  [LEAD_STATUS.UNQUALIFIED]: 'Unqualified'
 };
 
 export const LEAD_STATUS_COLORS = {
-  [LEAD_STATUS.NEW]: '#3b82f6',       // Blue - fresh opportunity
-  [LEAD_STATUS.CONTACTED]: '#8b5cf6', // Purple - engaged
-  [LEAD_STATUS.QUALIFIED]: '#10b981', // Green - qualified
-  [LEAD_STATUS.NURTURING]: '#f59e0b', // Amber - in progress
-  [LEAD_STATUS.CONVERTED]: '#6366f1', // Indigo - success
-  [LEAD_STATUS.UNQUALIFIED]: '#ef4444', // Red - not fit
-  [LEAD_STATUS.DEAD]: '#6b7280',      // Gray - inactive
-  [LEAD_STATUS.ARCHIVED]: '#9ca3af'   // Light gray - archived
+  [LEAD_STATUS.NEW]: '#3b82f6',           // Blue - fresh opportunity
+  [LEAD_STATUS.CONTACTED]: '#8b5cf6',     // Purple - engaged
+  [LEAD_STATUS.MET]: '#f59e0b',           // Amber - met in person
+  [LEAD_STATUS.UNDER_CONTRACT]: '#10b981', // Green - under contract
+  [LEAD_STATUS.CLOSED]: '#059669',        // Dark green - won
+  [LEAD_STATUS.COMPETING]: '#ef4444',     // Red - competing with others
+  [LEAD_STATUS.REJECTED]: '#dc2626',      // Dark red - rejected
+  [LEAD_STATUS.UNRESPONSIVE]: '#6b7280',  // Gray - not responding
+  [LEAD_STATUS.DEFERRED]: '#f59e0b',      // Amber - delayed
+  [LEAD_STATUS.UNQUALIFIED]: '#9ca3af'    // Light gray - not qualified
 };
 
 /**
  * Enhanced status configuration with full styling (matches escrowConfig pattern)
+ * 10 statuses across 3 categories: active, won, lost
  */
 export const LEAD_STATUS_CONFIG = {
+  // Active category (3 statuses)
   'new': {
     color: '#3b82f6',
     bg: 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(37,99,235,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#3b82f6', 0.2)}`,
     icon: 'fiber_new',
-    label: 'New'
+    label: 'New',
+    category: 'active'
   },
   'contacted': {
     color: '#8b5cf6',
     bg: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(124,58,237,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#8b5cf6', 0.2)}`,
     icon: 'phone',
-    label: 'Contacted'
+    label: 'Contacted',
+    category: 'active'
   },
-  'qualified': {
-    color: '#10b981',
-    bg: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#10b981', 0.2)}`,
-    icon: 'verified',
-    label: 'Qualified'
-  },
-  'nurturing': {
+  'met': {
     color: '#f59e0b',
     bg: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(217,119,6,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#f59e0b', 0.2)}`,
-    icon: 'spa',
-    label: 'Nurturing'
+    icon: 'handshake',
+    label: 'Met',
+    category: 'active'
   },
-  'converted': {
-    color: '#6366f1',
-    bg: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
-    getBorder: (theme) => `2px solid ${alpha('#6366f1', 0.2)}`,
-    icon: 'celebration',
-    label: 'Converted'
+  // Won category (2 statuses)
+  'under_contract': {
+    color: '#10b981',
+    bg: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#10b981', 0.2)}`,
+    icon: 'description',
+    label: 'Under Contract',
+    category: 'won'
   },
-  'unqualified': {
+  'closed': {
+    color: '#059669',
+    bg: 'linear-gradient(135deg, rgba(5,150,105,0.08) 0%, rgba(4,120,87,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#059669', 0.2)}`,
+    icon: 'check_circle',
+    label: 'Closed',
+    category: 'won'
+  },
+  // Lost category (5 statuses)
+  'competing': {
     color: '#ef4444',
     bg: 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#ef4444', 0.2)}`,
-    icon: 'block',
-    label: 'Unqualified'
+    icon: 'groups',
+    label: 'Competing',
+    category: 'lost'
   },
-  'dead': {
+  'rejected': {
+    color: '#dc2626',
+    bg: 'linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(185,28,28,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#dc2626', 0.2)}`,
+    icon: 'cancel',
+    label: 'Rejected',
+    category: 'lost'
+  },
+  'unresponsive': {
     color: '#6b7280',
     bg: 'linear-gradient(135deg, rgba(107,114,128,0.08) 0%, rgba(75,85,99,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#6b7280', 0.2)}`,
-    icon: 'do_not_disturb',
-    label: 'Dead'
+    icon: 'phone_disabled',
+    label: 'Unresponsive',
+    category: 'lost'
   },
-  'archived': {
+  'deferred': {
+    color: '#f59e0b',
+    bg: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(217,119,6,0.12) 100%)',
+    getBorder: (theme) => `2px solid ${alpha('#f59e0b', 0.2)}`,
+    icon: 'schedule',
+    label: 'Deferred',
+    category: 'lost'
+  },
+  'unqualified': {
     color: '#9ca3af',
     bg: 'linear-gradient(135deg, rgba(156,163,175,0.08) 0%, rgba(107,114,128,0.12) 100%)',
     getBorder: (theme) => `2px solid ${alpha('#9ca3af', 0.2)}`,
-    icon: 'archive',
-    label: 'Archived'
+    icon: 'block',
+    label: 'Unqualified',
+    category: 'lost'
   }
 };
 
