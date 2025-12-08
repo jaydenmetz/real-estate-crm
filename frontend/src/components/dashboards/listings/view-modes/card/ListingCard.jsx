@@ -149,11 +149,14 @@ const useListingCardConfig = (statuses) => {
     },
 
     // Commission (editable with toggle)
+    // NOTE: Displays total_commission (listing + buyer) but edits listing_commission only
+    // total_commission is a generated column in DB: listing_commission + buyer_commission
     {
       label: 'Commission',
       field: (listing) => {
         const price = listing.list_price || 0;
-        const percentage = listing.total_commission || 0;
+        // Use listing_commission for display/edit consistency (default 3%)
+        const percentage = listing.listing_commission || 3;
         return (price * percentage) / 100;
       },
       formatter: (value) => formatCurrency(value),
@@ -165,20 +168,20 @@ const useListingCardConfig = (statuses) => {
       editable: true,
       editor: EditListingCommission,
       editorProps: (listing) => ({
-        value: (listing.list_price || 0) * (listing.total_commission || 0) / 100,
-        commissionPercentage: listing.total_commission !== null && listing.total_commission !== undefined
-          ? parseFloat(listing.total_commission)
-          : null,
+        // Use listing_commission for editor (the editable portion)
+        value: (listing.list_price || 0) * (listing.listing_commission || 3) / 100,
+        commissionPercentage: listing.listing_commission !== null && listing.listing_commission !== undefined
+          ? parseFloat(listing.listing_commission)
+          : 3, // Default to 3% if null
         commissionType: listing.commission_type || 'percentage',
         purchasePrice: listing.list_price || 0,
       }),
       onSave: (listing, updates) => {
         // EditListingCommission returns { my_commission, commission_percentage, commission_type }
-        // For listings, we save to listingCommission (camelCase for backend columnMap)
-        // Backend maps listingCommission → listing_commission
+        // For listings, we save to listing_commission (snake_case for direct DB column)
         return {
-          listingCommission: updates.commission_percentage,
-          commissionType: updates.commission_type,
+          listing_commission: updates.commission_percentage,
+          commission_type: updates.commission_type,
         };
       },
       toggle: {
