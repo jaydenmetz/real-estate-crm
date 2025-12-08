@@ -46,8 +46,9 @@ const TotalCommissionCard = ({
   const normalizedStatus = status?.toLowerCase();
 
   if (normalizedStatus === 'all') {
-    // All tab: Closed Commission - Cancelled Commission
-    const closedCommission = data
+    // All tab: Show only CLOSED commissions (actual earned commission)
+    // Don't include cancelled/expired since that commission was never earned
+    commission = data
       .filter(item => {
         const itemStatus = item.listing_status || item.status;
         return itemStatus?.toLowerCase() === 'closed';
@@ -57,21 +58,6 @@ const TotalCommissionCard = ({
         const commissionPct = parseFloat(item.total_commission || 3);
         return sum + (price * (commissionPct / 100));
       }, 0);
-
-    // Expired category includes cancelled, expired, withdrawn
-    const expiredStatuses = statusGroups.expired;
-    const cancelledCommission = data
-      .filter(item => {
-        const itemStatus = item.listing_status || item.status;
-        return expiredStatuses.includes(itemStatus?.toLowerCase());
-      })
-      .reduce((sum, item) => {
-        const price = parseFloat(item.list_price || item.listing_price || 0);
-        const commissionPct = parseFloat(item.total_commission || 3);
-        return sum + (price * (commissionPct / 100));
-      }, 0);
-
-    commission = closedCommission - cancelledCommission;
   } else {
     // Single status category (Active, Closed, Expired, etc.)
     const validStatuses = statusGroups[normalizedStatus] || [normalizedStatus];
