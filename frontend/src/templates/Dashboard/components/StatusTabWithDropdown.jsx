@@ -278,6 +278,7 @@ const StatusTabWithDropdown = ({
                   sx={{
                     fontSize: '0.875rem',
                     py: 1,
+                    pl: 1.5, // Slight indent to match other flat items
                     fontWeight: 600,
                     borderBottom: '1px solid',
                     borderColor: 'divider',
