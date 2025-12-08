@@ -52,6 +52,7 @@ const StatusTabWithDropdown = ({
   isSelected,
   onCategoryClick,
   onStatusToggle, // Toggle individual status in multi-select array
+  onBulkStatusChange, // Set all statuses at once (for "All" checkbox)
   selectedStatuses = [], // Array of selected status keys for this tab
   ...tabProps
 }) => {
@@ -138,22 +139,38 @@ const StatusTabWithDropdown = ({
     const categoryStatusKeys = cat.statuses.map(s => s.status_key);
 
     // Check if all statuses in this category are selected
-    const allSelected = categoryStatusKeys.every(key => selectedStatuses.includes(key));
+    const allCategorySelected = categoryStatusKeys.every(key => selectedStatuses.includes(key));
 
-    // Toggle all statuses in this category
-    categoryStatusKeys.forEach(key => {
-      if (allSelected) {
-        // All selected: deselect this status (regardless of current state)
-        if (selectedStatuses.includes(key)) {
-          onStatusToggle(key);
-        }
+    if (onBulkStatusChange) {
+      // Use bulk update for better performance
+      let newStatuses;
+      if (allCategorySelected) {
+        // Deselect all in this category
+        newStatuses = selectedStatuses.filter(key => !categoryStatusKeys.includes(key));
       } else {
-        // Not all selected: select this status (regardless of current state)
-        if (!selectedStatuses.includes(key)) {
-          onStatusToggle(key);
-        }
+        // Select all in this category (add any missing)
+        newStatuses = [...selectedStatuses];
+        categoryStatusKeys.forEach(key => {
+          if (!newStatuses.includes(key)) {
+            newStatuses.push(key);
+          }
+        });
       }
-    });
+      onBulkStatusChange(newStatuses);
+    } else {
+      // Fallback to individual toggles
+      categoryStatusKeys.forEach(key => {
+        if (allCategorySelected) {
+          if (selectedStatuses.includes(key)) {
+            onStatusToggle(key);
+          }
+        } else {
+          if (!selectedStatuses.includes(key)) {
+            onStatusToggle(key);
+          }
+        }
+      });
+    }
   };
 
   // NOTE: Status initialization is handled by DashboardNavigation's useEffect
@@ -255,20 +272,30 @@ const StatusTabWithDropdown = ({
 
               const handleSelectAll = (e) => {
                 e.stopPropagation();
-                if (allSelected) {
-                  // Deselect all
-                  allStatusKeys.forEach(key => {
-                    if (selectedStatuses.includes(key)) {
-                      onStatusToggle(key);
-                    }
-                  });
+                if (onBulkStatusChange) {
+                  // Use bulk update for better performance and correctness
+                  if (allSelected) {
+                    // Deselect all
+                    onBulkStatusChange([]);
+                  } else {
+                    // Select all
+                    onBulkStatusChange(allStatusKeys);
+                  }
                 } else {
-                  // Select all
-                  allStatusKeys.forEach(key => {
-                    if (!selectedStatuses.includes(key)) {
-                      onStatusToggle(key);
-                    }
-                  });
+                  // Fallback to individual toggles (for backwards compatibility)
+                  if (allSelected) {
+                    allStatusKeys.forEach(key => {
+                      if (selectedStatuses.includes(key)) {
+                        onStatusToggle(key);
+                      }
+                    });
+                  } else {
+                    allStatusKeys.forEach(key => {
+                      if (!selectedStatuses.includes(key)) {
+                        onStatusToggle(key);
+                      }
+                    });
+                  }
                 }
               };
 

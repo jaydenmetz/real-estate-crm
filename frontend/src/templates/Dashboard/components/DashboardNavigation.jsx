@@ -258,6 +258,11 @@ export const DashboardNavigation = ({
                         // 'Active' = tab switch, should auto-upgrade to defaults
                         onStatusChange(`${tab.value}:${currentStatuses.join(',')}`)
                       }}
+                      onBulkStatusChange={(newStatuses) => {
+                        // Set all statuses at once (for "All" checkbox and category toggles)
+                        // This avoids the closure issue with forEach + onStatusToggle
+                        onStatusChange(`${tab.value}:${newStatuses.join(',')}`);
+                      }}
                       value={tabValue}
                     />
                   );
