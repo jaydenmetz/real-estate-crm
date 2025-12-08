@@ -20,13 +20,22 @@ const TotalThisMonthCard = ({
   delay = 1,
   ...props
 }) => {
+  // Status groups for each category (matching statusCategories.js)
+  const statusGroups = {
+    active: ['active', 'active_under_contract', 'pending'],
+    closed: ['closed'],
+    expired: ['cancelled', 'expired', 'withdrawn'],
+    all: null // All statuses
+  };
+
   const monthStart = startOfMonth(new Date());
 
   // Filter by status and date
   const count = data.filter(item => {
     // Filter by status
     const itemStatus = item.listing_status || item.status;
-    const matchesStatus = status === 'all' || itemStatus?.toLowerCase() === status.toLowerCase();
+    const validStatuses = statusGroups[status] || [status];
+    const matchesStatus = status === 'all' || validStatuses.includes(itemStatus?.toLowerCase());
 
     if (!matchesStatus) return false;
 

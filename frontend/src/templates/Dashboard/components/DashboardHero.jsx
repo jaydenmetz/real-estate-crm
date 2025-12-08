@@ -474,9 +474,11 @@ export const DashboardHero = ({
               {/* Render stat cards based on tab selection (not checkbox filters) */}
               {(() => {
                 // Extract tab portion from multi-select format (e.g., "Active:Active,Pending" → "Active")
-                const tabSelection = selectedStatus?.includes(':')
+                // Convert to lowercase to match visibleWhen category keys ('active', 'won', 'lost', 'all')
+                const rawTabSelection = selectedStatus?.includes(':')
                   ? selectedStatus.split(':')[0]
                   : selectedStatus;
+                const tabSelection = rawTabSelection?.toLowerCase() || 'all';
 
                 return statsConfig && statsConfig
                   .filter(statCfg => !statCfg.visibleWhen || statCfg.visibleWhen.includes(tabSelection))

@@ -18,12 +18,21 @@ const TotalListingsCard = ({
   delay = 0,
   ...props
 }) => {
+  // Status groups for each category (matching statusCategories.js)
+  const statusGroups = {
+    active: ['active', 'active_under_contract', 'pending'],
+    closed: ['closed'],
+    expired: ['cancelled', 'expired', 'withdrawn'],
+    all: null // All statuses
+  };
+
   // Calculate count based on status
   const count = status === 'all'
     ? data.length
     : data.filter(item => {
         const itemStatus = item.listing_status || item.status;
-        return itemStatus?.toLowerCase() === status.toLowerCase();
+        const validStatuses = statusGroups[status] || [status];
+        return validStatuses.includes(itemStatus?.toLowerCase());
       }).length;
 
   // Icon varies by status

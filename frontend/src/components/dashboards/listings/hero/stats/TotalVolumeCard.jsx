@@ -16,12 +16,21 @@ const TotalVolumeCard = ({
   delay = 2,
   ...props
 }) => {
+  // Status groups for each category (matching statusCategories.js)
+  const statusGroups = {
+    active: ['active', 'active_under_contract', 'pending'],
+    closed: ['closed'],
+    expired: ['cancelled', 'expired', 'withdrawn'],
+    all: null // All statuses
+  };
+
   // Calculate total value based on status
   const filteredListings = status === 'all'
     ? data
     : data.filter(item => {
         const itemStatus = item.listing_status || item.status;
-        return itemStatus?.toLowerCase() === status.toLowerCase();
+        const validStatuses = statusGroups[status] || [status];
+        return validStatuses.includes(itemStatus?.toLowerCase());
       });
 
   const totalVolume = filteredListings.reduce((sum, listing) => {

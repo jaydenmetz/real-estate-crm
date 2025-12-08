@@ -15,7 +15,7 @@ import {
   CalendarToday,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { CLIENT_STATUS_COLORS } from '../../../../../constants/clientConfig';
+import { CLIENT_STATUS_CONFIG } from '../../../../../constants/clientConfig';
 import { formatCurrency, formatDate as formatDateUtil } from '../../../../../utils/formatters';
 import { QuickActionsMenu } from '../../../../common/ui/QuickActionsMenu';
 
@@ -59,8 +59,8 @@ const ClientListItem = ({ client, onUpdate, onDelete, onArchive, onRestore, isAr
   const budgetAmount = parseFloat(budget || max_budget || 0);
   const lastContact = last_contact || last_contactDate;
 
-  // Get status color
-  const statusColor = CLIENT_STATUS_COLORS[clientStatus] || '#6366f1';
+  // Get status color (use hex color from config for alpha() compatibility)
+  const statusColor = CLIENT_STATUS_CONFIG[clientStatus]?.color || '#6366f1';
 
   // Handle row click - only navigate if not dragging (text selection)
   const handleRowMouseDown = useCallback((e) => {

@@ -30,11 +30,22 @@ const TotalCommissionCard = ({
 }) => {
   // Access privacy context for master toggle
   const { masterHidden, toggleMaster } = usePrivacy();
+
+  // Status groups for each category (matching statusCategories.js)
+  const statusGroups = {
+    active: ['active', 'active_under_contract', 'pending'],
+    closed: ['closed'],
+    expired: ['cancelled', 'expired', 'withdrawn'],
+    all: null // All statuses
+  };
+
   // Calculate commission
   // Data is already filtered by backend for archived/non-archived
   let commission = 0;
 
-  if (status === 'All') {
+  const normalizedStatus = status?.toLowerCase();
+
+  if (normalizedStatus === 'all') {
     // All tab: Closed Commission - Cancelled Commission
     const closedCommission = data
       .filter(item => {
@@ -42,32 +53,35 @@ const TotalCommissionCard = ({
         return itemStatus?.toLowerCase() === 'closed';
       })
       .reduce((sum, item) => {
-        const price = parseFloat(item.list_price || 0);
+        const price = parseFloat(item.list_price || item.listing_price || 0);
         const commissionPct = parseFloat(item.total_commission || 3);
         return sum + (price * (commissionPct / 100));
       }, 0);
 
+    // Expired category includes cancelled, expired, withdrawn
+    const expiredStatuses = statusGroups.expired;
     const cancelledCommission = data
       .filter(item => {
         const itemStatus = item.listing_status || item.status;
-        return itemStatus?.toLowerCase() === 'cancelled';
+        return expiredStatuses.includes(itemStatus?.toLowerCase());
       })
       .reduce((sum, item) => {
-        const price = parseFloat(item.list_price || 0);
+        const price = parseFloat(item.list_price || item.listing_price || 0);
         const commissionPct = parseFloat(item.total_commission || 3);
         return sum + (price * (commissionPct / 100));
       }, 0);
 
     commission = closedCommission - cancelledCommission;
   } else {
-    // Single status (Active, Closed, Cancelled, etc.)
+    // Single status category (Active, Closed, Expired, etc.)
+    const validStatuses = statusGroups[normalizedStatus] || [normalizedStatus];
     commission = data
       .filter(item => {
         const itemStatus = item.listing_status || item.status;
-        return itemStatus?.toLowerCase() === status.toLowerCase();
+        return validStatuses.includes(itemStatus?.toLowerCase());
       })
       .reduce((sum, item) => {
-        const price = parseFloat(item.list_price || 0);
+        const price = parseFloat(item.list_price || item.listing_price || 0);
         const commissionPct = parseFloat(item.total_commission || 3);
         return sum + (price * (commissionPct / 100));
       }, 0);
