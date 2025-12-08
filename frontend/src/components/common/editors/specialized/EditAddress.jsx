@@ -116,38 +116,52 @@ export const EditAddress = ({
 
       // If user selected from autocomplete, use full address object
       if (selectedAddress) {
+        // Use currentInputText if user edited the display name after autocomplete selection
+        // Otherwise fall back to the autocomplete's property_address
+        const displayName = currentInputText && currentInputText.trim()
+          ? currentInputText.trim()
+          : selectedAddress.property_address_display || selectedAddress.display_address || selectedAddress.property_address;
+
         // Add unit number to display_address if provided
         const updatedAddress = {
           ...selectedAddress,
-          display_address: addUnitNumber(selectedAddress.display_address || selectedAddress.property_address),
+          display_address: addUnitNumber(displayName),
+          // Also set property_address_display for consistency with AddressInput's format
+          property_address_display: addUnitNumber(displayName),
         };
         await onSave(updatedAddress);
       }
       // If user just typed text without selecting, save as display_address only
       else if (currentInputText && currentInputText.trim() !== displayAddress) {
         // Create minimal address object with just display_address changed
+        const newDisplayAddress = addUnitNumber(currentInputText.trim());
         const addressUpdate = typeof value === 'object'
           ? {
               ...value,
-              display_address: addUnitNumber(currentInputText.trim()),
+              display_address: newDisplayAddress,
+              property_address_display: newDisplayAddress,
             }
           : {
               property_address: value || '',
-              display_address: addUnitNumber(currentInputText.trim()),
+              display_address: newDisplayAddress,
+              property_address_display: newDisplayAddress,
             };
         await onSave(addressUpdate);
       }
       // If only unit number changed
       else if (unitNumber !== (displayAddress.match(/#(\d+)$/)?.[1] || '')) {
-        const baseAddress = selectedAddress?.display_address || selectedAddress?.property_address || currentInputText || displayAddress;
+        const baseAddress = selectedAddress?.property_address_display || selectedAddress?.display_address || selectedAddress?.property_address || currentInputText || displayAddress;
+        const newDisplayAddress = addUnitNumber(baseAddress);
         const addressUpdate = typeof value === 'object'
           ? {
               ...value,
-              display_address: addUnitNumber(baseAddress),
+              display_address: newDisplayAddress,
+              property_address_display: newDisplayAddress,
             }
           : {
               property_address: value || '',
-              display_address: addUnitNumber(baseAddress),
+              display_address: newDisplayAddress,
+              property_address_display: newDisplayAddress,
             };
         await onSave(addressUpdate);
       } else {
