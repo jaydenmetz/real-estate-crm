@@ -129,25 +129,25 @@ export const escrowsConfig = createEntityConfig({
         id: 'total_active_escrows',
         component: TotalEscrowsCard,
         props: { status: 'active' },
-        visibleWhen: ['Active']
+        visibleWhen: ['active']
       },
       {
         id: 'total_active_this_month',
         component: TotalThisMonthCard,
         props: { status: 'active', dateField: 'created_at' },
-        visibleWhen: ['Active']
+        visibleWhen: ['active']
       },
       {
         id: 'total_active_volume',
         component: TotalVolumeCard,
         props: { status: 'active' },
-        visibleWhen: ['Active']
+        visibleWhen: ['active']
       },
       {
         id: 'total_active_commission',
         component: TotalCommissionCard,
         props: { status: 'active' },
-        visibleWhen: ['Active']
+        visibleWhen: ['active']
       },
 
       // ========================================
@@ -157,25 +157,25 @@ export const escrowsConfig = createEntityConfig({
         id: 'total_closed_escrows',
         component: TotalEscrowsCard,
         props: { status: 'closed' },
-        visibleWhen: ['Closed']
+        visibleWhen: ['won']
       },
       {
         id: 'total_closed_this_month',
         component: TotalThisMonthCard,
         props: { status: 'closed', dateField: 'closing_date' },
-        visibleWhen: ['Closed']
+        visibleWhen: ['won']
       },
       {
         id: 'total_closed_volume',
         component: TotalVolumeCard,
         props: { status: 'closed' },
-        visibleWhen: ['Closed']
+        visibleWhen: ['won']
       },
       {
         id: 'total_closed_commission',
         component: TotalCommissionCard,
         props: { status: 'closed' },
-        visibleWhen: ['Closed']
+        visibleWhen: ['won']
       },
 
       // ========================================
@@ -185,25 +185,25 @@ export const escrowsConfig = createEntityConfig({
         id: 'total_cancelled_escrows',
         component: TotalEscrowsCard,
         props: { status: 'cancelled' },
-        visibleWhen: ['Cancelled']
+        visibleWhen: ['lost']
       },
       {
         id: 'total_cancelled_this_month',
         component: TotalThisMonthCard,
         props: { status: 'cancelled', dateField: 'updated_at' },
-        visibleWhen: ['Cancelled']
+        visibleWhen: ['lost']
       },
       {
         id: 'total_cancelled_volume',
         component: TotalVolumeCard,
         props: { status: 'cancelled' },
-        visibleWhen: ['Cancelled']
+        visibleWhen: ['lost']
       },
       {
         id: 'total_cancelled_commission',
         component: TotalCommissionCard,
         props: { status: 'cancelled' },
-        visibleWhen: ['Cancelled']
+        visibleWhen: ['lost']
       },
 
       // ========================================
@@ -212,32 +212,32 @@ export const escrowsConfig = createEntityConfig({
       {
         id: 'total_escrows',
         component: TotalEscrowsCard,
-        props: { status: 'All' },
-        visibleWhen: ['All']
+        props: { status: 'all' },
+        visibleWhen: ['all']
       },
       {
         id: 'total_escrows_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'All', dateField: 'created_at' },
-        visibleWhen: ['All']
+        props: { status: 'all', dateField: 'created_at' },
+        visibleWhen: ['all']
       },
       {
         id: 'total_volume',
         component: TotalVolumeCard,
-        props: { status: 'All' },
-        visibleWhen: ['All']
+        props: { status: 'all' },
+        visibleWhen: ['all']
       },
       {
         id: 'total_commission',
         component: TotalCommissionCard,
-        props: { status: 'All' },
-        visibleWhen: ['All']
+        props: { status: 'all' },
+        visibleWhen: ['all']
       },
     ],
 
     // Status Tabs Configuration
     statusTabs: escrowStatusTabs,
-    defaultStatus: 'Active',
+    defaultStatus: 'active',
 
     // Scope Filter Configuration
     getScopeOptions: getEscrowScopeOptions,
