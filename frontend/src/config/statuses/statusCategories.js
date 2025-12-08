@@ -23,41 +23,42 @@
 
 // ============================================================================
 // ESCROW CATEGORIES
+// Uses lowercase category IDs to match database category_key values
 // ============================================================================
 
 export const ESCROW_CATEGORIES = {
   ACTIVE: {
-    id: 'Active',
+    id: 'active',  // Matches database category_key
     label: 'Active',
     displayName: 'Active Escrows', // For dropdown header
-    statuses: ['Active'],
+    statuses: ['active'],  // Matches database status_key
     description: 'Currently active escrows',
     preferredViewMode: 'card',
     sortOrder: 1,
   },
   CLOSED: {
-    id: 'Closed',
+    id: 'won',  // Matches database category_key (closed = won category)
     label: 'Closed',
     displayName: 'Closed Escrows',
-    statuses: ['Closed'],
+    statuses: ['closed'],
     description: 'Successfully closed escrows',
     preferredViewMode: 'list',
     sortOrder: 2,
   },
   CANCELLED: {
-    id: 'Cancelled',
+    id: 'lost',  // Matches database category_key (cancelled = lost category)
     label: 'Cancelled',
     displayName: 'Cancelled Escrows',
-    statuses: ['Cancelled'],
+    statuses: ['cancelled'],
     description: 'Cancelled escrows',
     preferredViewMode: 'list',
     sortOrder: 3,
   },
   ALL: {
-    id: 'All',
+    id: 'all',
     label: 'All Escrows',
     displayName: 'All Escrows',
-    statuses: ['Active', 'Closed', 'Cancelled'],
+    statuses: ['active', 'closed', 'cancelled'],
     description: 'All escrows regardless of status',
     preferredViewMode: 'card',
     sortOrder: 4,
@@ -66,41 +67,42 @@ export const ESCROW_CATEGORIES = {
 
 // ============================================================================
 // LISTING CATEGORIES
+// Uses lowercase category IDs to match database category_key values
 // ============================================================================
 
 export const LISTING_CATEGORIES = {
   ACTIVE: {
-    id: 'Active',
+    id: 'active',  // Matches database category_key
     label: 'Active',
     displayName: 'Active Listings',
-    statuses: ['Active', 'ActiveUnderContract', 'Pending'],
+    statuses: ['active', 'active_under_contract', 'pending'],  // Matches database status_key
     description: 'Active listings and listings under contract',
     preferredViewMode: 'card',
     sortOrder: 1,
   },
   CLOSED: {
-    id: 'Closed',
+    id: 'won',  // Matches database category_key (closed = won category)
     label: 'Closed',
     displayName: 'Closed Listings',
-    statuses: ['Closed'],
+    statuses: ['closed'],
     description: 'Successfully closed listings',
     preferredViewMode: 'list',
     sortOrder: 2,
   },
   CANCELLED: {
-    id: 'Cancelled',
+    id: 'lost',  // Matches database category_key (cancelled/expired/withdrawn = lost category)
     label: 'Cancelled',
     displayName: 'Cancelled Listings',
-    statuses: ['Cancelled', 'Expired', 'Withdrawn'],
+    statuses: ['cancelled', 'expired', 'withdrawn'],
     description: 'Cancelled, expired, or withdrawn listings',
     preferredViewMode: 'list',
     sortOrder: 3,
   },
   ALL: {
-    id: 'All',
+    id: 'all',
     label: 'All Listings',
     displayName: 'All Listings',
-    statuses: ['Active', 'ActiveUnderContract', 'Pending', 'Closed', 'Cancelled', 'Expired', 'Withdrawn'],
+    statuses: ['active', 'active_under_contract', 'pending', 'closed', 'cancelled', 'expired', 'withdrawn'],
     description: 'All listings regardless of status',
     preferredViewMode: 'card',
     sortOrder: 4,
@@ -109,42 +111,43 @@ export const LISTING_CATEGORIES = {
 
 // ============================================================================
 // CLIENT CATEGORIES
-// Database statuses: active, lead, inactive, past_client
+// Uses lowercase category IDs to match database category_key values
+// Database statuses: active, closed, expired, cancelled
 // ============================================================================
 
 export const CLIENT_CATEGORIES = {
   ACTIVE: {
-    id: 'Active',
+    id: 'active',  // Matches database category_key
     label: 'Active',
     displayName: 'Active Clients',
-    statuses: ['active', 'lead'],
-    description: 'Active clients and leads',
+    statuses: ['active'],  // Matches database status_key
+    description: 'Active clients',
     preferredViewMode: 'card',
     sortOrder: 1,
   },
-  PAST: {
-    id: 'Past',
-    label: 'Past',
-    displayName: 'Past Clients',
-    statuses: ['past_client'],
-    description: 'Past clients',
+  CLOSED: {
+    id: 'won',  // Matches database category_key (closed = won category)
+    label: 'Closed',
+    displayName: 'Closed Clients',
+    statuses: ['closed'],
+    description: 'Closed clients (transactions completed)',
     preferredViewMode: 'list',
     sortOrder: 2,
   },
   INACTIVE: {
-    id: 'Inactive',
+    id: 'lost',  // Matches database category_key (expired/cancelled = lost category)
     label: 'Inactive',
     displayName: 'Inactive Clients',
-    statuses: ['inactive'],
-    description: 'Inactive clients',
+    statuses: ['expired', 'cancelled'],
+    description: 'Expired or cancelled clients',
     preferredViewMode: 'list',
     sortOrder: 3,
   },
   ALL: {
-    id: 'All',
+    id: 'all',
     label: 'All Clients',
     displayName: 'All Clients',
-    statuses: ['active', 'lead', 'inactive', 'past_client'],
+    statuses: ['active', 'closed', 'expired', 'cancelled'],
     description: 'All clients regardless of status',
     preferredViewMode: 'card',
     sortOrder: 4,
@@ -152,34 +155,37 @@ export const CLIENT_CATEGORIES = {
 };
 
 // ============================================================================
-// LEAD CATEGORIES (Future Implementation)
+// LEAD CATEGORIES
+// Uses lowercase category IDs to match database category_key values
+// Database statuses: new, contacted, met (active), under_contract, closed (won),
+//   competing, rejected, unresponsive, deferred, unqualified (lost)
 // ============================================================================
 
 export const LEAD_CATEGORIES = {
   ACTIVE: {
-    id: 'active',
+    id: 'active',  // Matches database category_key
     label: 'Active',
     displayName: 'Active Leads',
-    statuses: ['New', 'Contacted', 'Qualified', 'Nurturing'],
+    statuses: ['new', 'contacted', 'met'],  // Matches database status_key
     description: 'Currently active leads',
     preferredViewMode: 'card',
     sortOrder: 1,
   },
-  CONVERTED: {
-    id: 'converted',
-    label: 'Converted',
-    displayName: 'Converted Leads',
-    statuses: ['Converted'],
-    description: 'Leads converted to clients',
+  WON: {
+    id: 'won',  // Matches database category_key
+    label: 'Won',
+    displayName: 'Won Leads',
+    statuses: ['under_contract', 'closed'],
+    description: 'Leads under contract or closed',
     preferredViewMode: 'list',
     sortOrder: 2,
   },
   LOST: {
-    id: 'lost',
+    id: 'lost',  // Matches database category_key
     label: 'Lost',
     displayName: 'Lost Leads',
-    statuses: ['Unqualified', 'Lost', 'Dead'],
-    description: 'Unqualified, lost, or dead leads',
+    statuses: ['competing', 'rejected', 'unresponsive', 'deferred', 'unqualified'],
+    description: 'Lost or unqualified leads',
     preferredViewMode: 'list',
     sortOrder: 3,
   },
@@ -187,7 +193,7 @@ export const LEAD_CATEGORIES = {
     id: 'all',
     label: 'All Leads',
     displayName: 'All Leads',
-    statuses: ['New', 'Contacted', 'Qualified', 'Nurturing', 'Converted', 'Unqualified', 'Lost', 'Dead'],
+    statuses: ['new', 'contacted', 'met', 'under_contract', 'closed', 'competing', 'rejected', 'unresponsive', 'deferred', 'unqualified'],
     description: 'All leads regardless of status',
     preferredViewMode: 'card',
     sortOrder: 4,
@@ -195,21 +201,24 @@ export const LEAD_CATEGORIES = {
 };
 
 // ============================================================================
-// APPOINTMENT CATEGORIES (Future Implementation)
+// APPOINTMENT CATEGORIES
+// Uses lowercase category IDs to match database category_key values
+// Database statuses: scheduled, confirmed, rescheduled (active), completed (won),
+//   cancelled, no_show (lost)
 // ============================================================================
 
 export const APPOINTMENT_CATEGORIES = {
-  SCHEDULED: {
-    id: 'scheduled',
-    label: 'Scheduled',
-    displayName: 'Scheduled Appointments',
-    statuses: ['scheduled', 'confirmed'],
+  ACTIVE: {
+    id: 'active',  // Matches database category_key
+    label: 'Active',
+    displayName: 'Active Appointments',
+    statuses: ['scheduled', 'confirmed', 'rescheduled'],  // Matches database status_key
     description: 'Upcoming appointments',
     preferredViewMode: 'calendar',
     sortOrder: 1,
   },
-  COMPLETED: {
-    id: 'completed',
+  WON: {
+    id: 'won',  // Matches database category_key (completed = won)
     label: 'Completed',
     displayName: 'Completed Appointments',
     statuses: ['completed'],
@@ -217,8 +226,8 @@ export const APPOINTMENT_CATEGORIES = {
     preferredViewMode: 'list',
     sortOrder: 2,
   },
-  CANCELLED: {
-    id: 'cancelled',
+  LOST: {
+    id: 'lost',  // Matches database category_key (cancelled/no_show = lost)
     label: 'Cancelled',
     displayName: 'Cancelled Appointments',
     statuses: ['cancelled', 'no_show'],
@@ -230,7 +239,7 @@ export const APPOINTMENT_CATEGORIES = {
     id: 'all',
     label: 'All Appointments',
     displayName: 'All Appointments',
-    statuses: ['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'],
+    statuses: ['scheduled', 'confirmed', 'rescheduled', 'completed', 'cancelled', 'no_show'],
     description: 'All appointments regardless of status',
     preferredViewMode: 'card',
     sortOrder: 4,

@@ -15,11 +15,12 @@
 
 // ============================================================================
 // ESCROW STATUSES
+// Uses lowercase status IDs to match database status_key values
 // ============================================================================
 
 export const ESCROW_STATUSES = {
   ACTIVE: {
-    id: 'Active',
+    id: 'active',  // Matches database status_key
     label: 'Active',
     color: '#10b981',
     bg: 'rgba(16, 185, 129, 0.1)',
@@ -28,16 +29,16 @@ export const ESCROW_STATUSES = {
     sortOrder: 1,
   },
   CLOSED: {
-    id: 'Closed',
+    id: 'closed',
     label: 'Closed',
-    color: '#6366f1',
-    bg: 'rgba(99, 102, 241, 0.1)',
+    color: '#3b82f6',
+    bg: 'rgba(59, 130, 246, 0.1)',
     icon: 'check_circle',
     description: 'Successfully closed escrow',
     sortOrder: 2,
   },
   CANCELLED: {
-    id: 'Cancelled',
+    id: 'cancelled',
     label: 'Cancelled',
     color: '#ef4444',
     bg: 'rgba(239, 68, 68, 0.1)',
@@ -49,11 +50,12 @@ export const ESCROW_STATUSES = {
 
 // ============================================================================
 // LISTING STATUSES
+// Uses lowercase status IDs to match database status_key values
 // ============================================================================
 
 export const LISTING_STATUSES = {
   ACTIVE: {
-    id: 'Active',
+    id: 'active',  // Matches database status_key
     label: 'Active',
     color: '#10b981',
     bg: 'rgba(16, 185, 129, 0.1)',
@@ -62,16 +64,16 @@ export const LISTING_STATUSES = {
     sortOrder: 1,
   },
   ACTIVE_UNDER_CONTRACT: {
-    id: 'ActiveUnderContract',
+    id: 'active_under_contract',
     label: 'Active Under Contract',
-    color: '#3b82f6',
-    bg: 'rgba(59, 130, 246, 0.1)',
-    icon: 'description',
+    color: '#8b5cf6',
+    bg: 'rgba(139, 92, 246, 0.1)',
+    icon: 'handshake',
     description: 'Active listing with accepted offer',
     sortOrder: 2,
   },
   PENDING: {
-    id: 'Pending',
+    id: 'pending',
     label: 'Pending',
     color: '#f59e0b',
     bg: 'rgba(245, 158, 11, 0.1)',
@@ -80,59 +82,52 @@ export const LISTING_STATUSES = {
     sortOrder: 3,
   },
   CLOSED: {
-    id: 'Closed',
+    id: 'closed',
     label: 'Closed',
-    color: '#6366f1',
-    bg: 'rgba(99, 102, 241, 0.1)',
+    color: '#3b82f6',
+    bg: 'rgba(59, 130, 246, 0.1)',
     icon: 'check_circle',
     description: 'Successfully closed listing',
     sortOrder: 4,
   },
-  CANCELLED: {
-    id: 'Cancelled',
-    label: 'Cancelled',
-    color: '#ef4444',
-    bg: 'rgba(239, 68, 68, 0.1)',
-    icon: 'cancel',
-    description: 'Cancelled listing',
-    sortOrder: 5,
-  },
   EXPIRED: {
-    id: 'Expired',
+    id: 'expired',
     label: 'Expired',
-    color: '#94a3b8',
-    bg: 'rgba(148, 163, 184, 0.1)',
+    color: '#6b7280',
+    bg: 'rgba(107, 114, 128, 0.1)',
     icon: 'schedule',
     description: 'Expired listing',
-    sortOrder: 6,
+    sortOrder: 5,
   },
   WITHDRAWN: {
-    id: 'Withdrawn',
+    id: 'withdrawn',
     label: 'Withdrawn',
     color: '#64748b',
     bg: 'rgba(100, 116, 139, 0.1)',
     icon: 'remove_circle',
     description: 'Withdrawn from market',
-    sortOrder: 7,
+    sortOrder: 6,
   },
-  COMING_SOON: {
-    id: 'Coming Soon',
-    label: 'Coming Soon',
-    color: '#8b5cf6',
-    bg: 'rgba(139, 92, 246, 0.1)',
-    icon: 'schedule',
-    description: 'Coming soon to market',
-    sortOrder: 0,
+  CANCELLED: {
+    id: 'cancelled',
+    label: 'Cancelled',
+    color: '#ef4444',
+    bg: 'rgba(239, 68, 68, 0.1)',
+    icon: 'cancel',
+    description: 'Cancelled listing',
+    sortOrder: 7,
   },
 };
 
 // ============================================================================
-// CLIENT STATUSES (Future Implementation)
+// CLIENT STATUSES
+// Uses lowercase status IDs to match database status_key values
+// Database statuses: active (active), closed (won), expired, cancelled (lost)
 // ============================================================================
 
 export const CLIENT_STATUSES = {
   ACTIVE: {
-    id: 'active',
+    id: 'active',  // Matches database status_key
     label: 'Active',
     color: '#10b981',
     bg: 'rgba(16, 185, 129, 0.1)',
@@ -140,60 +135,45 @@ export const CLIENT_STATUSES = {
     description: 'Active client',
     sortOrder: 1,
   },
-  PROSPECTING: {
-    id: 'prospecting',
-    label: 'Prospecting',
-    color: '#3b82f6',
-    bg: 'rgba(59, 130, 246, 0.1)',
-    icon: 'person_search',
-    description: 'Prospecting client',
-    sortOrder: 2,
-  },
-  UNDER_CONTRACT: {
-    id: 'under_contract',
-    label: 'Under Contract',
-    color: '#f59e0b',
-    bg: 'rgba(245, 158, 11, 0.1)',
-    icon: 'description',
-    description: 'Client under contract',
-    sortOrder: 3,
-  },
   CLOSED: {
     id: 'closed',
     label: 'Closed',
-    color: '#6366f1',
-    bg: 'rgba(99, 102, 241, 0.1)',
+    color: '#3b82f6',
+    bg: 'rgba(59, 130, 246, 0.1)',
     icon: 'check_circle',
-    description: 'Closed client',
-    sortOrder: 4,
+    description: 'Closed client (transaction completed)',
+    sortOrder: 2,
   },
-  INACTIVE: {
-    id: 'inactive',
-    label: 'Inactive',
+  EXPIRED: {
+    id: 'expired',
+    label: 'Expired',
     color: '#94a3b8',
     bg: 'rgba(148, 163, 184, 0.1)',
-    icon: 'person_off',
-    description: 'Inactive client',
-    sortOrder: 5,
+    icon: 'schedule',
+    description: 'Expired client',
+    sortOrder: 3,
   },
-  LOST: {
-    id: 'lost',
-    label: 'Lost',
+  CANCELLED: {
+    id: 'cancelled',
+    label: 'Cancelled',
     color: '#ef4444',
     bg: 'rgba(239, 68, 68, 0.1)',
     icon: 'cancel',
-    description: 'Lost client',
-    sortOrder: 6,
+    description: 'Cancelled client',
+    sortOrder: 4,
   },
 };
 
 // ============================================================================
-// LEAD STATUSES (Future Implementation)
+// LEAD STATUSES
+// Uses lowercase status IDs to match database status_key values
+// Active: new, contacted, met | Won: under_contract, closed | Lost: competing, rejected, unresponsive, deferred, unqualified
 // ============================================================================
 
 export const LEAD_STATUSES = {
+  // Active category (3 statuses)
   NEW: {
-    id: 'New',
+    id: 'new',  // Matches database status_key
     label: 'New',
     color: '#3b82f6',
     bg: 'rgba(59, 130, 246, 0.1)',
@@ -202,81 +182,104 @@ export const LEAD_STATUSES = {
     sortOrder: 1,
   },
   CONTACTED: {
-    id: 'Contacted',
+    id: 'contacted',
     label: 'Contacted',
-    color: '#10b981',
-    bg: 'rgba(16, 185, 129, 0.1)',
+    color: '#8b5cf6',
+    bg: 'rgba(139, 92, 246, 0.1)',
     icon: 'phone',
     description: 'Contacted lead',
     sortOrder: 2,
   },
-  QUALIFIED: {
-    id: 'Qualified',
-    label: 'Qualified',
-    color: '#8b5cf6',
-    bg: 'rgba(139, 92, 246, 0.1)',
-    icon: 'verified',
-    description: 'Qualified lead',
+  MET: {
+    id: 'met',
+    label: 'Met',
+    color: '#10b981',
+    bg: 'rgba(16, 185, 129, 0.1)',
+    icon: 'handshake',
+    description: 'Met with lead',
     sortOrder: 3,
   },
-  NURTURING: {
-    id: 'Nurturing',
-    label: 'Nurturing',
+  // Won category (2 statuses)
+  UNDER_CONTRACT: {
+    id: 'under_contract',
+    label: 'Under Contract',
     color: '#f59e0b',
     bg: 'rgba(245, 158, 11, 0.1)',
-    icon: 'emoji_people',
-    description: 'Nurturing lead',
+    icon: 'description',
+    description: 'Lead under contract',
     sortOrder: 4,
   },
-  CONVERTED: {
-    id: 'Converted',
-    label: 'Converted',
-    color: '#6366f1',
-    bg: 'rgba(99, 102, 241, 0.1)',
+  CLOSED: {
+    id: 'closed',
+    label: 'Closed',
+    color: '#06b6d4',
+    bg: 'rgba(6, 182, 212, 0.1)',
     icon: 'check_circle',
-    description: 'Converted to client',
+    description: 'Closed lead (won)',
     sortOrder: 5,
   },
-  UNQUALIFIED: {
-    id: 'Unqualified',
-    label: 'Unqualified',
-    color: '#94a3b8',
-    bg: 'rgba(148, 163, 184, 0.1)',
-    icon: 'block',
-    description: 'Unqualified lead',
+  // Lost category (5 statuses)
+  COMPETING: {
+    id: 'competing',
+    label: 'Competing',
+    color: '#f97316',
+    bg: 'rgba(249, 115, 22, 0.1)',
+    icon: 'groups',
+    description: 'Competing with other agents',
     sortOrder: 6,
   },
-  LOST: {
-    id: 'Lost',
-    label: 'Lost',
+  REJECTED: {
+    id: 'rejected',
+    label: 'Rejected',
     color: '#ef4444',
     bg: 'rgba(239, 68, 68, 0.1)',
     icon: 'cancel',
-    description: 'Lost lead',
+    description: 'Lead rejected',
     sortOrder: 7,
   },
-  DEAD: {
-    id: 'Dead',
-    label: 'Dead',
-    color: '#64748b',
-    bg: 'rgba(100, 116, 139, 0.1)',
-    icon: 'close',
-    description: 'Dead lead',
+  UNRESPONSIVE: {
+    id: 'unresponsive',
+    label: 'Unresponsive',
+    color: '#94a3b8',
+    bg: 'rgba(148, 163, 184, 0.1)',
+    icon: 'phone_disabled',
+    description: 'Lead not responding',
     sortOrder: 8,
+  },
+  DEFERRED: {
+    id: 'deferred',
+    label: 'Deferred',
+    color: '#a855f7',
+    bg: 'rgba(168, 85, 247, 0.1)',
+    icon: 'schedule',
+    description: 'Lead deferred for later',
+    sortOrder: 9,
+  },
+  UNQUALIFIED: {
+    id: 'unqualified',
+    label: 'Unqualified',
+    color: '#6b7280',
+    bg: 'rgba(107, 114, 128, 0.1)',
+    icon: 'block',
+    description: 'Lead not qualified',
+    sortOrder: 10,
   },
 };
 
 // ============================================================================
-// APPOINTMENT STATUSES (Future Implementation)
+// APPOINTMENT STATUSES
+// Uses lowercase status IDs to match database status_key values
+// Active: scheduled, confirmed, rescheduled | Won: completed | Lost: cancelled, no_show
 // ============================================================================
 
 export const APPOINTMENT_STATUSES = {
+  // Active category (3 statuses)
   SCHEDULED: {
-    id: 'scheduled',
+    id: 'scheduled',  // Matches database status_key
     label: 'Scheduled',
     color: '#3b82f6',
     bg: 'rgba(59, 130, 246, 0.1)',
-    icon: 'event',
+    icon: 'schedule',
     description: 'Scheduled appointment',
     sortOrder: 1,
   },
@@ -289,15 +292,26 @@ export const APPOINTMENT_STATUSES = {
     description: 'Confirmed appointment',
     sortOrder: 2,
   },
+  RESCHEDULED: {
+    id: 'rescheduled',
+    label: 'Rescheduled',
+    color: '#8b5cf6',
+    bg: 'rgba(139, 92, 246, 0.1)',
+    icon: 'event_repeat',
+    description: 'Rescheduled appointment',
+    sortOrder: 3,
+  },
+  // Won category (1 status)
   COMPLETED: {
     id: 'completed',
     label: 'Completed',
     color: '#6366f1',
     bg: 'rgba(99, 102, 241, 0.1)',
-    icon: 'done_all',
+    icon: 'task_alt',
     description: 'Completed appointment',
-    sortOrder: 3,
+    sortOrder: 4,
   },
+  // Lost category (2 statuses)
   CANCELLED: {
     id: 'cancelled',
     label: 'Cancelled',
@@ -305,16 +319,16 @@ export const APPOINTMENT_STATUSES = {
     bg: 'rgba(239, 68, 68, 0.1)',
     icon: 'cancel',
     description: 'Cancelled appointment',
-    sortOrder: 4,
+    sortOrder: 5,
   },
   NO_SHOW: {
     id: 'no_show',
-    label: 'No Show',
-    color: '#94a3b8',
-    bg: 'rgba(148, 163, 184, 0.1)',
+    label: 'No-Show',
+    color: '#dc2626',
+    bg: 'rgba(220, 38, 38, 0.1)',
     icon: 'person_off',
-    description: 'No show appointment',
-    sortOrder: 5,
+    description: 'No-show appointment',
+    sortOrder: 6,
   },
 };
 
