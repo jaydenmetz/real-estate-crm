@@ -16,6 +16,9 @@ const authLimiter = rateLimit({
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
+  // Skip rate limiting for token refresh - it's authenticated and happens frequently
+  // This prevents legitimate users from being locked out due to normal token refresh activity
+  skip: (req) => req.path === '/refresh',
 });
 
 const strictLimiter = rateLimit({
