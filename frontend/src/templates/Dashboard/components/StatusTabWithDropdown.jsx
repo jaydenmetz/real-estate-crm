@@ -64,9 +64,11 @@ const StatusTabWithDropdown = ({
   // Get category data from database
   const currentCategory = dbCategories?.find(c => c.category_key === category.id);
 
-  // For "All" tab, get all categories except "All" itself
-  const allCategories = category.id === 'All'
-    ? dbCategories?.filter(c => c.category_key !== 'All')
+  // For "All" tab, get all categories except "all" itself
+  // Handle both 'all' (lowercase from database) and 'All' (legacy)
+  const isAllTab = category.id === 'all' || category.id === 'All';
+  const allCategories = isAllTab
+    ? dbCategories?.filter(c => c.category_key !== 'all' && c.category_key !== 'All')
     : null;
 
   // Calculate display label
@@ -76,7 +78,7 @@ const StatusTabWithDropdown = ({
     }
 
     // Get all statuses in this category
-    const categoryStatuses = category.id === 'All'
+    const categoryStatuses = isAllTab
       ? allCategories?.flatMap(cat => cat.statuses) || []
       : currentCategory?.statuses || [];
 
@@ -106,7 +108,7 @@ const StatusTabWithDropdown = ({
     } else {
       // Tab is not selected - switch to this category (all statuses selected by default)
       // Get all status keys in this category from database
-      const categoryStatuses = category.id === 'All'
+      const categoryStatuses = isAllTab
         ? allCategories?.flatMap(cat => cat.statuses) || []
         : currentCategory?.statuses || [];
 
@@ -244,8 +246,59 @@ const StatusTabWithDropdown = ({
         }}
       >
         {/* ALL TAB: Show grouped categories with smart nesting */}
-        {category.id === 'All' && allCategories ? (
+        {isAllTab && allCategories ? (
           <>
+            {/* "All" checkbox - select/deselect all statuses */}
+            {(() => {
+              const allStatusKeys = allCategories.flatMap(cat => cat.statuses.map(s => s.status_key));
+              const allSelected = allStatusKeys.length > 0 && allStatusKeys.every(key => selectedStatuses.includes(key));
+
+              const handleSelectAll = (e) => {
+                e.stopPropagation();
+                if (allSelected) {
+                  // Deselect all
+                  allStatusKeys.forEach(key => {
+                    if (selectedStatuses.includes(key)) {
+                      onStatusToggle(key);
+                    }
+                  });
+                } else {
+                  // Select all
+                  allStatusKeys.forEach(key => {
+                    if (!selectedStatuses.includes(key)) {
+                      onStatusToggle(key);
+                    }
+                  });
+                }
+              };
+
+              return (
+                <MenuItem
+                  onClick={handleSelectAll}
+                  sx={{
+                    fontSize: '0.875rem',
+                    py: 1,
+                    fontWeight: 600,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    mb: 0.5,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Checkbox
+                      checked={allSelected}
+                      indeterminate={selectedStatuses.length > 0 && !allSelected}
+                      size="small"
+                      sx={{ p: 0 }}
+                      readOnly
+                    />
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      All
+                    </Typography>
+                  </Box>
+                </MenuItem>
+              );
+            })()}
             {allCategories
               .sort((a, b) => (a.category_sort_order || 0) - (b.category_sort_order || 0))
               .map((cat) => {
