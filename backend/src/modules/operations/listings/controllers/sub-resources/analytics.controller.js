@@ -67,7 +67,7 @@ exports.getListingAnalytics = async (req, res) => {
         COUNT(*) as comparable_count
       FROM listings
       WHERE property_type = $1
-        AND listing_status = 'Closed'
+        AND listing_status = 'closed'
         AND ABS(square_feet - $2) <= $2 * 0.2  -- Within 20% of square footage
         AND ABS(list_price - $3) <= $3 * 0.2   -- Within 20% of price
         AND listing_date >= CURRENT_DATE - INTERVAL '6 months'

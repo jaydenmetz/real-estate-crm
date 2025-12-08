@@ -140,7 +140,7 @@ class CommissionService {
         FROM escrows
         WHERE 
           EXTRACT(YEAR FROM closing_date) = $1
-          AND escrow_status = 'Closed'
+          AND escrow_status = 'closed'
       `;
 
       const result = await pool.query(query, [year]);
@@ -227,7 +227,7 @@ class CommissionService {
         WHERE 
           EXTRACT(YEAR FROM closing_date) = $1
           AND closing_date < $2
-          AND escrow_status = 'Closed'
+          AND escrow_status = 'closed'
       `;
 
       const result = await pool.query(query, [year, date]);

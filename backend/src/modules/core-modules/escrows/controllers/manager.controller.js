@@ -87,7 +87,7 @@ const getManagerDashboard = async (req, res) => {
         FROM escrows e
         WHERE e.team_id = $1
           AND e.deleted_at IS NULL
-          AND e.escrow_status = 'Closed'
+          AND e.escrow_status = 'closed'
           ${dateFilter}
       ),
       follow_ups AS (

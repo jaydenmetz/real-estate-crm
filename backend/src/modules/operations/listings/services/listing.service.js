@@ -628,7 +628,7 @@ class ListingsService {
       SET
         is_archived = true,
         archived_at = CURRENT_TIMESTAMP,
-        listing_status = 'Cancelled'
+        listing_status = 'cancelled'
       WHERE id = $1
       AND (listing_agent_id = $2 OR team_id = $3)
       AND is_archived = false
@@ -668,7 +668,7 @@ class ListingsService {
       SET
         is_archived = false,
         archived_at = NULL,
-        listing_status = 'Active'
+        listing_status = 'active'
       WHERE id = $1
       AND (listing_agent_id = $2 OR team_id = $3)
       AND is_archived = true

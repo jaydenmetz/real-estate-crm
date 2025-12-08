@@ -53,7 +53,7 @@ class Client {
           COUNT(*) as transaction_count,
           SUM(purchase_price) as total_volume
         FROM escrows 
-        WHERE escrow_status = 'Closed'
+        WHERE escrow_status = 'closed'
         GROUP BY client_id
         
         UNION ALL
@@ -63,7 +63,7 @@ class Client {
           COUNT(*) as transaction_count,
           SUM(purchase_price) as total_volume
         FROM escrows 
-        WHERE escrow_status = 'Closed'
+        WHERE escrow_status = 'closed'
         GROUP BY client_id
       ) t ON c.id = t.client_id
       WHERE 1=1

@@ -240,7 +240,8 @@ const listingsConfig = createEntityConfig({
       }
 
       // Set days on market
-      if (data.listing_status === 'Active' || data.listingStatus === 'Active') {
+      // Use lowercase status values (database-driven)
+      if (data.listing_status === 'active' || data.listingStatus === 'active') {
         data.days_on_market = 0;
       }
 
@@ -251,8 +252,9 @@ const listingsConfig = createEntityConfig({
 
     beforeUpdate: async (data, currentRecord, user) => {
       // Update days on market if status changing to Active
-      if ((data.listingStatus === 'Active' || data.listing_status === 'Active') &&
-          currentRecord.listing_status !== 'Active') {
+      // Use lowercase status values (database-driven)
+      if ((data.listingStatus === 'active' || data.listing_status === 'active') &&
+          currentRecord.listing_status !== 'active') {
         data.days_on_market = 0;
         data.listing_date = 'CURRENT_DATE';
       }
