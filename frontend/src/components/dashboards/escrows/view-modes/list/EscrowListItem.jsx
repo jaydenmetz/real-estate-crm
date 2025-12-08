@@ -173,6 +173,7 @@ const useEscrowListConfig = (statuses) => {
           },
           toggle: {
             maskFn: maskCommission,
+            privacyLinked: true, // Links to master privacy toggle in stat card
           },
         },
 

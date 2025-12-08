@@ -103,10 +103,18 @@ const TableRowTemplate = React.memo(({
   const [openEditors, setOpenEditors] = useState({});
   const [toggleStates, setToggleStates] = useState({});
 
-  // Reset all toggle states when master toggle changes (syncs all items to master state)
+  // Sync individual toggle states when master toggle changes
+  // This makes the stat card toggle act as a "bulk set" for all items
+  // Only applies to columns with toggle.privacyLinked: true
   useEffect(() => {
-    setToggleStates({});
-  }, [masterHidden]);
+    const newToggleStates = {};
+    config.columns?.forEach((col, idx) => {
+      if (col.toggle?.privacyLinked) {
+        newToggleStates[`column_${idx}`] = !masterHidden;
+      }
+    });
+    setToggleStates(newToggleStates);
+  }, [masterHidden, config.columns]);
 
   // Actions menu state
   const [anchorEl, setAnchorEl] = useState(null);
@@ -243,9 +251,11 @@ const TableRowTemplate = React.memo(({
             : columnValue;
 
           // Toggle logic: true = show value, false/undefined = mask value
-          // Use individual toggle state (masterHidden used for syncing, not blocking)
-          const isToggled = toggleStates[`column_${idx}`] ?? !masterHidden; // Default matches master state
-          const shouldMask = !isToggled; // Only check individual toggle
+          // Individual items are always independently controllable
+          // Master toggle sets initial state for privacyLinked columns only
+          const defaultToggled = column.toggle?.privacyLinked ? !masterHidden : true;
+          const isToggled = toggleStates[`column_${idx}`] ?? defaultToggled;
+          const shouldMask = !isToggled; // Only individual toggle matters
           const displayValue = decodeHTML(
             column.toggle && shouldMask
               ? column.toggle.maskFn(columnValue)
@@ -304,17 +314,14 @@ const TableRowTemplate = React.memo(({
                 {column.toggle && (
                   <IconButton
                     onClick={(e) => {
-                      // Only allow toggle when master is NOT hidden
-                      if (!masterHidden) {
-                        handleToggle(`column_${idx}`, e);
-                      }
+                      // Always allow individual toggle
+                      handleToggle(`column_${idx}`, e);
                     }}
                     sx={{
                       width: 20,
                       height: 20,
                       p: 0,
-                      cursor: masterHidden ? 'not-allowed' : 'pointer',
-                      opacity: masterHidden ? 0.4 : 1,
+                      cursor: 'pointer',
                     }}
                   >
                     {shouldMask ? (

@@ -154,6 +154,7 @@ const useEscrowTableConfig = (statuses) => {
           },
           toggle: {
             maskFn: maskCommission,
+            privacyLinked: true, // Links to master privacy toggle in stat card
           },
           align: 'left',
           bold: true,

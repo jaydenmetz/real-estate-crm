@@ -155,13 +155,14 @@ const CardTemplate = React.memo(({
 
   // Sync individual toggle states when master toggle changes
   // This makes the stat card toggle act as a "bulk set" for all cards
+  // Only applies to metrics with toggle.privacyLinked: true
   useEffect(() => {
-    // Set all toggles to match the master state
+    // Set all privacy-linked toggles to match the master state
     // masterHidden = true means hide, so we want isToggled = false (masked)
     // masterHidden = false means show, so we want isToggled = true (shown)
     const newToggleStates = {};
     config.metrics?.forEach((metric, idx) => {
-      if (metric.toggle) {
+      if (metric.toggle?.privacyLinked) {
         newToggleStates[`metric_${idx}`] = !masterHidden;
       }
     });
@@ -556,8 +557,9 @@ const CardTemplate = React.memo(({
 
                   // Toggle state: true = show value, false/undefined = mask value
                   // Individual cards are always independently controllable
-                  // Master toggle just sets initial state, doesn't override
-                  const isToggled = toggleStates[`metric_${idx}`] ?? !masterHidden; // Default based on master state
+                  // Master toggle sets initial state for privacyLinked metrics only
+                  const defaultToggled = metric.toggle?.privacyLinked ? !masterHidden : true;
+                  const isToggled = toggleStates[`metric_${idx}`] ?? defaultToggled;
                   const shouldMask = !isToggled; // Only individual toggle matters
                   const displayValue = metric.toggle && shouldMask
                     ? metric.toggle.maskFn(metricValue)

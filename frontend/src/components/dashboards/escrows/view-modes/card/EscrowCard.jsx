@@ -194,6 +194,7 @@ const useEscrowCardConfig = (statuses) => {
           },
           toggle: {
             maskFn: maskCommission,
+            privacyLinked: true, // Links to master privacy toggle in stat card
             icon: {
               show: 'Visibility',
               hide: 'VisibilityOff',
