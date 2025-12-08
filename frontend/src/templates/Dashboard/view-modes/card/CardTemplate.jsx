@@ -149,22 +149,24 @@ const CardTemplate = React.memo(({
 
   // Reset toggle states when data changes (so updated values are shown, not masked)
   useEffect(() => {
-    // Extract metric values to detect changes
-    const metricValues = config.metrics?.map((metric, idx) => {
-      const value = typeof metric.field === 'function'
-        ? metric.field(data)
-        : data?.[metric.field];
-      return value;
-    }) || [];
-
-    // Reset toggle states when any metric value changes
+    // Reset toggle states when data ID changes
     setToggleStates({});
-  }, [data?.id, ...(config.metrics?.map((metric) => {
-    const value = typeof metric.field === 'function'
-      ? metric.field(data)
-      : data?.[metric.field];
-    return value;
-  }) || [])]);
+  }, [data?.id]);
+
+  // Sync individual toggle states when master toggle changes
+  // This makes the stat card toggle act as a "bulk set" for all cards
+  useEffect(() => {
+    // Set all toggles to match the master state
+    // masterHidden = true means hide, so we want isToggled = false (masked)
+    // masterHidden = false means show, so we want isToggled = true (shown)
+    const newToggleStates = {};
+    config.metrics?.forEach((metric, idx) => {
+      if (metric.toggle) {
+        newToggleStates[`metric_${idx}`] = !masterHidden;
+      }
+    });
+    setToggleStates(newToggleStates);
+  }, [masterHidden, config.metrics]);
 
   // Click vs drag detection (for text selection)
   const [isDragging, setIsDragging] = useState(false);
@@ -553,9 +555,10 @@ const CardTemplate = React.memo(({
                     : metricValue;
 
                   // Toggle state: true = show value, false/undefined = mask value
-                  // Master toggle (from PrivacyContext) overrides individual toggle
-                  const isToggled = toggleStates[`metric_${idx}`] ?? true; // Default to shown
-                  const shouldMask = masterHidden || !isToggled; // Master hidden OR individual hidden
+                  // Individual cards are always independently controllable
+                  // Master toggle just sets initial state, doesn't override
+                  const isToggled = toggleStates[`metric_${idx}`] ?? !masterHidden; // Default based on master state
+                  const shouldMask = !isToggled; // Only individual toggle matters
                   const displayValue = metric.toggle && shouldMask
                     ? metric.toggle.maskFn(metricValue)
                     : formattedValue;
@@ -597,13 +600,11 @@ const CardTemplate = React.memo(({
                         {metric.toggle && (
                           <Box
                             onClick={(e) => {
-                              // Only allow toggle when master is NOT hidden
-                              if (!masterHidden) {
-                                handleToggle(`metric_${idx}`, e, idx);
-                              }
+                              // Always allow individual card toggle
+                              handleToggle(`metric_${idx}`, e, idx);
                             }}
                             sx={{
-                              cursor: masterHidden ? 'not-allowed' : 'pointer',
+                              cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -612,10 +613,9 @@ const CardTemplate = React.memo(({
                               borderRadius: 1,
                               transition: 'all 0.2s',
                               flexShrink: 0,
-                              opacity: masterHidden ? 0.4 : 1,
-                              '&:hover': !masterHidden ? {
+                              '&:hover': {
                                 background: alpha(metricColor.primary, 0.1),
-                              } : {},
+                              },
                             }}
                           >
                             {shouldMask ? (
