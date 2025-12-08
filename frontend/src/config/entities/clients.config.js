@@ -199,7 +199,7 @@ export const clientsConfig = createEntityConfig({
 
     // Status Tabs Configuration (from centralized config)
     statusTabs: clientStatusTabs,
-    defaultStatus: 'Active',
+    defaultStatus: 'active',
 
     // Scope Filter Configuration (from navigation)
     getScopeOptions: getClientScopeOptions,

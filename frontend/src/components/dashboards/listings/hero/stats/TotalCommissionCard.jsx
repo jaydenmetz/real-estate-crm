@@ -89,11 +89,11 @@ const TotalCommissionCard = ({
 
   // Icon varies by status
   const defaultIcon = {
-    Active: 'Paid',
-    Closed: 'MonetizationOn',
-    Cancelled: 'MoneyOff',
-    All: 'AccountBalanceWallet'
-  }[status] || 'Paid';
+    active: 'Paid',
+    closed: 'MonetizationOn',
+    expired: 'MoneyOff',
+    all: 'AccountBalanceWallet'
+  }[normalizedStatus] || 'Paid';
 
   return (
     <DashboardStatCard

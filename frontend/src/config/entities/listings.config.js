@@ -212,7 +212,7 @@ export const listingsConfig = createEntityConfig({
 
     // Status Tabs Configuration
     statusTabs: listingStatusTabs,
-    defaultStatus: 'Active',
+    defaultStatus: 'active',
 
     // Scope Filter Configuration
     getScopeOptions: getListingScopeOptions,

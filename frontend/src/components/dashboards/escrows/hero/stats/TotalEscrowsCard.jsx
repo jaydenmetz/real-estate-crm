@@ -23,11 +23,12 @@ const TotalEscrowsCard = ({
 }) => {
   // Calculate count based on status
   // Data is already filtered by backend for archived/non-archived
-  const count = status === 'All'
+  const normalizedStatus = status?.toLowerCase();
+  const count = normalizedStatus === 'all'
     ? data.length
     : data.filter(item => {
         const itemStatus = item.escrow_status || item.status;
-        return itemStatus?.toLowerCase() === status.toLowerCase();
+        return itemStatus?.toLowerCase() === normalizedStatus;
       }).length;
 
   // Icon varies by status
@@ -35,8 +36,8 @@ const TotalEscrowsCard = ({
     active: 'Home',
     closed: 'CheckCircle',
     cancelled: 'Cancel',
-    All: 'Dashboard'
-  }[status] || 'Home';
+    all: 'Dashboard'
+  }[normalizedStatus] || 'Home';
 
   return (
     <DashboardStatCard

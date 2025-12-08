@@ -32,9 +32,10 @@ const TotalCommissionCard = ({
   const { masterHidden, toggleMaster } = usePrivacy();
   // Calculate commission
   // Data is already filtered by backend for archived/non-archived
+  const normalizedStatus = status?.toLowerCase();
   let commission = 0;
 
-  if (status === 'All') {
+  if (normalizedStatus === 'all') {
     // All tab: Closed Commission - Lost Commission
     const closedCommission = data
       .filter(item => {
@@ -64,7 +65,7 @@ const TotalCommissionCard = ({
     commission = data
       .filter(item => {
         const itemStatus = item.escrow_status || item.status;
-        return itemStatus?.toLowerCase() === status.toLowerCase();
+        return itemStatus?.toLowerCase() === normalizedStatus;
       })
       .reduce((sum, item) => {
         const price = parseFloat(item.purchase_price || 0);
@@ -78,8 +79,8 @@ const TotalCommissionCard = ({
     active: 'Paid',
     closed: 'MonetizationOn',
     cancelled: 'MoneyOff',
-    All: 'AccountBalanceWallet'
-  }[status] || 'Paid';
+    all: 'AccountBalanceWallet'
+  }[normalizedStatus] || 'Paid';
 
   return (
     <DashboardStatCard

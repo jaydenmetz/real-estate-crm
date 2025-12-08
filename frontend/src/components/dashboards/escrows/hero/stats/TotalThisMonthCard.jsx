@@ -23,14 +23,15 @@ const TotalThisMonthCard = ({
 }) => {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const normalizedStatus = status?.toLowerCase();
 
   // Calculate count for this month
   // Data is already filtered by backend for archived/non-archived
   const count = data.filter(item => {
     // Check status match
-    if (status !== 'All') {
+    if (normalizedStatus !== 'all') {
       const itemStatus = item.escrow_status || item.status;
-      if (itemStatus?.toLowerCase() !== status.toLowerCase()) {
+      if (itemStatus?.toLowerCase() !== normalizedStatus) {
         return false;
       }
     }
@@ -45,8 +46,8 @@ const TotalThisMonthCard = ({
     active: 'Schedule',
     closed: 'EventAvailable',
     cancelled: 'EventBusy',
-    All: 'CalendarMonth'
-  }[status] || 'Schedule';
+    all: 'CalendarMonth'
+  }[normalizedStatus] || 'Schedule';
 
   return (
     <DashboardStatCard
