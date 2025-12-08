@@ -82,7 +82,7 @@ export const clientsConfig = createEntityConfig({
     },
 
     // Stats Configuration (component-based for reusability)
-    // Stats calculate from data passed to them (like escrows)
+    // visibleWhen uses lowercase category keys to match database category_key values
     stats: [
       // ========================================
       // ACTIVE TAB STATS
@@ -91,81 +91,81 @@ export const clientsConfig = createEntityConfig({
         id: 'total_active_clients',
         component: TotalClientsCard,
         props: { status: 'active' },
-        visibleWhen: ['Active']
+        visibleWhen: ['active']
       },
       {
         id: 'active_clients_count',
         component: ActiveClientsCard,
         props: {},
-        visibleWhen: ['Active']
+        visibleWhen: ['active']
       },
       {
         id: 'new_this_month_active',
         component: NewThisMonthCard,
         props: {},
-        visibleWhen: ['Active']
+        visibleWhen: ['active']
       },
       {
         id: 'total_client_value_active',
         component: ClientValueCard,
         props: {},
-        visibleWhen: ['Active']
+        visibleWhen: ['active']
       },
 
       // ========================================
-      // PAST TAB STATS
+      // CLOSED TAB STATS (won category)
       // ========================================
       {
-        id: 'total_past_clients',
+        id: 'total_closed_clients',
         component: TotalClientsCard,
-        props: { status: 'past_client' },
-        visibleWhen: ['Past']
+        props: { status: 'closed' },
+        visibleWhen: ['won']
       },
       {
-        id: 'past_active_count',
+        id: 'closed_active_count',
         component: ActiveClientsCard,
         props: {},
-        visibleWhen: ['Past']
+        visibleWhen: ['won']
       },
       {
-        id: 'new_this_month_past',
+        id: 'new_this_month_closed',
         component: NewThisMonthCard,
         props: {},
-        visibleWhen: ['Past']
+        visibleWhen: ['won']
       },
       {
-        id: 'total_client_value_past',
+        id: 'total_client_value_closed',
         component: ClientValueCard,
         props: {},
-        visibleWhen: ['Past']
+        visibleWhen: ['won']
       },
 
       // ========================================
-      // INACTIVE TAB STATS
+      // INACTIVE TAB STATS (lost category)
       // ========================================
       {
         id: 'total_inactive_clients',
         component: TotalClientsCard,
         props: { status: 'inactive' },
-        visibleWhen: ['Inactive']
+        visibleWhen: ['lost']
       },
       {
         id: 'inactive_active_count',
         component: ActiveClientsCard,
         props: {},
-        visibleWhen: ['Inactive']
+        visibleWhen: ['lost']
       },
       {
         id: 'new_this_month_inactive',
         component: NewThisMonthCard,
         props: {},
-        visibleWhen: ['Inactive']
+        visibleWhen: ['lost']
       },
       {
         id: 'total_client_value_inactive',
         component: ClientValueCard,
         props: {},
-        visibleWhen: ['Inactive']
+        visibleWhen: ['lost']
       },
 
       // ========================================
@@ -175,25 +175,25 @@ export const clientsConfig = createEntityConfig({
         id: 'total_all_clients',
         component: TotalClientsCard,
         props: { status: 'all' },
-        visibleWhen: ['All']
+        visibleWhen: ['all']
       },
       {
         id: 'all_active_count',
         component: ActiveClientsCard,
         props: {},
-        visibleWhen: ['All']
+        visibleWhen: ['all']
       },
       {
         id: 'new_this_month_all',
         component: NewThisMonthCard,
         props: {},
-        visibleWhen: ['All']
+        visibleWhen: ['all']
       },
       {
         id: 'total_client_value_all',
         component: ClientValueCard,
         props: {},
-        visibleWhen: ['All']
+        visibleWhen: ['all']
       },
     ],
 

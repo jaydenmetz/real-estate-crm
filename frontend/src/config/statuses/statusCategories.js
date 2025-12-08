@@ -89,10 +89,10 @@ export const LISTING_CATEGORIES = {
     preferredViewMode: 'list',
     sortOrder: 2,
   },
-  CANCELLED: {
+  EXPIRED: {
     id: 'lost',  // Matches database category_key (cancelled/expired/withdrawn = lost category)
-    label: 'Cancelled',
-    displayName: 'Cancelled Listings',
+    label: 'Expired',
+    displayName: 'Expired Listings',
     statuses: ['cancelled', 'expired', 'withdrawn'],
     description: 'Cancelled, expired, or withdrawn listings',
     preferredViewMode: 'list',

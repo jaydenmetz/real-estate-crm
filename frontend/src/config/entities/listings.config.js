@@ -95,6 +95,7 @@ export const listingsConfig = createEntityConfig({
     },
 
     // Stats Configuration (component-based for reusability)
+    // visibleWhen uses lowercase category keys to match database category_key values
     stats: [
       // ========================================
       // ACTIVE TAB STATS
@@ -102,82 +103,82 @@ export const listingsConfig = createEntityConfig({
       {
         id: 'total_active_listings',
         component: TotalListingsCard,
-        props: { status: 'Active' },
-        visibleWhen: ['Active']
+        props: { status: 'active' },
+        visibleWhen: ['active']
       },
       {
         id: 'total_active_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'Active', dateField: 'created_at' },
-        visibleWhen: ['Active']
+        props: { status: 'active', dateField: 'created_at' },
+        visibleWhen: ['active']
       },
       {
         id: 'total_active_volume',
         component: TotalVolumeCard,
-        props: { status: 'Active' },
-        visibleWhen: ['Active']
+        props: { status: 'active' },
+        visibleWhen: ['active']
       },
       {
         id: 'total_active_commission',
         component: TotalCommissionCard,
-        props: { status: 'Active' },
-        visibleWhen: ['Active']
+        props: { status: 'active' },
+        visibleWhen: ['active']
       },
 
       // ========================================
-      // CLOSED TAB STATS
+      // CLOSED TAB STATS (won category)
       // ========================================
       {
         id: 'total_closed_listings',
         component: TotalListingsCard,
-        props: { status: 'Closed' },
-        visibleWhen: ['Closed']
+        props: { status: 'closed' },
+        visibleWhen: ['won']
       },
       {
         id: 'total_closed_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'Closed', dateField: 'closing_date' },
-        visibleWhen: ['Closed']
+        props: { status: 'closed', dateField: 'closing_date' },
+        visibleWhen: ['won']
       },
       {
         id: 'total_closed_volume',
         component: TotalVolumeCard,
-        props: { status: 'Closed' },
-        visibleWhen: ['Closed']
+        props: { status: 'closed' },
+        visibleWhen: ['won']
       },
       {
         id: 'total_closed_commission',
         component: TotalCommissionCard,
-        props: { status: 'Closed' },
-        visibleWhen: ['Closed']
+        props: { status: 'closed' },
+        visibleWhen: ['won']
       },
 
       // ========================================
-      // CANCELLED TAB STATS
+      // EXPIRED TAB STATS (lost category)
       // ========================================
       {
-        id: 'total_cancelled_listings',
+        id: 'total_expired_listings',
         component: TotalListingsCard,
-        props: { status: 'Cancelled' },
-        visibleWhen: ['Cancelled']
+        props: { status: 'expired' },
+        visibleWhen: ['lost']
       },
       {
-        id: 'total_cancelled_this_month',
+        id: 'total_expired_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'Cancelled', dateField: 'created_at' },
-        visibleWhen: ['Cancelled']
+        props: { status: 'expired', dateField: 'created_at' },
+        visibleWhen: ['lost']
       },
       {
-        id: 'total_cancelled_volume',
+        id: 'total_expired_volume',
         component: TotalVolumeCard,
-        props: { status: 'Cancelled' },
-        visibleWhen: ['Cancelled']
+        props: { status: 'expired' },
+        visibleWhen: ['lost']
       },
       {
-        id: 'total_cancelled_commission',
+        id: 'total_expired_commission',
         component: TotalCommissionCard,
-        props: { status: 'Cancelled' },
-        visibleWhen: ['Cancelled']
+        props: { status: 'expired' },
+        visibleWhen: ['lost']
       },
 
       // ========================================
@@ -186,26 +187,26 @@ export const listingsConfig = createEntityConfig({
       {
         id: 'total_listings',
         component: TotalListingsCard,
-        props: { status: 'All' },
-        visibleWhen: ['All']
+        props: { status: 'all' },
+        visibleWhen: ['all']
       },
       {
         id: 'total_listings_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'All', dateField: 'created_at' },
-        visibleWhen: ['All']
+        props: { status: 'all', dateField: 'created_at' },
+        visibleWhen: ['all']
       },
       {
         id: 'total_volume',
         component: TotalVolumeCard,
-        props: { status: 'All' },
-        visibleWhen: ['All']
+        props: { status: 'all' },
+        visibleWhen: ['all']
       },
       {
         id: 'total_commission',
         component: TotalCommissionCard,
-        props: { status: 'All' },
-        visibleWhen: ['All']
+        props: { status: 'all' },
+        visibleWhen: ['all']
       },
     ],
 
