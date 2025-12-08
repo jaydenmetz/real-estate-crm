@@ -585,8 +585,11 @@ async function updateEscrow(req, res) {
     // Map camelCase fields to snake_case for database
     const fieldMapping = {
       propertyAddress: 'property_address',
+      property_address: 'property_address', // snake_case version
       propertyAddressDisplay: 'display_address', // Updated to use standardized field name
+      property_address_display: 'display_address', // snake_case version from AddressInput
       displayAddress: 'display_address',
+      display_address: 'display_address', // snake_case version
       purchasePrice: 'purchase_price',
       closingDate: 'closing_date',
       acceptanceDate: 'acceptance_date',

@@ -408,6 +408,7 @@ class ListingsService {
       property_address: 'property_address',
       displayAddress: 'display_address',
       display_address: 'display_address',
+      property_address_display: 'display_address', // AddressInput sends this format
       city: 'city',
       state: 'state',
       zipCode: 'zip_code',
