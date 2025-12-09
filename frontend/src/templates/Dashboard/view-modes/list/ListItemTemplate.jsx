@@ -470,14 +470,14 @@ const ListItemTemplate = React.memo(({
                       }
                     }}
                     sx={{
-                      // Custom renderers handle their own styling - no wrapper padding/hover
-                      cursor: !hasCustomRenderer && metric.editable && onUpdate ? 'pointer' : 'default',
+                      // All metrics get outer wrapper styling (including customRenderers)
+                      cursor: metric.editable && onUpdate ? 'pointer' : 'default',
                       transition: 'all 0.2s',
-                      borderRadius: hasCustomRenderer ? 0 : 1,
-                      px: hasCustomRenderer ? 0 : 1,
-                      py: hasCustomRenderer ? 0 : 0.5,
-                      mx: hasCustomRenderer ? 0 : -1,
-                      '&:hover': !hasCustomRenderer && metric.editable && onUpdate ? {
+                      borderRadius: 1,
+                      px: 1,
+                      py: 0.5,
+                      mx: -1,
+                      '&:hover': metric.editable && onUpdate ? {
                         backgroundColor: 'action.hover',
                       } : {},
                     }}
@@ -495,35 +495,35 @@ const ListItemTemplate = React.memo(({
                     >
                       {typeof metric.label === 'function' ? metric.label(data) : metric.label}
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      {metric.toggle && (
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            // Always allow individual toggle
-                            handleToggle(`metric_${idx}`, e);
-                          }}
-                          sx={{
-                            p: 0.25,
-                            cursor: 'pointer',
-                          }}
-                        >
-                          {shouldMask ? (
-                            <VisibilityIcon sx={{ fontSize: 14 }} />
-                          ) : (
-                            <VisibilityOffIcon sx={{ fontSize: 14 }} />
-                          )}
-                        </IconButton>
-                      )}
-                      {metric.customRenderer ? (
-                        // Custom renderer for complex fields (like ClientCircles)
-                        metric.customRenderer(data, () => openEditor(`metric_${idx}`))
-                      ) : (
+                    {/* For custom renderers, render directly without inner Box wrapper */}
+                    {hasCustomRenderer ? (
+                      metric.customRenderer(data, () => openEditor(`metric_${idx}`))
+                    ) : (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        {metric.toggle && (
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              // Always allow individual toggle
+                              handleToggle(`metric_${idx}`, e);
+                            }}
+                            sx={{
+                              p: 0.25,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {shouldMask ? (
+                              <VisibilityIcon sx={{ fontSize: 14 }} />
+                            ) : (
+                              <VisibilityOffIcon sx={{ fontSize: 14 }} />
+                            )}
+                          </IconButton>
+                        )}
                         <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>
                           {displayValue}
                         </Typography>
-                      )}
-                    </Box>
+                      </Box>
+                    )}
                   </Box>
                 );
               })}

@@ -286,12 +286,16 @@ const TableRowTemplate = React.memo(({
             );
           }
 
+          // Check if this column has a custom renderer
+          const hasCustomRenderer = !!column.customRenderer;
+
           // Editable cell rendering
           return (
             <Box
               key={idx}
               onClick={(e) => {
-                if (column.editable && onUpdate && !isDragging) {
+                // Custom renderers handle their own click events
+                if (!hasCustomRenderer && column.editable && onUpdate && !isDragging) {
                   e.stopPropagation();
                   openEditor(`column_${idx}`);
                 }
@@ -310,31 +314,31 @@ const TableRowTemplate = React.memo(({
                 } : {},
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: column.align || 'flex-start' }}>
-                {column.toggle && (
-                  <IconButton
-                    onClick={(e) => {
-                      // Always allow individual toggle
-                      handleToggle(`column_${idx}`, e);
-                    }}
-                    sx={{
-                      width: 20,
-                      height: 20,
-                      p: 0,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {shouldMask ? (
-                      <VisibilityIcon sx={{ fontSize: 14 }} />
-                    ) : (
-                      <VisibilityOffIcon sx={{ fontSize: 14 }} />
-                    )}
-                  </IconButton>
-                )}
-                {column.customRenderer ? (
-                  // Custom renderer for complex fields (like ClientCircles)
-                  column.customRenderer(data, () => openEditor(`column_${idx}`))
-                ) : (
+              {/* For custom renderers, render directly without inner Box wrapper */}
+              {hasCustomRenderer ? (
+                column.customRenderer(data, () => openEditor(`column_${idx}`))
+              ) : (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: column.align || 'flex-start' }}>
+                  {column.toggle && (
+                    <IconButton
+                      onClick={(e) => {
+                        // Always allow individual toggle
+                        handleToggle(`column_${idx}`, e);
+                      }}
+                      sx={{
+                        width: 20,
+                        height: 20,
+                        p: 0,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {shouldMask ? (
+                        <VisibilityIcon sx={{ fontSize: 14 }} />
+                      ) : (
+                        <VisibilityOffIcon sx={{ fontSize: 14 }} />
+                      )}
+                    </IconButton>
+                  )}
                   <Typography
                     variant="body2"
                     sx={{
@@ -348,8 +352,8 @@ const TableRowTemplate = React.memo(({
                   >
                     {displayValue}
                   </Typography>
-                )}
-              </Box>
+                </Box>
+              )}
               {column.subtitle && (
                 <Typography
                   variant="caption"
