@@ -504,17 +504,23 @@ export const ClientCircles = ({
     if (isLocked && isOpen) {
       return (
         <>
-          {/* Dim backdrop - clicking it closes the popup */}
+          {/* Transparent backdrop - clicking it closes the popup */}
+          {/* No background color to avoid visual interference with cards */}
+          {/* onMouseMove prevents hover events from reaching elements below */}
           <Box
             onClick={handleClickAway}
+            onMouseMove={(e) => e.stopPropagation()}
+            onMouseEnter={(e) => e.stopPropagation()}
+            onMouseLeave={(e) => e.stopPropagation()}
             sx={{
               position: 'fixed',
               top: 0,
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.2)',
+              backgroundColor: 'transparent',
               zIndex: 1299, // Just below the popper (1300)
+              cursor: 'default',
             }}
           />
           {popperContent}
