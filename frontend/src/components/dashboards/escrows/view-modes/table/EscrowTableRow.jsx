@@ -16,7 +16,11 @@ import {
   EditAcceptanceDate,
   EditClosingDate,
   EditPropertyAddress,
+  EditClients,
 } from '../../editors';
+
+// Import ClientCircles component
+import { ClientCircles } from '../../../../common/ui/ClientCircles';
 
 // ============================================================================
 // COMMISSION MASKING (for privacy toggle)
@@ -59,8 +63,8 @@ const useEscrowTableConfig = (statuses) => {
         ];
 
     return {
-      // Grid layout: 8 columns with responsive widths
-      gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
+      // Grid layout: 9 columns with responsive widths (added Clients column)
+      gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 1.2fr 0.8fr 80px',
 
       // Status config for row styling
       statusConfig: {
@@ -193,6 +197,55 @@ const useEscrowTableConfig = (statuses) => {
           },
           align: 'left',
           hoverColor: alpha('#000', 0.05),
+        },
+
+        // Client Contacts (editable) - Shows client contact avatars/initials
+        {
+          label: (escrow) => {
+            const clients = escrow.clients || { buyers: [], sellers: [] };
+            const totalClients = (clients.buyers?.length || 0) + (clients.sellers?.length || 0);
+            return totalClients === 1 ? 'Client' : 'Clients';
+          },
+          field: 'clients',
+          customRenderer: (escrow, onEdit) => {
+            const clients = escrow.clients || { buyers: [], sellers: [] };
+            const representationType = escrow.representation_type || 'buyer';
+
+            return (
+              <ClientCircles
+                clients={clients}
+                representationType={representationType}
+                onEdit={onEdit}
+                maxVisible={4}
+                size="small"
+              />
+            );
+          },
+          editable: true,
+          editor: EditClients,
+          editorProps: (escrow) => {
+            const clients = escrow.clients || { buyers: [], sellers: [] };
+            const representationType = escrow.representation_type || 'buyer';
+
+            return {
+              values: {
+                buyerClients: clients.buyers || [],
+                sellerClients: clients.sellers || [],
+                representationType: representationType,
+              },
+              showRepresentationType: true,
+            };
+          },
+          onSave: (escrow, clientsData) => {
+            return {
+              clients: {
+                buyers: clientsData.buyerClients || [],
+                sellers: clientsData.sellerClients || [],
+              },
+              representation_type: clientsData.representationType,
+            };
+          },
+          align: 'left',
         },
 
         // Progress (read-only)

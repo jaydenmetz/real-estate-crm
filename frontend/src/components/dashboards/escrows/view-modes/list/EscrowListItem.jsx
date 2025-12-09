@@ -17,7 +17,11 @@ import {
   EditAcceptanceDate,
   EditClosingDate,
   EditPropertyAddress,
+  EditClients,
 } from '../../editors';
+
+// Import ClientCircles component
+import { ClientCircles } from '../../../../common/ui/ClientCircles';
 
 // ============================================================================
 // COMMISSION MASKING (for privacy toggle)
@@ -203,6 +207,53 @@ const useEscrowListConfig = (statuses) => {
           editor: EditClosingDate,
           onSave: (escrow, newDate) => {
             return { closing_date: newDate };
+          },
+        },
+
+        // Client Contacts (editable) - Shows client contact avatars/initials
+        {
+          label: (escrow) => {
+            const clients = escrow.clients || { buyers: [], sellers: [] };
+            const totalClients = (clients.buyers?.length || 0) + (clients.sellers?.length || 0);
+            return totalClients === 1 ? 'Client' : 'Clients';
+          },
+          field: 'clients',
+          customRenderer: (escrow, onEdit) => {
+            const clients = escrow.clients || { buyers: [], sellers: [] };
+            const representationType = escrow.representation_type || 'buyer';
+
+            return (
+              <ClientCircles
+                clients={clients}
+                representationType={representationType}
+                onEdit={onEdit}
+                maxVisible={6}
+              />
+            );
+          },
+          editable: true,
+          editor: EditClients,
+          editorProps: (escrow) => {
+            const clients = escrow.clients || { buyers: [], sellers: [] };
+            const representationType = escrow.representation_type || 'buyer';
+
+            return {
+              values: {
+                buyerClients: clients.buyers || [],
+                sellerClients: clients.sellers || [],
+                representationType: representationType,
+              },
+              showRepresentationType: true,
+            };
+          },
+          onSave: (escrow, clientsData) => {
+            return {
+              clients: {
+                buyers: clientsData.buyerClients || [],
+                sellers: clientsData.sellerClients || [],
+              },
+              representation_type: clientsData.representationType,
+            };
           },
         },
       ],
