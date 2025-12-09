@@ -667,8 +667,12 @@ const CardTemplate = React.memo(({
                   // Resolve label (support function or string)
                   const fieldLabel = typeof field.label === 'function' ? field.label(data) : field.label;
 
+                  // Add spacing between date fields (non-custom-renderer fields)
+                  const isLastField = idx === config.footer.fields.length - 1;
+                  const needsRightPadding = !hasCustomRenderer && !isLastField;
+
                   return (
-                    <Box key={idx} sx={{ display: 'flex', flexDirection: 'column', alignItems: hasCustomRenderer ? 'center' : 'flex-start', gap: 0.25, width: field.width || 'auto', minWidth: 0, flex: field.width ? `0 0 ${field.width}` : '1 1 auto', overflowY: 'visible', pr: idx === config.footer.fields.length - 1 ? 0.5 : 0 }}>
+                    <Box key={idx} sx={{ display: 'flex', flexDirection: 'column', alignItems: hasCustomRenderer ? 'center' : 'flex-start', gap: 0.25, width: field.width || 'auto', minWidth: 0, flex: field.width ? `0 0 ${field.width}` : '1 1 auto', overflowY: 'visible', pr: isLastField ? 0.5 : (needsRightPadding ? 1.5 : 0) }}>
                       <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         {fieldLabel}
                       </Typography>
