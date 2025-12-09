@@ -180,6 +180,7 @@ const useListingCardConfig = (statuses) => {
         };
       },
       toggle: {
+        privacyLinked: true, // Link to master privacy toggle in stat card
         maskFn: maskCommission,
         icon: {
           show: 'Visibility',
