@@ -550,6 +550,7 @@ export const ClientCircles = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'center', // Center content when not full
           cursor: 'pointer',
           borderRadius: 1,
           py: 0.5,
@@ -651,6 +652,7 @@ export const ClientCircles = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'center', // Center content when not full
           gap: 0.25,
           cursor: 'pointer',
           borderRadius: 1,
@@ -700,6 +702,7 @@ export const ClientCircles = ({
       sx={{
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'center', // Center content when not full
         cursor: 'pointer',
         borderRadius: 1,
         py: 0.5,
