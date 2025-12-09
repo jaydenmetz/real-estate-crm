@@ -34,7 +34,8 @@ const TotalVolumeCard = ({
       });
 
   const totalVolume = filteredListings.reduce((sum, listing) => {
-    const price = parseFloat(listing.listing_price || listing.price || 0);
+    // Database column is list_price, API may return snake_case or camelCase
+    const price = parseFloat(listing.list_price || listing.listPrice || listing.price || 0);
     return sum + price;
   }, 0);
 

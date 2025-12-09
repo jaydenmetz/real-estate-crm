@@ -54,8 +54,9 @@ const TotalCommissionCard = ({
         return itemStatus?.toLowerCase() === 'closed';
       })
       .reduce((sum, item) => {
-        const price = parseFloat(item.list_price || item.listing_price || 0);
-        const commissionPct = parseFloat(item.total_commission || 3);
+        // Database column is list_price, API may return snake_case or camelCase
+        const price = parseFloat(item.list_price || item.listPrice || 0);
+        const commissionPct = parseFloat(item.total_commission || item.listing_commission || 3);
         return sum + (price * (commissionPct / 100));
       }, 0);
   } else {
@@ -67,8 +68,9 @@ const TotalCommissionCard = ({
         return validStatuses.includes(itemStatus?.toLowerCase());
       })
       .reduce((sum, item) => {
-        const price = parseFloat(item.list_price || item.listing_price || 0);
-        const commissionPct = parseFloat(item.total_commission || 3);
+        // Database column is list_price, API may return snake_case or camelCase
+        const price = parseFloat(item.list_price || item.listPrice || 0);
+        const commissionPct = parseFloat(item.total_commission || item.listing_commission || 3);
         return sum + (price * (commissionPct / 100));
       }, 0);
   }
