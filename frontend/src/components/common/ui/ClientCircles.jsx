@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Box, Avatar, Typography, Paper, Fade, Popper, Chip, ClickAwayListener } from '@mui/material';
+import { Box, Avatar, Typography, Paper, Fade, Popper, Chip } from '@mui/material';
 import { Add, Email, Phone } from '@mui/icons-material';
 
 /**
@@ -163,13 +163,14 @@ export const ClientCircles = ({
     return (
       <Box
         key={client.id || `client-${index}`}
-        onMouseEnter={(e) => handleMouseEnter(e, client, role)}
-        onMouseLeave={handleMouseLeave}
+        onMouseEnter={isLocked ? undefined : (e) => handleMouseEnter(e, client, role)}
+        onMouseLeave={isLocked ? undefined : handleMouseLeave}
         sx={{
           position: 'relative',
           marginLeft: index === 0 ? 0 : '-16px', // Tighter overlap
           zIndex: isHovered || isThisLocked ? 20 : totalInGroup - index,
           transition: 'all 0.2s ease',
+          pointerEvents: isLocked && !isThisLocked ? 'none' : 'auto', // Disable mouse events when locked (except for locked avatar)
         }}
       >
         {/* Colored ring around avatar for role indication */}
@@ -499,7 +500,7 @@ export const ClientCircles = ({
       </Popper>
     );
 
-    // Wrap with ClickAwayListener and backdrop when locked
+    // Wrap with backdrop when locked - backdrop handles click-away
     if (isLocked && isOpen) {
       return (
         <>
@@ -514,16 +515,9 @@ export const ClientCircles = ({
               bottom: 0,
               backgroundColor: 'rgba(0, 0, 0, 0.2)',
               zIndex: 1299, // Just below the popper (1300)
-              animation: 'fadeIn 0.2s ease',
-              '@keyframes fadeIn': {
-                from: { opacity: 0 },
-                to: { opacity: 1 },
-              },
             }}
           />
-          <ClickAwayListener onClickAway={handleClickAway}>
-            <div>{popperContent}</div>
-          </ClickAwayListener>
+          {popperContent}
         </>
       );
     }
