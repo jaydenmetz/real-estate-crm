@@ -674,15 +674,8 @@ const CardTemplate = React.memo(({
                       </Typography>
                       {hasCustomRenderer ? (
                         // Custom renderer handles its own styling (e.g., ClientCircles)
-                        // Don't wrap with hover box since the component already has hover effects
-                        <Box
-                          sx={{
-                            // Minimal wrapper - no hover effects here since custom component handles it
-                            py: 0.25,
-                          }}
-                        >
-                          {field.customRenderer(data, () => openEditor(`footer_${idx}`))}
-                        </Box>
+                        // No wrapper padding - let the component handle its own layout
+                        field.customRenderer(data, () => openEditor(`footer_${idx}`))
                       ) : field.editable && onUpdate ? (
                         <Box
                           onClick={(e) => {

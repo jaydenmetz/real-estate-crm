@@ -553,14 +553,13 @@ export const ClientCircles = ({
           justifyContent: 'center', // Center content
           cursor: 'pointer',
           borderRadius: 1,
-          py: 0.5,
+          py: 0.25, // Match date field padding
           px: 0.75,
           mx: -0.75,
           transition: 'all 0.2s',
           // Fixed width for consistent hover area across all states
           width: 'calc(100% + 12px)', // Fill container width
           minWidth: 120, // Minimum width to match populated state
-          minHeight: 32, // Ensure consistent height
           '&:hover': {
             backgroundColor: 'action.hover',
           },
@@ -657,14 +656,13 @@ export const ClientCircles = ({
           gap: 0.25,
           cursor: 'pointer',
           borderRadius: 1,
-          py: 0.5,
+          py: 0.25, // Match date field padding
           px: 0.75,
           mx: -0.75,
           transition: 'all 0.2s',
           // Fixed width for consistent hover area across all states
           width: 'calc(100% + 12px)', // Fill container width
           minWidth: 120, // Minimum width to match populated state
-          minHeight: 32, // Ensure consistent height even with few circles
           '&:hover': {
             backgroundColor: 'action.hover',
           },
@@ -707,14 +705,13 @@ export const ClientCircles = ({
         justifyContent: 'center', // Center content
         cursor: 'pointer',
         borderRadius: 1,
-        py: 0.5,
+        py: 0.25, // Match date field padding
         px: 0.75,
         mx: -0.75,
         transition: 'all 0.2s',
         // Fixed width for consistent hover area across all states
         width: 'calc(100% + 12px)', // Fill container width
         minWidth: 120, // Minimum width to match populated state
-        minHeight: 32, // Ensure consistent height even with few circles
         '&:hover': {
           backgroundColor: 'action.hover',
         },
