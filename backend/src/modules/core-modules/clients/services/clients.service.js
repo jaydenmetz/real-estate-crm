@@ -282,13 +282,14 @@ class ClientsService {
       }
 
       // Create contact first
+      // user_id is required (NOT NULL) in contacts table
       const contactQuery = `
         INSERT INTO contacts (
           contact_type, first_name, last_name, email, phone,
           street_address, city, state, zip_code,
-          notes, tags, team_id, created_at, updated_at
+          notes, tags, team_id, user_id, created_at, updated_at
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW()
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW()
         ) RETURNING id
       `;
 
@@ -305,6 +306,7 @@ class ClientsService {
         notes,
         tags,
         user?.teamId || user?.team_id || null,
+        user?.id || null, // user_id - required field
       ];
 
       const contactResult = await dbClient.query(contactQuery, contactValues);
