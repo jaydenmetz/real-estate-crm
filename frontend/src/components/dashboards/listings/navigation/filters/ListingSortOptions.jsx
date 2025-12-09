@@ -9,11 +9,11 @@
 
 export const listingSortOptions = [
   {
-    value: 'created_at',
+    value: 'listing_date',
     label: 'Beginning Date'
   },
   {
-    value: 'listing_price',
+    value: 'list_price',
     label: 'List Price'
   },
   {
@@ -35,7 +35,11 @@ export const listingSortOptions = [
   {
     value: 'listing_status',
     label: 'Status'
+  },
+  {
+    value: 'created_at',
+    label: 'Date Created'
   }
 ];
 
-export const listingDefaultSort = 'created_at';
+export const listingDefaultSort = 'listing_date';

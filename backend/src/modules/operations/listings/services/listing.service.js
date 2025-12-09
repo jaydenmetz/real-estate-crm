@@ -155,8 +155,8 @@ class ListingsService {
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
     // Validate sort column
-    const allowedSortColumns = ['created_at', 'list_price', 'listing_date', 'days_on_market'];
-    const sortColumn = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at';
+    const allowedSortColumns = ['created_at', 'list_price', 'listing_date', 'days_on_market', 'property_address', 'bedrooms', 'square_feet', 'listing_status'];
+    const sortColumn = allowedSortColumns.includes(sortBy) ? sortBy : 'listing_date';
     const order = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
     // Get total count and stats (matching escrows pattern)
