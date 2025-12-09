@@ -543,7 +543,8 @@ export const ClientCircles = ({
       : sellers.length;
 
   // Empty state - no clients (grey circle with + icon)
-  // Wrapped in same container as populated state for consistent hover area
+  // Card view: Centered with fixed width for consistent layout
+  // List/Table view (disableHover): Left-aligned, minimal size
   if (totalCount === 0) {
     return (
       <Box
@@ -554,17 +555,18 @@ export const ClientCircles = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center', // Center content
+          justifyContent: disableHover ? 'flex-start' : 'center', // Left-align in List/Table
           cursor: 'pointer',
-          borderRadius: 1,
-          py: 0.25, // Match date field padding
-          px: 0.75,
-          ml: 1, // Add spacing from date fields
+          borderRadius: disableHover ? 0 : 1,
+          py: disableHover ? 0 : 0.25,
+          px: disableHover ? 0 : 0.75,
+          ml: disableHover ? 0 : 1,
           transition: 'all 0.2s',
-          // Fixed width for consistent hover area across all states
-          minWidth: 120, // Minimum width to match populated state
-          minHeight: 30, // Match date field height
-          '&:hover': {
+          // Card view: Fixed width for consistent hover area
+          // List/Table view: Minimal, no fixed width
+          minWidth: disableHover ? 'auto' : 120,
+          minHeight: disableHover ? 'auto' : 30,
+          '&:hover': disableHover ? {} : {
             backgroundColor: 'action.hover',
           },
         }}
@@ -656,7 +658,7 @@ export const ClientCircles = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center', // Center content
+          justifyContent: disableHover ? 'flex-start' : 'center', // Left-align in List/Table
           gap: 0.25,
           cursor: 'pointer',
           borderRadius: disableHover ? 0 : 1,
@@ -664,7 +666,8 @@ export const ClientCircles = ({
           px: disableHover ? 0 : 0.75,
           ml: disableHover ? 0 : 1, // Add spacing from date fields (only in Card view)
           transition: 'all 0.2s',
-          // Fixed width for consistent hover area across all states (only when not disabled)
+          // Card view: Fixed width for consistent hover area
+          // List/Table view: Minimal, no fixed width
           minWidth: disableHover ? 'auto' : 120,
           minHeight: disableHover ? 'auto' : 30,
           '&:hover': disableHover ? {} : {
@@ -706,14 +709,15 @@ export const ClientCircles = ({
       sx={{
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center', // Center content
+        justifyContent: disableHover ? 'flex-start' : 'center', // Left-align in List/Table
         cursor: 'pointer',
         borderRadius: disableHover ? 0 : 1,
         py: disableHover ? 0 : 0.25, // Match date field padding
         px: disableHover ? 0 : 0.75,
         ml: disableHover ? 0 : 1, // Add spacing from date fields (only in Card view)
         transition: 'all 0.2s',
-        // Fixed width for consistent hover area across all states (only when not disabled)
+        // Card view: Fixed width for consistent hover area
+        // List/Table view: Minimal, no fixed width
         minWidth: disableHover ? 'auto' : 120,
         minHeight: disableHover ? 'auto' : 30,
         '&:hover': disableHover ? {} : {
