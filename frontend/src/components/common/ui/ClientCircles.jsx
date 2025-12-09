@@ -40,12 +40,16 @@ const ROLE_COLORS = {
  * @param {string} representationType - 'buyer' | 'seller' | 'dual'
  * @param {function} onEdit - Callback to open EditClients modal
  * @param {number} maxVisible - Max circles to show per group before "+N" (default: 6)
+ * @param {boolean} disableHover - When true, disables internal hover effect (use when parent provides hover)
+ * @param {string} size - 'small' | 'medium' (default) - Avatar size
  */
 export const ClientCircles = ({
   clients = { buyers: [], sellers: [] },
   representationType = 'buyer',
   onEdit,
   maxVisible = 6,
+  disableHover = false,
+  size = 'medium',
 }) => {
   const [hoveredClient, setHoveredClient] = useState(null);
   const [hoveredRole, setHoveredRole] = useState(null); // Track which role the hovered client belongs to
@@ -655,15 +659,15 @@ export const ClientCircles = ({
           justifyContent: 'center', // Center content
           gap: 0.25,
           cursor: 'pointer',
-          borderRadius: 1,
-          py: 0.25, // Match date field padding
-          px: 0.75,
-          ml: 1, // Add spacing from date fields
+          borderRadius: disableHover ? 0 : 1,
+          py: disableHover ? 0 : 0.25, // Match date field padding
+          px: disableHover ? 0 : 0.75,
+          ml: disableHover ? 0 : 1, // Add spacing from date fields (only in Card view)
           transition: 'all 0.2s',
-          // Fixed width for consistent hover area across all states
-          minWidth: 120, // Minimum width to match populated state
-          minHeight: 30, // Match date field height
-          '&:hover': {
+          // Fixed width for consistent hover area across all states (only when not disabled)
+          minWidth: disableHover ? 'auto' : 120,
+          minHeight: disableHover ? 'auto' : 30,
+          '&:hover': disableHover ? {} : {
             backgroundColor: 'action.hover',
           },
         }}
@@ -704,15 +708,15 @@ export const ClientCircles = ({
         alignItems: 'center',
         justifyContent: 'center', // Center content
         cursor: 'pointer',
-        borderRadius: 1,
-        py: 0.25, // Match date field padding
-        px: 0.75,
-        ml: 1, // Add spacing from date fields
+        borderRadius: disableHover ? 0 : 1,
+        py: disableHover ? 0 : 0.25, // Match date field padding
+        px: disableHover ? 0 : 0.75,
+        ml: disableHover ? 0 : 1, // Add spacing from date fields (only in Card view)
         transition: 'all 0.2s',
-        // Fixed width for consistent hover area across all states
-        minWidth: 120, // Minimum width to match populated state
-        minHeight: 30, // Match date field height
-        '&:hover': {
+        // Fixed width for consistent hover area across all states (only when not disabled)
+        minWidth: disableHover ? 'auto' : 120,
+        minHeight: disableHover ? 'auto' : 30,
+        '&:hover': disableHover ? {} : {
           backgroundColor: 'action.hover',
         },
       }}

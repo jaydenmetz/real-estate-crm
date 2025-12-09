@@ -214,6 +214,7 @@ const useEscrowListConfig = (statuses) => {
                 representationType={representationType}
                 onEdit={onEdit}
                 maxVisible={6}
+                disableHover // Template provides hover
               />
             );
           },

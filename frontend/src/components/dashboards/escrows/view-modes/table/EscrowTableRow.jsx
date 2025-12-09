@@ -218,6 +218,7 @@ const useEscrowTableConfig = (statuses) => {
                 onEdit={onEdit}
                 maxVisible={4}
                 size="small"
+                disableHover // Template provides hover
               />
             );
           },
