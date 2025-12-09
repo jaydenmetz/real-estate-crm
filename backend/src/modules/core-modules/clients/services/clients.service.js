@@ -313,6 +313,8 @@ class ClientsService {
       // Create client with owner_id and team_id for proper ownership filtering
       // Also handle lead_ids for lead-to-client conversion
       const leadIds = clientData.lead_ids || clientData.leadIds || [];
+      // Format lead_ids for PostgreSQL uuid[] - use null for empty array
+      const formattedLeadIds = leadIds.length > 0 ? leadIds : null;
 
       const clientQuery = `
         INSERT INTO clients (
@@ -321,7 +323,7 @@ class ClientsService {
           agreement_start_date, agreement_end_date,
           lead_ids, owner_id, team_id, created_at, updated_at
         )
-        VALUES ($1, $2, 'active', $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+        VALUES ($1, $2, 'active', $3, $4, $5, $6, $7, $8, COALESCE($9, '{}'::uuid[]), $10, $11, NOW(), NOW())
         RETURNING id
       `;
 
@@ -334,7 +336,7 @@ class ClientsService {
         commission_type || 'percentage',
         agreement_start_date || null,
         agreement_end_date || null,
-        leadIds.length > 0 ? leadIds : [],
+        formattedLeadIds,
         user?.id || null,
         user?.teamId || user?.team_id || null
       ]);
