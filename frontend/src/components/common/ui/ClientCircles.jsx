@@ -560,6 +560,7 @@ export const ClientCircles = ({
           // Fixed width for consistent hover area across all states
           width: 'calc(100% + 12px)', // Fill container width
           minWidth: 120, // Minimum width to match populated state
+          minHeight: 30, // Match date field height
           '&:hover': {
             backgroundColor: 'action.hover',
           },
@@ -663,6 +664,7 @@ export const ClientCircles = ({
           // Fixed width for consistent hover area across all states
           width: 'calc(100% + 12px)', // Fill container width
           minWidth: 120, // Minimum width to match populated state
+          minHeight: 30, // Match date field height
           '&:hover': {
             backgroundColor: 'action.hover',
           },
@@ -712,6 +714,7 @@ export const ClientCircles = ({
         // Fixed width for consistent hover area across all states
         width: 'calc(100% + 12px)', // Fill container width
         minWidth: 120, // Minimum width to match populated state
+        minHeight: 30, // Match date field height
         '&:hover': {
           backgroundColor: 'action.hover',
         },

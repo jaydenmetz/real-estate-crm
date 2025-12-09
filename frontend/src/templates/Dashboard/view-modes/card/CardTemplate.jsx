@@ -687,6 +687,9 @@ const CardTemplate = React.memo(({
                             transition: 'all 0.2s',
                             borderRadius: 1,
                             py: 0.25,
+                            display: 'flex',
+                            alignItems: 'center',
+                            minHeight: 30, // Match ClientCircles height (26px circles + padding)
                             '&:hover': {
                               backgroundColor: 'action.hover',
                             },
@@ -697,9 +700,11 @@ const CardTemplate = React.memo(({
                           </Typography>
                         </Box>
                       ) : (
-                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
-                          {formattedValue}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 30 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
+                            {formattedValue}
+                          </Typography>
+                        </Box>
                       )}
                     </Box>
                   );
