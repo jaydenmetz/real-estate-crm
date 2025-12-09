@@ -539,41 +539,60 @@ export const ClientCircles = ({
       : sellers.length;
 
   // Empty state - no clients (grey circle with + icon)
+  // Wrapped in same container as populated state for consistent hover area
   if (totalCount === 0) {
     return (
       <Box
-        sx={{
-          width: 26,
-          height: 26,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, #9ca3af, #9ca3afdd)',
-          padding: '2px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          '&:hover': {
-            transform: 'scale(1.15) translateY(-2px)',
-            boxShadow: '0 4px 12px rgba(156, 163, 175, 0.5)',
-          },
-        }}
         onClick={(e) => {
           e.stopPropagation();
           onEdit?.();
         }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          cursor: 'pointer',
+          borderRadius: 1,
+          py: 0.5,
+          px: 0.75,
+          mx: -0.75,
+          transition: 'all 0.2s',
+          // Fill full width of container for consistent hover area
+          width: 'calc(100% + 12px)', // Account for mx: -0.75 (6px each side)
+          minHeight: 32, // Ensure consistent height
+          '&:hover': {
+            backgroundColor: 'action.hover',
+          },
+        }}
       >
-        <Avatar
+        <Box
           sx={{
-            width: '100%',
-            height: '100%',
-            fontSize: '0.7rem',
-            fontWeight: 700,
-            bgcolor: '#9ca3af',
-            color: 'white',
-            border: '1.5px solid white',
+            width: 26,
+            height: 26,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #9ca3af, #9ca3afdd)',
+            padding: '2px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              transform: 'scale(1.15) translateY(-2px)',
+              boxShadow: '0 4px 12px rgba(156, 163, 175, 0.5)',
+            },
           }}
         >
-          <Add sx={{ fontSize: 14 }} />
-        </Avatar>
+          <Avatar
+            sx={{
+              width: '100%',
+              height: '100%',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              bgcolor: '#9ca3af',
+              color: 'white',
+              border: '1.5px solid white',
+            }}
+          >
+            <Add sx={{ fontSize: 14 }} />
+          </Avatar>
+        </Box>
       </Box>
     );
   }
