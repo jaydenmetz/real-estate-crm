@@ -639,6 +639,9 @@ export const ClientCircles = ({
           px: 0.75,
           mx: -0.75,
           transition: 'all 0.2s',
+          // Fill full width of container for consistent hover area
+          width: 'calc(100% + 12px)', // Account for mx: -0.75 (6px each side)
+          minHeight: 32, // Ensure consistent height even with few circles
           '&:hover': {
             backgroundColor: 'action.hover',
           },
@@ -684,6 +687,9 @@ export const ClientCircles = ({
         px: 0.75,
         mx: -0.75,
         transition: 'all 0.2s',
+        // Fill full width of container for consistent hover area
+        width: 'calc(100% + 12px)', // Account for mx: -0.75 (6px each side)
+        minHeight: 32, // Ensure consistent height even with few circles
         '&:hover': {
           backgroundColor: 'action.hover',
         },
