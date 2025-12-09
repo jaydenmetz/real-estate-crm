@@ -256,18 +256,18 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         last_name: formData.lastName,
         phone: formData.phone,
         email: formData.email,
-        // Renamed fields - map to database columns
-        target_price: parseFloat(formData.targetPrice) || 0,
-        projected_commission: parseFloat(formData.projectedCommission) || 0,
+        // Map UI fields to database columns
+        budget: parseFloat(formData.targetPrice) || null,
+        commission: parseFloat(formData.projectedCommission) || null,
         commission_percentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
         commission_type: formData.commissionType,
         // Agreement dates
         agreement_start_date: formData.agreementStartDate,
         agreement_end_date: formData.agreementEndDate,
-        // Lead connection
-        lead_id: formData.leadId,
-        client_status: 'active',
-        stage: 'New',
+        // Lead connection - backend expects lead_ids array
+        lead_ids: formData.leadId ? [formData.leadId] : [],
+        // Client type defaults to 'buyer' if not specified
+        client_type: 'buyer',
       };
 
       const response = await clientsAPI.create(clientData);
