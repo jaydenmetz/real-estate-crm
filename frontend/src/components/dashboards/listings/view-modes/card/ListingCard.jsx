@@ -9,6 +9,7 @@ import { alpha } from '@mui/material';
 import { getStatusConfig } from '../../../../../constants/listingConfig';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+import { getListingDisplayName, getSubtitle } from '../../../../../utils/displayNameStrategies';
 import { useStatus } from '../../../../../contexts/StatusContext';
 
 // Import editor components
@@ -97,9 +98,9 @@ const useListingCardConfig = (statuses) => {
     },
   },
 
-  // Title Configuration (address, editable)
+  // Title Configuration (display_address, editable)
   title: {
-    field: (listing) => listing.display_address || listing.property_address || 'No Address',
+    field: (listing) => getListingDisplayName(listing),
     editable: true,
     editor: EditPropertyAddress,
     onSave: (listing, addressData) => {
@@ -120,13 +121,7 @@ const useListingCardConfig = (statuses) => {
 
   // Subtitle Configuration (city, state, zip)
   subtitle: {
-    formatter: (listing) => {
-      const parts = [];
-      if (listing.city) parts.push(listing.city);
-      if (listing.state) parts.push(listing.state);
-      if (listing.zip_code) parts.push(listing.zip_code);
-      return parts.join(', ') || null;
-    },
+    formatter: (listing) => getSubtitle('listing', listing),
   },
 
   // Metrics Configuration (1x2 horizontal row - ONLY Price and Commission)

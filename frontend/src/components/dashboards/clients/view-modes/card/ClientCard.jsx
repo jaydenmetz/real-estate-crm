@@ -7,6 +7,7 @@ import {
 } from '@mui/icons-material';
 import { alpha } from '@mui/material';
 import { formatCurrency } from '../../../../../utils/formatters';
+import { getClientDisplayName, getSubtitle } from '../../../../../utils/displayNameStrategies';
 import { useStatus } from '../../../../../contexts/StatusContext';
 
 // Import editor components
@@ -114,22 +115,21 @@ const useClientCardConfig = (statuses) => {
         },
       },
 
-      // Title Configuration (client name, editable)
+      // Title Configuration (display_name with fallback to computed name, editable)
       title: {
-        field: (client) => {
-          const firstName = client.firstName || client.first_name || '';
-          const lastName = client.lastName || client.last_name || '';
-          return `${firstName} ${lastName}`.trim() || 'Unnamed Client';
-        },
+        field: (client) => getClientDisplayName(client),
         editable: true,
         editor: EditClientName,
         onSave: (client, nameData) => {
           // nameData is an object from EditClientName with first_name, last_name, etc.
           // Handle both object (from EditClientName) and string (legacy) formats
           if (typeof nameData === 'object' && nameData !== null) {
+            // Compute display_name from first and last name
+            const displayName = `${nameData.first_name || ''} ${nameData.last_name || ''}`.trim();
             return {
               first_name: nameData.first_name,
               last_name: nameData.last_name,
+              display_name: displayName || null, // Save computed display_name
               lead_id: nameData.lead_id, // If linking to a lead
             };
           }
@@ -137,21 +137,18 @@ const useClientCardConfig = (statuses) => {
           const parts = String(nameData).trim().split(/\s+/);
           const firstName = parts[0] || '';
           const lastName = parts.slice(1).join(' ') || '';
+          const displayName = `${firstName} ${lastName}`.trim();
           return {
             first_name: firstName,
             last_name: lastName,
+            display_name: displayName || null,
           };
         },
       },
 
-      // Subtitle Configuration (phone + email, matching EditClientName modal)
+      // Subtitle Configuration (phone + email)
       subtitle: {
-        formatter: (client) => {
-          const phone = client.phone || client.client_phone || '';
-          const email = client.email || client.client_email || '';
-          const parts = [phone, email].filter(Boolean);
-          return parts.length > 0 ? parts.join(' • ') : 'No contact info';
-        },
+        formatter: (client) => getSubtitle('client', client) || 'No contact info',
       },
 
       // Metrics Configuration (2 columns - Target Price and Projected Commission)

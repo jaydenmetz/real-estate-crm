@@ -86,6 +86,7 @@ class AppointmentsService {
     const totalCount = parseInt(countResult.rows[0].count);
 
     // Query for paginated data with client name, stops count, attendees count, and first stop address
+    // Note: a.display_name is included via a.* - if null, frontend will compute it
     queryParams.push(limit, offset);
     const dataQuery = `
       SELECT
@@ -319,6 +320,7 @@ class AppointmentsService {
     const allowedFields = [
       'title', 'appointment_date', 'start_time', 'end_time', 'location',
       'appointment_type', 'description', 'status', 'client_id', 'listing_id',
+      'display_name',
     ];
 
     for (const field of allowedFields) {

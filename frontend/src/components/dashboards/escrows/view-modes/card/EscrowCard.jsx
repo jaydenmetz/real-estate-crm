@@ -9,6 +9,7 @@ import { alpha } from '@mui/material';
 import { getStatusConfig } from '../../../../../constants/escrowConfig';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+import { getEscrowDisplayName, getSubtitle } from '../../../../../utils/displayNameStrategies';
 import { useStatus } from '../../../../../contexts/StatusContext';
 
 // Compact date formatter - smaller separators for tighter spacing
@@ -109,9 +110,9 @@ const useEscrowCardConfig = (statuses) => {
         },
       },
 
-      // Title Configuration (address, editable)
+      // Title Configuration (display_address, editable)
       title: {
-        field: (escrow) => escrow.display_address || escrow.property_address, // Prefer display name, fallback to canonical
+        field: (escrow) => getEscrowDisplayName(escrow),
         editable: true,
         editor: EditPropertyAddress,
         onSave: (escrow, addressData) => {
@@ -133,13 +134,7 @@ const useEscrowCardConfig = (statuses) => {
 
       // Subtitle Configuration (city, state, zip)
       subtitle: {
-        formatter: (escrow) => {
-          const parts = [];
-          if (escrow.city) parts.push(escrow.city);
-          if (escrow.state) parts.push(escrow.state);
-          if (escrow.zip_code) parts.push(escrow.zip_code);
-          return parts.join(', ') || null;
-        },
+        formatter: (escrow) => getSubtitle('escrow', escrow),
       },
 
       // Metrics Configuration (1x2 horizontal row - ONLY Price and Commission)

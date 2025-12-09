@@ -207,6 +207,7 @@ class LeadsService {
       'first_name', 'last_name', 'email', 'phone', 'lead_source',
       'lead_status', 'lead_score', 'lead_temperature', 'notes',
       'property_interest', 'budget', 'budget_range', 'timeline', 'next_follow_up',
+      'display_name',
     ];
 
     for (const field of allowedFields) {

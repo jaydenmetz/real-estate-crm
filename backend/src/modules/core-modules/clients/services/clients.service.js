@@ -128,6 +128,7 @@ class ClientsService {
         cl.agreement_start_date,
         cl.agreement_end_date,
         cl.lead_ids,
+        cl.display_name,
         cl.created_at,
         cl.updated_at,
         co.first_name,
@@ -208,6 +209,7 @@ class ClientsService {
         cl.commission_type,
         cl.agreement_start_date,
         cl.agreement_end_date,
+        cl.display_name,
         cl.created_at,
         cl.updated_at,
         co.first_name,
@@ -443,6 +445,7 @@ class ClientsService {
       const clientType = updates.clientType || updates.client_type;
       const clientStatus = updates.status || updates.client_status || updates.stage;
       const leadIds = updates.lead_ids || updates.leadIds;
+      const displayName = updates.display_name || updates.displayName;
       const hasClientUpdates = clientType || clientStatus ||
         updates.budget !== undefined ||
         updates.commission !== undefined ||
@@ -450,7 +453,8 @@ class ClientsService {
         updates.commission_type !== undefined ||
         updates.agreement_start_date !== undefined ||
         updates.agreement_end_date !== undefined ||
-        leadIds !== undefined;
+        leadIds !== undefined ||
+        displayName !== undefined;
 
       if (hasClientUpdates) {
         const clientUpdates = [];
@@ -492,6 +496,10 @@ class ClientsService {
         if (leadIds !== undefined) {
           clientUpdates.push(`lead_ids = $${paramIndex++}`);
           clientValues.push(leadIds);
+        }
+        if (displayName !== undefined) {
+          clientUpdates.push(`display_name = $${paramIndex++}`);
+          clientValues.push(displayName);
         }
 
         if (clientUpdates.length > 0) {

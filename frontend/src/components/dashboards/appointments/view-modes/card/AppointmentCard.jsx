@@ -14,6 +14,7 @@ import {
 import { alpha } from '@mui/material';
 import { getStatusConfig, APPOINTMENT_STATUS } from '../../../../../constants/appointmentConfig';
 import { formatDate } from '../../../../../utils/formatters';
+import { getAppointmentDisplayName, getSubtitle } from '../../../../../utils/displayNameStrategies';
 import { useStatus } from '../../../../../contexts/StatusContext';
 
 // Import editor components
@@ -212,9 +213,14 @@ const useAppointmentCardConfig = (statuses) => {
         },
       },
 
-      // Title Configuration: "Appt Type - Contact Display Name"
+      // Title Configuration: Use display_name or compute from appointment type + attendee
       title: {
         field: (appointment) => {
+          // First check for custom display_name
+          if (appointment.display_name) {
+            return appointment.display_name;
+          }
+          // Fall back to computed: "Appt Type - Contact Display Name"
           const type = formatAppointmentType(appointment.appointment_type || appointment.type);
           const attendeeName = getPrimaryAttendeeName(appointment.attendees);
 
@@ -273,7 +279,7 @@ const useAppointmentCardConfig = (statuses) => {
         },
       },
 
-      // Subtitle Configuration: Initial location OR virtual type - editable, opens same type+location editor
+      // Subtitle Configuration: Full address using displayNameStrategies
       subtitle: {
         formatter: (appointment) => {
           // For virtual meetings, show the virtual type
@@ -281,11 +287,8 @@ const useAppointmentCardConfig = (statuses) => {
             const virtualType = appointment.virtual_meeting_type || 'video_call';
             return VIRTUAL_MEETING_TYPE_LABELS[virtualType] || 'Virtual Meeting';
           }
-          // For in-person, show address or display name
-          if (appointment.display_name) {
-            return appointment.display_name;
-          }
-          return getFirstStopAddress(appointment) || 'No location set';
+          // For in-person, use centralized subtitle strategy (full address)
+          return getSubtitle('appointment', appointment) || getFirstStopAddress(appointment) || 'No location set';
         },
         editable: true,
         editor: EditAppointmentType,

@@ -8,6 +8,7 @@ import {
 } from '@mui/icons-material';
 import { alpha } from '@mui/material';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+import { getLeadDisplayName, getSubtitle } from '../../../../../utils/displayNameStrategies';
 import { ClientCircles } from '../../../../common/ui/ClientCircles';
 
 // Compact date formatter - smaller separators for tighter spacing
@@ -101,33 +102,15 @@ const useLeadCardConfig = () => {
         },
       },
 
-      // Title Configuration (Lead Display Name)
+      // Title Configuration (display_name with fallback to computed name)
       title: {
-        field: (lead) => {
-          const firstName = lead.first_name || '';
-          const lastName = lead.last_name || '';
-          return `${firstName} ${lastName}`.trim() || 'Unnamed Lead';
-        },
+        field: (lead) => getLeadDisplayName(lead),
         editable: false, // Don't allow inline name editing from card
       },
 
-      // Subtitle Configuration (phone/email)
+      // Subtitle Configuration (phone + email)
       subtitle: {
-        formatter: (lead) => {
-          const parts = [];
-          if (lead.phone) {
-            // Format phone number
-            const cleaned = ('' + lead.phone).replace(/\D/g, '');
-            const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-            if (match) {
-              parts.push('(' + match[1] + ') ' + match[2] + '-' + match[3]);
-            } else {
-              parts.push(lead.phone);
-            }
-          }
-          if (lead.email) parts.push(lead.email);
-          return parts.join(' • ') || null;
-        },
+        formatter: (lead) => getSubtitle('lead', lead),
       },
 
       // Metrics Configuration (Target Price and Commission)
