@@ -503,7 +503,7 @@ export const ClientCircles = ({
     if (isLocked && isOpen) {
       return (
         <>
-          {/* Blur backdrop - clicking it closes the popup */}
+          {/* Dim backdrop - clicking it closes the popup */}
           <Box
             onClick={handleClickAway}
             sx={{
@@ -512,8 +512,7 @@ export const ClientCircles = ({
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.15)',
-              backdropFilter: 'blur(2px)',
+              backgroundColor: 'rgba(0, 0, 0, 0.2)',
               zIndex: 1299, // Just below the popper (1300)
               animation: 'fadeIn 0.2s ease',
               '@keyframes fadeIn': {
