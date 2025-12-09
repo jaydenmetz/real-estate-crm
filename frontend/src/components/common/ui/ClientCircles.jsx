@@ -555,10 +555,9 @@ export const ClientCircles = ({
           borderRadius: 1,
           py: 0.25, // Match date field padding
           px: 0.75,
-          mx: -0.75,
+          ml: 1, // Add spacing from date fields
           transition: 'all 0.2s',
           // Fixed width for consistent hover area across all states
-          width: 'calc(100% + 12px)', // Fill container width
           minWidth: 120, // Minimum width to match populated state
           minHeight: 30, // Match date field height
           '&:hover': {
@@ -659,10 +658,9 @@ export const ClientCircles = ({
           borderRadius: 1,
           py: 0.25, // Match date field padding
           px: 0.75,
-          mx: -0.75,
+          ml: 1, // Add spacing from date fields
           transition: 'all 0.2s',
           // Fixed width for consistent hover area across all states
-          width: 'calc(100% + 12px)', // Fill container width
           minWidth: 120, // Minimum width to match populated state
           minHeight: 30, // Match date field height
           '&:hover': {
@@ -709,10 +707,9 @@ export const ClientCircles = ({
         borderRadius: 1,
         py: 0.25, // Match date field padding
         px: 0.75,
-        mx: -0.75,
+        ml: 1, // Add spacing from date fields
         transition: 'all 0.2s',
         // Fixed width for consistent hover area across all states
-        width: 'calc(100% + 12px)', // Fill container width
         minWidth: 120, // Minimum width to match populated state
         minHeight: 30, // Match date field height
         '&:hover': {
