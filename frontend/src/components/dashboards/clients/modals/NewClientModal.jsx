@@ -247,6 +247,17 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
   };
 
   // Final submission
+  // Helper to format date for backend (YYYY-MM-DD)
+  const formatDateForBackend = (date) => {
+    if (!date) return null;
+    if (typeof date === 'string') return date;
+    // Date object - format as local date to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleSubmit = async () => {
     setSaving(true);
 
@@ -261,9 +272,9 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         commission: parseFloat(formData.projectedCommission) || null,
         commission_percentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
         commission_type: formData.commissionType,
-        // Agreement dates
-        agreement_start_date: formData.agreementStartDate,
-        agreement_end_date: formData.agreementEndDate,
+        // Agreement dates - format as YYYY-MM-DD strings
+        agreement_start_date: formatDateForBackend(formData.agreementStartDate),
+        agreement_end_date: formatDateForBackend(formData.agreementEndDate),
         // Lead connection - backend expects lead_ids array
         lead_ids: formData.leadId ? [formData.leadId] : [],
         // Client type defaults to 'buyer' if not specified
