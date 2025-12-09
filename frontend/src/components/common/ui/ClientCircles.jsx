@@ -303,8 +303,8 @@ export const ClientCircles = ({
                 border: '1px solid rgba(255,255,255,0.2)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset',
               }}
-              onMouseEnter={handlePopupMouseEnter}
-              onMouseLeave={handlePopupMouseLeave}
+              onMouseEnter={isLocked ? undefined : handlePopupMouseEnter}
+              onMouseLeave={isLocked ? undefined : handlePopupMouseLeave}
             >
               {hoveredClient && (
                 <Box sx={{ p: 2.5, textAlign: 'center' }}>
