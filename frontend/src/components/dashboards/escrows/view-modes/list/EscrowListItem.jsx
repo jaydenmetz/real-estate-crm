@@ -71,20 +71,6 @@ const useEscrowListConfig = (statuses) => {
         width: 200,
       },
 
-      // Progress Bar Overlay
-      progress: {
-        getValue: (escrow) => {
-          const totalTasks = escrow.checklist_total || 0;
-          const completedTasks = escrow.checklist_completed || 0;
-          if (totalTasks === 0) return 0;
-          return Math.round((completedTasks / totalTasks) * 100);
-        },
-        getColor: (escrow) => {
-          const config = getStatusConfig(escrow.status); // Use 'status' field
-          return config.bg;
-        },
-      },
-
       // Status Chip Configuration (editable)
       status: {
         field: 'status', // API returns 'status', not 'escrow_status'

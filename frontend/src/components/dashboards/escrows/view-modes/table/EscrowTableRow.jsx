@@ -63,8 +63,8 @@ const useEscrowTableConfig = (statuses) => {
         ];
 
     return {
-      // Grid layout: 9 columns with responsive widths (added Clients column)
-      gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 1.2fr 0.8fr 80px',
+      // Grid layout: 8 columns with responsive widths (Property, Status, Price, Commission, Acceptance, Closing, Clients, Actions)
+      gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 1.2fr 80px',
 
       // Status config for row styling
       statusConfig: {
@@ -246,21 +246,6 @@ const useEscrowTableConfig = (statuses) => {
             };
           },
           align: 'left',
-        },
-
-        // Progress (read-only)
-        {
-          label: 'Progress',
-          field: (escrow) => {
-            const totalTasks = escrow.checklist_total || 0;
-            const completedTasks = escrow.checklist_completed || 0;
-            if (totalTasks === 0) return 0;
-            return Math.round((completedTasks / totalTasks) * 100);
-          },
-          formatter: (value) => `${value}%`,
-          align: 'center',
-          bold: true,
-          color: (escrow) => getStatusConfig(escrow.status).color, // Use 'status' field
         },
       ],
     };

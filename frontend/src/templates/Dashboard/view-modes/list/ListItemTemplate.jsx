@@ -456,23 +456,28 @@ const ListItemTemplate = React.memo(({
                   ? metric.toggle.maskFn(metricValue)
                   : formattedValue;
 
+                // Check if this metric has a custom renderer
+                const hasCustomRenderer = !!metric.customRenderer;
+
                 return (
                   <Box
                     key={idx}
                     onClick={(e) => {
-                      if (metric.editable && onUpdate && !isDragging) {
+                      // Custom renderers handle their own click events
+                      if (!hasCustomRenderer && metric.editable && onUpdate && !isDragging) {
                         e.stopPropagation();
                         openEditor(`metric_${idx}`);
                       }
                     }}
                     sx={{
-                      cursor: metric.editable && onUpdate ? 'pointer' : 'default',
+                      // Custom renderers handle their own styling - no wrapper padding/hover
+                      cursor: !hasCustomRenderer && metric.editable && onUpdate ? 'pointer' : 'default',
                       transition: 'all 0.2s',
-                      borderRadius: 1,
-                      px: 1,
-                      py: 0.5,
-                      mx: -1,
-                      '&:hover': metric.editable && onUpdate ? {
+                      borderRadius: hasCustomRenderer ? 0 : 1,
+                      px: hasCustomRenderer ? 0 : 1,
+                      py: hasCustomRenderer ? 0 : 0.5,
+                      mx: hasCustomRenderer ? 0 : -1,
+                      '&:hover': !hasCustomRenderer && metric.editable && onUpdate ? {
                         backgroundColor: 'action.hover',
                       } : {},
                     }}
@@ -510,9 +515,14 @@ const ListItemTemplate = React.memo(({
                           )}
                         </IconButton>
                       )}
-                      <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>
-                        {displayValue}
-                      </Typography>
+                      {metric.customRenderer ? (
+                        // Custom renderer for complex fields (like ClientCircles)
+                        metric.customRenderer(data, () => openEditor(`metric_${idx}`))
+                      ) : (
+                        <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', whiteSpace: 'nowrap' }}>
+                          {displayValue}
+                        </Typography>
+                      )}
                     </Box>
                   </Box>
                 );

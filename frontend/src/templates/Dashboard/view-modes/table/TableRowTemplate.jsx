@@ -331,19 +331,24 @@ const TableRowTemplate = React.memo(({
                     )}
                   </IconButton>
                 )}
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: column.bold ? 700 : 600,
-                    fontSize: column.fontSize || '0.875rem',
-                    color: column.color || theme.palette.text.primary,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {displayValue}
-                </Typography>
+                {column.customRenderer ? (
+                  // Custom renderer for complex fields (like ClientCircles)
+                  column.customRenderer(data, () => openEditor(`column_${idx}`))
+                ) : (
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: column.bold ? 700 : 600,
+                      fontSize: column.fontSize || '0.875rem',
+                      color: column.color || theme.palette.text.primary,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {displayValue}
+                  </Typography>
+                )}
               </Box>
               {column.subtitle && (
                 <Typography
