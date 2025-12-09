@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Box, Avatar, Typography, Paper, Fade, Popper, Chip } from '@mui/material';
+import { Box, Avatar, Typography, Paper, Fade, Popper, Chip, ClickAwayListener } from '@mui/material';
 import { Add, Email, Phone } from '@mui/icons-material';
 
 /**
@@ -28,6 +28,7 @@ const ROLE_COLORS = {
  * Displays client avatars/initials in a horizontal row
  * Shows up to maxVisible circles, then "+N" indicator for overflow
  * Hover reveals contact card with full details
+ * Click locks the popup until clicking outside
  *
  * Visual differentiation:
  * - Buyers: Blue border/ring
@@ -49,6 +50,7 @@ export const ClientCircles = ({
   const [hoveredClient, setHoveredClient] = useState(null);
   const [hoveredRole, setHoveredRole] = useState(null); // Track which role the hovered client belongs to
   const [anchorEl, setAnchorEl] = useState(null);
+  const [isLocked, setIsLocked] = useState(false); // When true, popup stays open until click-away
   const closeTimeoutRef = useRef(null); // Timeout ref for delayed close
 
   const { buyers = [], sellers = [] } = clients || {};
@@ -92,6 +94,9 @@ export const ClientCircles = ({
   };
 
   const handleMouseLeave = () => {
+    // If locked, don't close on mouse leave
+    if (isLocked) return;
+
     // Delay closing to give user time to move to popup
     closeTimeoutRef.current = setTimeout(() => {
       setHoveredClient(null);
@@ -108,11 +113,43 @@ export const ClientCircles = ({
     }
   };
 
-  // Close popup when mouse leaves it
+  // Close popup when mouse leaves it (only if not locked)
   const handlePopupMouseLeave = () => {
+    if (isLocked) return;
+
     setHoveredClient(null);
     setHoveredRole(null);
     setAnchorEl(null);
+  };
+
+  // Handle click on avatar to lock the popup
+  const handleAvatarClick = (e, client, role) => {
+    e.stopPropagation();
+
+    // If clicking on the same client that's already locked, unlock and close
+    if (isLocked && hoveredClient?.id === client.id) {
+      setIsLocked(false);
+      setHoveredClient(null);
+      setHoveredRole(null);
+      setAnchorEl(null);
+      return;
+    }
+
+    // Lock the popup open for this client
+    setIsLocked(true);
+    setAnchorEl(e.currentTarget);
+    setHoveredClient(client);
+    setHoveredRole(role);
+  };
+
+  // Handle click-away to close locked popup
+  const handleClickAway = () => {
+    if (isLocked) {
+      setIsLocked(false);
+      setHoveredClient(null);
+      setHoveredRole(null);
+      setAnchorEl(null);
+    }
   };
 
   // Render a single client avatar with role-based coloring
@@ -120,6 +157,7 @@ export const ClientCircles = ({
     const avatarUrl = client.avatar_url || client.avatarUrl;
     const initials = getInitials(client, index);
     const isHovered = hoveredClient?.id === client.id || hoveredClient === client;
+    const isThisLocked = isLocked && hoveredClient?.id === client.id;
     const roleConfig = ROLE_COLORS[role] || ROLE_COLORS.buyer;
 
     return (
@@ -130,7 +168,7 @@ export const ClientCircles = ({
         sx={{
           position: 'relative',
           marginLeft: index === 0 ? 0 : '-16px', // Tighter overlap
-          zIndex: isHovered ? 20 : totalInGroup - index,
+          zIndex: isHovered || isThisLocked ? 20 : totalInGroup - index,
           transition: 'all 0.2s ease',
         }}
       >
@@ -142,13 +180,13 @@ export const ClientCircles = ({
             borderRadius: '50%',
             background: `linear-gradient(135deg, ${roleConfig.border}, ${roleConfig.border}dd)`,
             padding: '2px',
-            boxShadow: isHovered
+            boxShadow: isHovered || isThisLocked
               ? `0 4px 12px ${roleConfig.border}60`
               : `0 1px 3px rgba(0,0,0,0.12)`,
             transition: 'all 0.2s ease',
             // 3D perspective tilt - like a plate with right edge lifted
             // rotateY tilts left/right, perspective gives depth
-            transform: isHovered
+            transform: isHovered || isThisLocked
               ? 'perspective(100px) rotateY(0deg) scale(1.15) translateY(-2px)'
               : 'perspective(100px) rotateY(12deg)',
             cursor: 'pointer',
@@ -158,10 +196,7 @@ export const ClientCircles = ({
               zIndex: 25,
             },
           }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit?.();
-          }}
+          onClick={(e) => handleAvatarClick(e, client, role)}
         >
           <Avatar
             src={avatarUrl}
@@ -243,10 +278,11 @@ export const ClientCircles = ({
   const renderContactCard = () => {
     const gradientColors = getGradientColors(hoveredRole);
     const roleConfig = ROLE_COLORS[hoveredRole] || ROLE_COLORS.buyer;
+    const isOpen = Boolean(hoveredClient && anchorEl);
 
-    return (
+    const popperContent = (
       <Popper
-        open={Boolean(hoveredClient && anchorEl)}
+        open={isOpen}
         anchorEl={anchorEl}
         placement="top"
         transition
@@ -446,6 +482,10 @@ export const ClientCircles = ({
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
+                      setIsLocked(false);
+                      setHoveredClient(null);
+                      setHoveredRole(null);
+                      setAnchorEl(null);
                       onEdit?.();
                     }}
                   >
@@ -458,6 +498,38 @@ export const ClientCircles = ({
         )}
       </Popper>
     );
+
+    // Wrap with ClickAwayListener and backdrop when locked
+    if (isLocked && isOpen) {
+      return (
+        <>
+          {/* Blur backdrop - clicking it closes the popup */}
+          <Box
+            onClick={handleClickAway}
+            sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.15)',
+              backdropFilter: 'blur(2px)',
+              zIndex: 1299, // Just below the popper (1300)
+              animation: 'fadeIn 0.2s ease',
+              '@keyframes fadeIn': {
+                from: { opacity: 0 },
+                to: { opacity: 1 },
+              },
+            }}
+          />
+          <ClickAwayListener onClickAway={handleClickAway}>
+            <div>{popperContent}</div>
+          </ClickAwayListener>
+        </>
+      );
+    }
+
+    return popperContent;
   };
 
   // Calculate total for empty state check
@@ -553,7 +625,26 @@ export const ClientCircles = ({
     const totalOverflow = (buyers.length - maxBuyers) + (sellers.length - maxSellers);
 
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+      <Box
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit?.();
+        }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.25,
+          cursor: 'pointer',
+          borderRadius: 1,
+          py: 0.5,
+          px: 0.75,
+          mx: -0.75,
+          transition: 'all 0.2s',
+          '&:hover': {
+            backgroundColor: 'action.hover',
+          },
+        }}
+      >
         {/* Buyers group (blue rings) */}
         {buyers.length > 0 && renderClientGroup(buyers, maxBuyers, 'buyer')}
 
@@ -580,7 +671,25 @@ export const ClientCircles = ({
   const overflowCount = clientList.length - maxVisible;
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+    <Box
+      onClick={(e) => {
+        e.stopPropagation();
+        onEdit?.();
+      }}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        cursor: 'pointer',
+        borderRadius: 1,
+        py: 0.5,
+        px: 0.75,
+        mx: -0.75,
+        transition: 'all 0.2s',
+        '&:hover': {
+          backgroundColor: 'action.hover',
+        },
+      }}
+    >
       {displayClients.map((client, index) => renderClientAvatar(client, index, displayClients.length, role))}
       {renderOverflowText(overflowCount)}
       {renderContactCard()}
