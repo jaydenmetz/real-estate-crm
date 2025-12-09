@@ -234,26 +234,29 @@ export const DashboardContent = ({
     if (viewMode !== 'table' || !TableComponent) return null;
 
     // Define headers based on entity type
+    // Grid columns must match the corresponding TableRow component's gridTemplateColumns
     const headersByEntity = {
-      escrow: [
-        'Property', 'Status', 'Price', 'Commission',
-        'Acceptance', 'Close Date', 'Progress', 'Actions'
-      ],
-      listing: [
-        'Property', 'Status', 'List Price', 'Commission',
-        'MLS#', 'Beds/Baths', 'Days/Listed', 'Actions'
-      ]
+      escrow: {
+        headers: ['Property', 'Status', 'Price', 'Commission', 'Acceptance', 'Closing', 'Clients', 'Actions'],
+        // Must match EscrowTableRow gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 1.2fr 80px'
+        gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 1.2fr 80px',
+      },
+      listing: {
+        headers: ['Property', 'Status', 'List Price', 'Commission', 'MLS#', 'Beds/Baths', 'Days/Listed', 'Actions'],
+        gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
+      }
     };
 
-    const headers = headersByEntity[config.entity.name] || [
-      'Item', 'Status', 'Actions'
-    ];
+    const entityConfig = headersByEntity[config.entity.name] || {
+      headers: ['Item', 'Status', 'Actions'],
+      gridTemplateColumns: '2fr 1fr 80px',
+    };
 
     return (
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
+          gridTemplateColumns: entityConfig.gridTemplateColumns,
           gap: 2,
           px: 2,
           py: 1,
@@ -261,7 +264,7 @@ export const DashboardContent = ({
           borderBottom: `2px solid ${alpha('#000', 0.1)}`,
         }}
       >
-        {headers.map((header, index) => (
+        {entityConfig.headers.map((header, index) => (
           <Typography
             key={index}
             variant="caption"
@@ -269,7 +272,7 @@ export const DashboardContent = ({
               fontWeight: 700,
               color: 'text.secondary',
               textTransform: 'uppercase',
-              textAlign: header === 'Progress' ? 'center' : 'left'
+              textAlign: 'left'
             }}
           >
             {header}
