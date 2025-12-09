@@ -31,8 +31,9 @@ import { DateSetter } from '../../../common/setters/Date';
 import { CurrencyInput } from '../../../common/inputs/shared/CurrencyInput';
 import { PercentageInput } from '../../../common/inputs/shared/PercentageInput';
 import { AddressInput } from '../../../common/inputs/shared/AddressInput';
+import { ContactInput } from '../../../common/inputs/shared/ContactInput';
 import ClientCard from '../view-modes/card/ClientCard';
-import { clientsAPI } from '../../../../services/api.service';
+import { clientsAPI, contactsAPI } from '../../../../services/api.service';
 
 /**
  * Entity Type Configuration
@@ -140,6 +141,8 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     firstName: '',
     lastName: '',
     representativeTitle: '',
+    selectedContact: null, // Contact selected from search (for entity types)
+    isNewRepresentative: false, // True if representative doesn't exist in contacts yet
 
     // Contact Info
     phone: '',
@@ -225,6 +228,8 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         firstName: '',
         lastName: '',
         representativeTitle: '',
+        selectedContact: null,
+        isNewRepresentative: false,
         phone: '',
         email: '',
         mailingAddress: null,
@@ -238,6 +243,47 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
       setShowSuccess(false);
       onClose();
     }
+  };
+
+  // Handle contact selection from ContactInput
+  const handleContactSelect = (contact) => {
+    if (contact) {
+      // Auto-populate fields from selected contact
+      setFormData(prev => ({
+        ...prev,
+        selectedContact: contact,
+        isNewRepresentative: false,
+        firstName: contact.first_name || contact.firstName || '',
+        lastName: contact.last_name || contact.lastName || '',
+        phone: contact.phone || prev.phone || '',
+        email: contact.email || prev.email || '',
+        // If contact has address, use it for mailing address
+        mailingAddress: contact.street_address ? {
+          property_address: contact.street_address,
+          city: contact.city || '',
+          state: contact.state || '',
+          zip_code: contact.zip_code || '',
+        } : prev.mailingAddress,
+      }));
+    } else {
+      // Clear contact selection
+      setFormData(prev => ({
+        ...prev,
+        selectedContact: null,
+        isNewRepresentative: false,
+      }));
+    }
+  };
+
+  // Handle manual entry when contact not found
+  const handleManualContactEntry = ({ firstName, lastName, isNew }) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedContact: null,
+      isNewRepresentative: isNew,
+      firstName: firstName || '',
+      lastName: lastName || '',
+    }));
   };
 
   // Form handlers
@@ -308,6 +354,33 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     setSaving(true);
 
     try {
+      // For entity types with new representatives, save the representative as a contact first
+      let representativeContactId = formData.selectedContact?.id || null;
+
+      if (formData.entityType !== 'individual' && formData.isNewRepresentative && !representativeContactId) {
+        // Create new contact for the representative
+        try {
+          const contactResponse = await contactsAPI.create({
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            phone: formData.phone || null,
+            email: formData.email || null,
+            street_address: formData.mailingAddress?.property_address || '',
+            city: formData.mailingAddress?.city || '',
+            state: formData.mailingAddress?.state || '',
+            zip_code: formData.mailingAddress?.zip_code || '',
+            contact_type: 'representative', // Mark as representative type
+            notes: `Representative for ${formData.entityName} (${formData.representativeTitle || 'N/A'})`,
+          });
+          if (contactResponse.success && contactResponse.data) {
+            representativeContactId = contactResponse.data.id || contactResponse.data.contact_id;
+          }
+        } catch (contactError) {
+          console.warn('Could not save representative as contact:', contactError);
+          // Continue anyway - the client will still be created
+        }
+      }
+
       const clientData = {
         first_name: formData.firstName,
         last_name: formData.lastName,
@@ -317,6 +390,7 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         entity_type: formData.entityType,
         entity_name: formData.entityType !== 'individual' ? formData.entityName : null,
         representative_title: formData.entityType !== 'individual' ? formData.representativeTitle : null,
+        representative_contact_id: representativeContactId, // Link to the representative contact
         // Mailing address fields
         address_street: formData.mailingAddress?.property_address || '',
         address_city: formData.mailingAddress?.city || '',
@@ -552,60 +626,95 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
                   letterSpacing: '0.5px',
                 }}
               >
-                {formData.entityType === 'individual' ? 'Full Name' : 'Representative Name'}
+                {formData.entityType === 'individual' ? 'Full Name' : 'Representative'}
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  fullWidth
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  placeholder="First Name"
-                  autoFocus={formData.entityType === 'individual'}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person sx={{ color: 'white', fontSize: 20 }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'rgba(255,255,255,0.15)',
-                      borderRadius: 2,
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2 },
-                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
-                      '&.Mui-focused fieldset': { borderColor: 'white' },
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'white',
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      '&::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 },
-                    },
-                  }}
-                />
-                <TextField
-                  fullWidth
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  placeholder="Last Name"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'rgba(255,255,255,0.15)',
-                      borderRadius: 2,
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2 },
-                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
-                      '&.Mui-focused fieldset': { borderColor: 'white' },
-                    },
-                    '& .MuiInputBase-input': {
-                      color: 'white',
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      '&::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 },
-                    },
-                  }}
-                />
-              </Box>
+
+              {/* For entity types, use ContactInput with autocomplete */}
+              {formData.entityType !== 'individual' ? (
+                <Box>
+                  <ContactInput
+                    value={formData.selectedContact}
+                    onChange={handleContactSelect}
+                    placeholder="Search contacts or type name..."
+                    initialLabel="Select or Enter Representative"
+                    selectedLabel="Representative"
+                    color="white"
+                    allowManualEntry
+                    onManualEntry={handleManualContactEntry}
+                  />
+                  {/* Show selected/entered name below */}
+                  {(formData.firstName || formData.lastName) && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: 'rgba(255,255,255,0.7)',
+                        mt: 1,
+                        fontSize: '0.85rem',
+                      }}
+                    >
+                      {formData.selectedContact ? (
+                        <>Using existing contact: <strong style={{ color: 'white' }}>{formData.firstName} {formData.lastName}</strong></>
+                      ) : formData.isNewRepresentative ? (
+                        <>New representative: <strong style={{ color: 'white' }}>{formData.firstName} {formData.lastName}</strong> (will be saved as contact)</>
+                      ) : null}
+                    </Typography>
+                  )}
+                </Box>
+              ) : (
+                /* For individuals, keep the original text fields */
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    placeholder="First Name"
+                    autoFocus
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person sx={{ color: 'white', fontSize: 20 }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        backgroundColor: 'rgba(255,255,255,0.15)',
+                        borderRadius: 2,
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2 },
+                        '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                        '&.Mui-focused fieldset': { borderColor: 'white' },
+                      },
+                      '& .MuiInputBase-input': {
+                        color: 'white',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        '&::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 },
+                      },
+                    }}
+                  />
+                  <TextField
+                    fullWidth
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    placeholder="Last Name"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        backgroundColor: 'rgba(255,255,255,0.15)',
+                        borderRadius: 2,
+                        '& fieldset': { borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2 },
+                        '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                        '&.Mui-focused fieldset': { borderColor: 'white' },
+                      },
+                      '& .MuiInputBase-input': {
+                        color: 'white',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        '&::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 },
+                      },
+                    }}
+                  />
+                </Box>
+              )}
             </Box>
 
             {/* Representative Title (for non-individuals) */}

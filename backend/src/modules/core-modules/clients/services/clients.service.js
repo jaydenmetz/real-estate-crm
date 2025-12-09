@@ -132,6 +132,7 @@ class ClientsService {
         cl.entity_type,
         cl.entity_name,
         cl.representative_title,
+        cl.representative_contact_id,
         cl.created_at,
         cl.updated_at,
         co.first_name,
@@ -216,6 +217,7 @@ class ClientsService {
         cl.entity_type,
         cl.entity_name,
         cl.representative_title,
+        cl.representative_contact_id,
         cl.created_at,
         cl.updated_at,
         co.first_name,
@@ -263,6 +265,7 @@ class ClientsService {
         entity_type, entityType,
         entity_name, entityName,
         representative_title, representativeTitle,
+        representative_contact_id, representativeContactId,
         // snake_case alternatives
         first_name, last_name, client_type,
         address_street, address_city, address_state, address_zip,
@@ -279,6 +282,7 @@ class ClientsService {
       const finalEntityType = entity_type || entityType || 'individual';
       const finalEntityName = entity_name || entityName || null;
       const finalRepresentativeTitle = representative_title || representativeTitle || null;
+      const finalRepresentativeContactId = representative_contact_id || representativeContactId || null;
 
       await dbClient.query('BEGIN');
 
@@ -337,10 +341,10 @@ class ClientsService {
           commission, commission_percentage, commission_type,
           agreement_start_date, agreement_end_date,
           lead_ids, owner_id, team_id,
-          entity_type, entity_name, representative_title,
+          entity_type, entity_name, representative_title, representative_contact_id,
           created_at, updated_at
         )
-        VALUES ($1, $2, 'active', $3, $4, $5, $6, $7, $8, COALESCE($9, '{}'::uuid[]), $10, $11, $12, $13, $14, NOW(), NOW())
+        VALUES ($1, $2, 'active', $3, $4, $5, $6, $7, $8, COALESCE($9, '{}'::uuid[]), $10, $11, $12, $13, $14, $15, NOW(), NOW())
         RETURNING id
       `;
 
@@ -358,7 +362,8 @@ class ClientsService {
         user?.teamId || user?.team_id || null,
         finalEntityType,
         finalEntityName,
-        finalRepresentativeTitle
+        finalRepresentativeTitle,
+        finalRepresentativeContactId
       ]);
 
       await dbClient.query('COMMIT');
@@ -475,6 +480,7 @@ class ClientsService {
       const entityType = updates.entity_type || updates.entityType;
       const entityName = updates.entity_name || updates.entityName;
       const representativeTitle = updates.representative_title || updates.representativeTitle;
+      const representativeContactId = updates.representative_contact_id || updates.representativeContactId;
       const hasClientUpdates = clientType || clientStatus ||
         updates.budget !== undefined ||
         updates.commission !== undefined ||
@@ -486,7 +492,8 @@ class ClientsService {
         displayName !== undefined ||
         entityType !== undefined ||
         entityName !== undefined ||
-        representativeTitle !== undefined;
+        representativeTitle !== undefined ||
+        representativeContactId !== undefined;
 
       if (hasClientUpdates) {
         const clientUpdates = [];
@@ -544,6 +551,10 @@ class ClientsService {
         if (representativeTitle !== undefined) {
           clientUpdates.push(`representative_title = $${paramIndex++}`);
           clientValues.push(representativeTitle);
+        }
+        if (representativeContactId !== undefined) {
+          clientUpdates.push(`representative_contact_id = $${paramIndex++}`);
+          clientValues.push(representativeContactId);
         }
 
         if (clientUpdates.length > 0) {
