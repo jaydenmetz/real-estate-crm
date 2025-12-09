@@ -5,6 +5,7 @@ import { ModalContainer as ModalDialog } from '../../../common/modals/ModalConta
 import { clientsAPI } from '../../../../services/api.service';
 import debounce from 'lodash/debounce';
 import { NewClientModal } from '../../clients/modals/NewClientModal';
+import DraggableClientItem from './DraggableClientItem';
 
 /**
  * Unified Clients Editor for Escrows
@@ -57,6 +58,14 @@ export const EditClients = ({
   const [showNewClientModal, setShowNewClientModal] = useState(false);
   const [newClientRole, setNewClientRole] = useState(null); // 'buyer' | 'seller' | null
   const [newClientInitialName, setNewClientInitialName] = useState({ firstName: '', lastName: '' });
+
+  // Drag-and-drop state
+  const [dragState, setDragState] = useState({
+    draggingIndex: null,
+    draggingList: null,
+    dropTargetIndex: null,
+    dropTargetList: null,
+  });
 
   // Ref to track if we've already loaded initial data (prevents resetting on parent re-renders)
   const hasLoadedInitialData = useRef(false);
@@ -385,6 +394,87 @@ export const EditClients = ({
     setSelectedClients(prev => prev.filter(c => c.id !== clientId));
   };
 
+  // Drag-and-drop handlers for reordering and moving between lists
+  const handleDragStart = (index, listType) => {
+    setDragState({
+      draggingIndex: index,
+      draggingList: listType,
+      dropTargetIndex: null,
+      dropTargetList: null,
+    });
+  };
+
+  const handleDragOver = (index, listType) => {
+    setDragState(prev => ({
+      ...prev,
+      dropTargetIndex: index,
+      dropTargetList: listType,
+    }));
+  };
+
+  const handleDrop = (data, targetIndex, targetList) => {
+    const { client, index: sourceIndex, sourceList } = data;
+
+    if (sourceList === targetList) {
+      // Reordering within the same list
+      const setList = sourceList === 'buyer' ? setBuyerClients : setSellerClients;
+      setList(prev => {
+        const newList = [...prev];
+        // Remove from old position
+        newList.splice(sourceIndex, 1);
+        // Insert at new position
+        const adjustedIndex = sourceIndex < targetIndex ? targetIndex : targetIndex;
+        newList.splice(adjustedIndex, 0, client);
+        return newList;
+      });
+    } else {
+      // Moving between lists (buyer <-> seller)
+      const removeFromList = sourceList === 'buyer' ? setBuyerClients : setSellerClients;
+      const addToList = targetList === 'buyer' ? setBuyerClients : setSellerClients;
+
+      // Remove from source list
+      removeFromList(prev => prev.filter(c => c.id !== client.id));
+
+      // Add to target list at the specified position
+      addToList(prev => {
+        const newList = [...prev];
+        newList.splice(targetIndex, 0, client);
+        return newList;
+      });
+    }
+
+    // Reset drag state
+    setDragState({
+      draggingIndex: null,
+      draggingList: null,
+      dropTargetIndex: null,
+      dropTargetList: null,
+    });
+  };
+
+  const handleDragEnd = () => {
+    setDragState({
+      draggingIndex: null,
+      draggingList: null,
+      dropTargetIndex: null,
+      dropTargetList: null,
+    });
+  };
+
+  // Handle drop on empty list area (at the end)
+  const handleDropOnList = (e, listType) => {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      const { client, sourceList } = data;
+      const targetList = listType === 'buyer' ? buyerClients : sellerClients;
+
+      handleDrop(data, targetList.length, listType);
+    } catch (error) {
+      console.error('Drop on list error:', error);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -554,45 +644,26 @@ export const EditClients = ({
                 >
                   Buyer{buyerClients.length !== 1 ? 's' : ''}
                 </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {/* Existing buyers */}
-                  {buyerClients.map((client) => (
-                    <Box
+                <Box
+                  sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => handleDropOnList(e, 'buyer')}
+                >
+                  {/* Existing buyers - draggable */}
+                  {buyerClients.map((client, index) => (
+                    <DraggableClientItem
                       key={client.id}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        bgcolor: 'rgba(255,255,255,0.1)',
-                        borderRadius: 2,
-                        px: 2,
-                        py: 1.5,
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="body2" fontWeight={600} color="white">
-                          {client.firstName} {client.lastName}
-                        </Typography>
-                        {client.email && (
-                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-                            {client.email}
-                          </Typography>
-                        )}
-                      </Box>
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setBuyerClients(prev => prev.filter(c => c.id !== client.id));
-                        }}
-                        size="small"
-                        sx={{
-                          color: 'rgba(255,255,255,0.5)',
-                          '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' },
-                        }}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Box>
+                      client={client}
+                      index={index}
+                      listType="buyer"
+                      onRemove={(clientId) => setBuyerClients(prev => prev.filter(c => c.id !== clientId))}
+                      onDragStart={handleDragStart}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      onDragEnd={handleDragEnd}
+                      isDragging={dragState.draggingIndex === index && dragState.draggingList === 'buyer'}
+                      isDropTarget={dragState.dropTargetIndex === index && dragState.dropTargetList === 'buyer'}
+                    />
                   ))}
 
                   {/* Add Buyer - Dotted placeholder or search input (max 6 buyers) */}
@@ -772,45 +843,26 @@ export const EditClients = ({
                 >
                   Seller{sellerClients.length !== 1 ? 's' : ''}
                 </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  {/* Existing sellers */}
-                  {sellerClients.map((client) => (
-                    <Box
+                <Box
+                  sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => handleDropOnList(e, 'seller')}
+                >
+                  {/* Existing sellers - draggable */}
+                  {sellerClients.map((client, index) => (
+                    <DraggableClientItem
                       key={client.id}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        bgcolor: 'rgba(255,255,255,0.1)',
-                        borderRadius: 2,
-                        px: 2,
-                        py: 1.5,
-                      }}
-                    >
-                      <Box>
-                        <Typography variant="body2" fontWeight={600} color="white">
-                          {client.firstName} {client.lastName}
-                        </Typography>
-                        {client.email && (
-                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-                            {client.email}
-                          </Typography>
-                        )}
-                      </Box>
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSellerClients(prev => prev.filter(c => c.id !== client.id));
-                        }}
-                        size="small"
-                        sx={{
-                          color: 'rgba(255,255,255,0.5)',
-                          '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' },
-                        }}
-                      >
-                        <Delete fontSize="small" />
-                      </IconButton>
-                    </Box>
+                      client={client}
+                      index={index}
+                      listType="seller"
+                      onRemove={(clientId) => setSellerClients(prev => prev.filter(c => c.id !== clientId))}
+                      onDragStart={handleDragStart}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      onDragEnd={handleDragEnd}
+                      isDragging={dragState.draggingIndex === index && dragState.draggingList === 'seller'}
+                      isDropTarget={dragState.dropTargetIndex === index && dragState.dropTargetList === 'seller'}
+                    />
                   ))}
 
                   {/* Add Seller - Dotted placeholder or search input (max 6 sellers) */}
@@ -988,49 +1040,32 @@ export const EditClients = ({
               >
                 {selectedType === 'buyer' ? 'Buyer' : 'Seller'}{(selectedType === 'buyer' ? buyerClients : sellerClients).length !== 1 ? 's' : ''}
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {/* Existing clients */}
-                {(selectedType === 'buyer' ? buyerClients : sellerClients).map((client) => (
-                  <Box
+              <Box
+                sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => handleDropOnList(e, selectedType)}
+              >
+                {/* Existing clients - draggable for reordering */}
+                {(selectedType === 'buyer' ? buyerClients : sellerClients).map((client, index) => (
+                  <DraggableClientItem
                     key={client.id}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      bgcolor: 'rgba(255,255,255,0.1)',
-                      borderRadius: 2,
-                      px: 2,
-                      py: 1.5,
+                    client={client}
+                    index={index}
+                    listType={selectedType}
+                    onRemove={(clientId) => {
+                      if (selectedType === 'buyer') {
+                        setBuyerClients(prev => prev.filter(c => c.id !== clientId));
+                      } else {
+                        setSellerClients(prev => prev.filter(c => c.id !== clientId));
+                      }
                     }}
-                  >
-                    <Box>
-                      <Typography variant="body2" fontWeight={600} color="white">
-                        {client.firstName} {client.lastName}
-                      </Typography>
-                      {client.email && (
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
-                          {client.email}
-                        </Typography>
-                      )}
-                    </Box>
-                    <IconButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (selectedType === 'buyer') {
-                          setBuyerClients(prev => prev.filter(c => c.id !== client.id));
-                        } else {
-                          setSellerClients(prev => prev.filter(c => c.id !== client.id));
-                        }
-                      }}
-                      size="small"
-                      sx={{
-                        color: 'rgba(255,255,255,0.5)',
-                        '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.1)' },
-                      }}
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  </Box>
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onDragEnd={handleDragEnd}
+                    isDragging={dragState.draggingIndex === index && dragState.draggingList === selectedType}
+                    isDropTarget={dragState.dropTargetIndex === index && dragState.dropTargetList === selectedType}
+                  />
                 ))}
 
                 {/* Add Client - Dotted placeholder or search input (max 6 clients) */}
