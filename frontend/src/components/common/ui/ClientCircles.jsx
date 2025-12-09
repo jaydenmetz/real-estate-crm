@@ -550,15 +550,16 @@ export const ClientCircles = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center', // Center content when not full
+          justifyContent: 'center', // Center content
           cursor: 'pointer',
           borderRadius: 1,
           py: 0.5,
           px: 0.75,
           mx: -0.75,
           transition: 'all 0.2s',
-          // Fill full width of container for consistent hover area
-          width: 'calc(100% + 12px)', // Account for mx: -0.75 (6px each side)
+          // Fixed width for consistent hover area across all states
+          width: 'calc(100% + 12px)', // Fill container width
+          minWidth: 120, // Minimum width to match populated state
           minHeight: 32, // Ensure consistent height
           '&:hover': {
             backgroundColor: 'action.hover',
@@ -652,7 +653,7 @@ export const ClientCircles = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center', // Center content when not full
+          justifyContent: 'center', // Center content
           gap: 0.25,
           cursor: 'pointer',
           borderRadius: 1,
@@ -660,8 +661,9 @@ export const ClientCircles = ({
           px: 0.75,
           mx: -0.75,
           transition: 'all 0.2s',
-          // Fill full width of container for consistent hover area
-          width: 'calc(100% + 12px)', // Account for mx: -0.75 (6px each side)
+          // Fixed width for consistent hover area across all states
+          width: 'calc(100% + 12px)', // Fill container width
+          minWidth: 120, // Minimum width to match populated state
           minHeight: 32, // Ensure consistent height even with few circles
           '&:hover': {
             backgroundColor: 'action.hover',
@@ -702,15 +704,16 @@ export const ClientCircles = ({
       sx={{
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center', // Center content when not full
+        justifyContent: 'center', // Center content
         cursor: 'pointer',
         borderRadius: 1,
         py: 0.5,
         px: 0.75,
         mx: -0.75,
         transition: 'all 0.2s',
-        // Fill full width of container for consistent hover area
-        width: 'calc(100% + 12px)', // Account for mx: -0.75 (6px each side)
+        // Fixed width for consistent hover area across all states
+        width: 'calc(100% + 12px)', // Fill container width
+        minWidth: 120, // Minimum width to match populated state
         minHeight: 32, // Ensure consistent height even with few circles
         '&:hover': {
           backgroundColor: 'action.hover',
