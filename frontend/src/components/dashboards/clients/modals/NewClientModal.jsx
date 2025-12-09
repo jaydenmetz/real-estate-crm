@@ -6,10 +6,23 @@ import {
   Typography,
   ToggleButtonGroup,
   ToggleButton,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
-import { CheckCircle, Person } from '@mui/icons-material';
+import {
+  CheckCircle,
+  Person,
+  Business,
+  AccountBalance,
+  Gavel,
+  Description,
+  Percent,
+  AttachMoney,
+  Home,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+} from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Percent, AttachMoney } from '@mui/icons-material';
 import { ModalStepPage } from '../../../common/modals/ModalStepPage';
 import { Phone } from '../../../common/setters/Phone';
 import { Email } from '../../../common/setters/Email';
@@ -17,23 +30,96 @@ import { Currency } from '../../../common/setters/Currency';
 import { DateSetter } from '../../../common/setters/Date';
 import { CurrencyInput } from '../../../common/inputs/shared/CurrencyInput';
 import { PercentageInput } from '../../../common/inputs/shared/PercentageInput';
-import { LeadInput } from '../../../common/inputs/shared/LeadInput';
+import { AddressInput } from '../../../common/inputs/shared/AddressInput';
 import ClientCard from '../view-modes/card/ClientCard';
-import { clientsAPI, leadsAPI } from '../../../../services/api.service';
-import NewLeadModal from '../../leads/modals/NewLeadModal';
+import { clientsAPI } from '../../../../services/api.service';
 
 /**
- * NewClientModal - Quick-Add Flow for Clients
- * Step-based modal using existing editors with progress dots and arrow navigation
+ * Entity Type Configuration
+ * Defines the fields and labels for each entity type
+ */
+const ENTITY_TYPES = {
+  individual: {
+    value: 'individual',
+    label: 'Individual',
+    icon: Person,
+    description: 'A person buying/selling in their own name',
+    fields: ['firstName', 'lastName', 'email', 'phone', 'mailingAddress'],
+    representativeTitles: [], // No representative for individual
+  },
+  trust: {
+    value: 'trust',
+    label: 'Trust',
+    icon: AccountBalance,
+    description: 'A trust entity (e.g., "Smith Family Trust")',
+    fields: ['entityName', 'firstName', 'lastName', 'representativeTitle', 'email', 'phone', 'mailingAddress'],
+    representativeTitles: ['Trustee', 'Co-Trustee', 'Successor Trustee'],
+    entityNameLabel: 'Trust Name',
+    entityNamePlaceholder: 'e.g., Smith Family Trust',
+  },
+  corporation: {
+    value: 'corporation',
+    label: 'Corporation',
+    icon: Business,
+    description: 'A corporation (e.g., "ABC Corp")',
+    fields: ['entityName', 'firstName', 'lastName', 'representativeTitle', 'email', 'phone', 'mailingAddress'],
+    representativeTitles: ['President', 'Vice President', 'Secretary', 'Treasurer', 'CEO', 'CFO', 'Director', 'Authorized Agent'],
+    entityNameLabel: 'Corporation Name',
+    entityNamePlaceholder: 'e.g., ABC Corporation',
+  },
+  llc: {
+    value: 'llc',
+    label: 'LLC',
+    icon: Business,
+    description: 'A limited liability company',
+    fields: ['entityName', 'firstName', 'lastName', 'representativeTitle', 'email', 'phone', 'mailingAddress'],
+    representativeTitles: ['Managing Member', 'Member', 'Manager', 'Authorized Agent'],
+    entityNameLabel: 'LLC Name',
+    entityNamePlaceholder: 'e.g., 123 Main Street LLC',
+  },
+  partnership: {
+    value: 'partnership',
+    label: 'Partnership',
+    icon: Business,
+    description: 'A partnership entity',
+    fields: ['entityName', 'firstName', 'lastName', 'representativeTitle', 'email', 'phone', 'mailingAddress'],
+    representativeTitles: ['General Partner', 'Limited Partner', 'Managing Partner', 'Partner', 'Authorized Agent'],
+    entityNameLabel: 'Partnership Name',
+    entityNamePlaceholder: 'e.g., Smith & Jones Partners',
+  },
+  estate: {
+    value: 'estate',
+    label: 'Estate',
+    icon: Description,
+    description: 'An estate (e.g., "Estate of John Smith")',
+    fields: ['entityName', 'firstName', 'lastName', 'representativeTitle', 'email', 'phone', 'mailingAddress'],
+    representativeTitles: ['Executor', 'Executrix', 'Administrator', 'Administratrix', 'Personal Representative'],
+    entityNameLabel: 'Estate Name',
+    entityNamePlaceholder: 'e.g., Estate of John Smith',
+  },
+  power_of_attorney: {
+    value: 'power_of_attorney',
+    label: 'Power of Attorney',
+    icon: Gavel,
+    description: 'Someone acting under power of attorney',
+    fields: ['entityName', 'firstName', 'lastName', 'representativeTitle', 'email', 'phone', 'mailingAddress'],
+    representativeTitles: ['Attorney-in-Fact', 'Agent'],
+    entityNameLabel: 'Principal Name',
+    entityNamePlaceholder: 'e.g., John Smith (the person granting POA)',
+  },
+};
+
+/**
+ * NewClientModal - Quick-Add Flow for Clients with Entity Type Support
  *
  * Steps:
- * 1. Client Name (with lead search for pre-fill)
- * 2. Contact Info (Phone + Email)
- * 3. Target Price
- * 4. Projected Commission
- * 5. Client Beginning Date
- * 6. Client Expiration Date
- * 7. Connect Lead from Database
+ * 1. Client Type (Buyer/Seller) + Entity Type
+ * 2. Entity/Contact Details (dynamic based on entity type)
+ * 3. Contact Info (Phone + Email)
+ * 4. Mailing Address
+ * 5. Target Price
+ * 6. Projected Commission
+ * 7. Agreement Dates
  * 8. Preview & Confirm
  */
 const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
@@ -41,67 +127,78 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // NewLeadModal state
-  const [showNewLeadModal, setShowNewLeadModal] = useState(false);
-  const [newLeadSearchText, setNewLeadSearchText] = useState('');
-
   // Form data state
   const [formData, setFormData] = useState({
-    // Name (from lead or manual)
+    // Client Type (Buyer/Seller)
+    clientType: 'buyer',
+
+    // Entity Type
+    entityType: 'individual',
+    entityName: '',
+
+    // Contact/Representative Info
     firstName: '',
     lastName: '',
-    displayName: '',
+    representativeTitle: '',
 
     // Contact Info
     phone: '',
     email: '',
 
-    // Financial - renamed fields
-    targetPrice: '', // was: budget
-    projectedCommission: '', // was: commission
+    // Mailing Address
+    mailingAddress: null, // Will be structured address object
+
+    // Financial
+    targetPrice: '',
+    projectedCommission: '',
     commissionPercentage: '',
-    commissionType: 'percentage', // 'percentage' | 'flat'
+    commissionType: 'percentage',
 
     // Agreement Dates
     agreementStartDate: null,
     agreementEndDate: null,
-
-    // Lead connection (step 1 - required to select lead first)
-    leadId: null,
-    selectedLead: null,
   });
+
+  // Get current entity config
+  const entityConfig = ENTITY_TYPES[formData.entityType] || ENTITY_TYPES.individual;
 
   // Initialize form data from initialData when modal opens
   useEffect(() => {
     if (open && initialData) {
-      const firstName = initialData.firstName || '';
-      const lastName = initialData.lastName || '';
-      const displayName = `${firstName} ${lastName}`.trim();
-
       setFormData(prev => ({
         ...prev,
-        firstName,
-        lastName,
-        displayName,
+        firstName: initialData.firstName || '',
+        lastName: initialData.lastName || '',
       }));
     }
   }, [open, initialData]);
 
-  // Step configuration - fixed order
-  // Step 1 requires selecting a lead (or creating new one) before proceeding
-  const steps = useMemo(() => [
-    { id: 'name', label: 'Select Lead' },       // Lead selection is now step 1
-    { id: 'contact', label: 'Contact Info' },
-    { id: 'target-price', label: 'Target Price' },
-    { id: 'commission', label: 'Projected Commission' },
-    { id: 'agreement-start', label: 'Agreement Start' },
-    { id: 'agreement-end', label: 'Agreement Expiration' },
-    { id: 'preview', label: 'Preview & Confirm' },
-  ], []);
+  // Step configuration - changes based on entity type
+  const steps = useMemo(() => {
+    const baseSteps = [
+      { id: 'client-type', label: 'Client Type' },
+      { id: 'entity-details', label: formData.entityType === 'individual' ? 'Contact Details' : 'Entity Details' },
+      { id: 'contact-info', label: 'Contact Info' },
+      { id: 'mailing-address', label: 'Mailing Address' },
+      { id: 'target-price', label: 'Target Price' },
+      { id: 'commission', label: 'Commission' },
+      { id: 'agreement-dates', label: 'Agreement Dates' },
+      { id: 'preview', label: 'Preview' },
+    ];
+    return baseSteps;
+  }, [formData.entityType]);
 
   const currentStepConfig = steps[currentStep];
   const totalSteps = steps.length;
   const isLastStep = currentStep === totalSteps - 1;
+
+  // Compute display name for the client
+  const getDisplayName = () => {
+    if (formData.entityType === 'individual') {
+      return `${formData.firstName} ${formData.lastName}`.trim() || 'New Client';
+    }
+    return formData.entityName || 'New Entity';
+  };
 
   // Navigation handlers
   const handleNext = () => {
@@ -122,54 +219,52 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     if (!saving) {
       setCurrentStep(0);
       setFormData({
+        clientType: 'buyer',
+        entityType: 'individual',
+        entityName: '',
         firstName: '',
         lastName: '',
-        displayName: '',
+        representativeTitle: '',
         phone: '',
         email: '',
+        mailingAddress: null,
         targetPrice: '',
         projectedCommission: '',
         commissionPercentage: '',
         commissionType: 'percentage',
         agreementStartDate: null,
         agreementEndDate: null,
-        leadId: null,
-        selectedLead: null,
       });
       setShowSuccess(false);
-      setShowNewLeadModal(false);
-      setNewLeadSearchText('');
       onClose();
     }
   };
 
-  // Step-specific save handlers
-  const handleAgreementStartDate = (date) => {
-    setFormData({ ...formData, agreementStartDate: date });
+  // Form handlers
+  const handleClientTypeChange = (e, newType) => {
+    if (newType !== null) {
+      setFormData({ ...formData, clientType: newType });
+    }
   };
 
-  const handleAgreementEndDate = (date) => {
-    setFormData({ ...formData, agreementEndDate: date });
-  };
-
-  const handlePhoneSave = (phone) => {
-    setFormData({ ...formData, phone });
-  };
-
-  const handleEmailSave = (email) => {
-    setFormData({ ...formData, email });
+  const handleEntityTypeChange = (e, newType) => {
+    if (newType !== null) {
+      setFormData({
+        ...formData,
+        entityType: newType,
+        representativeTitle: '', // Reset representative title when entity type changes
+        entityName: '', // Reset entity name
+      });
+    }
   };
 
   const handleTargetPriceSave = (targetPrice) => {
-    // When target price changes, recalculate commission if type is percentage
     const newFormData = { ...formData, targetPrice };
-
     if (formData.commissionType === 'percentage' && formData.commissionPercentage) {
       const price = parseFloat(targetPrice) || 0;
       const percentage = parseFloat(formData.commissionPercentage) || 0;
       newFormData.projectedCommission = ((price * percentage) / 100).toString();
     }
-
     setFormData(newFormData);
   };
 
@@ -194,70 +289,21 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     }
   };
 
-  // Handle lead selection - this is now step 1, so also populate name/contact
-  const handleLeadSelect = (lead) => {
-    if (lead) {
-      const firstName = lead.first_name || lead.firstName || '';
-      const lastName = lead.last_name || lead.lastName || '';
-      const displayName = `${firstName} ${lastName}`.trim();
-
-      setFormData({
-        ...formData,
-        leadId: lead.id || lead.lead_id,
-        selectedLead: lead,
-        // Auto-populate from lead
-        firstName,
-        lastName,
-        displayName,
-        phone: lead.phone || lead.lead_phone || formData.phone,
-        email: lead.email || lead.lead_email || formData.email,
-      });
-    } else {
-      setFormData({
-        ...formData,
-        leadId: null,
-        selectedLead: null,
-        firstName: '',
-        lastName: '',
-        displayName: '',
-      });
-    }
+  const handleAddressChange = (addressData) => {
+    setFormData({ ...formData, mailingAddress: addressData });
   };
 
-  // Handle "Add New Lead" from LeadInput
-  const handleAddNewLead = (searchText) => {
-    setNewLeadSearchText(searchText);
-    setShowNewLeadModal(true);
-  };
-
-  // Handle successful lead creation from NewLeadModal
-  const handleNewLeadCreated = async (leadId) => {
-    try {
-      const response = await leadsAPI.getById(leadId);
-      if (response.success && response.data) {
-        const lead = response.data;
-        handleLeadSelect(lead);
-      }
-    } catch (error) {
-      console.error('Error fetching newly created lead:', error);
-    } finally {
-      setShowNewLeadModal(false);
-      setNewLeadSearchText('');
-    }
-  };
-
-  // Final submission
   // Helper to format date for backend (YYYY-MM-DD)
   const formatDateForBackend = (date) => {
     if (!date) return null;
     if (typeof date === 'string') return date;
-    // Date object - format as local date to avoid timezone issues
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
 
+  // Final submission
   const handleSubmit = async () => {
     setSaving(true);
 
@@ -267,27 +313,29 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         last_name: formData.lastName,
         phone: formData.phone,
         email: formData.email,
-        // Map UI fields to database columns
+        client_type: formData.clientType,
+        entity_type: formData.entityType,
+        entity_name: formData.entityType !== 'individual' ? formData.entityName : null,
+        representative_title: formData.entityType !== 'individual' ? formData.representativeTitle : null,
+        // Mailing address fields
+        address_street: formData.mailingAddress?.property_address || '',
+        address_city: formData.mailingAddress?.city || '',
+        address_state: formData.mailingAddress?.state || '',
+        address_zip: formData.mailingAddress?.zip_code || '',
+        // Financial fields
         budget: parseFloat(formData.targetPrice) || null,
         commission: parseFloat(formData.projectedCommission) || null,
         commission_percentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
         commission_type: formData.commissionType,
-        // Agreement dates - format as YYYY-MM-DD strings
+        // Agreement dates
         agreement_start_date: formatDateForBackend(formData.agreementStartDate),
         agreement_end_date: formatDateForBackend(formData.agreementEndDate),
-        // Lead connection - backend expects lead_ids array
-        lead_ids: formData.leadId ? [formData.leadId] : [],
-        // Client type defaults to 'buyer' if not specified
-        client_type: 'buyer',
       };
 
       const response = await clientsAPI.create(clientData);
 
       if (response.success) {
-        // Show success animation
         setShowSuccess(true);
-
-        // Auto-close after animation
         setTimeout(() => {
           if (onSuccess) {
             onSuccess(response.data.id || response.data.client_id);
@@ -302,122 +350,386 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
     }
   };
 
+  // Check if current step can proceed
+  const canProceed = useMemo(() => {
+    switch (currentStepConfig?.id) {
+      case 'client-type':
+        return formData.clientType && formData.entityType;
+      case 'entity-details':
+        if (formData.entityType === 'individual') {
+          return formData.firstName.trim() || formData.lastName.trim();
+        }
+        return formData.entityName.trim() && (formData.firstName.trim() || formData.lastName.trim());
+      default:
+        return true;
+    }
+  }, [currentStepConfig, formData]);
+
   // Render current step
   const renderStep = () => {
-    const stepId = currentStepConfig.id;
+    const stepId = currentStepConfig?.id;
 
     switch (stepId) {
-      case 'name':
+      case 'client-type':
         return (
-          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 500 }}>
-              {/* Selected Lead Display - shown after selection */}
-              {formData.selectedLead && (
-                <Box sx={{ mb: 3 }}>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: 'rgba(255,255,255,0.7)',
-                      mb: 0.5,
-                      display: 'block',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                    }}
-                  >
-                    Selected Lead
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 0.75,
-                      borderRadius: 1.5,
-                      p: 0.75,
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      backgroundColor: 'rgba(255,255,255,0.08)',
-                    }}
-                  >
-                    <Person sx={{ color: 'white', mt: 0.25, fontSize: 20 }} />
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontWeight: 700,
-                          color: 'white',
-                          fontSize: '0.9rem',
-                          lineHeight: 1.3,
-                          wordBreak: 'break-word',
-                        }}
-                      >
-                        {formData.displayName}
-                      </Typography>
-                      {(formData.phone || formData.email) && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: 'rgba(255,255,255,0.7)',
-                            display: 'block',
-                            mt: 0.25,
-                            fontSize: '0.75rem',
-                          }}
-                        >
-                          {[formData.phone, formData.email].filter(Boolean).join(' • ')}
-                        </Typography>
-                      )}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', maxWidth: 500, mx: 'auto' }}>
+            {/* Client Type Selection */}
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.9)',
+                  mb: 1.5,
+                  display: 'block',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}
+              >
+                Client Type
+              </Typography>
+              <ToggleButtonGroup
+                value={formData.clientType}
+                exclusive
+                onChange={handleClientTypeChange}
+                fullWidth
+                sx={{
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  '& .MuiToggleButton-root': {
+                    color: 'rgba(255,255,255,0.7)',
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    fontWeight: 600,
+                    py: 1.5,
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(255,255,255,0.25)',
+                      color: 'white',
+                      borderColor: 'rgba(255,255,255,0.5)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.35)',
+                      },
+                    },
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="buyer">
+                  <Home sx={{ mr: 1 }} />
+                  Buyer
+                </ToggleButton>
+                <ToggleButton value="seller">
+                  <AttachMoney sx={{ mr: 1 }} />
+                  Seller
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+
+            {/* Entity Type Selection */}
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.9)',
+                  mb: 1.5,
+                  display: 'block',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}
+              >
+                Entity Type
+              </Typography>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5 }}>
+                {Object.values(ENTITY_TYPES).map((entity) => {
+                  const Icon = entity.icon;
+                  const isSelected = formData.entityType === entity.value;
+                  return (
+                    <Box
+                      key={entity.value}
+                      onClick={() => handleEntityTypeChange(null, entity.value)}
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        border: '2px solid',
+                        borderColor: isSelected ? 'white' : 'rgba(255,255,255,0.3)',
+                        backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255,255,255,0.15)',
+                          borderColor: 'rgba(255,255,255,0.5)',
+                        },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <Icon sx={{ color: isSelected ? 'white' : 'rgba(255,255,255,0.7)', fontSize: 24 }} />
+                        <Box>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 600,
+                              color: isSelected ? 'white' : 'rgba(255,255,255,0.9)',
+                            }}
+                          >
+                            {entity.label}
+                          </Typography>
+                        </Box>
+                      </Box>
                     </Box>
-                  </Box>
-                </Box>
-              )}
-
-              {/* LeadInput with dynamic labels */}
-              <LeadInput
-                value={formData.selectedLead}
-                onChange={handleLeadSelect}
-                initialLabel="Select Lead"
-                selectedLabel="Client Name"
-                placeholder="Search leads by name..."
-                color="#3b82f6"
-                onAddNew={handleAddNewLead}
-                autoFocus
-              />
-
-              {!formData.selectedLead && (
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: 'rgba(255,255,255,0.5)',
-                    display: 'block',
-                    mt: 2,
-                    textAlign: 'center',
-                  }}
-                >
-                  Select a lead to create a client from, or add a new lead
-                </Typography>
-              )}
+                  );
+                })}
+              </Box>
             </Box>
           </Box>
         );
 
-      case 'contact':
+      case 'entity-details':
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, width: '100%', maxWidth: 400, mx: 'auto' }}>
+            {/* Entity Name (for non-individuals) */}
+            {formData.entityType !== 'individual' && (
+              <Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: 'rgba(255,255,255,0.7)',
+                    mb: 0.5,
+                    display: 'block',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  {entityConfig.entityNameLabel}
+                </Typography>
+                <TextField
+                  fullWidth
+                  value={formData.entityName}
+                  onChange={(e) => setFormData({ ...formData, entityName: e.target.value })}
+                  placeholder={entityConfig.entityNamePlaceholder}
+                  autoFocus
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Business sx={{ color: 'white', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                      borderRadius: 2,
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2 },
+                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                      '&.Mui-focused fieldset': { borderColor: 'white' },
+                    },
+                    '& .MuiInputBase-input': {
+                      color: 'white',
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      '&::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 },
+                    },
+                  }}
+                />
+              </Box>
+            )}
+
+            {/* Contact/Representative Name */}
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.7)',
+                  mb: 0.5,
+                  display: 'block',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                {formData.entityType === 'individual' ? 'Full Name' : 'Representative Name'}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                  fullWidth
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  placeholder="First Name"
+                  autoFocus={formData.entityType === 'individual'}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person sx={{ color: 'white', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                      borderRadius: 2,
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2 },
+                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                      '&.Mui-focused fieldset': { borderColor: 'white' },
+                    },
+                    '& .MuiInputBase-input': {
+                      color: 'white',
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      '&::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 },
+                    },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  placeholder="Last Name"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'rgba(255,255,255,0.15)',
+                      borderRadius: 2,
+                      '& fieldset': { borderColor: 'rgba(255,255,255,0.3)', borderWidth: 2 },
+                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                      '&.Mui-focused fieldset': { borderColor: 'white' },
+                    },
+                    '& .MuiInputBase-input': {
+                      color: 'white',
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      '&::placeholder': { color: 'rgba(255,255,255,0.4)', opacity: 1 },
+                    },
+                  }}
+                />
+              </Box>
+            </Box>
+
+            {/* Representative Title (for non-individuals) */}
+            {formData.entityType !== 'individual' && entityConfig.representativeTitles.length > 0 && (
+              <Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: 'rgba(255,255,255,0.7)',
+                    mb: 0.5,
+                    display: 'block',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  Title / Role
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {entityConfig.representativeTitles.map((title) => {
+                    const isSelected = formData.representativeTitle === title;
+                    return (
+                      <Box
+                        key={title}
+                        onClick={() => setFormData({ ...formData, representativeTitle: title })}
+                        sx={{
+                          px: 2,
+                          py: 1,
+                          borderRadius: 2,
+                          border: '2px solid',
+                          borderColor: isSelected ? 'white' : 'rgba(255,255,255,0.3)',
+                          backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            backgroundColor: 'rgba(255,255,255,0.15)',
+                            borderColor: 'rgba(255,255,255,0.5)',
+                          },
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 600,
+                            color: isSelected ? 'white' : 'rgba(255,255,255,0.8)',
+                            fontSize: '0.85rem',
+                          }}
+                        >
+                          {title}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Box>
+            )}
+          </Box>
+        );
+
+      case 'contact-info':
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
             <Box sx={{ width: '100%', maxWidth: 300, display: 'flex', flexDirection: 'column', gap: 3 }}>
               <Phone
                 label="Phone Number"
                 value={formData.phone}
-                onChange={handlePhoneSave}
+                onChange={(phone) => setFormData({ ...formData, phone })}
                 color="#8b5cf6"
                 showCurrentValue={false}
               />
               <Email
                 label="Email Address"
                 value={formData.email}
-                onChange={handleEmailSave}
+                onChange={(email) => setFormData({ ...formData, email })}
                 color="#8b5cf6"
                 showCurrentValue={false}
               />
+            </Box>
+          </Box>
+        );
+
+      case 'mailing-address':
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <Box sx={{ width: '100%', maxWidth: 500 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: 'rgba(255,255,255,0.9)',
+                  mb: 1.5,
+                  display: 'block',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                }}
+              >
+                Mailing Address
+              </Typography>
+              <AddressInput
+                value={formData.mailingAddress?.property_address || ''}
+                onChange={handleAddressChange}
+                placeholder="Enter mailing address"
+                color="#8b5cf6"
+                hideLabel
+              />
+              {formData.mailingAddress && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: 'rgba(255,255,255,0.6)',
+                    display: 'block',
+                    mt: 1,
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  {[
+                    formData.mailingAddress.city,
+                    formData.mailingAddress.state,
+                    formData.mailingAddress.zip_code,
+                  ].filter(Boolean).join(', ')}
+                </Typography>
+              )}
             </Box>
           </Box>
         );
@@ -438,7 +750,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         );
 
       case 'commission':
-        // Calculate display value for commission
         const getCommissionDisplay = () => {
           if (formData.commissionType === 'percentage') {
             const targetPrice = parseFloat(formData.targetPrice) || 0;
@@ -455,7 +766,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
             <Box sx={{ width: '100%', maxWidth: 300 }}>
-              {/* Label */}
               <Typography
                 variant="caption"
                 sx={{
@@ -471,7 +781,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
                 Projected Commission
               </Typography>
 
-              {/* Current Value Display */}
               <Typography
                 variant="h4"
                 sx={{
@@ -484,7 +793,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
                 {getCommissionDisplay()}
               </Typography>
 
-              {/* Commission Type Toggle */}
               <Box sx={{ mb: 3 }}>
                 <ToggleButtonGroup
                   value={formData.commissionType}
@@ -522,7 +830,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
                 </ToggleButtonGroup>
               </Box>
 
-              {/* Edit Input */}
               {formData.commissionType === 'percentage' ? (
                 <PercentageInput
                   value={formData.commissionPercentage}
@@ -540,29 +847,21 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           </Box>
         );
 
-      case 'agreement-start':
+      case 'agreement-dates':
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 300 }}>
+            <Box sx={{ width: '100%', maxWidth: 300, display: 'flex', flexDirection: 'column', gap: 3 }}>
               <DateSetter
-                label="Client Beginning Date"
+                label="Agreement Start Date"
                 value={formData.agreementStartDate}
-                onChange={handleAgreementStartDate}
+                onChange={(date) => setFormData({ ...formData, agreementStartDate: date })}
                 color="#8b5cf6"
                 showCurrentValue={false}
               />
-            </Box>
-          </Box>
-        );
-
-      case 'agreement-end':
-        return (
-          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 300 }}>
               <DateSetter
-                label="Client Expiration Date"
+                label="Agreement End Date"
                 value={formData.agreementEndDate}
-                onChange={handleAgreementEndDate}
+                onChange={(date) => setFormData({ ...formData, agreementEndDate: date })}
                 color="#f59e0b"
                 minDate={formData.agreementStartDate}
                 showCurrentValue={false}
@@ -572,7 +871,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
         );
 
       case 'preview':
-        // Build preview client object from formData
         const previewClient = {
           id: 'preview',
           first_name: formData.firstName,
@@ -581,13 +879,16 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           lastName: formData.lastName,
           phone: formData.phone,
           email: formData.email,
-          // Use new field names
+          client_type: formData.clientType,
+          entity_type: formData.entityType,
+          entity_name: formData.entityName,
+          representative_title: formData.representativeTitle,
           target_price: parseFloat(formData.targetPrice) || 0,
           targetPrice: parseFloat(formData.targetPrice) || 0,
-          budget: parseFloat(formData.targetPrice) || 0, // Fallback for card display
+          budget: parseFloat(formData.targetPrice) || 0,
           projected_commission: parseFloat(formData.projectedCommission) || 0,
           projectedCommission: parseFloat(formData.projectedCommission) || 0,
-          commission: parseFloat(formData.projectedCommission) || 0, // Fallback for card display
+          commission: parseFloat(formData.projectedCommission) || 0,
           commission_percentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
           commissionPercentage: formData.commissionType === 'percentage' ? parseFloat(formData.commissionPercentage) || null : null,
           commission_type: formData.commissionType,
@@ -596,12 +897,12 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           agreementEndDate: formData.agreementEndDate,
           agreement_start_date: formData.agreementStartDate,
           agreement_end_date: formData.agreementEndDate,
-          lead_id: formData.leadId,
           client_status: 'active',
           stage: 'New',
           lifetime_value: parseFloat(formData.projectedCommission) || 0,
-          leads: formData.selectedLead ? [formData.selectedLead] : [],
           is_preview: true,
+          // Display name logic
+          display_name: getDisplayName(),
         };
 
         return (
@@ -621,34 +922,7 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
               <ClientCard
                 client={previewClient}
                 onClick={() => {}}
-                onUpdate={(updatedClient) => {
-                  // Sync updates back to formData
-                  const newFormData = { ...formData };
-
-                  if (updatedClient.target_price !== undefined || updatedClient.budget !== undefined) {
-                    newFormData.targetPrice = (updatedClient.target_price || updatedClient.budget || 0).toString();
-                  }
-
-                  if (updatedClient.projected_commission !== undefined || updatedClient.commission !== undefined) {
-                    newFormData.projectedCommission = (updatedClient.projected_commission || updatedClient.commission || 0).toString();
-                  }
-
-                  if (updatedClient.agreement_start_date !== undefined) {
-                    newFormData.agreementStartDate = updatedClient.agreement_start_date;
-                  }
-
-                  if (updatedClient.agreement_end_date !== undefined) {
-                    newFormData.agreementEndDate = updatedClient.agreement_end_date;
-                  }
-
-                  if (updatedClient.first_name !== undefined) {
-                    newFormData.firstName = updatedClient.first_name;
-                    newFormData.lastName = updatedClient.last_name || '';
-                    newFormData.displayName = `${updatedClient.first_name} ${updatedClient.last_name || ''}`.trim();
-                  }
-
-                  setFormData(newFormData);
-                }}
+                onUpdate={() => {}}
               />
             </Box>
           </Box>
@@ -675,7 +949,7 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
       {!showSuccess ? (
         <ModalStepPage
           title="Create New Client"
-          color="#8b5cf6" // Purple theme for clients
+          color="#8b5cf6"
           currentStep={currentStep}
           totalSteps={totalSteps}
           onNext={handleNext}
@@ -684,7 +958,7 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           onStepClick={setCurrentStep}
           saving={saving}
           isLastStep={isLastStep}
-          canProceed={currentStep === 0 ? Boolean(formData.selectedLead) : true}
+          canProceed={canProceed}
         >
           <AnimatePresence mode="wait">
             <motion.div
@@ -699,7 +973,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           </AnimatePresence>
         </ModalStepPage>
       ) : (
-        // Success Animation
         <Fade in timeout={500}>
           <Box
             sx={{
@@ -733,20 +1006,6 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
           </Box>
         </Fade>
       )}
-
-      {/* NewLeadModal for "Add New Lead" option */}
-      <NewLeadModal
-        open={showNewLeadModal}
-        onClose={() => {
-          setShowNewLeadModal(false);
-          setNewLeadSearchText('');
-        }}
-        onSuccess={handleNewLeadCreated}
-        initialData={{
-          firstName: newLeadSearchText.split(' ')[0] || '',
-          lastName: newLeadSearchText.split(' ').slice(1).join(' ') || '',
-        }}
-      />
     </Dialog>
   );
 };

@@ -129,6 +129,9 @@ class ClientsService {
         cl.agreement_end_date,
         cl.lead_ids,
         cl.display_name,
+        cl.entity_type,
+        cl.entity_name,
+        cl.representative_title,
         cl.created_at,
         cl.updated_at,
         co.first_name,
@@ -210,6 +213,9 @@ class ClientsService {
         cl.agreement_start_date,
         cl.agreement_end_date,
         cl.display_name,
+        cl.entity_type,
+        cl.entity_name,
+        cl.representative_title,
         cl.created_at,
         cl.updated_at,
         co.first_name,
@@ -253,6 +259,10 @@ class ClientsService {
         notes, tags = [], budget,
         commission, commission_percentage, commission_type,
         agreement_start_date, agreement_end_date,
+        // Entity type fields
+        entity_type, entityType,
+        entity_name, entityName,
+        representative_title, representativeTitle,
         // snake_case alternatives
         first_name, last_name, client_type,
         address_street, address_city, address_state, address_zip,
@@ -266,6 +276,9 @@ class ClientsService {
       const finalAddressCity = addressCity || address_city;
       const finalAddressState = addressState || address_state;
       const finalAddressZip = addressZip || address_zip;
+      const finalEntityType = entity_type || entityType || 'individual';
+      const finalEntityName = entity_name || entityName || null;
+      const finalRepresentativeTitle = representative_title || representativeTitle || null;
 
       await dbClient.query('BEGIN');
 
@@ -323,9 +336,11 @@ class ClientsService {
           contact_id, client_type, status, budget,
           commission, commission_percentage, commission_type,
           agreement_start_date, agreement_end_date,
-          lead_ids, owner_id, team_id, created_at, updated_at
+          lead_ids, owner_id, team_id,
+          entity_type, entity_name, representative_title,
+          created_at, updated_at
         )
-        VALUES ($1, $2, 'active', $3, $4, $5, $6, $7, $8, COALESCE($9, '{}'::uuid[]), $10, $11, NOW(), NOW())
+        VALUES ($1, $2, 'active', $3, $4, $5, $6, $7, $8, COALESCE($9, '{}'::uuid[]), $10, $11, $12, $13, $14, NOW(), NOW())
         RETURNING id
       `;
 
@@ -340,7 +355,10 @@ class ClientsService {
         agreement_end_date || null,
         formattedLeadIds,
         user?.id || null,
-        user?.teamId || user?.team_id || null
+        user?.teamId || user?.team_id || null,
+        finalEntityType,
+        finalEntityName,
+        finalRepresentativeTitle
       ]);
 
       await dbClient.query('COMMIT');
@@ -454,6 +472,9 @@ class ClientsService {
       const clientStatus = updates.status || updates.client_status || updates.stage;
       const leadIds = updates.lead_ids || updates.leadIds;
       const displayName = updates.display_name || updates.displayName;
+      const entityType = updates.entity_type || updates.entityType;
+      const entityName = updates.entity_name || updates.entityName;
+      const representativeTitle = updates.representative_title || updates.representativeTitle;
       const hasClientUpdates = clientType || clientStatus ||
         updates.budget !== undefined ||
         updates.commission !== undefined ||
@@ -462,7 +483,10 @@ class ClientsService {
         updates.agreement_start_date !== undefined ||
         updates.agreement_end_date !== undefined ||
         leadIds !== undefined ||
-        displayName !== undefined;
+        displayName !== undefined ||
+        entityType !== undefined ||
+        entityName !== undefined ||
+        representativeTitle !== undefined;
 
       if (hasClientUpdates) {
         const clientUpdates = [];
@@ -508,6 +532,18 @@ class ClientsService {
         if (displayName !== undefined) {
           clientUpdates.push(`display_name = $${paramIndex++}`);
           clientValues.push(displayName);
+        }
+        if (entityType !== undefined) {
+          clientUpdates.push(`entity_type = $${paramIndex++}`);
+          clientValues.push(entityType);
+        }
+        if (entityName !== undefined) {
+          clientUpdates.push(`entity_name = $${paramIndex++}`);
+          clientValues.push(entityName);
+        }
+        if (representativeTitle !== undefined) {
+          clientUpdates.push(`representative_title = $${paramIndex++}`);
+          clientValues.push(representativeTitle);
         }
 
         if (clientUpdates.length > 0) {

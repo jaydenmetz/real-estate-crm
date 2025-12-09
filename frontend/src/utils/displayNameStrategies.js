@@ -45,6 +45,8 @@ export const getListingDisplayName = (listing) => {
 
 /**
  * Get display name for a client
+ * Supports entity types: individual, trust, corporation, llc, partnership, estate, power_of_attorney
+ * For non-individual entity types, entity_name is the primary display name
  * @param {Object} client - Client data object
  * @returns {string} Display name to show
  */
@@ -54,6 +56,12 @@ export const getClientDisplayName = (client) => {
   // First check for custom display_name
   if (client.display_name) {
     return client.display_name;
+  }
+
+  // For entity types (non-individual), use entity_name as primary display
+  const entityType = client.entity_type || client.entityType;
+  if (entityType && entityType !== 'individual' && (client.entity_name || client.entityName)) {
+    return client.entity_name || client.entityName;
   }
 
   // Fall back to computed name from contact info
@@ -191,7 +199,28 @@ export const getSubtitle = (entityType, data) => {
       return parts.length > 0 ? parts.join(', ') : null;
     }
     case 'client':
-    case 'clients':
+    case 'clients': {
+      // For entity types (non-individual), show representative name and title
+      const entityType = data.entity_type || data.entityType;
+      if (entityType && entityType !== 'individual') {
+        const firstName = data.first_name || data.firstName || '';
+        const lastName = data.last_name || data.lastName || '';
+        const representativeTitle = data.representative_title || data.representativeTitle || '';
+        const representativeName = `${firstName} ${lastName}`.trim();
+
+        if (representativeName && representativeTitle) {
+          return `${representativeName}, ${representativeTitle}`;
+        }
+        if (representativeName) {
+          return representativeName;
+        }
+      }
+      // For individuals, show phone and email
+      const phone = data.phone || '';
+      const email = data.email || '';
+      const parts = [phone, email].filter(Boolean);
+      return parts.length > 0 ? parts.join(' • ') : null;
+    }
     case 'lead':
     case 'leads': {
       // People-based entities show phone and email
