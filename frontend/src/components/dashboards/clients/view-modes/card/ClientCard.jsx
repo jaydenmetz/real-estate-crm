@@ -9,6 +9,7 @@ import { alpha } from '@mui/material';
 import { formatCurrency } from '../../../../../utils/formatters';
 import { getClientDisplayName, getSubtitle } from '../../../../../utils/displayNameStrategies';
 import { useStatus } from '../../../../../contexts/StatusContext';
+import { getStatusConfig } from '../../../../../constants/clientConfig';
 
 // Import editor components
 import {
@@ -25,23 +26,6 @@ import {
 
 // Import LeadCircles component for footer
 import { LeadCircles } from '../../../../common/ui/LeadCircles';
-
-// ============================================================================
-// STATUS CONFIGURATION
-// Uses lowercase_snake_case keys: active, closed, expired, cancelled
-// ============================================================================
-
-const getStatusConfig = (status) => {
-  const configs = {
-    'active': { label: 'Active', color: '#10b981', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-    'closed': { label: 'Closed', color: '#3b82f6', bg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
-    'expired': { label: 'Expired', color: '#6b7280', bg: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' },
-    'cancelled': { label: 'Cancelled', color: '#ef4444', bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
-  };
-  // Normalize to lowercase
-  const normalized = status ? status.toLowerCase() : 'active';
-  return configs[normalized] || configs['active'];
-};
 
 // Compact date formatter
 const formatCompactDate = (value) => {

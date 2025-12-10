@@ -10,6 +10,8 @@ import { alpha } from '@mui/material';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
 import { getLeadDisplayName, getSubtitle } from '../../../../../utils/displayNameStrategies';
 import { ClientCircles } from '../../../../common/ui/ClientCircles';
+import { useStatus } from '../../../../../contexts/StatusContext';
+import { getStatusConfig as getLeadStatusConfig } from '../../../../../constants/leadConfig';
 
 // Compact date formatter - smaller separators for tighter spacing
 const formatCompactDate = (value) => {
@@ -30,51 +32,37 @@ const formatCompactDate = (value) => {
   );
 };
 
-// Status configuration for leads
-// Uses lowercase_snake_case keys: new, contacted, met, under_contract, closed, competing, rejected, unresponsive, deferred, unqualified
-const getLeadStatusConfig = (status) => {
-  const configs = {
-    // Active category (3 statuses)
-    'new': { label: 'NEW', color: '#3b82f6', bg: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
-    'contacted': { label: 'CONTACTED', color: '#8b5cf6', bg: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
-    'met': { label: 'MET', color: '#10b981', bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-    // Won category (2 statuses)
-    'under_contract': { label: 'UNDER CONTRACT', color: '#f59e0b', bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
-    'closed': { label: 'CLOSED', color: '#06b6d4', bg: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
-    // Lost category (5 statuses)
-    'competing': { label: 'COMPETING', color: '#f97316', bg: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
-    'rejected': { label: 'REJECTED', color: '#ef4444', bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
-    'unresponsive': { label: 'UNRESPONSIVE', color: '#94a3b8', bg: 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)' },
-    'deferred': { label: 'DEFERRED', color: '#a855f7', bg: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)' },
-    'unqualified': { label: 'UNQUALIFIED', color: '#6b7280', bg: 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)' },
-  };
-  // Normalize status to lowercase for consistent lookup
-  const normalized = status ? status.toLowerCase() : 'new';
-  return configs[normalized] || configs['new'];
-};
-
 // ============================================================================
 // CARD VIEW CONFIGURATION HOOK
 // ============================================================================
 
-const useLeadCardConfig = () => {
+/**
+ * Hook to generate card config with database-driven status options
+ * @param {Array} statuses - Status array from StatusContext
+ * @returns {Object} Card configuration object
+ */
+const useLeadCardConfig = (statuses) => {
   return useMemo(() => {
-    // Static status options for leads
-    const statusOptions = [
-      // Active category
-      { value: 'new', label: 'New', color: '#3b82f6' },
-      { value: 'contacted', label: 'Contacted', color: '#8b5cf6' },
-      { value: 'met', label: 'Met', color: '#10b981' },
-      // Won category
-      { value: 'under_contract', label: 'Under Contract', color: '#f59e0b' },
-      { value: 'closed', label: 'Closed', color: '#06b6d4' },
-      // Lost category
-      { value: 'competing', label: 'Competing', color: '#f97316' },
-      { value: 'rejected', label: 'Rejected', color: '#ef4444' },
-      { value: 'unresponsive', label: 'Unresponsive', color: '#94a3b8' },
-      { value: 'deferred', label: 'Deferred', color: '#a855f7' },
-      { value: 'unqualified', label: 'Unqualified', color: '#6b7280' },
-    ];
+    // Transform database statuses into dropdown options, or use defaults
+    const statusOptions = statuses && statuses.length > 0
+      ? statuses.map((status) => ({
+          value: status.status_key,
+          label: status.label,
+          color: status.color,
+        }))
+      : [
+          // Default fallback status options
+          { value: 'new', label: 'New', color: '#3b82f6' },
+          { value: 'contacted', label: 'Contacted', color: '#8b5cf6' },
+          { value: 'met', label: 'Met', color: '#10b981' },
+          { value: 'under_contract', label: 'Under Contract', color: '#f59e0b' },
+          { value: 'closed', label: 'Closed', color: '#06b6d4' },
+          { value: 'competing', label: 'Competing', color: '#f97316' },
+          { value: 'rejected', label: 'Rejected', color: '#ef4444' },
+          { value: 'unresponsive', label: 'Unresponsive', color: '#94a3b8' },
+          { value: 'deferred', label: 'Deferred', color: '#a855f7' },
+          { value: 'unqualified', label: 'Unqualified', color: '#6b7280' },
+        ];
 
     return {
       // Image/Header Configuration - Show PersonAdd icon for leads
@@ -216,7 +204,7 @@ const useLeadCardConfig = () => {
         delete: true,
       },
     };
-  }, []);
+  }, [statuses]);
 };
 
 /**
@@ -245,8 +233,11 @@ const LeadCard = React.memo(({
   isSelected,
   onSelect,
 }) => {
-  // Generate config for lead cards
-  const config = useLeadCardConfig();
+  // Get database-driven statuses from context
+  const { statuses } = useStatus();
+
+  // Generate config for lead cards with database statuses
+  const config = useLeadCardConfig(statuses);
 
   return (
     <CardTemplate

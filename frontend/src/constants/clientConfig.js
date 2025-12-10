@@ -97,3 +97,9 @@ export const getClientStatusConfig = (status) => {
 
   return CLIENT_STATUS_CONFIG[normalized] || CLIENT_STATUS_CONFIG.active;
 };
+
+/**
+ * Get client status config (alias for getClientStatusConfig)
+ * Provides consistent naming across all entity configs
+ */
+export const getStatusConfig = getClientStatusConfig;

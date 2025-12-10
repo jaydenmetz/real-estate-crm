@@ -4,4 +4,5 @@
  */
 
 export { default as ContactsHeroCarousel } from './ContactsHeroCarousel';
+export { default as AIManagerModal } from './AIManagerModal';
 export * from './stats';
