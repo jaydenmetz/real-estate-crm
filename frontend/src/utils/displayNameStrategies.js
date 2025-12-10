@@ -80,6 +80,35 @@ export const getClientDisplayName = (client) => {
 };
 
 /**
+ * Get display name for a contact
+ * @param {Object} contact - Contact data object
+ * @returns {string} Display name to show
+ */
+export const getContactDisplayName = (contact) => {
+  if (!contact) return 'Unknown Contact';
+
+  // First check for custom display_name
+  if (contact.display_name) {
+    return contact.display_name;
+  }
+
+  // Fall back to computed name
+  const firstName = contact.first_name || contact.firstName || '';
+  const lastName = contact.last_name || contact.lastName || '';
+
+  if (firstName || lastName) {
+    return `${firstName} ${lastName}`.trim();
+  }
+
+  // Last resort: use email
+  if (contact.email) {
+    return contact.email;
+  }
+
+  return 'Unknown Contact';
+};
+
+/**
  * Get display name for a lead
  * @param {Object} lead - Lead data object
  * @returns {string} Display name to show
@@ -161,6 +190,9 @@ export const getDisplayName = (entityType, data) => {
     case 'lead':
     case 'leads':
       return getLeadDisplayName(data);
+    case 'contact':
+    case 'contacts':
+      return getContactDisplayName(data);
     case 'appointment':
     case 'appointments':
       return getAppointmentDisplayName(data);
@@ -229,6 +261,14 @@ export const getSubtitle = (entityType, data) => {
       const parts = [phone, email].filter(Boolean);
       return parts.length > 0 ? parts.join(' • ') : null;
     }
+    case 'contact':
+    case 'contacts': {
+      // Contacts show phone and email
+      const phone = data.phone || '';
+      const email = data.email || '';
+      const parts = [phone, email].filter(Boolean);
+      return parts.length > 0 ? parts.join(' • ') : null;
+    }
     case 'appointment':
     case 'appointments': {
       // Appointments show full address (from first stop or location)
@@ -264,6 +304,7 @@ export default {
   getEscrowDisplayName,
   getListingDisplayName,
   getClientDisplayName,
+  getContactDisplayName,
   getLeadDisplayName,
   getAppointmentDisplayName,
 };
