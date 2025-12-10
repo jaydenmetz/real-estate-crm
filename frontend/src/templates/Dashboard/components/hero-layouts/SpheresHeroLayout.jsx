@@ -48,27 +48,24 @@ export const SpheresHeroLayout = ({
   };
 
   return (
-    <Grid container spacing={3} sx={{
+    <Grid container spacing={2} sx={{
       flexGrow: 1,
       margin: 0,
       width: '100%',
-      '@media (min-width: 1017px) and (max-width: 1499px)': {
-        justifyContent: 'center',
+      flexWrap: 'nowrap',
+      '@media (max-width: 500px)': {
+        flexWrap: 'wrap',
       },
     }}>
       {/* Spheres Visualization */}
       <Grid item
-        xs={12}
         sx={{
-          '@media (min-width: 1017px)': {
-            width: aiCoachConfig ? '66.67%' : '100%',
-            flexBasis: aiCoachConfig ? '66.67%' : '100%',
-            maxWidth: aiCoachConfig ? '66.67%' : '100%',
-          },
-          '@media (min-width: 1500px)': {
-            width: aiCoachConfig ? '75%' : '100%',
-            flexBasis: aiCoachConfig ? '75%' : '100%',
-            maxWidth: aiCoachConfig ? '75%' : '100%',
+          flex: '1 1 auto',
+          minWidth: 0,
+          '@media (max-width: 500px)': {
+            width: '100%',
+            flexBasis: '100%',
+            maxWidth: '100%',
           },
         }}
       >
@@ -88,7 +85,7 @@ export const SpheresHeroLayout = ({
             }}
           >
             {/* Outer Container - Sphere of Influence */}
-            <motion.div variants={sphereVariants} style={{ flex: '1 1 auto', display: 'flex', maxWidth: 575, width: '100%' }}>
+            <motion.div variants={sphereVariants} style={{ flex: '1 1 auto', display: 'flex', maxWidth: 575, minWidth: 280, width: '100%' }}>
               <Box
                 onClick={() => onSphereClick?.('sphere')}
                 sx={{
@@ -367,17 +364,12 @@ export const SpheresHeroLayout = ({
       {/* AI Coach Card - 300x300 Manager Slot */}
       {aiCoachConfig && (
         <Grid item
-          xs={12}
           sx={{
-            '@media (min-width: 1017px)': {
-              width: '33.33%',
-              flexBasis: '33.33%',
-              maxWidth: '33.33%',
-            },
-            '@media (min-width: 1500px)': {
-              width: '25%',
-              flexBasis: '25%',
-              maxWidth: '25%',
+            flex: '0 0 auto',
+            '@media (max-width: 500px)': {
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
             },
           }}
         >
