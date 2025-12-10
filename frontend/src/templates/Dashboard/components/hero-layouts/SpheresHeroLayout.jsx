@@ -53,7 +53,8 @@ export const SpheresHeroLayout = ({
       margin: 0,
       width: '100%',
       flexWrap: 'nowrap',
-      '@media (max-width: 500px)': {
+      alignItems: 'flex-start',
+      '@media (max-width: 650px)': {
         flexWrap: 'wrap',
       },
     }}>
@@ -61,11 +62,12 @@ export const SpheresHeroLayout = ({
       <Grid item
         sx={{
           flex: '1 1 auto',
-          minWidth: 0,
-          '@media (max-width: 500px)': {
+          minWidth: 280,
+          '@media (max-width: 650px)': {
             width: '100%',
             flexBasis: '100%',
             maxWidth: '100%',
+            minWidth: 'unset',
           },
         }}
       >
@@ -366,7 +368,7 @@ export const SpheresHeroLayout = ({
         <Grid item
           sx={{
             flex: '0 0 auto',
-            '@media (max-width: 500px)': {
+            '@media (max-width: 650px)': {
               width: '100%',
               display: 'flex',
               justifyContent: 'center',
