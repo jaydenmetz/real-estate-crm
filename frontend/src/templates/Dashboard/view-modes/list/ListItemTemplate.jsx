@@ -436,7 +436,7 @@ const ListItemTemplate = React.memo(({
 
           {/* Metrics Row */}
           {config.metrics && config.metrics.length > 0 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mt: 'auto' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mt: 1 }}>
               {config.metrics.map((metric, idx) => {
                 const metricValue = typeof metric.field === 'function'
                   ? metric.field(data)
@@ -529,6 +529,69 @@ const ListItemTemplate = React.memo(({
               })}
             </Box>
           )}
+
+          {/* Footer Row (Lead Contacts, Attendees, etc.) */}
+          {config.footer?.fields && config.footer.fields.length > 0 && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mt: 1.5, pt: 1.5, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+              {config.footer.fields.map((field, idx) => {
+                const fieldValue = typeof field.field === 'function'
+                  ? field.field(data)
+                  : resolveField(data, field.field)?.raw;
+
+                const formattedValue = field.formatter
+                  ? field.formatter(fieldValue, data)
+                  : fieldValue;
+
+                const hasCustomRenderer = !!field.customRenderer;
+
+                return (
+                  <Box
+                    key={`footer_${idx}`}
+                    onClick={(e) => {
+                      if (!hasCustomRenderer && field.editable && onUpdate && !isDragging) {
+                        e.stopPropagation();
+                        openEditor(`footer_${idx}`);
+                      }
+                    }}
+                    sx={{
+                      cursor: field.editable && onUpdate ? 'pointer' : 'default',
+                      transition: 'all 0.2s',
+                      borderRadius: 1,
+                      px: 1,
+                      py: 0.5,
+                      mx: -1,
+                      '&:hover': field.editable && onUpdate ? {
+                        backgroundColor: 'action.hover',
+                      } : {},
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: 10,
+                        fontWeight: 600,
+                        color: theme.palette.text.secondary,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        whiteSpace: 'nowrap',
+                        display: 'block',
+                        mb: 0.5,
+                      }}
+                    >
+                      {typeof field.label === 'function' ? field.label(data) : field.label}
+                    </Typography>
+                    {hasCustomRenderer ? (
+                      field.customRenderer(data, () => openEditor(`footer_${idx}`))
+                    ) : (
+                      <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                        {formattedValue}
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
         </Box>
       </Box>
 
@@ -571,6 +634,34 @@ const ListItemTemplate = React.memo(({
                 await onUpdate(data.id, updates);
               }
               closeEditor(`metric_${idx}`);
+            }}
+            {...editorProps}
+          />
+        );
+      })}
+
+      {/* Footer Field Editor Modals */}
+      {config.footer?.fields?.map((field, idx) => {
+        if (!field.editor) return null;
+
+        const editorProps = field.editorProps
+          ? field.editorProps(data)
+          : {
+              value: typeof field.field === 'function' ? field.field(data) : resolveField(data, field.field)?.raw,
+              data: data,
+            };
+
+        return (
+          <field.editor
+            key={`footer_${idx}`}
+            open={openEditors[`footer_${idx}`] || false}
+            onClose={() => closeEditor(`footer_${idx}`)}
+            onSave={async (newValue) => {
+              if (onUpdate && field.onSave) {
+                const updates = field.onSave(data, newValue);
+                await onUpdate(data.id, updates);
+              }
+              closeEditor(`footer_${idx}`);
             }}
             {...editorProps}
           />
