@@ -81,14 +81,14 @@ export const SpheresHeroLayout = ({
           <Box
             sx={{
               display: 'flex',
-              justifyContent: 'flex-start',
+              justifyContent: 'center',
               alignItems: 'stretch',
               width: '100%',
               height: 200,
             }}
           >
             {/* Outer Container - Sphere of Influence */}
-            <motion.div variants={sphereVariants} style={{ flex: 1, display: 'flex' }}>
+            <motion.div variants={sphereVariants} style={{ flex: '1 1 auto', display: 'flex', maxWidth: 575, width: '100%' }}>
               <Box
                 onClick={() => onSphereClick?.('sphere')}
                 sx={{
