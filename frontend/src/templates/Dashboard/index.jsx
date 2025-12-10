@@ -550,6 +550,11 @@ export const DashboardTemplate = ({
           setSelectedYear={setSelectedYear}
           StatCardComponent={DashboardStatCard}
           allData={filteredData}
+          // Hero layout mode props
+          heroLayoutMode={config.dashboard.hero.layoutMode || 'cards'}
+          sphereData={config.dashboard.hero.sphereData}
+          onSphereClick={config.dashboard.hero.onSphereClick}
+          aiCoachConfig={config.dashboard.hero.aiCoachConfig}
         />
       ) : (
         <DashboardHero
@@ -562,7 +567,7 @@ export const DashboardTemplate = ({
             analyticsButtonLabel: config.dashboard.hero.analyticsButtonLabel,
             addButtonLabel: config.dashboard.hero.addButtonLabel,
             showAIAssistant: config.dashboard.hero.showAIAssistant,
-            aiAssistantWidget: config.dashboard.hero.aiAssistantWidget, // Pass custom widget
+            aiAssistantWidget: config.dashboard.hero.aiAssistantWidget,
             aiAssistantLabel: config.dashboard.hero.aiAssistantLabel,
             aiAssistantDescription: config.dashboard.hero.aiAssistantDescription,
           }}
@@ -581,7 +586,12 @@ export const DashboardTemplate = ({
           selectedYear={selectedYear}
           setSelectedYear={setSelectedYear}
           StatCardComponent={DashboardStatCard}
-          allData={filteredData} // Use filtered data so stats reflect checkbox selections
+          allData={filteredData}
+          // Hero layout mode props
+          heroLayoutMode={config.dashboard.hero.layoutMode || 'cards'}
+          sphereData={config.dashboard.hero.sphereData}
+          onSphereClick={config.dashboard.hero.onSphereClick}
+          aiCoachConfig={config.dashboard.hero.aiCoachConfig}
         />
       )}
 

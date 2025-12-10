@@ -16,6 +16,10 @@ import { motion } from 'framer-motion';
 import { Add as AddIcon, Assessment as AssessmentIcon } from '@mui/icons-material';
 import { EditDisplayStartDate, EditDisplayEndDate } from '../editors';
 
+// Import hero layout components
+import { CardsHeroLayout } from './hero-layouts';
+import { SpheresHeroLayout } from './hero-layouts';
+
 // Shadow wrapper to apply drop-shadow without being clipped by overflow:hidden
 const ShadowWrapper = styled(Box)({
   filter: 'drop-shadow(0 20px 40px rgba(0, 0, 0, 0.15))',
@@ -52,7 +56,13 @@ export const DashboardHero = ({
   selectedYear,
   setSelectedYear,
   StatCardComponent,
-  allData = [] // Pass all data to calculate available years
+  allData = [], // Pass all data to calculate available years
+  // NEW: Hero layout mode - 'cards' (default) or 'spheres'
+  heroLayoutMode = 'cards',
+  // Sphere-specific props (only used when heroLayoutMode='spheres')
+  sphereData = null, // { sphere: number, leads: number, clients: number }
+  onSphereClick = null,
+  aiCoachConfig = null, // { title, description, onHire }
 }) => {
   // State for date editor modals
   const [startDateEditorOpen, setStartDateEditorOpen] = useState(false);
@@ -392,343 +402,26 @@ export const DashboardHero = ({
           </Box>
         </Box>
 
-        {/* Main Content Row - Stats Grid + Action Buttons */}
-        <Grid container spacing={3} sx={{
-          flexGrow: 1,
-          margin: 0,
-          width: '100%',
-          // Center the grid + AI manager in 1017-1499px range
-          '@media (min-width: 1017px) and (max-width: 1499px)': {
-            justifyContent: 'center',
-          },
-        }}>
-
-          {/* Stats Cards Grid */}
-          <Grid item
-            xs={12}
-            sx={{
-              '@media (min-width: 1017px)': {
-                width: config.showAIAssistant ? '66.67%' : '100%',
-                flexBasis: config.showAIAssistant ? '66.67%' : '100%',
-                maxWidth: config.showAIAssistant ? '66.67%' : '100%',
-              },
-              '@media (min-width: 1500px)': {
-                width: config.showAIAssistant ? '75%' : '100%',
-                flexBasis: config.showAIAssistant ? '75%' : '100%',
-                maxWidth: config.showAIAssistant ? '75%' : '100%',
-              },
-            }}
-          >
-            <Box sx={{
-              display: 'grid',
-              gap: 3,
-              width: '100%',
-
-              // <702px: 4×1 vertical stack, cards stretch to full width, AI below
-              gridTemplateColumns: '1fr',
-              justifyContent: 'stretch',
-
-              // 702-1016px: 2×2 grid, cards flexible 225-275px, centered, AI below
-              '@media (min-width: 702px)': {
-                gridTemplateColumns: 'repeat(auto-fit, minmax(225px, 275px))',
-                justifyContent: 'center',
-              },
-
-              // 1017-1499px: 2×2 grid, cards flexible 225-275px, centered with AI manager
-              '@media (min-width: 1017px) and (max-width: 1499px)': {
-                gridTemplateColumns: 'repeat(2, minmax(225px, 275px))', // Force 2 columns
-                justifyContent: 'center',
-              },
-
-              // 1500px+: 1×4 row, cards flexible 225-275px, left-aligned, AI right
-              '@media (min-width: 1500px)': {
-                gridTemplateColumns: 'repeat(4, minmax(225px, 275px))',
-                justifyContent: 'flex-start',
-              },
-
-              // Individual grid cell styling
-              '& > *': {
-                // <702px: Full width cards
-                width: '100%',
-                justifySelf: 'stretch',
-
-                // 702px+: Allow cards to shrink/grow within grid constraints (225-275px)
-                '@media (min-width: 702px)': {
-                  minWidth: '225px',
-                  maxWidth: '275px',
-                  width: '100%', // Fill available space within minmax constraints
-                  justifySelf: 'center',
-                },
-
-                // 1017-1499px: Keep centered in 2×2 grid with AI manager
-                '@media (min-width: 1017px) and (max-width: 1499px)': {
-                  justifySelf: 'center',
-                },
-
-                // 1500px+: Left-align in 1×4 row with AI manager
-                '@media (min-width: 1500px)': {
-                  justifySelf: 'start',
-                },
-              },
-            }}>
-              {/* Render stat cards based on tab selection (not checkbox filters) */}
-              {(() => {
-                // Extract tab portion from multi-select format (e.g., "Active:Active,Pending" → "Active")
-                // Convert to lowercase to match visibleWhen category keys ('active', 'won', 'lost', 'all')
-                const rawTabSelection = selectedStatus?.includes(':')
-                  ? selectedStatus.split(':')[0]
-                  : selectedStatus;
-                const tabSelection = rawTabSelection?.toLowerCase() || 'all';
-
-                return statsConfig && statsConfig
-                  .filter(statCfg => !statCfg.visibleWhen || statCfg.visibleWhen.includes(tabSelection))
-                  .slice(0, 4) // Max 4 stat cards
-                  .map((statCfg, index) => {
-                  // Check if this is a component-based stat (new approach)
-                  if (statCfg.component) {
-                    const StatComponent = statCfg.component;
-
-                    // DEBUG: Safety check for undefined component
-                    if (!StatComponent) {
-                      console.error(`[DashboardHero] ❌ Component undefined for stat: ${statCfg.id}`);
-                      return (
-                        <Box key={statCfg.id} sx={{ p: 2, bgcolor: 'error.light', color: 'error.dark' }}>
-                          ERROR: {statCfg.id} component is undefined
-                        </Box>
-                      );
-                    }
-
-                    return (
-                      <StatComponent
-                        key={statCfg.id}
-                        data={allData}
-                        delay={index}
-                        {...(statCfg.props || {})}
-                      />
-                    );
-                  }
-
-                  // Fallback to old calculation-based approach (for backward compatibility)
-                  const prefixValue = statCfg.format === 'currency' ? '$' : (statCfg.prefix || '');
-                  const suffixValue = statCfg.format === 'percentage' ? '%' : (statCfg.suffix || '');
-                  const statValue = stats?.[statCfg.id]?.value || 0;
-                  let valueColor = statCfg.valueColor;
-                  if (valueColor === 'dynamic') {
-                    valueColor = statValue >= 0 ? '#4caf50' : '#f44336';
-                  }
-
-                  return StatCardComponent && (
-                    <StatCardComponent
-                      key={statCfg.id}
-                      icon={statCfg.icon}
-                      title={statCfg.label}
-                      value={statValue}
-                      prefix={prefixValue}
-                      suffix={suffixValue}
-                      color={statCfg.color || "#ffffff"}
-                      backgroundColor={statCfg.backgroundColor}
-                      textColor={statCfg.textColor || null}
-                      valueColor={valueColor}
-                      delay={index}
-                      goal={statCfg.goal}
-                      trend={stats?.[statCfg.id]?.trend}
-                    />
-                  );
-                });
-              })()}
-            </Box>
-
-            {/* Action Buttons Row */}
-            <Box sx={{
-              mt: 3,
-              display: 'flex',
-              gap: 2,
-              // Center buttons below 1016px
-              justifyContent: { xs: 'center', md: 'center', lg: 'flex-start' },
-              '@media (max-width: 1016px)': {
-                justifyContent: 'center',
-              },
-            }}>
-              {onNewItem && (
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={onNewItem}
-                  sx={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    backdropFilter: 'blur(10px)',
-                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.3)' },
-                    // Fixed dimensions
-                    height: 44,
-                    minWidth: 180,
-                    px: 3,
-                    whiteSpace: 'nowrap', // Prevent text wrapping
-                  }}
-                >
-                  {config.addButtonLabel || `NEW ${config.entitySingular?.toUpperCase()}`}
-                </Button>
-              )}
-              {config.showAnalyticsButton && (
-                <Button
-                  variant="outlined"
-                  startIcon={<AssessmentIcon />}
-                  sx={{
-                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                    color: 'white',
-                    '&:hover': {
-                      borderColor: 'rgba(255, 255, 255, 0.5)',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    },
-                    // Fixed dimensions
-                    height: 44,
-                    minWidth: 220,
-                    px: 3,
-                    whiteSpace: 'nowrap', // Prevent text wrapping
-                  }}
-                >
-                  {config.analyticsButtonLabel || `${config.entitySingular?.toUpperCase()} ANALYTICS`}
-                </Button>
-              )}
-            </Box>
-          </Grid>
-
-          {/* AI Assistant Card (if enabled) */}
-          {config.showAIAssistant && (
-            <Grid item
-              xs={12}
-              sx={{
-                // <702px: AI below stats (full width)
-                '@media (max-width: 701px)': {
-                  width: '100%',
-                  flexBasis: '100%',
-                  maxWidth: '100%',
-                },
-                // 702-1016px: AI below stats (full width)
-                '@media (min-width: 702px) and (max-width: 1016px)': {
-                  width: '100%',
-                  flexBasis: '100%',
-                  maxWidth: '100%',
-                },
-                // 1017-1499px: AI right side (33.33% for 2×2 layout)
-                '@media (min-width: 1017px) and (max-width: 1499px)': {
-                  width: '33.33%',
-                  flexBasis: '33.33%',
-                  maxWidth: '33.33%',
-                },
-                // 1500px+: AI right side (25% for 1×4 layout)
-                '@media (min-width: 1500px)': {
-                  width: '25%',
-                  flexBasis: '25%',
-                  maxWidth: '25%',
-                },
-              }}
-            >
-              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  {/* Render custom widget if provided, otherwise default card */}
-                  {config.aiAssistantWidget ? (
-                    React.createElement(config.aiAssistantWidget)
-                  ) : (
-                    <Card
-                      elevation={0}
-                      sx={{
-                        width: '300px',
-                        height: '300px',
-                        minWidth: '300px',
-                        minHeight: '300px',
-                        maxWidth: '300px',
-                        maxHeight: '300px',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)',
-                        backdropFilter: 'blur(10px)',
-                        border: '2px dashed rgba(255, 255, 255, 0.3)',
-                        borderRadius: 3,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          border: '2px dashed rgba(255, 255, 255, 0.5)',
-                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.12) 100%)',
-                        }
-                      }}
-                    >
-                      <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                        <Box>
-                          <Box
-                            sx={{
-                              width: 64,
-                              height: 64,
-                              borderRadius: '50%',
-                              background: 'rgba(255, 255, 255, 0.15)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              margin: '0 auto',
-                              mb: 2,
-                            }}
-                          >
-                            <Typography sx={{ fontSize: '2rem' }}>🤖</Typography>
-                          </Box>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: 'rgba(255, 255, 255, 0.95)',
-                              fontWeight: 700,
-                              mb: 1,
-                              letterSpacing: '0.02em',
-                            }}
-                          >
-                            {config.aiAssistantLabel || 'AI Assistant'}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: 'rgba(255, 255, 255, 0.7)',
-                              mb: 2,
-                              fontSize: '0.875rem',
-                            }}
-                          >
-                            {config.aiAssistantDescription || 'Hire an AI assistant to automate workflows.'}
-                          </Typography>
-                          <Box
-                            sx={{
-                              display: 'inline-block',
-                              px: 2,
-                              py: 0.75,
-                              borderRadius: 2,
-                              background: 'rgba(255, 255, 255, 0.2)',
-                              backdropFilter: 'blur(5px)',
-                            }}
-                          >
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                color: 'white',
-                                fontWeight: 600,
-                                letterSpacing: '0.1em',
-                                textTransform: 'uppercase',
-                                fontSize: '0.75rem',
-                              }}
-                            >
-                              Coming Soon
-                            </Typography>
-                          </Box>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  )}
-                </motion.div>
-              </Box>
-            </Grid>
-          )}
-        </Grid>
+        {/* Main Content Row - Conditional Layout based on heroLayoutMode */}
+        {heroLayoutMode === 'spheres' ? (
+          <SpheresHeroLayout
+            config={config}
+            onNewItem={onNewItem}
+            sphereData={sphereData}
+            onSphereClick={onSphereClick}
+            aiCoachConfig={aiCoachConfig}
+          />
+        ) : (
+          <CardsHeroLayout
+            config={config}
+            stats={stats}
+            statsConfig={statsConfig}
+            selectedStatus={selectedStatus}
+            onNewItem={onNewItem}
+            StatCardComponent={StatCardComponent}
+            allData={allData}
+          />
+        )}
       </Box>
     </HeroSection>
     </ShadowWrapper>

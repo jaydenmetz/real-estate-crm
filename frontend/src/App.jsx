@@ -37,6 +37,7 @@ import AppointmentsDashboard from './components/dashboards/appointments';
 import AppointmentDetail from './components/details/appointments';
 import LeadsDashboard from './components/dashboards/leads';
 import LeadDetail from './components/details/leads';
+import ContactsDashboard from './components/dashboards/contacts';
 
 // Financial Components (moved to _future folder - not yet implemented)
 // import CommissionDashboard from './components/dashboards/_future/CommissionDashboard';
@@ -359,6 +360,8 @@ function App() {
                                 <Route path="/leads" element={<LeadsDashboard />} />
                                 <Route path="/leads/health" element={<ProtectedRoute requiredRole="system_admin"><LeadsHealthDashboard /></ProtectedRoute>} />
                                 <Route path="/leads/:id" element={<LeadDetail />} />
+
+                                <Route path="/contacts" element={<ContactsDashboard />} />
                     
                                 {/* Financial Management - Coming Soon */}
                                 {/* <Route path="/commissions" element={<CommissionDashboard />} /> */}
