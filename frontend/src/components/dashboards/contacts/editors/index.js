@@ -6,12 +6,14 @@
  * - Full validation and formatting
  * - Real-time updates
  *
- * Note: Contacts currently don't have inline editors as most fields
- * are display-only (no workflow status, no financial fields to edit).
- * This file is a placeholder for future inline editors.
+ * Available Editors:
+ * - EditContactName: First/Last name editing with display name update
+ * - EditContactEmail: Email address editing with validation
+ * - EditContactPhone: Phone number editing
+ * - EditContactRole: Role selection (sphere/lead/client)
  */
 
-// Placeholder exports - add editors as needed
-// export { EditContactName } from './EditContactName';
-// export { EditContactEmail } from './EditContactEmail';
-// export { EditContactPhone } from './EditContactPhone';
+export { EditContactName } from './EditContactName';
+export { EditContactEmail } from './EditContactEmail';
+export { EditContactPhone } from './EditContactPhone';
+export { EditContactRole } from './EditContactRole';
