@@ -25,7 +25,7 @@ import GlobalErrorBoundary from './components/common/error-handling/GlobalErrorB
 import ConnectionStatus from './components/common/status/ConnectionStatus';
 
 // Dashboard Components
-import HomeDashboard from './components/dashboards/home';
+import HomeDashboard from './components/widgets/home';
 import ProjectRoadmapDashboard from './components/common/admin/ProjectRoadmapDashboard';
 import EscrowsDashboard from './components/dashboards/escrows';
 import EscrowDetail from './components/details/escrows';
