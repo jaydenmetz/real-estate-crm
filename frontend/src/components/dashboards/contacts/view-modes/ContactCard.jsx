@@ -6,9 +6,17 @@ import { useNavigate } from 'react-router-dom';
 
 /**
  * ContactCard - Card component for displaying contacts in grid view
+ *
+ * Note: DashboardContent passes the item using the entity name as the prop key,
+ * so for contacts it passes `contact={item}` not `item={item}`
  */
-export const ContactCard = ({ item: contact, config, onUpdate, onDelete, delay = 0 }) => {
+export const ContactCard = ({ contact, config, onUpdate, onDelete, index = 0 }) => {
   const navigate = useNavigate();
+
+  // Safety check for undefined contact
+  if (!contact) {
+    return null;
+  }
 
   const fullName = `${contact.first_name || ''} ${contact.last_name || ''}`.trim() || 'Unnamed Contact';
   const initials = `${(contact.first_name || '')[0] || ''}${(contact.last_name || '')[0] || ''}`.toUpperCase() || '?';
@@ -27,7 +35,7 @@ export const ContactCard = ({ item: contact, config, onUpdate, onDelete, delay =
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: delay * 0.05 }}
+      transition={{ duration: 0.3, delay: index * 0.05 }}
     >
       <Box
         onClick={handleClick}
