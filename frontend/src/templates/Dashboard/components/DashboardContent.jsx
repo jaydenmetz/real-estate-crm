@@ -244,7 +244,27 @@ export const DashboardContent = ({
       listing: {
         headers: ['Property', 'Status', 'List Price', 'Commission', 'MLS#', 'Beds/Baths', 'Days/Listed', 'Actions'],
         gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
-      }
+      },
+      appointment: {
+        headers: ['Appointment', 'Status', '+ Stops', 'Duration', 'Start', 'End', 'Location', 'Attendees', 'Actions'],
+        // Must match AppointmentTableRow gridTemplateColumns: '2fr 1fr 70px 80px 1fr 80px 1.2fr 100px 80px'
+        gridTemplateColumns: '2fr 1fr 70px 80px 1fr 80px 1.2fr 100px 80px',
+      },
+      client: {
+        headers: ['Client', 'Status', 'Target Price', 'Commission', 'Beginning', 'Expiration', 'Leads', 'Phone', 'Actions'],
+        // Must match ClientTableRow gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 100px 1.2fr 80px'
+        gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 100px 1.2fr 80px',
+      },
+      lead: {
+        headers: ['Lead', 'Status', 'Target Price', 'Commission', 'Created', 'Expires', 'Contacts', 'Score', 'Actions'],
+        // Must match LeadTableRow gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 100px 80px 80px'
+        gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 100px 80px 80px',
+      },
+      contact: {
+        headers: ['Name', 'Contact', 'Portfolio', 'Lifetime Value', 'Created', 'Last Follow Up', 'Associated', 'Actions'],
+        // Must match ContactTableRow gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 1fr 100px 80px'
+        gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 1fr 100px 80px',
+      },
     };
 
     const entityConfig = headersByEntity[config.entity.name] || {
