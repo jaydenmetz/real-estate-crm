@@ -1,17 +1,20 @@
-import React from 'react';
-import { EditSelect } from '../../../common/editors/fields/EditSelect';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Select } from '../../../common/setters/Select';
 import { LEAD_SOURCES, LEAD_SOURCE_LABELS } from '../../../../constants/leadConfig';
 
 /**
- * Lead-specific Source Editor
- * Wraps EditSelect with lead-specific context and styling
+ * Lead Source Editor
+ * Uses the standard EditorModal + Select setter pattern
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void
+ * @param {function} onSave - Save handler (newSource) => void
  * @param {string} value - Current lead source
  */
 export const EditLeadSource = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value);
+
   // Convert source constants to options array
   const sourceOptions = Object.values(LEAD_SOURCES).map(source => ({
     value: source,
@@ -19,14 +22,19 @@ export const EditLeadSource = ({ open, onClose, onSave, value }) => {
   }));
 
   return (
-    <EditSelect
+    <EditorModal
       open={open}
       onClose={onClose}
-      onSave={onSave}
-      label="Lead Source"
-      value={value}
-      options={sourceOptions}
-      color="#ec4899" // Pink theme for leads
-    />
+      onSave={() => onSave(editValue)}
+      color="#10b981" // Green for leads
+    >
+      <Select
+        label="Lead Source"
+        value={editValue}
+        onChange={setEditValue}
+        options={sourceOptions}
+        color="#10b981"
+      />
+    </EditorModal>
   );
 };

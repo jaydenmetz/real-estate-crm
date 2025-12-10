@@ -1,34 +1,40 @@
-import React from 'react';
-import { EditSelect } from '../../../common/editors/fields/EditSelect';
+import React, { useState } from 'react';
+import { EditorModal } from '../../../common/modals/EditorModal';
+import { Select } from '../../../common/setters/Select';
 import { LEAD_STATUS, LEAD_STATUS_LABELS } from '../../../../constants/leadConfig';
 
 /**
- * Lead-specific Status Editor
- * Wraps EditSelect with lead-specific context and styling
+ * Lead Status Editor
+ * Uses the standard EditorModal + Select setter pattern
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void
+ * @param {function} onSave - Save handler (newStatus) => void
  * @param {string} value - Current lead status
  */
 export const EditLeadStatus = ({ open, onClose, onSave, value }) => {
+  const [editValue, setEditValue] = useState(value);
+
   // Convert status constants to options array
-  const statusOptions = Object.values(LEAD_STATUS)
-    .filter(status => status !== LEAD_STATUS.ARCHIVED) // Don't allow direct archive via status change
-    .map(status => ({
-      value: status,
-      label: LEAD_STATUS_LABELS[status]
-    }));
+  const statusOptions = Object.values(LEAD_STATUS).map(status => ({
+    value: status,
+    label: LEAD_STATUS_LABELS[status]
+  }));
 
   return (
-    <EditSelect
+    <EditorModal
       open={open}
       onClose={onClose}
-      onSave={onSave}
-      label="Lead Status"
-      value={value}
-      options={statusOptions}
-      color="#ec4899" // Pink theme for leads
-    />
+      onSave={() => onSave(editValue)}
+      color="#10b981" // Green for leads
+    >
+      <Select
+        label="Lead Status"
+        value={editValue}
+        onChange={setEditValue}
+        options={statusOptions}
+        color="#10b981"
+      />
+    </EditorModal>
   );
 };

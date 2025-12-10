@@ -1,297 +1,264 @@
-import React, { useState, useCallback } from 'react';
+import React, { useMemo } from 'react';
+import { ListItemTemplate } from '../../../../../templates/Dashboard/view-modes';
+import { CheckCircle, Cancel, Person, Schedule } from '@mui/icons-material';
+import { Avatar, Box, Typography, Chip, alpha, useTheme } from '@mui/material';
+import { getStatusConfig, CLIENT_STATUS_CONFIG } from '../../../../../constants/clientConfig';
+import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+import { useStatus } from '../../../../../contexts/StatusContext';
+
+// Import editor components
 import {
-  Box,
-  Typography,
-  Chip,
-  useTheme,
-  alpha,
-  Avatar,
-} from '@mui/material';
-import {
-  PersonOutline,
-  Email,
-  Phone,
-  AttachMoney,
-  CalendarToday,
-} from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { CLIENT_STATUS_CONFIG } from '../../../../../constants/clientConfig';
-import { formatCurrency, formatDate as formatDateUtil } from '../../../../../utils/formatters';
-import { QuickActionsMenu } from '../../../../common/ui/QuickActionsMenu';
+  EditClientName,
+  EditClientEmail,
+  EditClientPhone,
+  EditClientBudget,
+} from '../../editors';
+
+// ============================================================================
+// LIST VIEW CONFIGURATION HOOK
+// ============================================================================
 
 /**
- * ClientListItem - Full-width horizontal list view with avatar on left
- * Adapted from ListingListItem for clients data structure
+ * Hook to generate list config with database-driven status options
+ * @param {Array} statuses - Status array from StatusContext
+ * @returns {Object} List configuration object
  */
-const ClientListItem = ({ client, onUpdate, onDelete, onArchive, onRestore, isArchived = false }) => {
-  const navigate = useNavigate();
+const useClientListConfig = (statuses) => {
   const theme = useTheme();
 
-  // Click vs drag detection (for text selection)
-  const [isDragging, setIsDragging] = useState(false);
-  const [mouseDownPos, setMouseDownPos] = useState(null);
+  return useMemo(() => {
+    // Transform database statuses into dropdown options
+    // Fallback to hardcoded options if database statuses not loaded yet
+    const statusOptions = statuses && statuses.length > 0
+      ? statuses.map((status) => ({
+          value: status.status_key,
+          label: status.label,
+          icon: status.status_key === 'cancelled' || status.status_key === 'expired' ? Cancel : CheckCircle,
+          color: status.color,
+        }))
+      : [
+          { value: 'active', label: 'Active', icon: Person, color: '#10b981' },
+          { value: 'closed', label: 'Closed', icon: CheckCircle, color: '#3b82f6' },
+          { value: 'expired', label: 'Expired', icon: Schedule, color: '#6b7280' },
+          { value: 'cancelled', label: 'Cancelled', icon: Cancel, color: '#ef4444' },
+        ];
 
-  // Extract client data (support both snake_case and camelCase)
-  const {
-    id,
-    firstName,
-    first_name,
-    lastName,
-    last_name,
-    email,
-    phone,
-    client_status,
-    status,
-    clientType,
-    client_type,
-    budget,
-    max_budget,
-    created_at,
-    last_contact,
-    last_contactDate,
-  } = client;
+    return {
+      // Custom image section with avatar
+      image: {
+        width: 120,
+        customRenderer: (client) => {
+          const firstName = client.firstName || client.first_name || '';
+          const lastName = client.lastName || client.last_name || '';
+          const initials = `${firstName[0] || '?'}${lastName[0] || '?'}`.toUpperCase();
+          const status = client.client_status || client.status || 'active';
+          const statusConfig = getStatusConfig(status);
 
-  // Normalize fields
-  const fullName = `${firstName || first_name || ''} ${lastName || last_name || ''}`.trim();
-  const initials = `${(firstName || first_name || '?')[0]}${(lastName || last_name || '?')[0]}`.toUpperCase();
-  const clientStatus = client_status || status || 'lead';
-  const type = clientType || client_type || 'buyer';
-  const budgetAmount = parseFloat(budget || max_budget || 0);
-  const lastContact = last_contact || last_contactDate;
-
-  // Get status color (use hex color from config for alpha() compatibility)
-  const statusColor = CLIENT_STATUS_CONFIG[clientStatus]?.color || '#6366f1';
-
-  // Handle row click - only navigate if not dragging (text selection)
-  const handleRowMouseDown = useCallback((e) => {
-    setMouseDownPos({ x: e.clientX, y: e.clientY });
-    setIsDragging(false);
-  }, []);
-
-  const handleRowMouseMove = useCallback((e) => {
-    if (mouseDownPos) {
-      const distance = Math.sqrt(
-        Math.pow(e.clientX - mouseDownPos.x, 2) + Math.pow(e.clientY - mouseDownPos.y, 2)
-      );
-      // If mouse moved more than 5px, consider it a drag (text selection)
-      if (distance > 5) {
-        setIsDragging(true);
-      }
-    }
-  }, [mouseDownPos]);
-
-  const handleRowClick = useCallback(() => {
-    // Only navigate if user didn't drag (text selection)
-    if (!isDragging) {
-      navigate(`/clients/${id}`);
-    }
-    setMouseDownPos(null);
-  }, [isDragging, id, navigate]);
-
-  return (
-    <Box
-      onMouseDown={handleRowMouseDown}
-      onMouseMove={handleRowMouseMove}
-      onClick={handleRowClick}
-      sx={{
-        display: 'flex',
-        width: '100%',
-        minHeight: 120,
-        borderRadius: 3,
-        overflow: 'hidden',
-        cursor: 'pointer',
-        position: 'relative',
-        bgcolor: 'background.paper',
-        border: `1px solid ${alpha(statusColor, 0.15)}`,
-        boxShadow: `0 4px 16px ${alpha(statusColor, 0.08)}`,
-        transition: 'all 0.2s',
-        '&:hover': {
-          boxShadow: `0 6px 24px ${alpha(statusColor, 0.15)}`,
-          transform: 'translateY(-2px)',
-        },
-      }}
-    >
-      {/* Avatar Section - 120px fixed width */}
-      <Box
-        sx={{
-          width: 120,
-          minWidth: 120,
-          position: 'relative',
-          background: 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Avatar
-          sx={{
-            width: 70,
-            height: 70,
-            background: `linear-gradient(135deg, ${statusColor} 0%, ${alpha(statusColor, 0.8)} 100%)`,
-            fontSize: '1.75rem',
-            fontWeight: 700,
-            border: `3px solid rgba(255,255,255,0.9)`,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          }}
-        >
-          {initials}
-        </Avatar>
-
-        {/* Delete/Restore Button */}
-        {(onArchive || onDelete || onRestore) && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              display: 'flex',
-              gap: 0.5,
-            }}
-          >
+          return (
             <Box
               sx={{
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                backdropFilter: 'blur(8px)',
-                borderRadius: '50%',
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
               }}
             >
-              <QuickActionsMenu
-                item={client}
-                onView={() => navigate(`/clients/${id}`)}
-                onShare={null} // Future feature
-                onArchive={onArchive}
-                onRestore={onRestore}
-                onDelete={onDelete}
-                isArchived={isArchived}
-                color="white"
-              />
-            </Box>
-          </Box>
-        )}
-      </Box>
-
-      {/* Content Area */}
-      <Box
-        sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          p: 2,
-          minWidth: 0,
-        }}
-      >
-        {/* Header Row: Name + Status */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, minWidth: 0 }}>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 700,
-                fontSize: '1rem',
-                color: theme.palette.text.primary,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {fullName}
-            </Typography>
-            <Chip
-              label={type.charAt(0).toUpperCase() + type.slice(1)}
-              size="small"
-              sx={{
-                fontSize: 10,
-                fontWeight: 600,
-                height: 20,
-                background: alpha(statusColor, 0.1),
-                color: statusColor,
-              }}
-            />
-          </Box>
-          <Chip
-            label={clientStatus.charAt(0).toUpperCase() + clientStatus.slice(1)}
-            size="small"
-            sx={{
-              fontWeight: 700,
-              fontSize: 11,
-              ml: 2,
-              background: `linear-gradient(135deg, ${statusColor} 0%, ${alpha(statusColor, 0.8)} 100%)`,
-              color: 'white',
-            }}
-          />
-        </Box>
-
-        {/* Contact Info Row */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 2 }}>
-          {email && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Email sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
-              <Typography
-                variant="body2"
+              <Avatar
                 sx={{
-                  fontSize: '0.85rem',
-                  color: theme.palette.text.secondary,
+                  width: 70,
+                  height: 70,
+                  background: `linear-gradient(135deg, ${statusConfig.color} 0%, ${alpha(statusConfig.color, 0.8)} 100%)`,
+                  fontSize: '1.75rem',
+                  fontWeight: 700,
+                  border: '3px solid rgba(255,255,255,0.9)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                }}
+              >
+                {initials}
+              </Avatar>
+            </Box>
+          );
+        },
+      },
+
+      // Status configuration
+      status: {
+        field: (client) => client.client_status || client.status || 'active',
+        getConfig: (status) => {
+          const config = getStatusConfig(status);
+          return {
+            label: config.label,
+            color: config.color,
+            bg: config.bg,
+          };
+        },
+        editable: true,
+        options: statusOptions,
+        onSave: (client, newStatus) => ({ client_status: newStatus }),
+      },
+
+      // Title configuration (name + type chip)
+      title: {
+        field: (client) => {
+          const firstName = client.firstName || client.first_name || '';
+          const lastName = client.lastName || client.last_name || '';
+          return `${firstName} ${lastName}`.trim() || 'Unnamed Client';
+        },
+        editable: true,
+        editor: EditClientName,
+        editorProps: (client) => ({
+          value: `${client.firstName || client.first_name || ''} ${client.lastName || client.last_name || ''}`.trim(),
+          data: client,
+        }),
+        onSave: (client, nameData) => ({
+          first_name: nameData.first_name,
+          last_name: nameData.last_name,
+        }),
+        customRenderer: (client, onEdit) => {
+          const firstName = client.firstName || client.first_name || '';
+          const lastName = client.lastName || client.last_name || '';
+          const fullName = `${firstName} ${lastName}`.trim() || 'Unnamed Client';
+          const type = client.clientType || client.client_type || 'buyer';
+          const status = client.client_status || client.status || 'active';
+          const statusConfig = getStatusConfig(status);
+
+          return (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, minWidth: 0 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  color: theme.palette.text.primary,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  maxWidth: 250,
                 }}
               >
-                {email}
+                {fullName}
               </Typography>
+              <Chip
+                label={type.charAt(0).toUpperCase() + type.slice(1)}
+                size="small"
+                sx={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  height: 20,
+                  background: alpha(statusConfig.color, 0.1),
+                  color: statusConfig.color,
+                }}
+              />
             </Box>
-          )}
-          {phone && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Phone sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
-              <Typography variant="body2" sx={{ fontSize: '0.85rem', color: theme.palette.text.secondary }}>
-                {phone}
-              </Typography>
-            </Box>
-          )}
-        </Box>
+          );
+        },
+      },
 
-        {/* Metrics Row */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mt: 'auto' }}>
-          {/* Budget */}
-          {budgetAmount > 0 && (
-            <Box>
-              <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-                Budget
-              </Typography>
-              <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#10b981', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {formatCurrency(budgetAmount)}
-              </Typography>
-            </Box>
-          )}
+      // Subtitle with contact info
+      subtitle: {
+        formatter: (client) => {
+          const parts = [];
+          if (client.email) parts.push(client.email);
+          if (client.phone) parts.push(client.phone);
+          return parts.join(' | ');
+        },
+      },
 
-          {/* Created Date */}
-          {created_at && (
-            <Box>
-              <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-                Created
-              </Typography>
-              <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {formatDateUtil(created_at, 'MMM d, yyyy')}
-              </Typography>
-            </Box>
-          )}
+      // Metrics row
+      metrics: [
+        // Budget
+        {
+          label: 'Budget',
+          field: (client) => parseFloat(client.budget || client.max_budget || 0),
+          formatter: (value) => value > 0 ? formatCurrency(value) : '—',
+          editable: true,
+          editor: EditClientBudget,
+          editorProps: (client) => ({
+            value: client.budget || client.max_budget || 0,
+            data: client,
+          }),
+          onSave: (client, newBudget) => ({ budget: newBudget, max_budget: newBudget }),
+          color: '#10b981',
+        },
 
-          {/* Last Contact */}
-          {lastContact && (
-            <Box>
-              <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
-                Last Contact
-              </Typography>
-              <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#6366f1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {formatDateUtil(lastContact, 'MMM d, yyyy')}
-              </Typography>
-            </Box>
-          )}
-        </Box>
-      </Box>
-    </Box>
-  );
+        // Created Date
+        {
+          label: 'Created',
+          field: 'created_at',
+          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
+          editable: false,
+        },
+
+        // Last Contact
+        {
+          label: 'Last Contact',
+          field: (client) => client.last_contact || client.last_contactDate,
+          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
+          editable: false,
+          color: '#6366f1',
+        },
+      ],
+    };
+  }, [statuses, theme]);
 };
+
+/**
+ * ClientListItem - Full-width horizontal list view for clients dashboard
+ *
+ * Now uses ListItemTemplate with inline configuration for better colocation.
+ * Now uses database-driven status options from StatusContext.
+ *
+ * Features:
+ * - Avatar with initials and status-colored gradient
+ * - Editable name with client type chip
+ * - Contact info (email, phone) in subtitle
+ * - Metrics: Budget, Created, Last Contact
+ * - Status menu: dynamically populated from database
+ * - Click vs drag: text selection support
+ * - Hover effects and transitions
+ */
+const ClientListItem = React.memo(({
+  client,
+  onClick,
+  onUpdate,
+  onArchive,
+  onDelete,
+  onRestore,
+  isArchived = false,
+  // Multi-select props
+  isSelectable,
+  isSelected,
+  onSelect,
+}) => {
+  // Get statuses from context (entity type is 'clients')
+  const { statuses } = useStatus();
+
+  // Filter to client statuses only
+  const clientStatuses = useMemo(() => {
+    return statuses?.filter(s => s.entity_type === 'clients') || [];
+  }, [statuses]);
+
+  // Generate config with database-driven status options
+  const config = useClientListConfig(clientStatuses);
+
+  return (
+    <ListItemTemplate
+      data={client}
+      config={config}
+      onClick={onClick}
+      onUpdate={onUpdate}
+      onArchive={onArchive}
+      onDelete={onDelete}
+      onRestore={onRestore}
+      isArchived={isArchived}
+      isSelectable={isSelectable}
+      isSelected={isSelected}
+      onSelect={onSelect}
+    />
+  );
+});
+
+ClientListItem.displayName = 'ClientListItem';
 
 export default ClientListItem;
