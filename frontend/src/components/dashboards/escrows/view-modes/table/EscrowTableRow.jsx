@@ -124,7 +124,15 @@ const useEscrowTableConfig = (statuses) => {
           editable: true,
           editor: EditPurchasePrice,
           onSave: (escrow, newPrice) => {
-            return { purchase_price: newPrice };
+            const updates = { purchase_price: newPrice };
+
+            // If commission is percentage-based, recalculate my_commission
+            if (escrow.commission_type === 'percentage' && escrow.commission_percentage) {
+              const percentage = parseFloat(escrow.commission_percentage);
+              updates.my_commission = (parseFloat(newPrice) * percentage) / 100;
+            }
+
+            return updates;
           },
           align: 'left',
           bold: true,
