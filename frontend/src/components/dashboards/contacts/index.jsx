@@ -9,6 +9,7 @@ import { ContactCard } from './view-modes';
 import { NewContactModal } from './modals';
 import { contactsAPI, leadsAPI, clientsAPI } from '../../../services/api.service';
 import { useQuery } from '@tanstack/react-query';
+import { StatusProvider } from '../../../contexts/StatusContext';
 
 /**
  * ContactsDashboard - Dashboard with Spheres hero layout
@@ -177,82 +178,84 @@ const ContactsDashboard = () => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      {/* Hero with Spheres Layout */}
-      <DashboardHero
-        config={{
-          title: 'Contacts',
-          subtitle: 'Manage your sphere of influence',
-          gradient: `linear-gradient(135deg, ${contactsConfig.entity.colorGradient.start} 0%, ${contactsConfig.entity.colorGradient.end} 100%)`,
-          entitySingular: 'Contact',
-          showAnalyticsButton: contactsConfig.dashboard.hero.showAnalyticsButton,
-          analyticsButtonLabel: contactsConfig.dashboard.hero.analyticsButtonLabel,
-          addButtonLabel: contactsConfig.dashboard.hero.addButtonLabel,
-          showAIAssistant: false, // Using AI Coach instead
-        }}
-        stats={{}}
-        statsConfig={[]}
-        selectedStatus={selectedStatus}
-        onNewItem={() => setNewItemModalOpen(true)}
-        dateRangeFilter={dateRangeFilter}
-        setDateRangeFilter={setDateRangeFilter}
-        customStartDate={customStartDate}
-        setCustomStartDate={setCustomStartDate}
-        customEndDate={customEndDate}
-        setCustomEndDate={setCustomEndDate}
-        dateRange={calculatedDateRange}
-        detectPresetRange={detectPresetRange}
-        selectedYear={selectedYear}
-        setSelectedYear={setSelectedYear}
-        allData={filteredData}
-        // Sphere layout props
-        heroLayoutMode="spheres"
-        sphereData={sphereData}
-        onSphereClick={handleSphereClick}
-        aiCoachConfig={{
-          title: 'AI Coach',
-          description: 'Get personalized coaching to grow your sphere of influence and convert more leads to clients.',
-          onHire: null, // Coming soon
-        }}
-      />
+    <StatusProvider entityType="contacts">
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        {/* Hero with Spheres Layout */}
+        <DashboardHero
+          config={{
+            title: 'Contacts',
+            subtitle: 'Manage your sphere of influence',
+            gradient: `linear-gradient(135deg, ${contactsConfig.entity.colorGradient.start} 0%, ${contactsConfig.entity.colorGradient.end} 100%)`,
+            entitySingular: 'Contact',
+            showAnalyticsButton: contactsConfig.dashboard.hero.showAnalyticsButton,
+            analyticsButtonLabel: contactsConfig.dashboard.hero.analyticsButtonLabel,
+            addButtonLabel: contactsConfig.dashboard.hero.addButtonLabel,
+            showAIAssistant: false, // Using AI Coach instead
+          }}
+          stats={{}}
+          statsConfig={[]}
+          selectedStatus={selectedStatus}
+          onNewItem={() => setNewItemModalOpen(true)}
+          dateRangeFilter={dateRangeFilter}
+          setDateRangeFilter={setDateRangeFilter}
+          customStartDate={customStartDate}
+          setCustomStartDate={setCustomStartDate}
+          customEndDate={customEndDate}
+          setCustomEndDate={setCustomEndDate}
+          dateRange={calculatedDateRange}
+          detectPresetRange={detectPresetRange}
+          selectedYear={selectedYear}
+          setSelectedYear={setSelectedYear}
+          allData={filteredData}
+          // Sphere layout props
+          heroLayoutMode="spheres"
+          sphereData={sphereData}
+          onSphereClick={handleSphereClick}
+          aiCoachConfig={{
+            title: 'AI Coach',
+            description: 'Get personalized coaching to grow your sphere of influence and convert more leads to clients.',
+            onHire: null, // Coming soon
+          }}
+        />
 
-      {/* Navigation - simplified for contacts */}
-      <DashboardNavigation
-        config={{
-          ...contactsConfig.dashboard,
-          entity: contactsConfig.entity,
-        }}
-        selectedStatus={selectedStatus}
-        onStatusChange={setSelectedStatus}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        sortBy={sortBy}
-        onSortByChange={setSortBy}
-        sortOrder={sortOrder}
-        onSortOrderChange={setSortOrder}
-        selectedItems={[]}
-        totalCount={filteredData.length}
-        onClearSelection={() => {}}
-        onSelectAll={() => {}}
-      />
+        {/* Navigation - simplified for contacts */}
+        <DashboardNavigation
+          config={{
+            ...contactsConfig.dashboard,
+            entity: contactsConfig.entity,
+          }}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          sortBy={sortBy}
+          onSortByChange={setSortBy}
+          sortOrder={sortOrder}
+          onSortOrderChange={setSortOrder}
+          selectedItems={[]}
+          totalCount={filteredData.length}
+          onClearSelection={() => {}}
+          onSelectAll={() => {}}
+        />
 
-      {/* Content Grid */}
-      <DashboardContent
-        loading={contactsLoading}
-        data={filteredData}
-        viewMode={viewMode}
-        CardComponent={ContactCard}
-        config={contactsConfig}
-        selectedStatus={selectedStatus}
-      />
+        {/* Content Grid */}
+        <DashboardContent
+          loading={contactsLoading}
+          data={filteredData}
+          viewMode={viewMode}
+          CardComponent={ContactCard}
+          config={contactsConfig}
+          selectedStatus={selectedStatus}
+        />
 
-      {/* New Contact Modal */}
-      <NewContactModal
-        open={newItemModalOpen}
-        onClose={() => setNewItemModalOpen(false)}
-        onCreate={handleCreate}
-      />
-    </Container>
+        {/* New Contact Modal */}
+        <NewContactModal
+          open={newItemModalOpen}
+          onClose={() => setNewItemModalOpen(false)}
+          onCreate={handleCreate}
+        />
+      </Container>
+    </StatusProvider>
   );
 };
 
