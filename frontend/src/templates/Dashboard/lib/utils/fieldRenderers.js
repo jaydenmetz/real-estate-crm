@@ -96,9 +96,28 @@ export const formatFieldValue = (value, format, options = {}) => {
  * @returns {Object} { value, formatted, raw }
  */
 export const resolveField = (data, fieldConfig) => {
+  // Handle undefined/null fieldConfig gracefully
+  if (fieldConfig === undefined || fieldConfig === null) {
+    return {
+      value: undefined,
+      formatted: undefined,
+      raw: undefined
+    };
+  }
+
   // Simple string field
   if (typeof fieldConfig === 'string') {
     const value = getFieldValue(data, fieldConfig);
+    return {
+      value,
+      formatted: value,
+      raw: value
+    };
+  }
+
+  // If fieldConfig is a function, call it directly
+  if (typeof fieldConfig === 'function') {
+    const value = fieldConfig(data);
     return {
       value,
       formatted: value,
