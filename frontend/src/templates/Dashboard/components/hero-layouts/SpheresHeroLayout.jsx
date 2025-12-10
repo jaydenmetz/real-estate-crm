@@ -1,17 +1,17 @@
 import React from 'react';
 import { Box, Grid, Card, CardContent, Typography, Button } from '@mui/material';
 import { motion } from 'framer-motion';
-import { Add as AddIcon, Assessment as AssessmentIcon } from '@mui/icons-material';
+import { Add as AddIcon, Assessment as AssessmentIcon, People, Handshake } from '@mui/icons-material';
 
 /**
- * SpheresHeroLayout - Nested concentric spheres visualization for contacts
+ * SpheresHeroLayout - Horizontal nested spheres visualization for contacts
  *
- * Shows the contact hierarchy as nested rounded rectangles:
- * - Outer: Sphere of Influence (largest)
- * - Middle: Leads
- * - Inner: Clients (smallest)
+ * Shows the contact hierarchy as horizontally nested rounded rectangles:
+ * - Left: Sphere of Influence (largest, contains all)
+ * - Right nested: Leads (medium, contains clients)
+ * - Innermost right: Clients (smallest, green circle)
  *
- * Used for the Contacts dashboard to visualize the relationship funnel.
+ * Labels appear at top-left of each section with values at bottom.
  */
 export const SpheresHeroLayout = ({
   config,
@@ -22,23 +22,23 @@ export const SpheresHeroLayout = ({
 }) => {
   const { sphere = 0, leads = 0, clients = 0 } = sphereData;
 
-  // Animation variants for the nested spheres
+  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.15,
+        staggerChildren: 0.2,
         delayChildren: 0.1,
       },
     },
   };
 
   const sphereVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
+    hidden: { opacity: 0, x: -20 },
     visible: {
       opacity: 1,
-      scale: 1,
+      x: 0,
       transition: {
         type: 'spring',
         stiffness: 100,
@@ -52,204 +52,249 @@ export const SpheresHeroLayout = ({
       flexGrow: 1,
       margin: 0,
       width: '100%',
-      '@media (min-width: 1017px) and (max-width: 1499px)': {
-        justifyContent: 'center',
-      },
     }}>
       {/* Spheres Visualization */}
-      <Grid item
-        xs={12}
-        sx={{
-          '@media (min-width: 1017px)': {
-            width: aiCoachConfig ? '66.67%' : '100%',
-            flexBasis: aiCoachConfig ? '66.67%' : '100%',
-            maxWidth: aiCoachConfig ? '66.67%' : '100%',
-          },
-          '@media (min-width: 1500px)': {
-            width: aiCoachConfig ? '75%' : '100%',
-            flexBasis: aiCoachConfig ? '75%' : '100%',
-            maxWidth: aiCoachConfig ? '75%' : '100%',
-          },
-        }}
-      >
+      <Grid item xs={12}>
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          {/* Nested Spheres Container */}
+          {/* Horizontal Nested Spheres */}
           <Box
             sx={{
               display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
+              justifyContent: 'flex-start',
+              alignItems: 'stretch',
               width: '100%',
-              py: 2,
+              minHeight: { xs: 280, md: 320 },
             }}
           >
-            {/* Outer Sphere - Sphere of Influence */}
-            <motion.div variants={sphereVariants}>
+            {/* Outer Container - Sphere of Influence */}
+            <motion.div variants={sphereVariants} style={{ flex: 1, display: 'flex' }}>
               <Box
                 onClick={() => onSphereClick?.('sphere')}
                 sx={{
                   position: 'relative',
-                  width: { xs: 280, sm: 340, md: 400 },
-                  height: { xs: 280, sm: 340, md: 400 },
-                  borderRadius: '24px',
-                  background: 'rgba(255, 255, 255, 0.08)',
+                  flex: 1,
+                  minHeight: { xs: 280, md: 320 },
+                  borderRadius: '16px',
+                  background: 'rgba(0, 0, 0, 0.25)',
                   backdropFilter: 'blur(8px)',
-                  border: '2px solid rgba(255, 255, 255, 0.15)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  pt: 2,
+                  flexDirection: 'row',
                   cursor: onSphereClick ? 'pointer' : 'default',
                   transition: 'all 0.3s ease',
+                  overflow: 'hidden',
                   '&:hover': onSphereClick ? {
-                    background: 'rgba(255, 255, 255, 0.12)',
-                    border: '2px solid rgba(255, 255, 255, 0.25)',
-                    transform: 'scale(1.02)',
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
                   } : {},
                 }}
               >
-                {/* Sphere Label */}
-                <Typography
-                  variant="caption"
+                {/* Left Side - Sphere Info */}
+                <Box
                   sx={{
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    fontSize: '0.7rem',
-                    fontWeight: 600,
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    mb: 0.5,
+                    flex: '0 0 auto',
+                    width: { xs: '40%', sm: '35%', md: '30%' },
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    p: { xs: 2, md: 3 },
                   }}
                 >
-                  Sphere of Influence
-                </Typography>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    color: 'white',
-                    fontWeight: 700,
-                    fontSize: { xs: '1.5rem', md: '2rem' },
-                  }}
-                >
-                  {sphere.toLocaleString()}
-                </Typography>
-
-                {/* Middle Sphere - Leads */}
-                <motion.div variants={sphereVariants}>
+                  {/* Top Label */}
                   <Box
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSphereClick?.('leads');
-                    }}
                     sx={{
-                      position: 'relative',
-                      width: { xs: 200, sm: 240, md: 280 },
-                      height: { xs: 200, sm: 240, md: 280 },
-                      borderRadius: '20px',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      backdropFilter: 'blur(8px)',
-                      border: '2px solid rgba(255, 255, 255, 0.2)',
-                      display: 'flex',
-                      flexDirection: 'column',
+                      display: 'inline-flex',
                       alignItems: 'center',
-                      justifyContent: 'flex-start',
-                      pt: 2,
-                      mt: 1,
-                      cursor: onSphereClick ? 'pointer' : 'default',
-                      transition: 'all 0.3s ease',
-                      '&:hover': onSphereClick ? {
-                        background: 'rgba(255, 255, 255, 0.15)',
-                        border: '2px solid rgba(255, 255, 255, 0.3)',
-                        transform: 'scale(1.02)',
-                      } : {},
+                      gap: 0.5,
+                      bgcolor: 'rgba(100, 116, 139, 0.8)',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      width: 'fit-content',
                     }}
                   >
-                    {/* Leads Label */}
                     <Typography
-                      variant="caption"
-                      sx={{
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        mb: 0.5,
-                      }}
-                    >
-                      Leads
-                    </Typography>
-                    <Typography
-                      variant="h4"
                       sx={{
                         color: 'white',
+                        fontSize: '0.7rem',
                         fontWeight: 700,
-                        fontSize: { xs: '1.5rem', md: '2rem' },
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
                       }}
                     >
-                      {leads.toLocaleString()}
+                      SPHERE
                     </Typography>
+                  </Box>
 
-                    {/* Inner Sphere - Clients */}
-                    <motion.div variants={sphereVariants}>
+                  {/* Bottom Value */}
+                  <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                    <Typography
+                      sx={{
+                        color: 'white',
+                        fontWeight: 800,
+                        fontSize: { xs: '3rem', sm: '4rem', md: '5rem' },
+                        lineHeight: 1,
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      {sphere.toLocaleString()}
+                    </Typography>
+                    <People sx={{ color: 'rgba(255,255,255,0.6)', fontSize: { xs: 28, md: 36 } }} />
+                  </Box>
+                </Box>
+
+                {/* Right Side - Leads Container */}
+                <Box
+                  sx={{
+                    flex: 1,
+                    display: 'flex',
+                    p: { xs: 1.5, md: 2 },
+                  }}
+                >
+                  <motion.div variants={sphereVariants} style={{ flex: 1, display: 'flex' }}>
+                    <Box
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSphereClick?.('leads');
+                      }}
+                      sx={{
+                        position: 'relative',
+                        flex: 1,
+                        borderRadius: '12px',
+                        background: 'linear-gradient(135deg, rgba(180, 140, 80, 0.4) 0%, rgba(160, 120, 60, 0.3) 100%)',
+                        border: '2px solid rgba(200, 160, 100, 0.5)',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        cursor: onSphereClick ? 'pointer' : 'default',
+                        transition: 'all 0.3s ease',
+                        overflow: 'hidden',
+                        '&:hover': onSphereClick ? {
+                          background: 'linear-gradient(135deg, rgba(180, 140, 80, 0.5) 0%, rgba(160, 120, 60, 0.4) 100%)',
+                          border: '2px solid rgba(200, 160, 100, 0.7)',
+                        } : {},
+                      }}
+                    >
+                      {/* Left Side - Leads Info */}
                       <Box
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSphereClick?.('clients');
-                        }}
                         sx={{
-                          position: 'relative',
-                          width: { xs: 120, sm: 140, md: 160 },
-                          height: { xs: 120, sm: 140, md: 160 },
-                          borderRadius: '16px',
-                          background: 'rgba(255, 255, 255, 0.15)',
-                          backdropFilter: 'blur(8px)',
-                          border: '2px solid rgba(255, 255, 255, 0.25)',
+                          flex: '0 0 auto',
+                          width: { xs: '50%', md: '45%' },
                           display: 'flex',
                           flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          mt: 2,
-                          cursor: onSphereClick ? 'pointer' : 'default',
-                          transition: 'all 0.3s ease',
-                          '&:hover': onSphereClick ? {
-                            background: 'rgba(255, 255, 255, 0.22)',
-                            border: '2px solid rgba(255, 255, 255, 0.4)',
-                            transform: 'scale(1.05)',
-                          } : {},
+                          justifyContent: 'space-between',
+                          p: { xs: 1.5, md: 2 },
                         }}
                       >
-                        {/* Clients Label */}
-                        <Typography
-                          variant="caption"
+                        {/* Top Label */}
+                        <Box
                           sx={{
-                            color: 'rgba(255, 255, 255, 0.8)',
-                            fontSize: '0.65rem',
-                            fontWeight: 600,
-                            letterSpacing: '0.1em',
-                            textTransform: 'uppercase',
-                            mb: 0.5,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 0.5,
+                            bgcolor: 'rgba(180, 140, 80, 0.9)',
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 1,
+                            width: 'fit-content',
                           }}
                         >
-                          Clients
-                        </Typography>
-                        <Typography
-                          variant="h4"
-                          sx={{
-                            color: 'white',
-                            fontWeight: 700,
-                            fontSize: { xs: '1.25rem', md: '1.5rem' },
-                          }}
-                        >
-                          {clients.toLocaleString()}
-                        </Typography>
+                          <Typography
+                            sx={{
+                              color: 'white',
+                              fontSize: '0.65rem',
+                              fontWeight: 700,
+                              letterSpacing: '0.05em',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            LEADS
+                          </Typography>
+                        </Box>
+
+                        {/* Bottom Value */}
+                        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                          <Typography
+                            sx={{
+                              color: 'white',
+                              fontWeight: 800,
+                              fontSize: { xs: '2.5rem', sm: '3rem', md: '3.5rem' },
+                              lineHeight: 1,
+                              letterSpacing: '-0.02em',
+                            }}
+                          >
+                            {leads.toLocaleString()}
+                          </Typography>
+                          <Typography sx={{ fontSize: { xs: 20, md: 28 } }}>🤝</Typography>
+                        </Box>
                       </Box>
-                    </motion.div>
-                  </Box>
-                </motion.div>
+
+                      {/* Right Side - Clients Circle */}
+                      <Box
+                        sx={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          p: { xs: 1, md: 2 },
+                        }}
+                      >
+                        <motion.div variants={sphereVariants}>
+                          <Box
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSphereClick?.('clients');
+                            }}
+                            sx={{
+                              width: { xs: 100, sm: 120, md: 140 },
+                              height: { xs: 100, sm: 120, md: 140 },
+                              borderRadius: '50%',
+                              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                              border: '3px solid rgba(16, 185, 129, 0.6)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: onSphereClick ? 'pointer' : 'default',
+                              transition: 'all 0.3s ease',
+                              boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)',
+                              '&:hover': onSphereClick ? {
+                                transform: 'scale(1.05)',
+                                boxShadow: '0 6px 30px rgba(16, 185, 129, 0.4)',
+                              } : {},
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                fontSize: '0.6rem',
+                                fontWeight: 700,
+                                letterSpacing: '0.1em',
+                                textTransform: 'uppercase',
+                                mb: 0.25,
+                              }}
+                            >
+                              CLIENTS
+                            </Typography>
+                            <Typography
+                              sx={{
+                                color: 'white',
+                                fontWeight: 800,
+                                fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
+                                lineHeight: 1,
+                              }}
+                            >
+                              {clients.toLocaleString()}
+                            </Typography>
+                          </Box>
+                        </motion.div>
+                      </Box>
+                    </Box>
+                  </motion.div>
+                </Box>
               </Box>
             </motion.div>
           </Box>
@@ -260,10 +305,7 @@ export const SpheresHeroLayout = ({
           mt: 3,
           display: 'flex',
           gap: 2,
-          justifyContent: { xs: 'center', md: 'center', lg: 'flex-start' },
-          '@media (max-width: 1016px)': {
-            justifyContent: 'center',
-          },
+          justifyContent: 'flex-start',
         }}>
           {onNewItem && (
             <Button
@@ -305,136 +347,6 @@ export const SpheresHeroLayout = ({
           )}
         </Box>
       </Grid>
-
-      {/* AI Coach Card */}
-      {aiCoachConfig && (
-        <Grid item
-          xs={12}
-          sx={{
-            '@media (max-width: 701px)': {
-              width: '100%',
-              flexBasis: '100%',
-              maxWidth: '100%',
-            },
-            '@media (min-width: 702px) and (max-width: 1016px)': {
-              width: '100%',
-              flexBasis: '100%',
-              maxWidth: '100%',
-            },
-            '@media (min-width: 1017px) and (max-width: 1499px)': {
-              width: '33.33%',
-              flexBasis: '33.33%',
-              maxWidth: '33.33%',
-            },
-            '@media (min-width: 1500px)': {
-              width: '25%',
-              flexBasis: '25%',
-              maxWidth: '25%',
-            },
-          }}
-        >
-          <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <Card
-                elevation={0}
-                sx={{
-                  width: '300px',
-                  minHeight: '300px',
-                  minWidth: '300px',
-                  maxWidth: '300px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)',
-                  backdropFilter: 'blur(10px)',
-                  border: '2px dashed rgba(255, 255, 255, 0.3)',
-                  borderRadius: 3,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.3s ease',
-                  cursor: aiCoachConfig.onHire ? 'pointer' : 'default',
-                  '&:hover': aiCoachConfig.onHire ? {
-                    border: '2px dashed rgba(255, 255, 255, 0.5)',
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.12) 100%)',
-                  } : {},
-                }}
-                onClick={aiCoachConfig.onHire}
-              >
-                <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                  <Box>
-                    <Box
-                      sx={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: '50%',
-                        background: 'rgba(255, 255, 255, 0.15)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        margin: '0 auto',
-                        mb: 2,
-                      }}
-                    >
-                      <Typography sx={{ fontSize: '2rem' }}>🧠</Typography>
-                    </Box>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: 'rgba(255, 255, 255, 0.95)',
-                        fontWeight: 700,
-                        mb: 1,
-                        letterSpacing: '0.02em',
-                      }}
-                    >
-                      {aiCoachConfig.title || 'AI Coach'}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        mb: 2,
-                        fontSize: '0.875rem',
-                      }}
-                    >
-                      {aiCoachConfig.description || 'Get personalized coaching to grow your sphere of influence and convert more leads.'}
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: 'inline-block',
-                        px: 2,
-                        py: 0.75,
-                        borderRadius: 2,
-                        background: aiCoachConfig.onHire
-                          ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                          : 'rgba(255, 255, 255, 0.2)',
-                        backdropFilter: 'blur(5px)',
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: 'white',
-                          fontWeight: 600,
-                          letterSpacing: '0.1em',
-                          textTransform: 'uppercase',
-                          fontSize: '0.75rem',
-                        }}
-                      >
-                        {aiCoachConfig.onHire ? 'Hire Coach' : 'Coming Soon'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Box>
-        </Grid>
-      )}
     </Grid>
   );
 };
