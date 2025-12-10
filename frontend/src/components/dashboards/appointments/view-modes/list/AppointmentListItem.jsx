@@ -214,34 +214,34 @@ const useAppointmentListConfig = (statuses) => {
           formatter: (value) => value || 'TBD',
           editable: false,
         },
-      ],
 
-      // Footer Configuration - Attendees (editable)
-      footer: {
-        fields: [
-          {
-            label: 'Attendees',
-            field: 'attendees',
-            customRenderer: (apt, onEdit) => {
-              const attendees = apt.attendees || apt.clients || [];
-              return (
-                <AttendeeCircles
-                  attendees={attendees}
-                  onEdit={onEdit}
-                  maxVisible={6}
-                />
-              );
-            },
-            editable: true,
-            editor: EditAttendees,
-            editorProps: (apt) => ({
-              value: apt.attendees || [],
-              data: apt,
-            }),
-            onSave: (apt, attendees) => ({ attendees }),
+        // Attendees (editable) - in metrics row like Escrows
+        {
+          label: (apt) => {
+            const attendees = apt.attendees || [];
+            return attendees.length === 1 ? 'Attendee' : 'Attendees';
           },
-        ],
-      },
+          field: 'attendees',
+          customRenderer: (apt, onEdit) => {
+            const attendees = apt.attendees || apt.clients || [];
+            return (
+              <AttendeeCircles
+                attendees={attendees}
+                onEdit={onEdit}
+                maxVisible={4}
+                disableHover
+              />
+            );
+          },
+          editable: true,
+          editor: EditAttendees,
+          editorProps: (apt) => ({
+            value: apt.attendees || [],
+            data: apt,
+          }),
+          onSave: (apt, attendees) => ({ attendees }),
+        },
+      ],
 
       // Quick Actions Configuration
       actions: {
