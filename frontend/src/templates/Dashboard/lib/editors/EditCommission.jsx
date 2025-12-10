@@ -64,15 +64,26 @@ export const EditCommission = ({
 
     const newValue = parseFloat(editValue);
 
-    // Check if value actually changed - don't save if unchanged
-    const hasChanged = commissionType === 'percentage'
+    // Calculate what the new commission should be
+    const calculatedCommission = commissionType === 'percentage' && purchasePrice
+      ? (purchasePrice * newValue) / 100
+      : (commissionType === 'flat' ? newValue : 0);
+
+    // Check if percentage/flat value changed
+    const hasValueChanged = commissionType === 'percentage'
       ? newValue !== commissionPercentage
       : newValue !== value;
 
     const hasTypeChanged = commissionType !== initialCommissionType;
 
-    // If nothing changed, just close
-    if (!hasChanged && !hasTypeChanged) {
+    // Also check if the calculated commission differs from stored commission
+    // This handles cases where percentage is same but my_commission is stale
+    // (e.g., commission_percentage=3 but my_commission=8655 instead of 8640)
+    const hasCommissionMismatch = commissionType === 'percentage' &&
+      Math.abs(calculatedCommission - (value || 0)) > 0.01; // Allow 1 cent tolerance
+
+    // If nothing changed and commission matches, just close
+    if (!hasValueChanged && !hasTypeChanged && !hasCommissionMismatch) {
       onClose();
       return;
     }
@@ -87,7 +98,7 @@ export const EditCommission = ({
         // Save percentage as-is (2.25 stays as 2.25, representing 2.25%)
         // Calculate dollar amount by dividing by 100 (2.25% of price)
         updates.commission_percentage = newValue;
-        updates.my_commission = purchasePrice ? (purchasePrice * newValue) / 100 : 0;
+        updates.my_commission = calculatedCommission;
       } else {
         // Save flat dollar amount and clear percentage
         updates.my_commission = newValue;
