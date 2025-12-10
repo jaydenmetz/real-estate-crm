@@ -1,6 +1,28 @@
+/**
+ * Contacts Entity Configuration
+ *
+ * Complete configuration for the contacts entity including:
+ * - Dashboard layout with spheres hero mode
+ * - Detail page widgets and sections
+ * - Forms and validation
+ * - API endpoints
+ * - Permissions
+ */
+
 import { createEntityConfig } from '../../utils/config/createEntityConfig';
 import { contactsAPI } from '../../services/api.service';
 import { createSortFunction } from '../../utils/sortUtils';
+
+// Import navigation configurations
+import {
+  contactStatusTabs,
+  contactSortOptions,
+  contactDefaultSort,
+  getContactScopeOptions,
+  contactDefaultScope,
+  contactViewModes,
+  contactDefaultViewMode
+} from '../../components/dashboards/contacts/navigation';
 
 export const contactsConfig = createEntityConfig({
   // ========================================
@@ -68,34 +90,25 @@ export const contactsConfig = createEntityConfig({
     // Stats Configuration - Not used for spheres mode but kept for compatibility
     stats: [],
 
-    // Status Tabs Configuration
-    statusTabs: [
-      { value: 'all', label: 'All Contacts', categoryKey: 'all' },
-      { value: 'sphere', label: 'Sphere', categoryKey: 'sphere' },
-      { value: 'lead', label: 'Leads', categoryKey: 'lead' },
-      { value: 'client', label: 'Clients', categoryKey: 'client' },
-    ],
+    // Status Tabs Configuration (imported from navigation)
+    statusTabs: contactStatusTabs,
     defaultStatus: 'all',
 
-    // Scope Filter Configuration
-    scopeOptions: [
-      { value: 'all', label: 'All Contacts' },
-      { value: 'mine', label: 'My Contacts' },
-    ],
-    defaultScope: 'all',
+    // Scope Filter Configuration (imported from navigation)
+    getScopeOptions: getContactScopeOptions,
+    defaultScope: contactDefaultScope,
 
-    // Sort Options Configuration
-    sortOptions: [
-      { value: 'last_name', label: 'Last Name' },
-      { value: 'first_name', label: 'First Name' },
-      { value: 'created_at', label: 'Date Added' },
-      { value: 'updated_at', label: 'Last Updated' },
-    ],
-    defaultSort: { sortBy: 'last_name', sortOrder: 'asc' },
+    // Sort Options Configuration (imported from navigation)
+    sortOptions: contactSortOptions,
+    defaultSort: contactDefaultSort,
 
-    // View Modes Configuration
-    viewModes: ['grid', 'list', 'table'],
-    defaultViewMode: 'grid',
+    // View Modes Configuration (imported from navigation)
+    viewModes: contactViewModes,
+    defaultViewMode: contactDefaultViewMode,
+
+    // Archive Configuration
+    showArchive: true,
+    archiveLabel: 'Archive',
 
     // Card Configuration
     card: {
