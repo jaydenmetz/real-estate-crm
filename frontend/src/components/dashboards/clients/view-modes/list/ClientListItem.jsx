@@ -2,17 +2,32 @@ import React, { useMemo } from 'react';
 import { ListItemTemplate } from '../../../../../templates/Dashboard/view-modes';
 import { CheckCircle, Cancel, Person, Schedule } from '@mui/icons-material';
 import { Avatar, Box, Typography, Chip, alpha, useTheme } from '@mui/material';
-import { getStatusConfig, CLIENT_STATUS_CONFIG } from '../../../../../constants/clientConfig';
+import { getStatusConfig } from '../../../../../constants/clientConfig';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
 import { useStatus } from '../../../../../contexts/StatusContext';
 
-// Import editor components
+// Import editor components - same as ClientCard
 import {
   EditClientName,
   EditClientEmail,
   EditClientPhone,
+  EditClientStatus,
   EditClientBudget,
+  EditClientCommission,
+  EditAgreementStartDate,
+  EditAgreementEndDate,
+  EditLeads,
 } from '../../editors';
+
+// Import LeadCircles component for footer
+import { LeadCircles } from '../../../../common/ui/LeadCircles';
+
+// Compact date formatter (same as ClientCard)
+const formatCompactDate = (value) => {
+  if (!value) return 'TBD';
+  const date = new Date(value);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
 
 // ============================================================================
 // LIST VIEW CONFIGURATION HOOK
@@ -83,7 +98,7 @@ const useClientListConfig = (statuses) => {
         },
       },
 
-      // Status configuration
+      // Status configuration (editable)
       status: {
         field: (client) => client.client_status || client.status || 'active',
         getConfig: (status) => {
@@ -99,7 +114,7 @@ const useClientListConfig = (statuses) => {
         onSave: (client, newStatus) => ({ client_status: newStatus }),
       },
 
-      // Title configuration (name + type chip)
+      // Title configuration (name + type chip, editable)
       title: {
         field: (client) => {
           const firstName = client.firstName || client.first_name || '';
@@ -112,10 +127,22 @@ const useClientListConfig = (statuses) => {
           value: `${client.firstName || client.first_name || ''} ${client.lastName || client.last_name || ''}`.trim(),
           data: client,
         }),
-        onSave: (client, nameData) => ({
-          first_name: nameData.first_name,
-          last_name: nameData.last_name,
-        }),
+        onSave: (client, nameData) => {
+          // Handle both object (from EditClientName) and string formats
+          if (typeof nameData === 'object' && nameData !== null) {
+            const displayName = `${nameData.first_name || ''} ${nameData.last_name || ''}`.trim();
+            return {
+              first_name: nameData.first_name,
+              last_name: nameData.last_name,
+              display_name: displayName || null,
+              lead_id: nameData.lead_id,
+            };
+          }
+          const parts = String(nameData).trim().split(/\s+/);
+          const firstName = parts[0] || '';
+          const lastName = parts.slice(1).join(' ') || '';
+          return { first_name: firstName, last_name: lastName };
+        },
         customRenderer: (client, onEdit) => {
           const firstName = client.firstName || client.first_name || '';
           const lastName = client.lastName || client.last_name || '';
@@ -159,46 +186,133 @@ const useClientListConfig = (statuses) => {
       subtitle: {
         formatter: (client) => {
           const parts = [];
-          if (client.email) parts.push(client.email);
           if (client.phone) parts.push(client.phone);
-          return parts.join(' | ');
+          if (client.email) parts.push(client.email);
+          return parts.join(' • ');
         },
       },
 
-      // Metrics row
+      // Metrics row - matches ClientCard: Target Price, Projected Commission
       metrics: [
-        // Budget
+        // Target Price (editable) - renamed from Budget
         {
-          label: 'Budget',
-          field: (client) => parseFloat(client.budget || client.max_budget || 0),
+          label: 'Target Price',
+          field: (client) => client.target_price || client.targetPrice || client.budget || 0,
           formatter: (value) => value > 0 ? formatCurrency(value) : '—',
+          color: '#10b981',
           editable: true,
           editor: EditClientBudget,
           editorProps: (client) => ({
-            value: client.budget || client.max_budget || 0,
+            value: client.target_price || client.targetPrice || client.budget || 0,
             data: client,
           }),
-          onSave: (client, newBudget) => ({ budget: newBudget, max_budget: newBudget }),
-          color: '#10b981',
+          onSave: (client, newTargetPrice) => {
+            const updates = { target_price: newTargetPrice };
+            // Auto-recalculate commission if type is percentage
+            const commissionType = client.commission_type || client.commissionType || 'percentage';
+            const commissionPercentage = client.commission_percentage || client.commissionPercentage;
+            if (commissionType === 'percentage' && commissionPercentage) {
+              updates.projected_commission = (newTargetPrice * commissionPercentage) / 100;
+            }
+            return updates;
+          },
         },
 
-        // Created Date
+        // Projected Commission (editable)
         {
-          label: 'Created',
-          field: 'created_at',
-          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
-          editable: false,
+          label: 'Projected Commission',
+          field: (client) => client.projected_commission || client.projectedCommission || client.commission || client.lifetime_value || 0,
+          formatter: (value) => value > 0 ? formatCurrency(value) : '—',
+          color: '#06b6d4',
+          editable: true,
+          editor: EditClientCommission,
+          editorProps: (client) => ({
+            value: client.projected_commission || client.projectedCommission || client.commission || client.lifetime_value || 0,
+            commissionPercentage: client.commission_percentage || client.commissionPercentage,
+            commissionType: client.commission_type || client.commissionType || 'percentage',
+            budget: client.target_price || client.targetPrice || client.budget || 0,
+            data: client,
+          }),
+          onSave: (client, updates) => ({
+            projected_commission: updates.commission,
+            commission_percentage: updates.commission_percentage,
+            commission_type: updates.commission_type,
+          }),
         },
 
-        // Last Contact
+        // Beginning Date (editable)
         {
-          label: 'Last Contact',
-          field: (client) => client.last_contact || client.last_contactDate,
-          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
-          editable: false,
-          color: '#6366f1',
+          label: 'Beginning',
+          field: (client) => client.agreement_start_date || client.agreementStartDate,
+          formatter: (value) => formatCompactDate(value),
+          editable: true,
+          editor: EditAgreementStartDate,
+          editorProps: (client) => ({
+            value: client.agreement_start_date || client.agreementStartDate,
+            data: client,
+          }),
+          onSave: (client, newDate) => ({ agreement_start_date: newDate }),
+        },
+
+        // Expiration Date (editable)
+        {
+          label: (client) => {
+            const endDate = client.agreement_end_date || client.agreementEndDate;
+            if (!endDate) return 'Expiration';
+            const date = new Date(endDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            date.setHours(0, 0, 0, 0);
+            const diffDays = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+            if (diffDays < 0) return 'Expired';
+            if (diffDays <= 30) return 'Expiring';
+            return 'Expiration';
+          },
+          field: (client) => client.agreement_end_date || client.agreementEndDate,
+          formatter: (value) => formatCompactDate(value),
+          editable: true,
+          editor: EditAgreementEndDate,
+          editorProps: (client) => ({
+            value: client.agreement_end_date || client.agreementEndDate,
+            minDate: client.agreement_start_date || client.agreementStartDate,
+            data: client,
+          }),
+          onSave: (client, newDate) => ({ agreement_end_date: newDate }),
         },
       ],
+
+      // Footer with Lead Contacts
+      footer: {
+        fields: [
+          {
+            label: (client) => {
+              const leads = client.leads || [];
+              return leads.length > 1 ? 'Lead Contacts' : 'Lead Contact';
+            },
+            field: 'leads',
+            customRenderer: (client, onEdit) => {
+              const leads = client.leads || [];
+              return (
+                <LeadCircles
+                  leads={leads}
+                  onEdit={onEdit}
+                  maxVisible={6}
+                />
+              );
+            },
+            editable: true,
+            editor: EditLeads,
+            editorProps: (client) => ({
+              value: client.leads || [],
+              data: client,
+            }),
+            onSave: (client, leadsData) => {
+              const leadIds = leadsData.map(l => l.id || l.lead_id);
+              return { lead_ids: leadIds, leads: leadsData };
+            },
+          },
+        ],
+      },
     };
   }, [statuses, theme]);
 };
@@ -206,17 +320,15 @@ const useClientListConfig = (statuses) => {
 /**
  * ClientListItem - Full-width horizontal list view for clients dashboard
  *
- * Now uses ListItemTemplate with inline configuration for better colocation.
- * Now uses database-driven status options from StatusContext.
- *
- * Features:
- * - Avatar with initials and status-colored gradient
- * - Editable name with client type chip
- * - Contact info (email, phone) in subtitle
- * - Metrics: Budget, Created, Last Contact
- * - Status menu: dynamically populated from database
- * - Click vs drag: text selection support
- * - Hover effects and transitions
+ * Now matches ClientCard fields:
+ * - Name (editable)
+ * - Phone + Email (subtitle)
+ * - Target Price (editable)
+ * - Projected Commission (editable)
+ * - Beginning Date (editable)
+ * - Expiration Date (editable)
+ * - Lead Contacts (editable)
+ * - Status (editable)
  */
 const ClientListItem = React.memo(({
   client,

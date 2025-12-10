@@ -6,13 +6,28 @@ import { getStatusConfig } from '../../../../../constants/clientConfig';
 import { formatCurrency, formatDate } from '../../../../../utils/formatters';
 import { useStatus } from '../../../../../contexts/StatusContext';
 
-// Import editor components
+// Import editor components - same as ClientCard
 import {
   EditClientName,
   EditClientEmail,
   EditClientPhone,
+  EditClientStatus,
   EditClientBudget,
+  EditClientCommission,
+  EditAgreementStartDate,
+  EditAgreementEndDate,
+  EditLeads,
 } from '../../editors';
+
+// Import LeadCircles component for leads column
+import { LeadCircles } from '../../../../common/ui/LeadCircles';
+
+// Compact date formatter (same as ClientCard)
+const formatCompactDate = (value) => {
+  if (!value) return 'TBD';
+  const date = new Date(value);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
 
 // ============================================================================
 // TABLE VIEW CONFIGURATION HOOK
@@ -44,8 +59,8 @@ const useClientTableConfig = (statuses) => {
         ];
 
     return {
-      // Grid layout: 8 columns (Avatar+Name, Email, Phone, Status, Budget, Created, Last Contact, Actions)
-      gridTemplateColumns: 'auto 2fr 1.5fr 1.2fr 1fr 1fr 1fr 80px',
+      // Grid layout: 9 columns (Avatar+Name, Status, Target Price, Commission, Beginning, Expiration, Leads, Phone, Actions)
+      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 100px 1.2fr 80px',
 
       // Status config for row styling
       statusConfig: {
@@ -59,7 +74,7 @@ const useClientTableConfig = (statuses) => {
         },
       },
 
-      // Column configurations
+      // Column configurations - matches ClientCard fields
       columns: [
         // Avatar + Name (editable)
         {
@@ -106,18 +121,16 @@ const useClientTableConfig = (statuses) => {
                   >
                     {fullName}
                   </Typography>
-                  <Chip
-                    label={type.charAt(0).toUpperCase() + type.slice(1)}
-                    size="small"
+                  <Typography
+                    variant="caption"
                     sx={{
-                      fontSize: 9,
-                      fontWeight: 600,
-                      height: 18,
-                      mt: 0.5,
-                      background: alpha(statusConfig.color, 0.1),
-                      color: statusConfig.color,
+                      fontSize: '0.7rem',
+                      color: theme.palette.text.secondary,
+                      display: 'block',
                     }}
-                  />
+                  >
+                    {client.phone || client.email || ''}
+                  </Typography>
                 </Box>
               </Box>
             );
@@ -128,30 +141,160 @@ const useClientTableConfig = (statuses) => {
             value: `${client.firstName || client.first_name || ''} ${client.lastName || client.last_name || ''}`.trim(),
             data: client,
           }),
-          onSave: (client, nameData) => ({
-            first_name: nameData.first_name,
-            last_name: nameData.last_name,
-          }),
+          onSave: (client, nameData) => {
+            if (typeof nameData === 'object' && nameData !== null) {
+              const displayName = `${nameData.first_name || ''} ${nameData.last_name || ''}`.trim();
+              return {
+                first_name: nameData.first_name,
+                last_name: nameData.last_name,
+                display_name: displayName || null,
+                lead_id: nameData.lead_id,
+              };
+            }
+            const parts = String(nameData).trim().split(/\s+/);
+            const firstName = parts[0] || '';
+            const lastName = parts.slice(1).join(' ') || '';
+            return { first_name: firstName, last_name: lastName };
+          },
           align: 'left',
           bold: true,
           hoverColor: 'rgba(16, 185, 129, 0.08)',
         },
 
-        // Email (editable)
+        // Status (editable)
         {
-          label: 'Email',
-          field: 'email',
-          formatter: (value) => value || '—',
+          label: 'Status',
+          field: (client) => client.client_status || client.status || 'active',
+          formatter: (status) => {
+            const config = getStatusConfig(status);
+            return config.label;
+          },
+          isStatus: true,
           editable: true,
-          editor: EditClientEmail,
+          statusOptions: statusOptions,
+          onSave: (client, newStatus) => ({ client_status: newStatus }),
+          align: 'left',
+        },
+
+        // Target Price (editable)
+        {
+          label: 'Target Price',
+          field: (client) => client.target_price || client.targetPrice || client.budget || 0,
+          formatter: (value) => value > 0 ? formatCurrency(value) : '—',
+          editable: true,
+          editor: EditClientBudget,
           editorProps: (client) => ({
-            value: client.email || '',
+            value: client.target_price || client.targetPrice || client.budget || 0,
             data: client,
           }),
-          onSave: (client, newEmail) => ({ email: newEmail }),
+          onSave: (client, newTargetPrice) => {
+            const updates = { target_price: newTargetPrice };
+            const commissionType = client.commission_type || client.commissionType || 'percentage';
+            const commissionPercentage = client.commission_percentage || client.commissionPercentage;
+            if (commissionType === 'percentage' && commissionPercentage) {
+              updates.projected_commission = (newTargetPrice * commissionPercentage) / 100;
+            }
+            return updates;
+          },
           align: 'left',
-          color: theme.palette.text.secondary,
-          hoverColor: alpha('#000', 0.05),
+          bold: true,
+          color: '#10b981',
+          hoverColor: 'rgba(16, 185, 129, 0.08)',
+        },
+
+        // Projected Commission (editable)
+        {
+          label: 'Commission',
+          field: (client) => client.projected_commission || client.projectedCommission || client.commission || client.lifetime_value || 0,
+          formatter: (value) => value > 0 ? formatCurrency(value) : '—',
+          editable: true,
+          editor: EditClientCommission,
+          editorProps: (client) => ({
+            value: client.projected_commission || client.projectedCommission || client.commission || client.lifetime_value || 0,
+            commissionPercentage: client.commission_percentage || client.commissionPercentage,
+            commissionType: client.commission_type || client.commissionType || 'percentage',
+            budget: client.target_price || client.targetPrice || client.budget || 0,
+            data: client,
+          }),
+          onSave: (client, updates) => ({
+            projected_commission: updates.commission,
+            commission_percentage: updates.commission_percentage,
+            commission_type: updates.commission_type,
+          }),
+          align: 'left',
+          bold: true,
+          color: '#06b6d4',
+          hoverColor: 'rgba(6, 182, 212, 0.08)',
+        },
+
+        // Beginning Date (editable)
+        {
+          label: 'Beginning',
+          field: (client) => client.agreement_start_date || client.agreementStartDate,
+          formatter: (value) => formatCompactDate(value),
+          editable: true,
+          editor: EditAgreementStartDate,
+          editorProps: (client) => ({
+            value: client.agreement_start_date || client.agreementStartDate,
+            data: client,
+          }),
+          onSave: (client, newDate) => ({ agreement_start_date: newDate }),
+          align: 'left',
+        },
+
+        // Expiration Date (editable)
+        {
+          label: (client) => {
+            const endDate = client?.agreement_end_date || client?.agreementEndDate;
+            if (!endDate) return 'Expiration';
+            const date = new Date(endDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            date.setHours(0, 0, 0, 0);
+            const diffDays = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+            if (diffDays < 0) return 'Expired';
+            if (diffDays <= 30) return 'Expiring';
+            return 'Expiration';
+          },
+          field: (client) => client.agreement_end_date || client.agreementEndDate,
+          formatter: (value) => formatCompactDate(value),
+          editable: true,
+          editor: EditAgreementEndDate,
+          editorProps: (client) => ({
+            value: client.agreement_end_date || client.agreementEndDate,
+            minDate: client.agreement_start_date || client.agreementStartDate,
+            data: client,
+          }),
+          onSave: (client, newDate) => ({ agreement_end_date: newDate }),
+          align: 'left',
+        },
+
+        // Lead Contacts (editable)
+        {
+          label: 'Leads',
+          field: 'leads',
+          customRenderer: (client, onEdit) => {
+            const leads = client.leads || [];
+            return (
+              <LeadCircles
+                leads={leads}
+                onEdit={onEdit}
+                maxVisible={3}
+                size="small"
+              />
+            );
+          },
+          editable: true,
+          editor: EditLeads,
+          editorProps: (client) => ({
+            value: client.leads || [],
+            data: client,
+          }),
+          onSave: (client, leadsData) => {
+            const leadIds = leadsData.map(l => l.id || l.lead_id);
+            return { lead_ids: leadIds, leads: leadsData };
+          },
+          align: 'left',
         },
 
         // Phone (editable)
@@ -170,58 +313,6 @@ const useClientTableConfig = (statuses) => {
           color: theme.palette.text.secondary,
           hoverColor: alpha('#000', 0.05),
         },
-
-        // Status (editable)
-        {
-          label: 'Status',
-          field: (client) => client.client_status || client.status || 'active',
-          formatter: (status) => {
-            const config = getStatusConfig(status);
-            return config.label;
-          },
-          isStatus: true,
-          editable: true,
-          statusOptions: statusOptions,
-          onSave: (client, newStatus) => ({ client_status: newStatus }),
-          align: 'left',
-        },
-
-        // Budget (editable)
-        {
-          label: 'Budget',
-          field: (client) => parseFloat(client.budget || client.max_budget || 0),
-          formatter: (value) => value > 0 ? formatCurrency(value) : '—',
-          editable: true,
-          editor: EditClientBudget,
-          editorProps: (client) => ({
-            value: client.budget || client.max_budget || 0,
-            data: client,
-          }),
-          onSave: (client, newBudget) => ({ budget: newBudget, max_budget: newBudget }),
-          align: 'left',
-          bold: true,
-          color: '#10b981',
-          hoverColor: 'rgba(16, 185, 129, 0.08)',
-        },
-
-        // Created Date (read-only)
-        {
-          label: 'Created',
-          field: 'created_at',
-          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
-          editable: false,
-          align: 'left',
-        },
-
-        // Last Contact (read-only)
-        {
-          label: 'Last Contact',
-          field: (client) => client.last_contact || client.last_contactDate,
-          formatter: (value) => value ? formatDate(value, 'MMM d') : '—',
-          editable: false,
-          align: 'left',
-          color: '#6366f1',
-        },
       ],
     };
   }, [statuses, theme]);
@@ -230,16 +321,15 @@ const useClientTableConfig = (statuses) => {
 /**
  * ClientTableRow - Compact table view for clients dashboard
  *
- * Now uses TableRowTemplate with inline configuration for better colocation.
- * Now uses database-driven status options from StatusContext.
- *
- * Features:
- * - Grid layout with 8 columns (Avatar+Name, Email, Phone, Status, Budget, Created, Last Contact, Actions)
- * - Inline editors: name, email, phone, budget, status
- * - Avatar with initials and status-colored gradient
- * - Status menu: dynamically populated from database
- * - Click vs drag: text selection support
- * - Hover effects and transitions
+ * Now matches ClientCard fields:
+ * - Name + Phone/Email (editable)
+ * - Status (editable)
+ * - Target Price (editable)
+ * - Projected Commission (editable)
+ * - Beginning Date (editable)
+ * - Expiration Date (editable)
+ * - Lead Contacts (editable)
+ * - Phone (editable)
  */
 const ClientTableRow = React.memo(({
   client,
