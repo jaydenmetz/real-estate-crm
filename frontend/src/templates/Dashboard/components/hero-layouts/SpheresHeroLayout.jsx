@@ -84,7 +84,7 @@ export const SpheresHeroLayout = ({
               justifyContent: 'flex-start',
               alignItems: 'stretch',
               width: '100%',
-              minHeight: { xs: 280, md: 320 },
+              height: 200,
             }}
           >
             {/* Outer Container - Sphere of Influence */}
@@ -94,7 +94,7 @@ export const SpheresHeroLayout = ({
                 sx={{
                   position: 'relative',
                   flex: 1,
-                  minHeight: { xs: 280, md: 320 },
+                  height: '100%',
                   borderRadius: '16px',
                   background: 'rgba(0, 0, 0, 0.25)',
                   backdropFilter: 'blur(8px)',
@@ -118,7 +118,7 @@ export const SpheresHeroLayout = ({
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    p: { xs: 2, md: 3 },
+                    p: { xs: 1.5, md: 2 },
                   }}
                 >
                   {/* Top Label */}
@@ -153,14 +153,14 @@ export const SpheresHeroLayout = ({
                       sx={{
                         color: 'white',
                         fontWeight: 800,
-                        fontSize: { xs: '3rem', sm: '4rem', md: '5rem' },
+                        fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
                         lineHeight: 1,
                         letterSpacing: '-0.02em',
                       }}
                     >
                       {sphere.toLocaleString()}
                     </Typography>
-                    <People sx={{ color: 'rgba(255,255,255,0.6)', fontSize: { xs: 28, md: 36 } }} />
+                    <People sx={{ color: 'rgba(255,255,255,0.6)', fontSize: { xs: 20, md: 24 } }} />
                   </Box>
                 </Box>
 
@@ -169,7 +169,7 @@ export const SpheresHeroLayout = ({
                   sx={{
                     flex: 1,
                     display: 'flex',
-                    p: { xs: 1.5, md: 2 },
+                    p: { xs: 1, md: 1.5 },
                   }}
                 >
                   <motion.div variants={sphereVariants} style={{ flex: 1, display: 'flex' }}>
@@ -203,7 +203,7 @@ export const SpheresHeroLayout = ({
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'space-between',
-                          p: { xs: 1.5, md: 2 },
+                          p: { xs: 1, md: 1.5 },
                         }}
                       >
                         {/* Top Label */}
@@ -238,14 +238,14 @@ export const SpheresHeroLayout = ({
                             sx={{
                               color: 'white',
                               fontWeight: 800,
-                              fontSize: { xs: '2.5rem', sm: '3rem', md: '3.5rem' },
+                              fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
                               lineHeight: 1,
                               letterSpacing: '-0.02em',
                             }}
                           >
                             {leads.toLocaleString()}
                           </Typography>
-                          <Typography sx={{ fontSize: { xs: 20, md: 28 } }}>🤝</Typography>
+                          <Typography sx={{ fontSize: { xs: 16, md: 20 } }}>🤝</Typography>
                         </Box>
                       </Box>
 
@@ -256,7 +256,7 @@ export const SpheresHeroLayout = ({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          p: { xs: 1, md: 2 },
+                          p: 1,
                         }}
                       >
                         <motion.div variants={sphereVariants}>
@@ -266,8 +266,8 @@ export const SpheresHeroLayout = ({
                               onSphereClick?.('clients');
                             }}
                             sx={{
-                              width: { xs: 100, sm: 120, md: 140 },
-                              height: { xs: 100, sm: 120, md: 140 },
+                              width: { xs: 80, sm: 100, md: 120 },
+                              height: { xs: 80, sm: 100, md: 120 },
                               borderRadius: '50%',
                               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                               border: '3px solid rgba(16, 185, 129, 0.6)',
@@ -287,7 +287,7 @@ export const SpheresHeroLayout = ({
                             <Typography
                               sx={{
                                 color: 'rgba(255, 255, 255, 0.9)',
-                                fontSize: '0.6rem',
+                                fontSize: '0.55rem',
                                 fontWeight: 700,
                                 letterSpacing: '0.1em',
                                 textTransform: 'uppercase',
@@ -300,7 +300,7 @@ export const SpheresHeroLayout = ({
                               sx={{
                                 color: 'white',
                                 fontWeight: 800,
-                                fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
+                                fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
                                 lineHeight: 1,
                               }}
                             >
@@ -383,7 +383,8 @@ export const SpheresHeroLayout = ({
         >
           <Card
             sx={{
-              height: 200,
+              width: 300,
+              height: 300,
               background: 'rgba(0, 0, 0, 0.25)',
               backdropFilter: 'blur(8px)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
