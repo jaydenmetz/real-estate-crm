@@ -17,7 +17,11 @@ import {
   EditListingDate,
   EditExpirationDate,
   EditPropertyAddress,
+  EditSellers,
 } from '../../editors';
+
+// Import ClientCircles component for footer
+import { ClientCircles } from '../../../../common/ui/ClientCircles';
 
 // ============================================================================
 // COMMISSION MASKING (for privacy toggle)
@@ -188,12 +192,12 @@ const useListingListConfig = (statuses) => {
     // Expiration Date (editable with minDate validation) - Dynamic label based on status
     {
       label: (listing) => {
-        const status = listing?.listing_status;
-        if (status === 'Closed') return 'Closed';
-        if (status === 'Cancelled') return 'Cancelled';
-        if (status === 'Expired') return 'Expired';
-        if (status === 'Withdrawn') return 'Withdrawn';
-        return 'Expires'; // Active, Active Under Contract, Pending, and default
+        const status = listing?.listing_status?.toLowerCase();
+        if (status === 'closed') return 'Closed';
+        if (status === 'cancelled') return 'Cancelled';
+        if (status === 'expired') return 'Expired';
+        if (status === 'withdrawn') return 'Withdrawn';
+        return 'Expires'; // active, active_under_contract, pending, and default
       },
       field: 'expiration_date',
       formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
@@ -207,6 +211,42 @@ const useListingListConfig = (statuses) => {
       },
     },
   ],
+
+  // Footer Configuration (Sellers)
+  footer: {
+    fields: [
+      // Client Contacts (sellers only for listings)
+      {
+        label: (listing) => {
+          const sellers = listing.sellers || [];
+          return sellers.length === 1 ? 'Client Contact' : 'Client Contacts';
+        },
+        field: 'sellers',
+        customRenderer: (listing, onEdit) => {
+          const sellers = listing.sellers || [];
+          // Listings only have sellers, so we use seller representation type
+          return (
+            <ClientCircles
+              clients={{ buyers: [], sellers: sellers }}
+              representationType="seller"
+              onEdit={onEdit}
+              maxVisible={6}
+            />
+          );
+        },
+        editable: true,
+        editor: EditSellers,
+        editorProps: (listing) => ({
+          value: listing.sellers || [],
+        }),
+        onSave: (listing, sellersData) => {
+          // sellersData is an array of seller client objects
+          const sellerIds = sellersData.map(s => s.id || s.client_id);
+          return { seller_ids: sellerIds, sellers: sellersData };
+        },
+      },
+    ],
+  },
     };
   }, [statuses]);
 };

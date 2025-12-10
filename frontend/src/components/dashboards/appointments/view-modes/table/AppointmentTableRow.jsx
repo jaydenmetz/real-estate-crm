@@ -14,7 +14,51 @@ import {
   EditAppointmentTime,
   EditAppointmentStatus,
   EditAppointmentLocation,
+  EditStops,
+  EditAttendees,
 } from '../../editors';
+
+// Import AttendeeCircles component
+import { AttendeeCircles } from '../../../../common/ui/AttendeeCircles';
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Format duration in minutes
+ */
+const formatDuration = (minutes) => {
+  if (!minutes) return '30 min';
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (mins === 0) return `${hours}h`;
+  return `${hours}h ${mins}m`;
+};
+
+/**
+ * Format appointment time for display (12-hour format)
+ */
+const formatTime = (time) => {
+  if (!time) return '';
+  if (time.includes && (time.includes('AM') || time.includes('PM'))) return time;
+  const [hours, minutes] = String(time).split(':');
+  const h = parseInt(hours);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${minutes} ${ampm}`;
+};
+
+/**
+ * Calculate total duration from all stops
+ */
+const getTotalDuration = (appointment) => {
+  if (appointment.stops && appointment.stops.length > 0) {
+    return appointment.stops.reduce((sum, stop) => sum + (stop.estimated_duration || 30), 0);
+  }
+  return appointment.duration || 30;
+};
 
 // ============================================================================
 // TABLE VIEW CONFIGURATION HOOK
@@ -48,8 +92,8 @@ const useAppointmentTableConfig = (statuses) => {
         ];
 
     return {
-      // Grid layout: 7 columns (Title+Type, Date, Time, Location, Client, Status, Actions)
-      gridTemplateColumns: '2fr 1fr 1fr 1.5fr 1fr 1fr 80px',
+      // Grid layout: 10 columns (Title+Type, Status, +Stops, Duration, Start, End, Location, Attendees, Actions)
+      gridTemplateColumns: '2fr 1fr 70px 80px 1fr 80px 1.2fr 100px 80px',
 
       // Status config for row styling
       statusConfig: {
@@ -117,11 +161,64 @@ const useAppointmentTableConfig = (statuses) => {
           hoverColor: 'rgba(59, 130, 246, 0.08)',
         },
 
-        // Date (editable)
+        // Status (editable)
         {
-          label: 'Date',
-          field: (apt) => apt.appointment_date || apt.appointmentDate,
-          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
+          label: 'Status',
+          field: (apt) => apt.appointment_status || apt.status || 'scheduled',
+          formatter: (status) => {
+            const config = getStatusConfig(status);
+            return config.label;
+          },
+          isStatus: true,
+          editable: true,
+          statusOptions: statusOptions,
+          onSave: (apt, newStatus) => ({ appointment_status: newStatus }),
+          align: 'left',
+        },
+
+        // + Stops (editable)
+        {
+          label: '+ Stops',
+          field: (apt) => {
+            const stopCount = apt.stop_count || apt.stops?.length || 1;
+            return Math.max(0, stopCount - 1);
+          },
+          formatter: (value) => String(value),
+          editable: true,
+          editor: EditStops,
+          editorProps: (apt) => ({
+            value: apt.stops || [],
+            data: apt,
+            excludeFirstStop: true,
+          }),
+          onSave: (apt, stops) => ({ stops }),
+          align: 'left',
+          bold: true,
+          color: '#3b82f6',
+        },
+
+        // Duration (calculated)
+        {
+          label: 'Duration',
+          field: (apt) => getTotalDuration(apt),
+          formatter: (value) => formatDuration(value),
+          editable: false,
+          align: 'left',
+          color: '#10b981',
+        },
+
+        // Start date/time (editable)
+        {
+          label: 'Start',
+          field: (apt) => {
+            const date = apt.appointment_date || apt.date;
+            const time = apt.appointment_time || apt.time;
+            if (!date) return '—';
+            const dateStr = formatDate(date, 'MMM d');
+            const timeStr = time ? formatTime(time) : '';
+            return timeStr ? `${dateStr} ${timeStr}` : dateStr;
+          },
+          formatter: (value) => value || '—',
           editable: true,
           editor: EditAppointmentDate,
           editorProps: (apt) => ({
@@ -133,26 +230,31 @@ const useAppointmentTableConfig = (statuses) => {
           hoverColor: alpha('#000', 0.05),
         },
 
-        // Time (editable)
+        // End time (calculated)
         {
-          label: 'Time',
-          field: (apt) => apt.appointment_time || apt.appointmentTime,
+          label: 'End',
+          field: (apt) => {
+            const startTime = apt.appointment_time || apt.time;
+            const duration = getTotalDuration(apt);
+            if (!startTime) return '—';
+            const [hours, minutes] = String(startTime).split(':').map(Number);
+            const startMinutes = hours * 60 + minutes;
+            const endMinutes = startMinutes + duration;
+            const endHours = Math.floor(endMinutes / 60) % 24;
+            const endMins = endMinutes % 60;
+            const spansToNextDay = endMinutes >= 24 * 60;
+            const timeStr = formatTime(`${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`);
+            return spansToNextDay ? `${timeStr} +1d` : timeStr;
+          },
           formatter: (value) => value || '—',
-          editable: true,
-          editor: EditAppointmentTime,
-          editorProps: (apt) => ({
-            value: apt.appointment_time || apt.appointmentTime,
-            data: apt,
-          }),
-          onSave: (apt, newTime) => ({ appointment_time: newTime }),
+          editable: false,
           align: 'left',
-          hoverColor: alpha('#000', 0.05),
         },
 
         // Location (editable)
         {
           label: 'Location',
-          field: (apt) => apt.location,
+          field: (apt) => apt.location || apt.first_stop_address,
           formatter: (value) => value || '—',
           editable: true,
           editor: EditAppointmentLocation,
@@ -166,28 +268,28 @@ const useAppointmentTableConfig = (statuses) => {
           hoverColor: alpha('#000', 0.05),
         },
 
-        // Client (read-only for now)
+        // Attendees (editable)
         {
-          label: 'Client',
-          field: (apt) => apt.client_name || apt.clientName,
-          formatter: (value) => value || '—',
-          editable: false,
-          align: 'left',
-          color: theme.palette.text.secondary,
-        },
-
-        // Status (editable)
-        {
-          label: 'Status',
-          field: (apt) => apt.appointment_status || apt.status || 'scheduled',
-          formatter: (status) => {
-            const config = getStatusConfig(status);
-            return config.label;
+          label: 'Attendees',
+          field: 'attendees',
+          customRenderer: (apt, onEdit) => {
+            const attendees = apt.attendees || [];
+            return (
+              <AttendeeCircles
+                attendees={attendees}
+                onEdit={onEdit}
+                maxVisible={3}
+                size="small"
+              />
+            );
           },
-          isStatus: true,
           editable: true,
-          statusOptions: statusOptions,
-          onSave: (apt, newStatus) => ({ appointment_status: newStatus }),
+          editor: EditAttendees,
+          editorProps: (apt) => ({
+            value: apt.attendees || [],
+            data: apt,
+          }),
+          onSave: (apt, attendees) => ({ attendees }),
           align: 'left',
         },
       ],

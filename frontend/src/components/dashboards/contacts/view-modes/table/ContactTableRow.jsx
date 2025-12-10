@@ -32,8 +32,8 @@ const maskLifetimeValue = (value) => {
 const useContactTableConfig = () => {
   return useMemo(() => {
     return {
-      // Grid layout: 7 columns (Name, Contact, Portfolio, Lifetime Value, Created, Last Follow Up, Actions)
-      gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 1fr 80px',
+      // Grid layout: 8 columns (Name, Contact, Portfolio, Lifetime Value, Created, Last Follow Up, Associated, Actions)
+      gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 1fr 100px 80px',
 
       // No status config for contacts (no workflow status)
       statusConfig: null,
@@ -117,6 +117,28 @@ const useContactTableConfig = () => {
           editable: false,
           align: 'left',
           hoverColor: alpha('#000', 0.05),
+        },
+
+        // Associated Contacts (contact circles)
+        {
+          label: 'Associated',
+          field: 'associated_contacts',
+          customRenderer: (contact) => {
+            const associatedContacts = contact.associated_contacts || contact.contacts || [];
+            if (associatedContacts.length === 0) {
+              return null;
+            }
+            return (
+              <ClientCircles
+                clients={{ buyers: associatedContacts, sellers: [] }}
+                representationType="buyer"
+                maxVisible={3}
+                size="small"
+              />
+            );
+          },
+          editable: false,
+          align: 'left',
         },
       ],
     };

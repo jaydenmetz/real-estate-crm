@@ -4,16 +4,28 @@ import { CheckCircle, Cancel, FiberNew, Phone, Handshake } from '@mui/icons-mate
 import { Avatar, Box, Typography, Chip, LinearProgress, alpha, useTheme } from '@mui/material';
 import { TrendingUp } from '@mui/icons-material';
 import { getStatusConfig, LEAD_SOURCE_LABELS } from '../../../../../constants/leadConfig';
-import { formatDate } from '../../../../../utils/formatters';
+import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+import { getLeadDisplayName, getSubtitle } from '../../../../../utils/displayNameStrategies';
 import { useStatus } from '../../../../../contexts/StatusContext';
 
-// Import editor components
+// Import editor components - same as LeadCard
 import {
   EditLeadName,
   EditLeadEmail,
   EditLeadPhone,
   EditLeadSource,
+  EditLeadStatus,
 } from '../../editors';
+
+// Import ClientCircles for contacts display (like LeadCard)
+import { ClientCircles } from '../../../../common/ui/ClientCircles';
+
+// Compact date formatter (same as LeadCard)
+const formatCompactDate = (value) => {
+  if (!value) return 'TBD';
+  const date = new Date(value);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
 
 // ============================================================================
 // LIST VIEW CONFIGURATION HOOK
@@ -21,15 +33,13 @@ import {
 
 /**
  * Hook to generate list config with database-driven status options
- * @param {Array} statuses - Status array from StatusContext
- * @returns {Object} List configuration object
+ * Matches LeadCard fields: Status, Name, Phone+Email, Target Price, Est. Commission, Created, Expires, Contacts
  */
 const useLeadListConfig = (statuses) => {
   const theme = useTheme();
 
   return useMemo(() => {
     // Transform database statuses into dropdown options
-    // Fallback to hardcoded options if database statuses not loaded yet
     const statusOptions = statuses && statuses.length > 0
       ? statuses.map((status) => ({
           value: status.status_key,
@@ -89,14 +99,7 @@ const useLeadListConfig = (statuses) => {
               </Avatar>
 
               {/* Lead Score Badge */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  bottom: 8,
-                  left: 8,
-                  right: 8,
-                }}
-              >
+              <Box sx={{ position: 'absolute', bottom: 8, left: 8, right: 8 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
                   <TrendingUp sx={{ fontSize: 12, color: 'white' }} />
                   <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'white', fontWeight: 600 }}>
@@ -121,16 +124,12 @@ const useLeadListConfig = (statuses) => {
         },
       },
 
-      // Status configuration
+      // Status configuration (editable)
       status: {
         field: (lead) => lead.lead_status || lead.status || 'new',
         getConfig: (status) => {
           const config = getStatusConfig(status);
-          return {
-            label: config.label,
-            color: config.color,
-            bg: config.bg,
-          };
+          return { label: config.label, color: config.color, bg: config.bg };
         },
         editable: true,
         options: statusOptions,
@@ -139,22 +138,9 @@ const useLeadListConfig = (statuses) => {
 
       // Title configuration (name + type chip)
       title: {
-        field: (lead) => {
-          const firstName = lead.firstName || lead.first_name || '';
-          const lastName = lead.lastName || lead.last_name || '';
-          return `${firstName} ${lastName}`.trim() || 'Unnamed Lead';
-        },
-        editable: true,
-        editor: EditLeadName,
-        editorProps: (lead) => ({
-          value: `${lead.firstName || lead.first_name || ''} ${lead.lastName || lead.last_name || ''}`.trim(),
-          data: lead,
-        }),
-        onSave: (lead, nameData) => ({
-          first_name: nameData.first_name,
-          last_name: nameData.last_name,
-        }),
-        customRenderer: (lead, onEdit) => {
+        field: (lead) => getLeadDisplayName(lead),
+        editable: false, // Match LeadCard - no inline name editing
+        customRenderer: (lead) => {
           const firstName = lead.firstName || lead.first_name || '';
           const lastName = lead.lastName || lead.last_name || '';
           const fullName = `${firstName} ${lastName}`.trim() || 'Unnamed Lead';
@@ -193,52 +179,92 @@ const useLeadListConfig = (statuses) => {
         },
       },
 
-      // Subtitle with contact info
+      // Subtitle with contact info (phone + email)
       subtitle: {
-        formatter: (lead) => {
-          const parts = [];
-          if (lead.email) parts.push(lead.email);
-          if (lead.phone) parts.push(lead.phone);
-          return parts.join(' | ');
-        },
+        formatter: (lead) => getSubtitle('lead', lead) || 'No contact info',
       },
 
-      // Metrics row
+      // Metrics row - matches LeadCard: Target Price, Est. Commission
       metrics: [
-        // Source
+        // Target Price (read-only like LeadCard)
         {
-          label: 'Source',
-          field: 'source',
-          formatter: (value) => {
-            if (!value) return '—';
-            return LEAD_SOURCE_LABELS[value] || value.charAt(0).toUpperCase() + value.slice(1).replace('_', ' ');
-          },
-          editable: true,
-          editor: EditLeadSource,
-          editorProps: (lead) => ({
-            value: lead.source || '',
-            data: lead,
-          }),
-          onSave: (lead, newSource) => ({ source: newSource }),
+          label: 'Target Price',
+          field: (lead) => lead.target_price || lead.budget || 0,
+          formatter: (value) => value > 0 ? formatCurrency(value) : '—',
+          color: '#10b981',
+          editable: false,
         },
 
-        // Created Date
+        // Est. Commission (3% of target price, read-only like LeadCard)
+        {
+          label: 'Est. Commission',
+          field: (lead) => {
+            const targetPrice = lead.target_price || lead.budget || 0;
+            const commissionRate = lead.commission_rate || 0.03;
+            return targetPrice * commissionRate;
+          },
+          formatter: (value) => value > 0 ? formatCurrency(value) : '—',
+          color: '#6366f1',
+          editable: false,
+        },
+
+        // Created Date (read-only like LeadCard)
         {
           label: 'Created',
           field: 'created_at',
-          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
+          formatter: (value) => formatCompactDate(value),
           editable: false,
         },
 
-        // Last Contact
+        // Expiration Date (read-only like LeadCard)
         {
-          label: 'Last Contact',
-          field: 'last_contact',
-          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
+          label: 'Expires',
+          field: (lead) => lead.expiration_date || lead.expires_at,
+          formatter: (value) => formatCompactDate(value),
           editable: false,
-          color: '#6366f1',
         },
       ],
+
+      // Footer with Contacts (like LeadCard)
+      footer: {
+        fields: [
+          {
+            label: (lead) => {
+              const contacts = lead.contacts || [];
+              return contacts.length === 1 ? 'Contact' : 'Contacts';
+            },
+            field: 'contacts',
+            customRenderer: (lead) => {
+              const contacts = lead.contacts || [];
+              // If no contacts, show the lead itself as a "contact"
+              if (contacts.length === 0 && (lead.first_name || lead.last_name)) {
+                const leadAsContact = [{
+                  id: lead.id,
+                  first_name: lead.first_name,
+                  last_name: lead.last_name,
+                  email: lead.email,
+                  phone: lead.phone,
+                }];
+                return (
+                  <ClientCircles
+                    clients={{ buyers: leadAsContact, sellers: [] }}
+                    representationType="buyer"
+                    maxVisible={6}
+                  />
+                );
+              }
+              return (
+                <ClientCircles
+                  clients={{ buyers: contacts, sellers: [] }}
+                  representationType="buyer"
+                  maxVisible={6}
+                />
+              );
+            },
+            editable: false,
+          },
+        ],
+      },
     };
   }, [statuses, theme]);
 };
@@ -246,17 +272,15 @@ const useLeadListConfig = (statuses) => {
 /**
  * LeadListItem - Full-width horizontal list view for leads dashboard
  *
- * Now uses ListItemTemplate with inline configuration for better colocation.
- * Now uses database-driven status options from StatusContext.
- *
- * Features:
- * - Avatar with initials, status-colored gradient, and lead score
- * - Editable name with lead type chip
- * - Contact info (email, phone) in subtitle
- * - Metrics: Source, Created, Last Contact
- * - Status menu: dynamically populated from database
- * - Click vs drag: text selection support
- * - Hover effects and transitions
+ * Now matches LeadCard fields:
+ * - Status (editable)
+ * - Name + Type chip
+ * - Phone + Email (subtitle)
+ * - Target Price
+ * - Est. Commission
+ * - Created Date
+ * - Expiration Date
+ * - Contacts circles
  */
 const LeadListItem = React.memo(({
   lead,
@@ -266,20 +290,12 @@ const LeadListItem = React.memo(({
   onDelete,
   onRestore,
   isArchived = false,
-  // Multi-select props
   isSelectable,
   isSelected,
   onSelect,
 }) => {
-  // Get statuses from context (entity type is 'leads')
   const { statuses } = useStatus();
-
-  // Filter to lead statuses only
-  const leadStatuses = useMemo(() => {
-    return statuses?.filter(s => s.entity_type === 'leads') || [];
-  }, [statuses]);
-
-  // Generate config with database-driven status options
+  const leadStatuses = useMemo(() => statuses?.filter(s => s.entity_type === 'leads') || [], [statuses]);
   const config = useLeadListConfig(leadStatuses);
 
   return (

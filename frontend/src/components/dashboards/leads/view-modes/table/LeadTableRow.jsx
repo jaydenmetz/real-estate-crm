@@ -2,17 +2,29 @@ import React, { useMemo } from 'react';
 import { TableRowTemplate } from '../../../../../templates/Dashboard/view-modes';
 import { CheckCircle, Cancel, FiberNew, Phone, Handshake } from '@mui/icons-material';
 import { Avatar, Box, Typography, Chip, LinearProgress, alpha, useTheme } from '@mui/material';
-import { getStatusConfig, LEAD_SOURCE_LABELS } from '../../../../../constants/leadConfig';
-import { formatDate } from '../../../../../utils/formatters';
+import { getStatusConfig } from '../../../../../constants/leadConfig';
+import { formatCurrency, formatDate } from '../../../../../utils/formatters';
+import { getLeadDisplayName } from '../../../../../utils/displayNameStrategies';
 import { useStatus } from '../../../../../contexts/StatusContext';
 
-// Import editor components
+// Import editor components - same as LeadCard
 import {
   EditLeadName,
   EditLeadEmail,
   EditLeadPhone,
   EditLeadSource,
+  EditLeadStatus,
 } from '../../editors';
+
+// Import ClientCircles for contacts display (like LeadCard)
+import { ClientCircles } from '../../../../common/ui/ClientCircles';
+
+// Compact date formatter (same as LeadCard)
+const formatCompactDate = (value) => {
+  if (!value) return 'TBD';
+  const date = new Date(value);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
 
 // ============================================================================
 // TABLE VIEW CONFIGURATION HOOK
@@ -20,15 +32,12 @@ import {
 
 /**
  * Hook to generate table config with database-driven status options
- * @param {Array} statuses - Status array from StatusContext
- * @returns {Object} Table configuration object
+ * Matches LeadCard fields: Status, Name, Target Price, Est. Commission, Created, Expires, Contacts
  */
 const useLeadTableConfig = (statuses) => {
   const theme = useTheme();
 
   return useMemo(() => {
-    // Transform database statuses into dropdown options
-    // Fallback to hardcoded options if database statuses not loaded yet
     const statusOptions = statuses && statuses.length > 0
       ? statuses.map((status) => ({
           value: status.status_key,
@@ -50,32 +59,23 @@ const useLeadTableConfig = (statuses) => {
         ];
 
     return {
-      // Grid layout: 8 columns (Avatar+Name, Email, Phone, Status, Source, Score, Created, Actions)
-      gridTemplateColumns: 'auto 2fr 1.5fr 1.2fr 1fr 1fr 1fr 80px',
+      // Grid layout: 9 columns (Avatar+Name, Status, Target Price, Commission, Created, Expires, Contacts, Score, Actions)
+      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 100px 80px 80px',
 
-      // Status config for row styling
       statusConfig: {
         getConfig: (lead) => {
           const status = lead.lead_status || lead.status || 'new';
           const config = getStatusConfig(status);
-          return {
-            color: config.color,
-            bg: config.bg,
-          };
+          return { color: config.color, bg: config.bg };
         },
       },
 
-      // Column configurations
       columns: [
-        // Avatar + Name (editable)
+        // Avatar + Name (read-only like LeadCard)
         {
           label: 'Lead',
-          field: (lead) => {
-            const firstName = lead.firstName || lead.first_name || '';
-            const lastName = lead.lastName || lead.last_name || '';
-            return `${firstName} ${lastName}`.trim() || 'Unnamed Lead';
-          },
-          customRenderer: (lead, onEdit) => {
+          field: (lead) => getLeadDisplayName(lead),
+          customRenderer: (lead) => {
             const firstName = lead.firstName || lead.first_name || '';
             const lastName = lead.lastName || lead.last_name || '';
             const fullName = `${firstName} ${lastName}`.trim() || 'Unnamed Lead';
@@ -112,79 +112,26 @@ const useLeadTableConfig = (statuses) => {
                   >
                     {fullName}
                   </Typography>
-                  <Chip
-                    label={type.charAt(0).toUpperCase() + type.slice(1)}
-                    size="small"
-                    sx={{
-                      fontSize: 9,
-                      fontWeight: 600,
-                      height: 18,
-                      mt: 0.5,
-                      background: alpha(statusConfig.color, 0.1),
-                      color: statusConfig.color,
-                    }}
-                  />
+                  <Typography
+                    variant="caption"
+                    sx={{ fontSize: '0.7rem', color: theme.palette.text.secondary, display: 'block' }}
+                  >
+                    {lead.phone || lead.email || ''}
+                  </Typography>
                 </Box>
               </Box>
             );
           },
-          editable: true,
-          editor: EditLeadName,
-          editorProps: (lead) => ({
-            value: `${lead.firstName || lead.first_name || ''} ${lead.lastName || lead.last_name || ''}`.trim(),
-            data: lead,
-          }),
-          onSave: (lead, nameData) => ({
-            first_name: nameData.first_name,
-            last_name: nameData.last_name,
-          }),
+          editable: false, // Match LeadCard
           align: 'left',
           bold: true,
-          hoverColor: 'rgba(59, 130, 246, 0.08)',
-        },
-
-        // Email (editable)
-        {
-          label: 'Email',
-          field: 'email',
-          formatter: (value) => value || '—',
-          editable: true,
-          editor: EditLeadEmail,
-          editorProps: (lead) => ({
-            value: lead.email || '',
-            data: lead,
-          }),
-          onSave: (lead, newEmail) => ({ email: newEmail }),
-          align: 'left',
-          color: theme.palette.text.secondary,
-          hoverColor: alpha('#000', 0.05),
-        },
-
-        // Phone (editable)
-        {
-          label: 'Phone',
-          field: 'phone',
-          formatter: (value) => value || '—',
-          editable: true,
-          editor: EditLeadPhone,
-          editorProps: (lead) => ({
-            value: lead.phone || '',
-            data: lead,
-          }),
-          onSave: (lead, newPhone) => ({ phone: newPhone }),
-          align: 'left',
-          color: theme.palette.text.secondary,
-          hoverColor: alpha('#000', 0.05),
         },
 
         // Status (editable)
         {
           label: 'Status',
           field: (lead) => lead.lead_status || lead.status || 'new',
-          formatter: (status) => {
-            const config = getStatusConfig(status);
-            return config.label;
-          },
+          formatter: (status) => getStatusConfig(status).label,
           isStatus: true,
           editable: true,
           statusOptions: statusOptions,
@@ -192,38 +139,96 @@ const useLeadTableConfig = (statuses) => {
           align: 'left',
         },
 
-        // Source (editable)
+        // Target Price (read-only like LeadCard)
         {
-          label: 'Source',
-          field: 'source',
-          formatter: (value) => {
-            if (!value) return '—';
-            return LEAD_SOURCE_LABELS[value] || value.charAt(0).toUpperCase() + value.slice(1).replace('_', ' ');
-          },
-          editable: true,
-          editor: EditLeadSource,
-          editorProps: (lead) => ({
-            value: lead.source || '',
-            data: lead,
-          }),
-          onSave: (lead, newSource) => ({ source: newSource }),
+          label: 'Target Price',
+          field: (lead) => lead.target_price || lead.budget || 0,
+          formatter: (value) => value > 0 ? formatCurrency(value) : '—',
+          editable: false,
           align: 'left',
-          hoverColor: alpha('#000', 0.05),
+          bold: true,
+          color: '#10b981',
         },
 
-        // Lead Score (custom renderer with progress bar)
+        // Est. Commission (read-only like LeadCard)
+        {
+          label: 'Commission',
+          field: (lead) => {
+            const targetPrice = lead.target_price || lead.budget || 0;
+            const commissionRate = lead.commission_rate || 0.03;
+            return targetPrice * commissionRate;
+          },
+          formatter: (value) => value > 0 ? formatCurrency(value) : '—',
+          editable: false,
+          align: 'left',
+          bold: true,
+          color: '#6366f1',
+        },
+
+        // Created Date (read-only like LeadCard)
+        {
+          label: 'Created',
+          field: 'created_at',
+          formatter: (value) => formatCompactDate(value),
+          editable: false,
+          align: 'left',
+        },
+
+        // Expiration Date (read-only like LeadCard)
+        {
+          label: 'Expires',
+          field: (lead) => lead.expiration_date || lead.expires_at,
+          formatter: (value) => formatCompactDate(value),
+          editable: false,
+          align: 'left',
+        },
+
+        // Contacts (read-only like LeadCard)
+        {
+          label: 'Contacts',
+          field: 'contacts',
+          customRenderer: (lead) => {
+            const contacts = lead.contacts || [];
+            if (contacts.length === 0 && (lead.first_name || lead.last_name)) {
+              const leadAsContact = [{
+                id: lead.id,
+                first_name: lead.first_name,
+                last_name: lead.last_name,
+              }];
+              return (
+                <ClientCircles
+                  clients={{ buyers: leadAsContact, sellers: [] }}
+                  representationType="buyer"
+                  maxVisible={3}
+                  size="small"
+                />
+              );
+            }
+            return (
+              <ClientCircles
+                clients={{ buyers: contacts, sellers: [] }}
+                representationType="buyer"
+                maxVisible={3}
+                size="small"
+              />
+            );
+          },
+          editable: false,
+          align: 'left',
+        },
+
+        // Lead Score (read-only)
         {
           label: 'Score',
           field: (lead) => parseInt(lead.score) || 0,
-          customRenderer: (lead, onEdit) => {
+          customRenderer: (lead) => {
             const leadScore = parseInt(lead.score) || 0;
-
             return (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#6366f1' }}>
                   {leadScore}
                 </Typography>
-                <Box sx={{ flex: 1, minWidth: 30 }}>
+                <Box sx={{ flex: 1, minWidth: 20 }}>
                   <LinearProgress
                     variant="determinate"
                     value={leadScore}
@@ -231,24 +236,13 @@ const useLeadTableConfig = (statuses) => {
                       height: 4,
                       borderRadius: 2,
                       backgroundColor: alpha('#6366f1', 0.1),
-                      '& .MuiLinearProgress-bar': {
-                        backgroundColor: '#6366f1',
-                      },
+                      '& .MuiLinearProgress-bar': { backgroundColor: '#6366f1' },
                     }}
                   />
                 </Box>
               </Box>
             );
           },
-          editable: false, // Score is typically calculated, not manually edited
-          align: 'left',
-        },
-
-        // Created Date (read-only)
-        {
-          label: 'Created',
-          field: 'created_at',
-          formatter: (value) => value ? formatDate(value, 'MMM d, yyyy') : '—',
           editable: false,
           align: 'left',
         },
@@ -260,17 +254,15 @@ const useLeadTableConfig = (statuses) => {
 /**
  * LeadTableRow - Compact table view for leads dashboard
  *
- * Now uses TableRowTemplate with inline configuration for better colocation.
- * Now uses database-driven status options from StatusContext.
- *
- * Features:
- * - Grid layout with 8 columns (Avatar+Name, Email, Phone, Status, Source, Score, Created, Actions)
- * - Inline editors: name, email, phone, source, status
- * - Avatar with initials and status-colored gradient
- * - Lead score with progress bar visualization
- * - Status menu: dynamically populated from database
- * - Click vs drag: text selection support
- * - Hover effects and transitions
+ * Now matches LeadCard fields:
+ * - Name + Phone/Email
+ * - Status (editable)
+ * - Target Price
+ * - Est. Commission
+ * - Created Date
+ * - Expiration Date
+ * - Contacts circles
+ * - Score
  */
 const LeadTableRow = React.memo(({
   lead,
@@ -280,20 +272,12 @@ const LeadTableRow = React.memo(({
   onDelete,
   onRestore,
   isArchived = false,
-  // Multi-select props
   isSelectable,
   isSelected,
   onSelect,
 }) => {
-  // Get statuses from context (entity type is 'leads')
   const { statuses } = useStatus();
-
-  // Filter to lead statuses only
-  const leadStatuses = useMemo(() => {
-    return statuses?.filter(s => s.entity_type === 'leads') || [];
-  }, [statuses]);
-
-  // Generate config with database-driven status options
+  const leadStatuses = useMemo(() => statuses?.filter(s => s.entity_type === 'leads') || [], [statuses]);
   const config = useLeadTableConfig(leadStatuses);
 
   return (
