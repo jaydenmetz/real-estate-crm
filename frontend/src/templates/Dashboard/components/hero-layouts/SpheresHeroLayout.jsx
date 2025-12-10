@@ -52,9 +52,26 @@ export const SpheresHeroLayout = ({
       flexGrow: 1,
       margin: 0,
       width: '100%',
+      '@media (min-width: 1017px) and (max-width: 1499px)': {
+        justifyContent: 'center',
+      },
     }}>
       {/* Spheres Visualization */}
-      <Grid item xs={12}>
+      <Grid item
+        xs={12}
+        sx={{
+          '@media (min-width: 1017px)': {
+            width: aiCoachConfig ? '66.67%' : '100%',
+            flexBasis: aiCoachConfig ? '66.67%' : '100%',
+            maxWidth: aiCoachConfig ? '66.67%' : '100%',
+          },
+          '@media (min-width: 1500px)': {
+            width: aiCoachConfig ? '75%' : '100%',
+            flexBasis: aiCoachConfig ? '75%' : '100%',
+            maxWidth: aiCoachConfig ? '75%' : '100%',
+          },
+        }}
+      >
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -347,6 +364,121 @@ export const SpheresHeroLayout = ({
           )}
         </Box>
       </Grid>
+      {/* AI Coach Card - 300x300 Manager Slot */}
+      {aiCoachConfig && (
+        <Grid item
+          xs={12}
+          sx={{
+            '@media (min-width: 1017px)': {
+              width: '33.33%',
+              flexBasis: '33.33%',
+              maxWidth: '33.33%',
+            },
+            '@media (min-width: 1500px)': {
+              width: '25%',
+              flexBasis: '25%',
+              maxWidth: '25%',
+            },
+          }}
+        >
+          <Card
+            sx={{
+              height: 200,
+              background: 'rgba(0, 0, 0, 0.25)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <CardContent sx={{ textAlign: 'center', p: 3 }}>
+              {/* Brain Icon */}
+              <Box
+                sx={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '50%',
+                  bgcolor: 'rgba(139, 92, 246, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mx: 'auto',
+                  mb: 2,
+                }}
+              >
+                <Typography sx={{ fontSize: '2rem' }}>🧠</Typography>
+              </Box>
+
+              {/* Title */}
+              <Typography
+                variant="h6"
+                sx={{
+                  color: 'white',
+                  fontWeight: 700,
+                  mb: 1,
+                }}
+              >
+                {aiCoachConfig.title || 'AI Coach'}
+              </Typography>
+
+              {/* Description */}
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  mb: 2,
+                  lineHeight: 1.5,
+                }}
+              >
+                {aiCoachConfig.description || 'Get personalized coaching to grow your business.'}
+              </Typography>
+
+              {/* Coming Soon Badge or Action Button */}
+              {aiCoachConfig.onHire ? (
+                <Button
+                  variant="contained"
+                  onClick={aiCoachConfig.onHire}
+                  startIcon={<Handshake />}
+                  sx={{
+                    bgcolor: 'rgba(139, 92, 246, 0.8)',
+                    '&:hover': { bgcolor: 'rgba(139, 92, 246, 1)' },
+                  }}
+                >
+                  Hire Coach
+                </Button>
+              ) : (
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                    px: 2,
+                    py: 0.75,
+                    borderRadius: 2,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    COMING SOON
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      )}
     </Grid>
   );
 };
