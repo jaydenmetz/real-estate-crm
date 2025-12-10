@@ -10,7 +10,7 @@ import {
 } from '@mui/icons-material';
 import { getStatusConfig } from '../../../../../constants/appointmentConfig';
 import { formatDate } from '../../../../../utils/formatters';
-import { getAppointmentDisplayName } from '../../../../../utils/displayNameStrategies';
+import { getAppointmentDisplayName, getSubtitle } from '../../../../../utils/displayNameStrategies';
 import { useStatus } from '../../../../../contexts/StatusContext';
 
 // Import editor components
@@ -139,11 +139,11 @@ const useAppointmentListConfig = (statuses) => {
         editable: false,
       },
 
-      // Subtitle Configuration
+      // Subtitle Configuration - Location (matches Card)
       subtitle: {
         formatter: (apt) => {
-          const type = apt.appointment_type || apt.appointmentType || 'showing';
-          return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
+          // Use centralized subtitle strategy (full address) like Card
+          return getSubtitle('appointment', apt) || apt.location || apt.first_stop_address || 'No location set';
         },
       },
 

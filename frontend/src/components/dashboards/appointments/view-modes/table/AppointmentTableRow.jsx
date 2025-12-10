@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
 import { TableRowTemplate } from '../../../../../templates/Dashboard/view-modes';
 import { CheckCircle, Cancel, Schedule, EventRepeat } from '@mui/icons-material';
-import { alpha, Chip, Box, Typography, useTheme } from '@mui/material';
-import { getStatusConfig, APPOINTMENT_TYPE_LABELS } from '../../../../../constants/appointmentConfig';
+import { alpha, useTheme } from '@mui/material';
+import { getStatusConfig } from '../../../../../constants/appointmentConfig';
 import { formatDate } from '../../../../../utils/formatters';
+import { getSubtitle } from '../../../../../utils/displayNameStrategies';
 import { useStatus } from '../../../../../contexts/StatusContext';
 
 // Import editor components
@@ -109,45 +110,13 @@ const useAppointmentTableConfig = (statuses) => {
 
       // Column configurations
       columns: [
-        // Title + Type (editable)
+        // Title + Location subtitle (matches Card pattern)
         {
           label: 'Appointment',
           field: (apt) => apt.title || 'Untitled Appointment',
-          customRenderer: (apt, onEdit) => {
-            const type = apt.appointmentType || apt.appointment_type || 'showing';
-            const status = apt.appointment_status || apt.status || 'scheduled';
-            const statusConfig = getStatusConfig(status);
-            const typeLabel = APPOINTMENT_TYPE_LABELS[type] || type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
-
-            return (
-              <Box sx={{ minWidth: 0 }}>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                    color: theme.palette.text.primary,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {apt.title || 'Untitled Appointment'}
-                </Typography>
-                <Chip
-                  label={typeLabel}
-                  size="small"
-                  sx={{
-                    fontSize: 9,
-                    fontWeight: 600,
-                    height: 18,
-                    mt: 0.5,
-                    background: alpha(statusConfig.color, 0.1),
-                    color: statusConfig.color,
-                  }}
-                />
-              </Box>
-            );
+          subtitle: (apt) => {
+            // Use centralized subtitle strategy (full address) like Card
+            return getSubtitle('appointment', apt) || apt.location || apt.first_stop_address || 'No location set';
           },
           editable: true,
           editor: EditAppointmentTitle,
