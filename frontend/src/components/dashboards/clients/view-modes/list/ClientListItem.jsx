@@ -279,40 +279,37 @@ const useClientListConfig = (statuses) => {
           }),
           onSave: (client, newDate) => ({ agreement_end_date: newDate }),
         },
-      ],
 
-      // Footer with Lead Contacts
-      footer: {
-        fields: [
-          {
-            label: (client) => {
-              const leads = client.leads || [];
-              return leads.length > 1 ? 'Lead Contacts' : 'Lead Contact';
-            },
-            field: 'leads',
-            customRenderer: (client, onEdit) => {
-              const leads = client.leads || [];
-              return (
-                <LeadCircles
-                  leads={leads}
-                  onEdit={onEdit}
-                  maxVisible={6}
-                />
-              );
-            },
-            editable: true,
-            editor: EditLeads,
-            editorProps: (client) => ({
-              value: client.leads || [],
-              data: client,
-            }),
-            onSave: (client, leadsData) => {
-              const leadIds = leadsData.map(l => l.id || l.lead_id);
-              return { lead_ids: leadIds, leads: leadsData };
-            },
+        // Lead Contacts (editable) - in metrics row like Escrows
+        {
+          label: (client) => {
+            const leads = client.leads || [];
+            return leads.length === 1 ? 'Lead' : 'Leads';
           },
-        ],
-      },
+          field: 'leads',
+          customRenderer: (client, onEdit) => {
+            const leads = client.leads || [];
+            return (
+              <LeadCircles
+                leads={leads}
+                onEdit={onEdit}
+                maxVisible={4}
+                disableHover
+              />
+            );
+          },
+          editable: true,
+          editor: EditLeads,
+          editorProps: (client) => ({
+            value: client.leads || [],
+            data: client,
+          }),
+          onSave: (client, leadsData) => {
+            const leadIds = leadsData.map(l => l.id || l.lead_id);
+            return { lead_ids: leadIds, leads: leadsData };
+          },
+        },
+      ],
     };
   }, [statuses, theme]);
 };
