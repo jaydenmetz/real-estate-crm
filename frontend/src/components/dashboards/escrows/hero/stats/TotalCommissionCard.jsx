@@ -30,10 +30,27 @@ const TotalCommissionCard = ({
 }) => {
   // Access privacy context for master toggle
   const { masterHidden, toggleMaster } = usePrivacy();
-  // Calculate commission
+  // Calculate commission using stored my_commission value (same as card display)
+  // Falls back to calculated value only if my_commission is not set
   // Data is already filtered by backend for archived/non-archived
   const normalizedStatus = status?.toLowerCase();
   let commission = 0;
+
+  // Helper to get commission value - prioritize stored my_commission
+  const getCommissionValue = (item) => {
+    // Use stored my_commission if available (matches what cards display)
+    if (item.my_commission != null && item.my_commission !== 0) {
+      return parseFloat(item.my_commission);
+    }
+    // Fall back to gross_commission if available
+    if (item.gross_commission != null && item.gross_commission !== 0) {
+      return parseFloat(item.gross_commission);
+    }
+    // Last resort: calculate from price × percentage
+    const price = parseFloat(item.purchase_price || 0);
+    const commissionPct = parseFloat(item.commission_percentage || 3);
+    return price * (commissionPct / 100);
+  };
 
   if (normalizedStatus === 'all') {
     // All tab: Show only CLOSED commissions (actual earned commission)
@@ -43,11 +60,7 @@ const TotalCommissionCard = ({
         const itemStatus = item.escrow_status || item.status;
         return itemStatus?.toLowerCase() === 'closed';
       })
-      .reduce((sum, item) => {
-        const price = parseFloat(item.purchase_price || 0);
-        const commissionPct = parseFloat(item.commission_percentage || 3);
-        return sum + (price * (commissionPct / 100));
-      }, 0);
+      .reduce((sum, item) => sum + getCommissionValue(item), 0);
   } else {
     // Single status (active, closed, cancelled)
     commission = data
@@ -55,11 +68,7 @@ const TotalCommissionCard = ({
         const itemStatus = item.escrow_status || item.status;
         return itemStatus?.toLowerCase() === normalizedStatus;
       })
-      .reduce((sum, item) => {
-        const price = parseFloat(item.purchase_price || 0);
-        const commissionPct = parseFloat(item.commission_percentage || 3);
-        return sum + (price * (commissionPct / 100));
-      }, 0);
+      .reduce((sum, item) => sum + getCommissionValue(item), 0);
   }
 
   // Icon varies by status
