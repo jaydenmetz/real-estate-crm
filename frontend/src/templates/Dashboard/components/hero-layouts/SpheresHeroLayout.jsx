@@ -251,11 +251,12 @@ export const SpheresHeroLayout = ({
                       {/* Right Side - Clients Circle */}
                       <Box
                         sx={{
-                          flex: 1,
+                          flex: '0 0 auto',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          p: 1,
+                          p: 0.5,
+                          pr: 1,
                         }}
                       >
                         <motion.div variants={sphereVariants}>
@@ -265,8 +266,8 @@ export const SpheresHeroLayout = ({
                               onSphereClick?.('clients');
                             }}
                             sx={{
-                              width: { xs: 80, sm: 100, md: 120 },
-                              height: { xs: 80, sm: 100, md: 120 },
+                              width: { xs: 70, sm: 85, md: 100 },
+                              height: { xs: 70, sm: 85, md: 100 },
                               borderRadius: '50%',
                               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                               border: '3px solid rgba(16, 185, 129, 0.6)',
@@ -286,7 +287,7 @@ export const SpheresHeroLayout = ({
                             <Typography
                               sx={{
                                 color: 'rgba(255, 255, 255, 0.9)',
-                                fontSize: '0.55rem',
+                                fontSize: { xs: '0.5rem', md: '0.55rem' },
                                 fontWeight: 700,
                                 letterSpacing: '0.1em',
                                 textTransform: 'uppercase',
@@ -299,7 +300,7 @@ export const SpheresHeroLayout = ({
                               sx={{
                                 color: 'white',
                                 fontWeight: 800,
-                                fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
+                                fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' },
                                 lineHeight: 1,
                               }}
                             >
