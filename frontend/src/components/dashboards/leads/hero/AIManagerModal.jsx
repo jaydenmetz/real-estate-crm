@@ -71,16 +71,21 @@ const AIManagerModal = ({ open, onClose }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      fullScreen
+      maxWidth="sm"
+      fullWidth
       PaperProps={{
         sx: {
           background: 'linear-gradient(135deg, #047857 0%, #10b981 50%, #34d399 100%)',
+          maxWidth: 700,
+          maxHeight: '90vh',
+          m: 2,
+          borderRadius: 3,
         },
       }}
     >
       <Box
         sx={{
-          minHeight: '100vh',
+          minHeight: 400,
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',

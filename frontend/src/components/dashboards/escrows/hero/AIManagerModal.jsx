@@ -65,11 +65,15 @@ const AIManagerModal = ({ open, onClose }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth={false}
-      fullScreen
+      maxWidth="sm"
+      fullWidth
       PaperProps={{
         sx: {
           background: 'linear-gradient(135deg, #1a237e 0%, #0d47a1 50%, #01579b 100%)',
+          maxWidth: 700,
+          maxHeight: '90vh',
+          m: 2,
+          borderRadius: 3,
         },
       }}
     >

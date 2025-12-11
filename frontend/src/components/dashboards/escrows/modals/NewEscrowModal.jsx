@@ -85,10 +85,10 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   }
 
   // Dynamic step configuration based on representation type
+  // Order: Address → Price → Commission → Start Date → End Date → Clients → Preview
   const steps = useMemo(() => {
     const baseSteps = [
       { id: 'property', label: 'Property Address' },
-      { id: 'representation-and-clients', label: 'Representation & Clients' },
       { id: 'purchase-price', label: 'Purchase Price' },
     ];
 
@@ -102,10 +102,11 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       baseSteps.push({ id: 'commission', label: 'Commission' });
     }
 
-    // Add date steps
+    // Add date steps, then clients, then preview
     baseSteps.push(
       { id: 'acceptance-date', label: 'Acceptance Date' },
       { id: 'closing-date', label: 'Closing Date' },
+      { id: 'representation-and-clients', label: 'Representation & Clients' },
       { id: 'preview', label: 'Preview & Confirm' }
     );
 
