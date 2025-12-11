@@ -369,17 +369,15 @@ export const DashboardHero = ({
                 } else {
                   setDateRangeFilter(null);
                 }
-              }}
-              onSaveSuccess={(savedDate) => {
-                // Auto-progression: Open end date editor after saving start date
-                setStartDateEditorOpen(false);
-                setTimeout(() => {
-                  // Pre-fill end date with start date if not already set
-                  if (!customEndDate) {
-                    setCustomEndDate(savedDate);
-                  }
-                  setEndDateEditorOpen(true);
-                }, 300); // Small delay for smooth transition
+
+                // Cascading logic: If end date is not set, open end date editor
+                const currentEndDate = customEndDate || dateRange?.endDate;
+                if (!currentEndDate) {
+                  setStartDateEditorOpen(false);
+                  setTimeout(() => {
+                    setEndDateEditorOpen(true);
+                  }, 300);
+                }
               }}
             />
             <EditDisplayEndDate
@@ -396,6 +394,19 @@ export const DashboardHero = ({
                   setDateRangeFilter(matched);
                 } else {
                   setDateRangeFilter(null);
+                }
+
+                // Cascading logic: Open start date editor if:
+                // 1. Start date is null/empty, OR
+                // 2. Start date is after the new end date (invalid)
+                const currentStartDate = customStartDate || dateRange?.startDate;
+                const startDateInvalid = currentStartDate && parsedDate && new Date(currentStartDate) > parsedDate;
+
+                if (!currentStartDate || startDateInvalid) {
+                  setEndDateEditorOpen(false);
+                  setTimeout(() => {
+                    setStartDateEditorOpen(true);
+                  }, 300);
                 }
               }}
             />
