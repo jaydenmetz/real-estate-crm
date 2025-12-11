@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { EditorModal } from '../../../common/modals/EditorModal';
 import { DateSetter } from '../../../common/setters/Date';
+import { toLocalDateString } from '../../../../utils/safeDateUtils';
 
 /**
  * Closing Date Editor
@@ -17,10 +18,11 @@ export const EditClosingDate = ({ open, onClose, onSave, value, inline = false }
 
   const handleSave = async () => {
     if (editValue) {
-      const year = editValue.getFullYear();
-      const month = String(editValue.getMonth() + 1).padStart(2, '0');
-      const day = String(editValue.getDate()).padStart(2, '0');
-      await onSave(`${year}-${month}-${day}`);
+      // Use centralized utility to prevent timezone shifting
+      const dateString = toLocalDateString(editValue);
+      if (dateString) {
+        await onSave(dateString);
+      }
     }
   };
 
@@ -29,11 +31,11 @@ export const EditClosingDate = ({ open, onClose, onSave, value, inline = false }
     setEditValue(newDate);
     // In inline mode, immediately notify parent of changes
     if (inline && onSave && newDate) {
-      const year = newDate.getFullYear();
-      const month = String(newDate.getMonth() + 1).padStart(2, '0');
-      const day = String(newDate.getDate()).padStart(2, '0');
-      const dateString = `${year}-${month}-${day}`;
-      onSave(dateString);
+      // Use centralized utility to prevent timezone shifting
+      const dateString = toLocalDateString(newDate);
+      if (dateString) {
+        onSave(dateString);
+      }
     }
   };
 

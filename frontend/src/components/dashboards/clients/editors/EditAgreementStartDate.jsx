@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { EditorModal } from '../../../common/modals/EditorModal';
 import { DateSetter } from '../../../common/setters/Date';
+import { toLocalDateString, parseLocalDate } from '../../../../utils/safeDateUtils';
 
 /**
  * Agreement Start Date (Beginning) Editor for Clients
@@ -18,11 +19,11 @@ export const EditAgreementStartDate = ({ open, onClose, onSave, value, inline = 
   // Initialize/reset date when modal opens or value changes
   useEffect(() => {
     if (open || inline) {
-      // Parse the value to a Date object
+      // Parse the value to a Date object using timezone-safe utility
       if (value) {
-        const date = value instanceof Date ? value : new Date(value);
+        const date = value instanceof Date ? value : parseLocalDate(value);
         // Check for valid date
-        if (!isNaN(date.getTime())) {
+        if (date && !isNaN(date.getTime())) {
           setEditValue(date);
         } else {
           setEditValue(null);
@@ -35,13 +36,11 @@ export const EditAgreementStartDate = ({ open, onClose, onSave, value, inline = 
 
   const handleSave = async () => {
     if (editValue && editValue instanceof Date && !isNaN(editValue.getTime())) {
-      const year = editValue.getFullYear();
-      const month = String(editValue.getMonth() + 1).padStart(2, '0');
-      const day = String(editValue.getDate()).padStart(2, '0');
-      console.log('[EditAgreementStartDate] Saving date:', `${year}-${month}-${day}`);
-      await onSave(`${year}-${month}-${day}`);
-    } else {
-      console.log('[EditAgreementStartDate] No valid date to save:', editValue);
+      // Use centralized utility to prevent timezone shifting
+      const dateString = toLocalDateString(editValue);
+      if (dateString) {
+        await onSave(dateString);
+      }
     }
   };
 
@@ -50,11 +49,11 @@ export const EditAgreementStartDate = ({ open, onClose, onSave, value, inline = 
     setEditValue(newDate);
     // In inline mode, immediately notify parent of changes
     if (inline && onSave && newDate && newDate instanceof Date && !isNaN(newDate.getTime())) {
-      const year = newDate.getFullYear();
-      const month = String(newDate.getMonth() + 1).padStart(2, '0');
-      const day = String(newDate.getDate()).padStart(2, '0');
-      const dateString = `${year}-${month}-${day}`;
-      onSave(dateString);
+      // Use centralized utility to prevent timezone shifting
+      const dateString = toLocalDateString(newDate);
+      if (dateString) {
+        onSave(dateString);
+      }
     }
   };
 

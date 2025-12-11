@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { EditorModal } from '../../../components/common/modals/EditorModal';
 import { DateSetter } from '../../../components/common/setters/Date';
+import { toLocalDateString } from '../../../utils/safeDateUtils';
 
 export const EditDisplayEndDate = ({ open, onClose, onSave, value }) => {
   const [editValue, setEditValue] = useState(value);
 
   const handleSave = async () => {
     if (editValue) {
-      const year = editValue.getFullYear();
-      const month = String(editValue.getMonth() + 1).padStart(2, '0');
-      const day = String(editValue.getDate()).padStart(2, '0');
-      await onSave(`${year}-${month}-${day}`);
+      // Use centralized utility to prevent timezone shifting
+      const dateString = toLocalDateString(editValue);
+      if (dateString) {
+        await onSave(dateString);
+      }
     }
   };
 

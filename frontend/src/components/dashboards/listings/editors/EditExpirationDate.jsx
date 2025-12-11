@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { EditorModal } from '../../../common/modals/EditorModal';
 import { DateSetter } from '../../../common/setters/Date';
+import { toLocalDateString } from '../../../../utils/safeDateUtils';
 
 /**
  * Expiration Date Editor
@@ -21,28 +22,26 @@ export const EditExpirationDate = ({ open, onClose, onSave, value, minDate, inli
     setEditValue(value);
   }, [value]);
 
-  // Format date to YYYY-MM-DD string
-  const formatDate = (date) => {
-    if (!date) return null;
-    if (typeof date === 'string') return date;
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
   // Handler for date changes
   const handleChange = (newDate) => {
     setEditValue(newDate);
     // In inline mode, immediately notify parent of changes
     if (inline && onSave) {
-      onSave(formatDate(newDate));
+      // Use centralized utility to prevent timezone shifting
+      const dateString = toLocalDateString(newDate);
+      if (dateString) {
+        onSave(dateString);
+      }
     }
   };
 
   const handleSave = async () => {
     if (editValue) {
-      await onSave(formatDate(editValue));
+      // Use centralized utility to prevent timezone shifting
+      const dateString = toLocalDateString(editValue);
+      if (dateString) {
+        await onSave(dateString);
+      }
     }
   };
 

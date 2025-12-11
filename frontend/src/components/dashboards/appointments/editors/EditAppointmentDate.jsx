@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { EditorModal } from '../../../common/modals/EditorModal';
 import { DateSetter } from '../../../common/setters/Date';
+import { toLocalDateString } from '../../../../utils/safeDateUtils';
 
 /**
  * Appointment-specific Date Editor
@@ -16,10 +17,11 @@ export const EditAppointmentDate = ({ open, onClose, onSave, value }) => {
 
   const handleSave = async () => {
     if (editValue) {
-      const year = editValue.getFullYear();
-      const month = String(editValue.getMonth() + 1).padStart(2, '0');
-      const day = String(editValue.getDate()).padStart(2, '0');
-      await onSave(`${year}-${month}-${day}`);
+      // Use centralized utility to prevent timezone shifting
+      const dateString = toLocalDateString(editValue);
+      if (dateString) {
+        await onSave(dateString);
+      }
     }
   };
 

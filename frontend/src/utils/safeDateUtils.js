@@ -181,11 +181,60 @@ export function getSafeTimestamp() {
   }
 }
 
+/**
+ * Convert a Date object to YYYY-MM-DD string (timezone-safe)
+ * Use this when saving DATE fields to the backend.
+ *
+ * This extracts local date components to ensure the date doesn't shift
+ * due to timezone conversion. For example, if a user in PST selects
+ * "December 13", this will always return "2025-12-13" regardless of
+ * the Date object's internal UTC representation.
+ *
+ * @param {Date|string} dateValue - Date object or date string to convert
+ * @returns {string|null} Date string in YYYY-MM-DD format, or null if invalid
+ *
+ * @example
+ * // User selects December 13, 2025 in any timezone
+ * toLocalDateString(new Date(2025, 11, 13)) → "2025-12-13"
+ *
+ * // Also handles string input (parses and re-formats)
+ * toLocalDateString("2025-12-13") → "2025-12-13"
+ */
+export function toLocalDateString(dateValue) {
+  if (!dateValue) return null;
+
+  try {
+    let date;
+
+    // If it's a string, parse it first using parseLocalDate
+    if (typeof dateValue === 'string') {
+      date = parseLocalDate(dateValue);
+    } else if (dateValue instanceof Date) {
+      date = dateValue;
+    } else {
+      return null;
+    }
+
+    if (!date || isNaN(date.getTime())) return null;
+
+    // Extract LOCAL date components (not UTC!)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    console.warn('Error converting to local date string:', dateValue, error);
+    return null;
+  }
+}
+
 export default {
   parseLocalDate,
   safeParseDate,
   safeFormatDate,
   safeFormatRelativeTime,
   isValidDate,
-  getSafeTimestamp
+  getSafeTimestamp,
+  toLocalDateString
 };
