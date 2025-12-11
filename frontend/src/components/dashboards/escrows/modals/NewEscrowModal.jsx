@@ -424,7 +424,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       case 'acceptance-date':
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 500 }}>
+            <Box sx={{ width: '100%', maxWidth: 300 }}>
               <EditAcceptanceDate
                 open={true}
                 onClose={() => {}}
@@ -439,7 +439,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       case 'closing-date':
         return (
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-            <Box sx={{ width: '100%', maxWidth: 500 }}>
+            <Box sx={{ width: '100%', maxWidth: 300 }}>
               <EditClosingDate
                 open={true}
                 onClose={() => {}}
