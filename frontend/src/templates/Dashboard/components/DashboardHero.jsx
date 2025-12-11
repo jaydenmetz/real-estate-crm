@@ -15,6 +15,7 @@ import { styled } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import { Add as AddIcon, Assessment as AssessmentIcon } from '@mui/icons-material';
 import { EditDisplayStartDate, EditDisplayEndDate } from '../editors';
+import { parseLocalDate } from '../../../utils/safeDateUtils';
 
 // Import hero layout components
 import { CardsHeroLayout } from './hero-layouts';
@@ -361,7 +362,8 @@ export const DashboardHero = ({
               color={config.gradient?.match(/#[0-9A-Fa-f]{6}/)?.[0] || '#667eea'}
               maxDate={customEndDate || dateRange?.endDate} // Validation: Start date must be before end date
               onSave={(newDate) => {
-                const parsedDate = new Date(newDate);
+                // Use parseLocalDate to prevent timezone shifting (off-by-one bug)
+                const parsedDate = parseLocalDate(newDate);
                 setCustomStartDate(parsedDate);
                 if (parsedDate && customEndDate && detectPresetRange) {
                   const matched = detectPresetRange(parsedDate, customEndDate);
@@ -387,7 +389,8 @@ export const DashboardHero = ({
               color={config.gradient?.match(/#[0-9A-Fa-f]{6}/)?.[0] || '#667eea'}
               minDate={customStartDate || dateRange?.startDate} // Validation: End date must be after start date
               onSave={(newDate) => {
-                const parsedDate = new Date(newDate);
+                // Use parseLocalDate to prevent timezone shifting (off-by-one bug)
+                const parsedDate = parseLocalDate(newDate);
                 setCustomEndDate(parsedDate);
                 if (customStartDate && parsedDate && detectPresetRange) {
                   const matched = detectPresetRange(customStartDate, parsedDate);
@@ -400,7 +403,7 @@ export const DashboardHero = ({
                 // 1. Start date is null/empty, OR
                 // 2. Start date is after the new end date (invalid)
                 const currentStartDate = customStartDate || dateRange?.startDate;
-                const startDateInvalid = currentStartDate && parsedDate && new Date(currentStartDate) > parsedDate;
+                const startDateInvalid = currentStartDate && parsedDate && parseLocalDate(currentStartDate) > parsedDate;
 
                 if (!currentStartDate || startDateInvalid) {
                   setEndDateEditorOpen(false);
