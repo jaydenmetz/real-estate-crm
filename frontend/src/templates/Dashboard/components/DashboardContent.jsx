@@ -14,6 +14,7 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStatus } from '../../../contexts/StatusContext';
+import { getCategoryById } from '../../../config/statuses/statusCategories';
 
 /**
  * DashboardContent - Config-driven content grid/list with animations
@@ -80,6 +81,7 @@ export const DashboardContent = ({
   // Empty state
   if (!data || data.length === 0) {
     // Format status text intelligently
+    // Uses CATEGORY LABEL (from statusCategories.js) not status key
     const formatStatusText = (statusStr) => {
       // If viewing archived items, always show "Archived"
       if (showArchived) {
@@ -89,35 +91,39 @@ export const DashboardContent = ({
       if (!statusStr) return '';
 
       // Parse format: "CategoryKey:status1,status2" or just "CategoryKey"
-      // Examples: "Active:Active", "All:Active,Closed", "Active", "Closed:Closed"
+      // Examples: "active:active", "all:active,closed", "won:closed", "lost:cancelled"
 
-      // Remove "All:" prefix completely if present
-      let cleaned = statusStr.replace(/^All:/, '');
+      // Handle "all" or "All" - return empty (no prefix needed)
+      if (statusStr.toLowerCase() === 'all' || statusStr.toLowerCase().startsWith('all:')) {
+        return '';
+      }
 
-      // If result is empty or just "All", return empty string (no status prefix)
-      if (!cleaned || cleaned === 'All') return '';
+      // Extract category key (before the colon)
+      const categoryKey = statusStr.includes(':')
+        ? statusStr.split(':')[0].toLowerCase()
+        : statusStr.toLowerCase();
 
-      // Split by BOTH colon and comma to handle "Closed:Closed" format
-      // Replace colons with commas, then split by comma
-      const parts = cleaned.replace(/:/g, ',').split(',').map(s => s.trim()).filter(Boolean);
+      // Skip if it's "all"
+      if (categoryKey === 'all') return '';
 
-      // Remove duplicates (e.g., "Active:Active" becomes just "Active")
-      const uniqueParts = [...new Set(parts)];
+      // Look up the CATEGORY (not status) to get the display label
+      // getCategoryById returns the category config which has a 'label' property
+      const entityName = config.entity.name; // e.g., 'escrow', 'listing', 'client'
+      const entityPlural = config.entity.namePlural; // e.g., 'escrows', 'listings', 'clients'
+      const category = getCategoryById(entityPlural, categoryKey);
 
-      // Convert status keys to labels using StatusContext
-      const labeledParts = uniqueParts.map(statusKey => {
-        const status = getStatusByKey(statusKey);
-        return status?.label || statusKey; // Fallback to key if label not found
-      });
+      if (category) {
+        return category.label; // Returns "Cancelled", "Closed", "Active", etc.
+      }
 
-      if (labeledParts.length === 0) return '';
-      if (labeledParts.length === 1) return labeledParts[0];
-      if (labeledParts.length === 2) return `${labeledParts[0]} or ${labeledParts[1]}`;
+      // Fallback: Try to get status label if no category found
+      const status = getStatusByKey(categoryKey);
+      if (status?.label) {
+        return status.label;
+      }
 
-      // 3+ items: "A, B, or C"
-      const lastPart = labeledParts[labeledParts.length - 1];
-      const firstParts = labeledParts.slice(0, -1).join(', ');
-      return `${firstParts}, or ${lastPart}`;
+      // Last resort: capitalize the key
+      return categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
     };
 
     // Format date range for display
