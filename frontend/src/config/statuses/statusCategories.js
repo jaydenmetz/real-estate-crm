@@ -51,7 +51,7 @@ export const ESCROW_CATEGORIES = {
     displayName: 'Cancelled Escrows',
     statuses: ['cancelled'],
     description: 'Cancelled escrows',
-    preferredViewMode: 'list',
+    preferredViewMode: 'table',
     sortOrder: 3,
   },
   ALL: {
@@ -95,7 +95,7 @@ export const LISTING_CATEGORIES = {
     displayName: 'Expired Listings',
     statuses: ['cancelled', 'expired', 'withdrawn'],
     description: 'Cancelled, expired, or withdrawn listings',
-    preferredViewMode: 'list',
+    preferredViewMode: 'table',
     sortOrder: 3,
   },
   ALL: {
@@ -140,7 +140,7 @@ export const CLIENT_CATEGORIES = {
     displayName: 'Inactive Clients',
     statuses: ['expired', 'cancelled'],
     description: 'Expired or cancelled clients',
-    preferredViewMode: 'list',
+    preferredViewMode: 'table',
     sortOrder: 3,
   },
   ALL: {
@@ -186,7 +186,7 @@ export const LEAD_CATEGORIES = {
     displayName: 'Lost Leads',
     statuses: ['competing', 'rejected', 'unresponsive', 'deferred', 'unqualified'],
     description: 'Lost or unqualified leads',
-    preferredViewMode: 'list',
+    preferredViewMode: 'table',
     sortOrder: 3,
   },
   ALL: {
@@ -232,7 +232,7 @@ export const APPOINTMENT_CATEGORIES = {
     displayName: 'Cancelled Appointments',
     statuses: ['cancelled', 'no_show'],
     description: 'Cancelled or no-show appointments',
-    preferredViewMode: 'list',
+    preferredViewMode: 'table',
     sortOrder: 3,
   },
   ALL: {
