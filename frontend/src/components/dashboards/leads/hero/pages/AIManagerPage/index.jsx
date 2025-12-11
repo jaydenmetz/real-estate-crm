@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Button, Grid, alpha, MenuItem, Select } from '@mui/material';
+import { Box, Typography, Button, Grid, MenuItem, Select } from '@mui/material';
 import {
   AutoAwesome as AutoAwesomeIcon,
   Psychology as PsychologyIcon,
@@ -9,6 +9,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import apiInstance from '../../../../../../services/api.service';
 import AIManagerStatCard from './AIManagerStatCard';
+import AIManagerQuickItems from '../../../../../common/ai/AIManagerQuickItems';
 
 /**
  * AIManagerPage - Page 2 of the leads hero carousel
@@ -46,6 +47,14 @@ const AIManagerPage = ({ isVisible, onConfigureAI, onViewActivity }) => {
     hotLeads: 0,
     pendingFollowups: 0,
     conversionRate: 0,
+  };
+
+  // Standardized quick items data (used by AIManagerQuickItems component)
+  const quickItemsData = data?.quick_items || {
+    tasks_queued: 0,
+    reminders_scheduled: 0,
+    actions_today: 0,
+    alerts_for_you: 0,
   };
 
   return (
@@ -162,7 +171,7 @@ const AIManagerPage = ({ isVisible, onConfigureAI, onViewActivity }) => {
       </Box>
 
       {/* Stats Grid */}
-      <Grid container spacing={3} sx={{ mb: 4, position: 'relative', zIndex: 1 }}>
+      <Grid container spacing={3} sx={{ mb: 3, position: 'relative', zIndex: 1 }}>
         <Grid item xs={6} md={3}>
           <AIManagerStatCard
             title="AI-Scored"
@@ -200,6 +209,11 @@ const AIManagerPage = ({ isVisible, onConfigureAI, onViewActivity }) => {
           />
         </Grid>
       </Grid>
+
+      {/* Quick Info Strip - Standardized across all AI Managers */}
+      <Box sx={{ mb: 3, position: 'relative', zIndex: 1 }}>
+        <AIManagerQuickItems data={quickItemsData} isLoading={isLoading} />
+      </Box>
 
       {/* Action Buttons */}
       <Box

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Button, Chip, Grid, Skeleton } from '@mui/material';
+import { Box, Typography, Button, Grid, Skeleton } from '@mui/material';
 import {
   Settings as SettingsIcon,
   TrendingUp as TrendingUpIcon,
@@ -8,6 +8,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import apiInstance from '../../../../../../services/api.service';
 import AIManagerStatCard from './AIManagerStatCard';
+import AIManagerQuickItems from '../../../../../common/ai/AIManagerQuickItems';
 
 /**
  * AIManagerPage - Full AI Manager hero page for listings
@@ -40,60 +41,18 @@ const AIManagerPage = ({ isVisible = true, onConfigureAI, onViewActivity }) => {
     avg_days_on_market: 0,
   };
 
+  // Standardized quick items data (used by AIManagerQuickItems component)
   const quickItemsData = data?.data?.quick_items || {
-    price_reductions: 0,
-    new_inquiries: 0,
-    showings_scheduled: 0,
-    photos_needed: 0,
+    tasks_queued: 0,
+    reminders_scheduled: 0,
+    actions_today: 0,
+    alerts_for_you: 0,
   };
 
   const aiStatus = data?.data?.ai_status || {
     is_active: true,
     monitoring_all: true,
     next_summary: '5 PM',
-  };
-
-  // Quick info items built from API data
-  const quickItems = [
-    {
-      icon: '📉',
-      text: 'price reductions needed',
-      value: quickItemsData.price_reductions,
-      type: 'urgent',
-    },
-    {
-      icon: '💬',
-      text: 'new inquiries',
-      value: quickItemsData.new_inquiries,
-      type: 'pending',
-    },
-    {
-      icon: '🏠',
-      text: 'showings scheduled',
-      value: quickItemsData.showings_scheduled,
-      type: 'info',
-    },
-    {
-      icon: '📷',
-      text: 'listings need photos',
-      value: quickItemsData.photos_needed,
-      type: 'success',
-    },
-  ];
-
-  const getQuickItemColor = (type) => {
-    switch (type) {
-      case 'urgent':
-        return { bg: 'rgba(255, 152, 0, 0.2)', border: 'rgba(255, 152, 0, 0.5)' };
-      case 'pending':
-        return { bg: 'rgba(100, 181, 246, 0.2)', border: 'rgba(100, 181, 246, 0.5)' };
-      case 'info':
-        return { bg: 'rgba(129, 199, 132, 0.2)', border: 'rgba(129, 199, 132, 0.5)' };
-      case 'success':
-        return { bg: 'rgba(77, 182, 172, 0.2)', border: 'rgba(77, 182, 172, 0.5)' };
-      default:
-        return { bg: 'rgba(255,255,255,0.1)', border: 'rgba(255,255,255,0.2)' };
-    }
   };
 
   const dateFilters = [
@@ -252,59 +211,9 @@ const AIManagerPage = ({ isVisible = true, onConfigureAI, onViewActivity }) => {
         </Grid>
       </Grid>
 
-      {/* Quick Info Strip */}
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 1.5,
-          mb: 3,
-        }}
-      >
-        {isLoading ? (
-          // Loading skeletons for chips
-          [...Array(4)].map((_, i) => (
-            <Skeleton
-              key={i}
-              variant="rounded"
-              width={160}
-              height={36}
-              sx={{ bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 4 }}
-            />
-          ))
-        ) : (
-          quickItems.map((item, index) => {
-            const colors = getQuickItemColor(item.type);
-            return (
-              <Chip
-                key={index}
-                icon={<span style={{ fontSize: '1rem', marginLeft: 8 }}>{item.icon}</span>}
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Typography
-                      component="span"
-                      sx={{ fontWeight: 700, fontSize: '0.85rem' }}
-                    >
-                      {item.value}
-                    </Typography>
-                    <Typography component="span" sx={{ fontSize: '0.85rem' }}>
-                      {item.text}
-                    </Typography>
-                  </Box>
-                }
-                sx={{
-                  background: colors.bg,
-                  border: `1px solid ${colors.border}`,
-                  color: '#fff',
-                  height: 36,
-                  '& .MuiChip-icon': {
-                    color: '#fff',
-                  },
-                }}
-              />
-            );
-          })
-        )}
+      {/* Quick Info Strip - Standardized across all AI Managers */}
+      <Box sx={{ mb: 3 }}>
+        <AIManagerQuickItems data={quickItemsData} isLoading={isLoading} />
       </Box>
 
       {/* Action Strip */}
