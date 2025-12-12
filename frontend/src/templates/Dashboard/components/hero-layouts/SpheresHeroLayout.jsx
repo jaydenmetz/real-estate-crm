@@ -88,26 +88,37 @@ export const SpheresHeroLayout = ({
           </Box>
         )}
 
-        {/* Row 2: Buttons + Spheres */}
+        {/* Row 2: Buttons + Spheres (horizontal scroll when needed) */}
         <Box sx={{
           display: 'flex',
           gap: 2,
-          alignItems: 'stretch',
-          '@media (max-width: 900px)': {
-            flexDirection: 'column',
+          alignItems: 'center',
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          pb: 1, // Space for scrollbar
+          // Custom scrollbar styling
+          '&::-webkit-scrollbar': {
+            height: 6,
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: 3,
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(255, 255, 255, 0.3)',
+            borderRadius: 3,
+            '&:hover': {
+              background: 'rgba(255, 255, 255, 0.5)',
+            },
           },
         }}>
-          {/* Buttons Container */}
+          {/* Buttons Container - Side by side, fixed width */}
           <Box sx={{
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'row',
             gap: 1.5,
-            justifyContent: 'center',
-            minWidth: 200,
-            '@media (max-width: 900px)': {
-              flexDirection: 'row',
-              width: '100%',
-            },
+            alignItems: 'center',
+            flexShrink: 0, // Don't shrink buttons
           }}>
             {onNewItem && (
               <Button
@@ -149,8 +160,11 @@ export const SpheresHeroLayout = ({
             )}
           </Box>
 
-          {/* Spheres Visualization Container */}
-          <Box sx={{ flex: 1, minWidth: 280 }}>
+          {/* Spheres Visualization Container - shrinks to minWidth then triggers scroll */}
+          <Box sx={{
+            flex: '1 1 auto',
+            minWidth: 320, // Minimum width before horizontal scroll kicks in
+          }}>
             <motion.div
               variants={containerVariants}
               initial="hidden"
@@ -161,14 +175,14 @@ export const SpheresHeroLayout = ({
               <Box
                 sx={{
                   display: 'flex',
-                  justifyContent: 'center',
+                  justifyContent: 'flex-start',
                   alignItems: 'stretch',
                   width: '100%',
                   height: hasStatCards ? 160 : 200,
                 }}
               >
                 {/* Outer Container - Sphere of Influence */}
-                <motion.div variants={sphereVariants} style={{ flex: '1 1 auto', display: 'flex', maxWidth: 575, minWidth: 280, width: '100%' }}>
+                <motion.div variants={sphereVariants} style={{ flex: '1 1 auto', display: 'flex', maxWidth: 500, minWidth: 320, width: '100%' }}>
                   <Box
                     onClick={() => onSphereClick?.('sphere')}
                     sx={{
@@ -411,7 +425,7 @@ export const SpheresHeroLayout = ({
         </Box>
       </Box>
 
-      {/* AI Manager Card - Spans both rows on right side */}
+      {/* AI Manager Card - Fixed 300x300 */}
       {aiCoachConfig && (
         <Box sx={{
           flex: '0 0 auto',
@@ -421,9 +435,8 @@ export const SpheresHeroLayout = ({
         }}>
           <Card
             sx={{
-              width: 280,
-              height: hasStatCards ? 'calc(200px + 160px + 16px)' : 300,
-              minHeight: 300,
+              width: 300,
+              height: 300,
               background: 'rgba(0, 0, 0, 0.25)',
               backdropFilter: 'blur(8px)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
