@@ -75,29 +75,53 @@ function getPlaceholderImage(address) {
 
 /**
  * Get the best available image URL for a property
- * Priority: property_image_url > zillow_image_url > null (use fallback icon)
+ * Priority: Street View > uploaded image > Zillow image > fallback icon
  *
- * NOTE: We intentionally skip Street View as a fallback because:
- * 1. Many addresses return "Sorry, we have no imagery here" placeholder
- * 2. The fallback house icon provides a better UX than Google's error message
- * 3. Street View API calls cost money even when no imagery exists
+ * Street View is primary because it shows the actual property from the street.
+ * If Street View returns "no imagery" placeholder, the image onError handler
+ * in the component will NOT fire (it's a valid image), so we rely on the
+ * fallback icon showing when there's truly no image source.
  *
  * @param {object} escrow - Escrow object with image URLs and address
  * @returns {string|null} Best available image URL, or null to use fallback icon
  */
 export function getBestPropertyImage(escrow) {
-  // Priority 1: Uploaded property image
+  // Priority 1: Street View (primary - shows actual property)
+  // Build full address with city, state, zip for accurate Street View
+  const streetAddress = escrow.property_address || escrow.propertyAddress;
+  const city = escrow.city;
+  const state = escrow.state;
+  const zipCode = escrow.zip_code || escrow.zipCode;
+
+  if (streetAddress) {
+    // Build complete address for Street View (e.g., "616 42nd St, Bakersfield, CA 93301")
+    let fullAddress = streetAddress;
+    if (city && state) {
+      fullAddress = `${streetAddress}, ${city}, ${state}`;
+      if (zipCode) {
+        fullAddress += ` ${zipCode}`;
+      }
+    }
+
+    return getStreetViewUrl(fullAddress, {
+      width: 800,
+      height: 600,
+      fov: 90,
+      pitch: 10 // Slight upward angle for better building view
+    });
+  }
+
+  // Priority 2: Uploaded property image
   if (escrow.property_image_url || escrow.propertyImageUrl) {
     return escrow.property_image_url || escrow.propertyImageUrl;
   }
 
-  // Priority 2: Zillow image
+  // Priority 3: Zillow image
   if (escrow.zillow_image_url || escrow.zillowImageUrl) {
     return escrow.zillow_image_url || escrow.zillowImageUrl;
   }
 
-  // Priority 3: Return null to trigger fallback icon
-  // This is better UX than Street View's "no imagery" placeholder
+  // Priority 4: Return null to trigger fallback icon
   return null;
 }
 
