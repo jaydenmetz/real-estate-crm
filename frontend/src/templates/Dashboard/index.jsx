@@ -62,11 +62,15 @@ export const DashboardTemplate = ({
     if (savedFilter && savedFilter !== 'null') return savedFilter;
 
     // Category-specific defaults (if no saved preference)
-    // Using category_key from database: active, won, lost, all
+    // Category IDs from statusCategories.js:
+    //   - active: Active tab → 1 Day
+    //   - won: Closed/Won tab → 1 Year (escrows use "won" id for "Closed" label)
+    //   - lost: Cancelled/Lost tab → 1 Year (escrows use "lost" id for "Cancelled" label)
+    //   - all: All tab → no filtering
     const lowerCategory = categoryKey?.toLowerCase();
     if (lowerCategory === 'active') return '1D'; // 1 Day for Active
-    if (lowerCategory === 'won' || lowerCategory === 'closed') return '1Y'; // 1 Year for Closed/Won
-    if (lowerCategory === 'lost' || lowerCategory === 'cancelled') return '1Y'; // 1 Year for Cancelled/Lost
+    if (lowerCategory === 'won') return '1Y'; // 1 Year for Closed/Won
+    if (lowerCategory === 'lost') return '1Y'; // 1 Year for Cancelled/Lost
     if (lowerCategory === 'all') return null; // All tab = no date filtering
     return null; // Default = no filtering
   };
