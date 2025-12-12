@@ -4,14 +4,21 @@ import { useQuery } from '@tanstack/react-query';
 import { DashboardHero } from '../../../../templates/Dashboard/components/DashboardHero';
 import { leadsAPI, clientsAPI } from '../../../../services/api.service';
 
+// Import stat card components
+import {
+  TotalContactsCard,
+  NewContactsThisMonthCard,
+  TotalPortfolioCard,
+  TotalLifetimeValueCard,
+} from './stats';
+
 /**
  * ContactsHeroCarousel - Wrapper for the contacts hero section
  *
- * Unlike escrows which has a carousel with multiple pages,
- * contacts uses the spheres layout mode which shows:
- * - Nested spheres visualization (Sphere > Leads > Clients)
- * - AI Coach card
- * - Action buttons
+ * Layout Structure:
+ * - Row 1: Stat Cards (4) + AI Manager Card (spanning 2 rows)
+ *   - Total Contacts | New This Month | Total Portfolio | Lifetime Value
+ * - Row 2: Buttons + Spheres Visualization
  *
  * This component computes sphere data from:
  * - allData (contacts passed from DashboardTemplate)
@@ -77,6 +84,15 @@ const ContactsHeroCarousel = ({
     };
   }, [allData, leadsData, clientsData]);
 
+  // Define stat cards configuration (left to right)
+  // 1. Total Contacts | 2. New This Month | 3. Total Portfolio | 4. Lifetime Value
+  const statCards = useMemo(() => [
+    { component: TotalContactsCard, props: { icon: 'People' } },
+    { component: NewContactsThisMonthCard, props: {} },
+    { component: TotalPortfolioCard, props: { showPrivacy: true } },
+    { component: TotalLifetimeValueCard, props: { showPrivacy: true } },
+  ], []);
+
   // Handle sphere click - navigate to appropriate dashboard
   const handleSphereClick = (sphereType) => {
     switch (sphereType) {
@@ -123,6 +139,7 @@ const ContactsHeroCarousel = ({
       heroLayoutMode="spheres"
       sphereData={sphereData}
       onSphereClick={handleSphereClick}
+      statCards={statCards}
       aiCoachConfig={aiCoachConfig || {
         title: 'AI Coach',
         description: 'Get personalized coaching to grow your sphere of influence and convert more leads to clients.',

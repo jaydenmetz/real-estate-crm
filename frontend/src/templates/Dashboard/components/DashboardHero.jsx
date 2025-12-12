@@ -64,6 +64,7 @@ export const DashboardHero = ({
   sphereData = null, // { sphere: number, leads: number, clients: number }
   onSphereClick = null,
   aiCoachConfig = null, // { title, description, onHire }
+  statCards = null, // Array of { component: Component, props: {} } for spheres layout
 }) => {
   // State for date editor modals
   const [startDateEditorOpen, setStartDateEditorOpen] = useState(false);
@@ -424,6 +425,8 @@ export const DashboardHero = ({
             sphereData={sphereData}
             onSphereClick={onSphereClick}
             aiCoachConfig={aiCoachConfig}
+            statCards={statCards}
+            allData={allData}
           />
         ) : (
           <CardsHeroLayout
