@@ -632,32 +632,100 @@ const NewClientModal = ({ open, onClose, onSuccess, initialData }) => {
               {/* For entity types, use ContactInput with autocomplete */}
               {formData.entityType !== 'individual' ? (
                 <Box>
-                  <ContactInput
-                    value={formData.selectedContact}
-                    onChange={handleContactSelect}
-                    placeholder="Search contacts or type name..."
-                    initialLabel="Select or Enter Representative"
-                    selectedLabel="Representative"
-                    color="white"
-                    allowManualEntry
-                    onManualEntry={handleManualContactEntry}
-                  />
-                  {/* Show selected/entered name below */}
-                  {(formData.firstName || formData.lastName) && (
-                    <Typography
-                      variant="body2"
+                  {/* Show selected contact card above the search input */}
+                  {(formData.selectedContact || formData.isNewRepresentative) && (formData.firstName || formData.lastName) && (
+                    <Box
                       sx={{
-                        color: 'rgba(255,255,255,0.7)',
-                        mt: 1,
-                        fontSize: '0.85rem',
+                        mb: 2,
+                        p: 2,
+                        borderRadius: 2,
+                        backgroundColor: 'rgba(255,255,255,0.15)',
+                        border: '2px solid rgba(255,255,255,0.3)',
                       }}
                     >
-                      {formData.selectedContact ? (
-                        <>Using existing contact: <strong style={{ color: 'white' }}>{formData.firstName} {formData.lastName}</strong></>
-                      ) : formData.isNewRepresentative ? (
-                        <>New representative: <strong style={{ color: 'white' }}>{formData.firstName} {formData.lastName}</strong> (will be saved as contact)</>
-                      ) : null}
-                    </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                          <Person sx={{ color: 'white', fontSize: 28 }} />
+                          <Box>
+                            <Typography
+                              variant="body1"
+                              sx={{
+                                color: 'white',
+                                fontWeight: 700,
+                                fontSize: '1rem',
+                              }}
+                            >
+                              {formData.firstName} {formData.lastName}
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
+                              {formData.phone && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <PhoneIcon sx={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }} />
+                                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
+                                    {formData.phone}
+                                  </Typography>
+                                </Box>
+                              )}
+                              {formData.email && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <EmailIcon sx={{ color: 'rgba(255,255,255,0.6)', fontSize: 14 }} />
+                                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>
+                                    {formData.email}
+                                  </Typography>
+                                </Box>
+                              )}
+                            </Box>
+                          </Box>
+                        </Box>
+                        <Box
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              selectedContact: null,
+                              isNewRepresentative: false,
+                              firstName: '',
+                              lastName: '',
+                              phone: '',
+                              email: '',
+                            }));
+                          }}
+                          sx={{
+                            cursor: 'pointer',
+                            color: 'rgba(255,255,255,0.5)',
+                            fontSize: '0.75rem',
+                            '&:hover': { color: 'white' },
+                          }}
+                        >
+                          Change
+                        </Box>
+                      </Box>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: 'block',
+                          mt: 1,
+                          pt: 1,
+                          borderTop: '1px solid rgba(255,255,255,0.1)',
+                          color: 'rgba(255,255,255,0.5)',
+                          fontSize: '0.7rem',
+                        }}
+                      >
+                        {formData.selectedContact ? 'Existing Contact' : 'New Contact (will be saved)'}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Only show search input if no contact selected yet */}
+                  {!formData.selectedContact && !formData.isNewRepresentative && (
+                    <ContactInput
+                      value={formData.selectedContact}
+                      onChange={handleContactSelect}
+                      placeholder="Search contacts or type name..."
+                      label={null}
+                      color="#ffffff"
+                      allowManualEntry
+                      onManualEntry={handleManualContactEntry}
+                    />
                   )}
                 </Box>
               ) : (
