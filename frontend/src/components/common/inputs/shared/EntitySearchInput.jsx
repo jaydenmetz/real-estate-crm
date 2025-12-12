@@ -7,6 +7,27 @@ import debounce from 'lodash/debounce';
 // Special marker for "Add New" option
 const ADD_NEW_OPTION_ID = '__add_new__';
 
+// Convert color names to hex values that MUI's alpha() function can process
+const normalizeColor = (color) => {
+  if (!color) return '#8b5cf6'; // Default purple
+  // If already a valid format (starts with # or rgb), return as-is
+  if (color.startsWith('#') || color.startsWith('rgb')) return color;
+  // Map common color names to hex
+  const colorMap = {
+    white: '#ffffff',
+    black: '#000000',
+    red: '#ff0000',
+    green: '#00ff00',
+    blue: '#0000ff',
+    purple: '#8b5cf6',
+    orange: '#f97316',
+    yellow: '#eab308',
+    gray: '#6b7280',
+    grey: '#6b7280',
+  };
+  return colorMap[color.toLowerCase()] || '#8b5cf6'; // Fallback to default purple
+};
+
 /**
  * Generic Entity Search Input Component
  * Reusable autocomplete for searching database entities (clients, leads, listings, contacts)
@@ -162,6 +183,9 @@ export const EntitySearchInput = ({
     }
   }, [onChange, getDisplayLabel, onAddNew, searchText]);
 
+  // Normalize color for use with MUI's alpha() function
+  const safeColor = normalizeColor(color);
+
   // Default option renderer
   const defaultRenderOption = (props, option) => {
     const { key, ...otherProps } = props;
@@ -176,15 +200,15 @@ export const EntitySearchInput = ({
           sx={{
             py: 1.5,
             borderTop: '1px solid rgba(0,0,0,0.1)',
-            backgroundColor: alpha(color, 0.05),
+            backgroundColor: alpha(safeColor, 0.05),
             '&:hover': {
-              backgroundColor: alpha(color, 0.1),
+              backgroundColor: alpha(safeColor, 0.1),
             },
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <AddNewIcon sx={{ color: color, fontSize: 22 }} />
-            <Typography sx={{ fontWeight: 600, fontSize: '0.9rem', color: color }}>
+            <AddNewIcon sx={{ color: safeColor, fontSize: 22 }} />
+            <Typography sx={{ fontWeight: 600, fontSize: '0.9rem', color: safeColor }}>
               {addNewLabel(searchText.trim())}
             </Typography>
           </Box>
@@ -203,7 +227,7 @@ export const EntitySearchInput = ({
         sx={{ py: 1.5 }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Icon sx={{ color: color, fontSize: 22 }} />
+          <Icon sx={{ color: safeColor, fontSize: 22 }} />
           <Box>
             <Typography sx={{ fontWeight: 600, fontSize: '0.9rem', color: 'text.primary' }}>
               {displayLabel}
