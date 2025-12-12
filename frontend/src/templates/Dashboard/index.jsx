@@ -53,16 +53,13 @@ export const DashboardTemplate = ({
   const [newItemModalOpen, setNewItemModalOpen] = useState(false);
 
   // Helper function: Get default date range for a category tab
+  // ALWAYS returns the category-specific default (no localStorage persistence)
+  // This ensures consistent behavior when switching tabs
   const getDefaultDateRange = (status) => {
     // Extract category key from status (format: "active:status1,status2" or just "active")
     const categoryKey = status?.includes(':') ? status.split(':')[0] : status;
 
-    // Check localStorage first (user's last selection for this category)
-    const savedFilter = localStorage.getItem(`${config.entity.namePlural}DateFilter_${categoryKey}`);
-    if (savedFilter && savedFilter !== 'null') return savedFilter;
-
-    // Category-specific defaults (if no saved preference)
-    // Category IDs from statusCategories.js:
+    // Category-specific defaults based on category IDs from statusCategories.js:
     //   - active: Active tab → 1 Day
     //   - won: Closed/Won tab → 1 Year (escrows use "won" id for "Closed" label)
     //   - lost: Cancelled/Lost tab → 1 Year (escrows use "lost" id for "Cancelled" label)
@@ -323,20 +320,9 @@ export const DashboardTemplate = ({
     setShowArchived(false);
   }, [selectedStatus, config.entity.namePlural]);
 
-  // Save date range preference to localStorage when it changes
-  useEffect(() => {
-    // Extract category key for localStorage (not the full "active:status1,status2")
-    const categoryKey = selectedStatus?.includes(':') ? selectedStatus.split(':')[0] : selectedStatus;
-    if (dateRangeFilter) {
-      localStorage.setItem(
-        `${config.entity.namePlural}DateFilter_${categoryKey}`,
-        dateRangeFilter
-      );
-    } else {
-      // Remove from localStorage if filter is cleared
-      localStorage.removeItem(`${config.entity.namePlural}DateFilter_${categoryKey}`);
-    }
-  }, [dateRangeFilter, selectedStatus, config.entity.namePlural]);
+  // Note: Date range preferences are NOT persisted to localStorage
+  // Each tab always resets to its default date range when selected
+  // This ensures predictable behavior (Active=1D, Closed=1Y, etc.)
 
   // Helper to detect preset ranges (matching Clients)
   const detectPresetRange = (startDate, endDate) => {
