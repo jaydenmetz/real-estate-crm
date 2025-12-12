@@ -169,6 +169,14 @@ const CardTemplate = React.memo(({
     setToggleStates(newToggleStates);
   }, [masterHidden, config.metrics]);
 
+  // Image loading state - tracks if image failed to load
+  const [imageError, setImageError] = useState(false);
+
+  // Reset image error when imageSource changes
+  useEffect(() => {
+    setImageError(false);
+  }, [imageSource]);
+
   // Click vs drag detection (for text selection)
   const [isDragging, setIsDragging] = useState(false);
   const [mouseDownPos, setMouseDownPos] = useState(null);
@@ -358,14 +366,11 @@ const CardTemplate = React.memo(({
                 aspectRatio: config.image.aspectRatio || '3 / 2',
                 width: '100%',
                 position: 'relative',
-                background: imageSource
-                  ? `url(${imageSource})`
-                  : 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
+                background: 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                overflow: 'hidden',
                 '&::after': {
                   content: '""',
                   position: 'absolute',
@@ -374,10 +379,29 @@ const CardTemplate = React.memo(({
                   right: 0,
                   height: '50%',
                   background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)',
+                  zIndex: 2,
                 },
               }}
             >
-              {!imageSource && config.image.fallbackIcon && (
+              {/* Actual image element - hidden when error occurs */}
+              {imageSource && !imageError && (
+                <img
+                  src={imageSource}
+                  alt=""
+                  onError={() => setImageError(true)}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    zIndex: 1,
+                  }}
+                />
+              )}
+              {/* Fallback icon - shown when no image or image fails to load */}
+              {(!imageSource || imageError) && config.image.fallbackIcon && (
                 <Box component={config.image.fallbackIcon} sx={{ fontSize: 80, color: alpha('#757575', 0.5), zIndex: 1 }} />
               )}
 

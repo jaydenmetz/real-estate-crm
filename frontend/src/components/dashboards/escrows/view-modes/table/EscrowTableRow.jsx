@@ -207,7 +207,7 @@ const useEscrowTableConfig = (statuses) => {
           hoverColor: alpha('#000', 0.05),
         },
 
-        // Client Contacts (editable) - Shows client contact avatars/initials
+        // Clients (editable) - Shows client contact avatars/initials
         {
           label: (escrow) => {
             const clients = escrow.clients || { buyers: [], sellers: [] };

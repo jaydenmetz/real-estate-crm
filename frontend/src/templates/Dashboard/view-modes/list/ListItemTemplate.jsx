@@ -132,6 +132,22 @@ const ListItemTemplate = React.memo(({
   // Status menu state
   const [statusMenuAnchor, setStatusMenuAnchor] = useState(null);
 
+  // Quick actions menu state
+  const [actionsMenuAnchor, setActionsMenuAnchor] = useState(null);
+
+  // Resolve image source early so we can use it in useEffect
+  const imageSource = typeof config.image?.source === 'function'
+    ? config.image.source(data)
+    : config.image?.source;
+
+  // Image loading state - tracks if image failed to load
+  const [imageError, setImageError] = useState(false);
+
+  // Reset image error when imageSource changes
+  useEffect(() => {
+    setImageError(false);
+  }, [imageSource]);
+
   // Click vs drag detection
   const [isDragging, setIsDragging] = useState(false);
   const [mouseDownPos, setMouseDownPos] = useState(null);
@@ -199,10 +215,24 @@ const ListItemTemplate = React.memo(({
     handleStatusClose();
   }, [data, config.status, onUpdate, handleStatusClose]);
 
-  // Resolve image source
-  const imageSource = typeof config.image?.source === 'function'
-    ? config.image.source(data)
-    : config.image?.source;
+  // Quick actions menu handlers
+  const handleActionsMenuOpen = useCallback((e) => {
+    e.stopPropagation();
+    setActionsMenuAnchor(e.currentTarget);
+  }, []);
+
+  const handleActionsMenuClose = useCallback((e) => {
+    e?.stopPropagation();
+    setActionsMenuAnchor(null);
+  }, []);
+
+  const handleAction = useCallback((e, action) => {
+    e.stopPropagation();
+    handleActionsMenuClose();
+    if (action) action();
+  }, [handleActionsMenuClose]);
+
+  // Note: imageSource is resolved earlier (before useEffect that resets imageError)
 
   // Resolve status
   const statusValue = typeof config.status?.field === 'function'
@@ -293,17 +323,31 @@ const ListItemTemplate = React.memo(({
               width: config.image.width || 200,
               minWidth: config.image.width || 200,
               position: 'relative',
-              background: imageSource
-                ? `url(${imageSource})`
-                : 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
+              background: 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              overflow: 'hidden',
             }}
           >
-            {!imageSource && config.image.fallbackIcon && (
+            {/* Actual image element - hidden when error occurs */}
+            {imageSource && !imageError && (
+              <img
+                src={imageSource}
+                alt=""
+                onError={() => setImageError(true)}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
+            )}
+            {/* Fallback icon - shown when no image or image fails to load */}
+            {(!imageSource || imageError) && config.image.fallbackIcon && (
               <Box component={config.image.fallbackIcon} sx={{ fontSize: 60, color: alpha('#757575', 0.5) }} />
             )}
 
@@ -330,22 +374,6 @@ const ListItemTemplate = React.memo(({
               </Box>
             )}
 
-            {/* Quick Actions on Image */}
-            {(onArchive || onDelete || onRestore) && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  opacity: 0,
-                  transition: 'opacity 0.2s',
-                  '&:hover': { opacity: 1 },
-                  'Box:hover &': { opacity: 1 },
-                }}
-              >
-                {/* QuickActionsMenu would go here */}
-              </Box>
-            )}
           </Box>
         )}
 
@@ -414,6 +442,7 @@ const ListItemTemplate = React.memo(({
               )}
             </Box>
 
+            {/* Status Chip */}
             {config.status && (
               <Chip
                 label={statusConfig.label || statusValue}
@@ -431,6 +460,79 @@ const ListItemTemplate = React.memo(({
                   } : {},
                 }}
               />
+            )}
+
+            {/* Quick Actions Menu Button */}
+            {(onArchive || onDelete || onRestore || onClick) && (
+              <Box sx={{ ml: 1.5 }}>
+                <IconButton
+                  size="small"
+                  onClick={handleActionsMenuOpen}
+                  sx={{
+                    color: 'text.secondary',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                    },
+                  }}
+                >
+                  <MoreVertIcon />
+                </IconButton>
+                <Menu
+                  anchorEl={actionsMenuAnchor}
+                  open={Boolean(actionsMenuAnchor)}
+                  onClose={handleActionsMenuClose}
+                  onClick={(e) => e.stopPropagation()}
+                  PaperProps={{
+                    sx: {
+                      borderRadius: 2,
+                      mt: 1,
+                      minWidth: 160,
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                    },
+                  }}
+                >
+                  {onClick && (
+                    <MenuItem onClick={(e) => handleAction(e, () => onClick(data))}>
+                      <ListItemIcon>
+                        <VisibilityIcon sx={{ fontSize: 18 }} />
+                      </ListItemIcon>
+                      <ListItemText primary="View Details" />
+                    </MenuItem>
+                  )}
+                  {isArchived ? (
+                    <>
+                      {onRestore && (
+                        <MenuItem onClick={(e) => handleAction(e, () => onRestore(data))}>
+                          <ListItemIcon>
+                            <UnarchiveIcon sx={{ fontSize: 18 }} />
+                          </ListItemIcon>
+                          <ListItemText primary="Restore" />
+                        </MenuItem>
+                      )}
+                      {onDelete && (
+                        <MenuItem
+                          onClick={(e) => handleAction(e, () => onDelete(data))}
+                          sx={{ color: 'error.main' }}
+                        >
+                          <ListItemIcon>
+                            <DeleteIcon sx={{ fontSize: 18, color: 'error.main' }} />
+                          </ListItemIcon>
+                          <ListItemText primary="Delete" />
+                        </MenuItem>
+                      )}
+                    </>
+                  ) : (
+                    onArchive && (
+                      <MenuItem onClick={(e) => handleAction(e, () => onArchive(data))}>
+                        <ListItemIcon>
+                          <ArchiveIcon sx={{ fontSize: 18 }} />
+                        </ListItemIcon>
+                        <ListItemText primary="Archive" />
+                      </MenuItem>
+                    )
+                  )}
+                </Menu>
+              </Box>
             )}
           </Box>
 

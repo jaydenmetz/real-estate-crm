@@ -52,17 +52,23 @@ export const DashboardTemplate = ({
   // Modal state
   const [newItemModalOpen, setNewItemModalOpen] = useState(false);
 
-  // Helper function: Get default date range for a status
+  // Helper function: Get default date range for a category tab
   const getDefaultDateRange = (status) => {
-    // Check localStorage first (user's last selection for this status)
-    const savedFilter = localStorage.getItem(`${config.entity.namePlural}DateFilter_${status}`);
+    // Extract category key from status (format: "active:status1,status2" or just "active")
+    const categoryKey = status?.includes(':') ? status.split(':')[0] : status;
+
+    // Check localStorage first (user's last selection for this category)
+    const savedFilter = localStorage.getItem(`${config.entity.namePlural}DateFilter_${categoryKey}`);
     if (savedFilter && savedFilter !== 'null') return savedFilter;
 
-    // Status-specific defaults (if no saved preference)
-    if (status === 'Active') return '1M'; // 1 Month for Active
-    if (status === 'Closed') return '1Y'; // 1 Year for Closed
-    if (status === 'Cancelled') return '1Y'; // 1 Year for Cancelled
-    return null; // All tab and others = no filtering
+    // Category-specific defaults (if no saved preference)
+    // Using category_key from database: active, won, lost, all
+    const lowerCategory = categoryKey?.toLowerCase();
+    if (lowerCategory === 'active') return '1D'; // 1 Day for Active
+    if (lowerCategory === 'won' || lowerCategory === 'closed') return '1Y'; // 1 Year for Closed/Won
+    if (lowerCategory === 'lost' || lowerCategory === 'cancelled') return '1Y'; // 1 Year for Cancelled/Lost
+    if (lowerCategory === 'all') return null; // All tab = no date filtering
+    return null; // Default = no filtering
   };
 
   // Date range states for the hero
@@ -297,18 +303,22 @@ export const DashboardTemplate = ({
     // Clear custom dates when switching status tabs
     setCustomStartDate(null);
     setCustomEndDate(null);
+    // Reset archive view when switching tabs (always start with non-archived view)
+    setShowArchived(false);
   }, [selectedStatus, config.entity.namePlural]);
 
   // Save date range preference to localStorage when it changes
   useEffect(() => {
+    // Extract category key for localStorage (not the full "active:status1,status2")
+    const categoryKey = selectedStatus?.includes(':') ? selectedStatus.split(':')[0] : selectedStatus;
     if (dateRangeFilter) {
       localStorage.setItem(
-        `${config.entity.namePlural}DateFilter_${selectedStatus}`,
+        `${config.entity.namePlural}DateFilter_${categoryKey}`,
         dateRangeFilter
       );
     } else {
       // Remove from localStorage if filter is cleared
-      localStorage.removeItem(`${config.entity.namePlural}DateFilter_${selectedStatus}`);
+      localStorage.removeItem(`${config.entity.namePlural}DateFilter_${categoryKey}`);
     }
   }, [dateRangeFilter, selectedStatus, config.entity.namePlural]);
 

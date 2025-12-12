@@ -345,8 +345,6 @@ const TableRowTemplate = React.memo(({
                       fontWeight: column.bold ? 700 : 600,
                       fontSize: column.fontSize || '0.875rem',
                       color: column.color || theme.palette.text.primary,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                     }}
                   >
@@ -361,8 +359,6 @@ const TableRowTemplate = React.memo(({
                     color: theme.palette.text.secondary,
                     fontSize: '0.75rem',
                     display: 'block',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                   }}
                 >

@@ -288,6 +288,7 @@ export const DashboardContent = ({
           py: 1,
           mb: 1,
           borderBottom: `2px solid ${alpha('#000', 0.1)}`,
+          minWidth: 'max-content', // Prevent headers from being cut off
         }}
       >
         {entityConfig.headers.map((header, index) => (
@@ -298,7 +299,8 @@ export const DashboardContent = ({
               fontWeight: 700,
               color: 'text.secondary',
               textTransform: 'uppercase',
-              textAlign: 'left'
+              textAlign: 'left',
+              whiteSpace: 'nowrap',
             }}
           >
             {header}
@@ -318,6 +320,7 @@ export const DashboardContent = ({
         gridTemplateColumns: '1fr',
         gap: 1,
         width: '100%',
+        minWidth: 'max-content', // Prevent content from being cut off
       };
     }
 
@@ -357,8 +360,29 @@ export const DashboardContent = ({
     };
   };
 
+  // For table view, wrap in scrollable container
+  const tableWrapperStyles = viewMode === 'table' ? {
+    overflowX: 'auto',
+    overflowY: 'visible',
+    width: '100%',
+    // Hide scrollbar on Chrome/Safari but keep functionality
+    '&::-webkit-scrollbar': {
+      height: 8,
+    },
+    '&::-webkit-scrollbar-track': {
+      background: 'transparent',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: alpha('#000', 0.2),
+      borderRadius: 4,
+    },
+    '&::-webkit-scrollbar-thumb:hover': {
+      background: alpha('#000', 0.3),
+    },
+  } : {};
+
   return (
-    <>
+    <Box sx={tableWrapperStyles}>
       {renderTableHeaders()}
 
       <Box sx={getGridStyles()}>
@@ -439,6 +463,6 @@ export const DashboardContent = ({
             })}
         </AnimatePresence>
       </Box>
-    </>
+    </Box>
   );
 };
