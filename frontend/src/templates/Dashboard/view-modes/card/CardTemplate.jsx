@@ -174,12 +174,65 @@ const CardTemplate = React.memo(({
     ? config.image.source(data)
     : config.image?.source;
 
-  // Image loading state - tracks if image failed to load
+  // Image loading state - tracks if image failed to load or is a "no imagery" placeholder
   const [imageError, setImageError] = useState(false);
 
   // Reset image error when imageSource changes
   useEffect(() => {
     setImageError(false);
+  }, [imageSource]);
+
+  // Detect Google Street View "no imagery" placeholder using canvas pixel sampling
+  const handleImageLoad = useCallback((e) => {
+    const img = e.target;
+
+    // Only check for Street View placeholder images (Google Maps API URLs)
+    if (!imageSource || !imageSource.includes('maps.googleapis.com/maps/api/streetview')) {
+      return;
+    }
+
+    try {
+      // Create a small canvas to sample pixels
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      // Sample a small area (1x1 is enough for solid color detection)
+      canvas.width = 1;
+      canvas.height = 1;
+
+      // Sample from center-ish area (50, 50 in a 800x600 image)
+      // The placeholder is a solid gray background
+      ctx.drawImage(img, 50, 50, 1, 1, 0, 0, 1, 1);
+      const pixel = ctx.getImageData(0, 0, 1, 1).data;
+
+      // Google's "no imagery" placeholder is a gray color (approximately RGB: 224, 224, 224)
+      // The hex 0xe0e0e0 = RGB(224, 224, 224)
+      // Allow some tolerance for compression artifacts
+      const isGray = Math.abs(pixel[0] - pixel[1]) < 10 &&
+                     Math.abs(pixel[1] - pixel[2]) < 10 &&
+                     pixel[0] >= 200 && pixel[0] <= 240;
+
+      if (isGray) {
+        // Additional check: sample another point to confirm it's a solid color placeholder
+        canvas.width = 1;
+        canvas.height = 1;
+        ctx.drawImage(img, 200, 200, 1, 1, 0, 0, 1, 1);
+        const pixel2 = ctx.getImageData(0, 0, 1, 1).data;
+
+        const isAlsoGray = Math.abs(pixel2[0] - pixel2[1]) < 10 &&
+                           Math.abs(pixel2[1] - pixel2[2]) < 10 &&
+                           pixel2[0] >= 200 && pixel2[0] <= 240;
+
+        if (isAlsoGray) {
+          // This is the "no imagery" placeholder - show fallback icon
+          setImageError(true);
+        }
+      }
+    } catch (err) {
+      // Canvas operations can fail due to CORS - in that case, just show the image
+      // Google's Street View API should allow cross-origin access
+      console.warn('Could not detect Street View placeholder:', err);
+    }
   }, [imageSource]);
 
   // Click vs drag detection (for text selection)
@@ -385,12 +438,14 @@ const CardTemplate = React.memo(({
                 },
               }}
             >
-              {/* Actual image element - hidden when error occurs */}
+              {/* Actual image element - hidden when error occurs or is "no imagery" placeholder */}
               {imageSource && !imageError && (
                 <img
                   src={imageSource}
                   alt=""
+                  crossOrigin="anonymous"
                   onError={() => setImageError(true)}
+                  onLoad={handleImageLoad}
                   style={{
                     position: 'absolute',
                     top: 0,
