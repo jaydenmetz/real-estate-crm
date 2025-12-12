@@ -88,10 +88,10 @@ export const SpheresHeroLayout = ({
           </Box>
         )}
 
-        {/* Row 2: Buttons (centered) + Spheres (right) with horizontal scroll when needed */}
+        {/* Row 2: Buttons (centered in left area) + Spheres (right, fixed width) */}
         <Box sx={{
           display: 'flex',
-          gap: 2,
+          gap: 0,
           alignItems: 'center',
           overflowX: 'auto',
           overflowY: 'hidden',
@@ -112,14 +112,15 @@ export const SpheresHeroLayout = ({
             },
           },
         }}>
-          {/* Buttons Container - Centered, side by side */}
+          {/* Buttons Container - Takes remaining space, centers buttons within */}
           <Box sx={{
+            flex: '1 1 auto',
             display: 'flex',
             flexDirection: 'row',
             gap: 1.5,
             alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0, // Don't shrink buttons
+            justifyContent: 'center', // Center buttons in the available space
+            minWidth: 'fit-content',
           }}>
             {onNewItem && (
               <Button
@@ -161,31 +162,30 @@ export const SpheresHeroLayout = ({
             )}
           </Box>
 
-          {/* Spheres Visualization Container - shrinks to minWidth then triggers scroll, aligned right */}
+          {/* Spheres Visualization Container - Fixed width, aligned right */}
           <Box sx={{
-            flex: '1 1 auto',
+            flex: '0 0 auto', // Don't grow or shrink
+            width: 450, // Fixed width for spheres
             minWidth: 320, // Minimum width before horizontal scroll kicks in
-            display: 'flex',
-            justifyContent: 'flex-end', // Align spheres to the right
           }}>
             <motion.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              style={{ height: '100%', width: '100%', maxWidth: 500 }}
+              style={{ height: '100%', width: '100%' }}
             >
               {/* Horizontal Nested Spheres */}
               <Box
                 sx={{
                   display: 'flex',
-                  justifyContent: 'flex-end', // Align to the right
+                  justifyContent: 'flex-end',
                   alignItems: 'stretch',
                   width: '100%',
                   height: hasStatCards ? 160 : 200,
                 }}
               >
                 {/* Outer Container - Sphere of Influence */}
-                <motion.div variants={sphereVariants} style={{ flex: '0 1 auto', display: 'flex', maxWidth: 500, minWidth: 320, width: '100%' }}>
+                <motion.div variants={sphereVariants} style={{ flex: '1 1 auto', display: 'flex', width: '100%' }}>
                   <Box
                     onClick={() => onSphereClick?.('sphere')}
                     sx={{
