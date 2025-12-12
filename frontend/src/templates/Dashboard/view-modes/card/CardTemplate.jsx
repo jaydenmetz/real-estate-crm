@@ -169,6 +169,11 @@ const CardTemplate = React.memo(({
     setToggleStates(newToggleStates);
   }, [masterHidden, config.metrics]);
 
+  // Resolve image source early so we can use it in useEffect
+  const imageSource = typeof config.image?.source === 'function'
+    ? config.image.source(data)
+    : config.image?.source;
+
   // Image loading state - tracks if image failed to load
   const [imageError, setImageError] = useState(false);
 
@@ -286,10 +291,7 @@ const CardTemplate = React.memo(({
     if (action) action();
   }, [handleActionsMenuClose]);
 
-  // Resolve image source
-  const imageSource = typeof config.image?.source === 'function'
-    ? config.image.source(data)
-    : config.image?.source;
+  // Note: imageSource is resolved earlier (before useEffect that resets imageError)
 
   // Resolve status
   const statusValue = typeof config.status?.field === 'function'
