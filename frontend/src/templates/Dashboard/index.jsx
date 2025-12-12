@@ -72,8 +72,20 @@ export const DashboardTemplate = ({
   };
 
   // Date range states for the hero
-  // Initialize based on current status (will be updated when status changes)
-  const [dateRangeFilter, setDateRangeFilter] = useState(null);
+  // Initialize with correct default based on initial status tab (matching useDashboardData logic)
+  const [dateRangeFilter, setDateRangeFilter] = useState(() => {
+    // Determine initial status the same way useDashboardData does
+    const saved = localStorage.getItem(`${config.entity.namePlural}Status`);
+    const validStatuses = config.dashboard?.statusTabs?.map(tab => tab.value) || [];
+    const savedTabName = saved?.includes(':') ? saved.split(':')[0] : saved;
+    const isValidStatus = saved && validStatuses.includes(savedTabName);
+    const initialStatus = isValidStatus
+      ? saved
+      : (config.dashboard?.defaultStatus || config.dashboard?.statusTabs?.[0]?.value || 'All');
+
+    // Get default date range for initial status
+    return getDefaultDateRange(initialStatus);
+  });
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // For YTD year selector
